@@ -10,17 +10,13 @@ struct ScanView: View {
     var body: some View { BrandScreen(title: "Scan", subtitle: "Point at a can, tap list, or label.", symbol: "viewfinder") }
 }
 
-struct CellarView: View {
-    var body: some View { BrandScreen(title: "Cellar", subtitle: "Your Cellar is looking thirsty. Log your first pour.", symbol: "square.stack.3d.up") }
-}
+// CellarView -> Features/Cellar/CellarView.swift
 
 struct NearYouView: View {
     var body: some View { BrandScreen(title: "On Tap Near You", subtitle: "See what is good on tap around you.", symbol: "mappin.and.ellipse") }
 }
 
-struct GamesView: View {
-    var body: some View { BrandScreen(title: "Tapt Games", subtitle: "Trivia, cards, and table games. Free, always.", symbol: "die.face.5") }
-}
+// GamesView -> Features/Games/GamesView.swift
 
 /// Shared branded empty-state scaffold (voice + tokens from docs/06-BRAND.md).
 struct BrandScreen: View {
