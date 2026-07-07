@@ -1,4 +1,4 @@
-# Pilsy — Product Brief
+# Tapt — Product Brief
 
 **A free, global, scan-first beer passport. Untappd's fun, without the tax.**
 
@@ -6,7 +6,7 @@
 
 ## 1. Hero Concept
 
-**Pilsy is a free, global, scan-first beer passport — point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, and see what's actually good on tap near you.** Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, brewery menus — Pilsy gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries fund the party.
+**Tapt is a free, global, scan-first beer passport — point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, and see what's actually good on tap near you.** Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, brewery menus — Tapt gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries fund the party.
 
 One-line pitch: **Vivino's scan-and-go, rebuilt for beer, on data we own — trustworthy where Untappd is distrusted, generous where it gouges, and global and no/low-first where it's defensive.**
 
@@ -23,20 +23,20 @@ One-line pitch: **Vivino's scan-and-go, rebuilt for beer, on data we own — tru
 
 ## 3. Name
 
-**Recommendation: `Pilsy`** — the cleanest name in verification (the only "low" collision risk in the set: no app, brewery, brand, or trademark hit). Coined, ownable, warm, beer-evocative, easy worldwide. The one caveat — "pils" leans lager — is a *marketing* problem, not a legal one, solved by style-neutral positioning ("your whole beer world, one passport"). Clean clearance means fastest, safest path to an App Store title and a filed mark.
+**Recommendation: `Tapt`** — the cleanest name in verification (the only "low" collision risk in the set: no app, brewery, brand, or trademark hit). Coined, ownable, warm, beer-evocative, easy worldwide. The one caveat — "pils" leans lager — is a *marketing* problem, not a legal one, solved by style-neutral positioning ("your whole beer world, one passport"). Clean clearance means fastest, safest path to an App Store title and a filed mark.
 
 ### Shortlist (ranked by verification cleanliness)
 
 | Name | Risk | Why it's on the list / caveat |
 |---|---|---|
-| **Pilsy** | Low | Cleanest overall; coined + ownable. Neutralize the lager read in brand copy. |
+| **Tapt** | Low | Cleanest overall; coined + ownable. Neutralize the lager read in brand copy. |
 | **Steiny** | Medium | Best *brand* fit — style-neutral, stein = native gamification currency. Caveat: Steinlager nickname; avoid Steinlager-adjacent visuals. **Primary fallback.** |
 | **Hoply** | Medium | Clearly beer (hops), exact string free. Caveat: one letter off live "Hoppy"; distance it. |
 | **Brewt** | Medium | Invented, ownable. Caveat: real "Brewt's" cocktail-mixer brand in the same channel. |
 
 **Dropped** (high risk): Clink, Tappr, Nectar, Pinta, Cheerz, Froth, Suds.
 
-> **Before commit:** formal USPTO/EUIPO clearance (Nice classes 9 + 42) + domain checks (`pilsy.app`, `pilsy.com`, `getpilsy.com`).
+> **Before commit:** formal USPTO/EUIPO clearance (Nice classes 9 + 42) + domain checks (`tapt.app`, `tapt.com`, `getpilsy.com`).
 
 ---
 
@@ -70,7 +70,7 @@ RN's New Architecture closed the *CRUD-perf* gap, not the *platform/polish* gap.
 
 ## 5. The Trust Fix (the moat)
 
-Untappd's deepest flaw is a score nobody believes — a Kölsch punished against Double IPAs. Pilsy's core differentiator:
+Untappd's deepest flaw is a score nobody believes — a Kölsch punished against Double IPAs. Tapt's core differentiator:
 
 - **Style-normalized score** — rate each beer *relative to its own style*.
 - **Predicted-for-YOU match** — a flavor graph + taste model surfaces "you'll probably love this."
@@ -85,7 +85,7 @@ Guardrail: keep it explainable ("we normalized within *Pilsner*"), never a black
 | # | Feature | Notes |
 |---|---|---|
 | 1 | **Scan → identify → rate** | VisionKit/AVFoundation; `pg_trgm` fuzzy-match; manual fallback. The hero. |
-| 2 | **Style-fair + personalized score** | The reason to trust Pilsy. |
+| 2 | **Style-fair + personalized score** | The reason to trust Tapt. |
 | 3 | **The Cellar** | Personal collection / wishlist. |
 | 4 | **Log a Pour (check-in)** | Photo, flavor-tag chips, glassware, venue, rating. |
 | 5 | **Tap List — "On Near You"** | Nearby POI (Foursquare + Apple) + popular beers from **our own** check-ins. |

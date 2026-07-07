@@ -1,4 +1,4 @@
-# Pilsy — Beer/brewery data sources (74 evaluated)
+# Tapt — Beer/brewery data sources (74 evaluated)
 
 **License is a first-class filter: this app is built to be sold, so we can only build the core asset on commercially-usable data.**
 

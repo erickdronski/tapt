@@ -1,4 +1,4 @@
-# Pilsy 🍺 *(working name)*
+# Tapt 🍺
 
 A free, global, scan-first **beer passport**: point your camera at any label, tap list, or barcode → instant personalized, style-fair match score → log the pour to your **Cellar** → see what's actually good **on tap near you**. Free to drinkers forever; breweries fund the party. Built to scale worldwide — and structured from day one as a sellable taste-graph + territory-intelligence asset.
 
@@ -13,6 +13,6 @@ A free, global, scan-first **beer passport**: point your camera at any label, ta
 
 ## Status
 - [x] Research (3 agent fleets) + synthesis
-- [ ] Owner: confirm name (working: **Pilsy**)
+- [ ] Owner: confirm name (working: **Tapt**)
 - [ ] Dedicated Supabase project + GitHub repo + Vercel (landing) — isolated, like Lore
 - [ ] Apple + Google auth · schema migration · scan loop · map

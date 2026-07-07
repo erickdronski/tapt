@@ -1,4 +1,4 @@
-# Pilsy — Data model notes (sellable taste-graph + territory intelligence)
+# Tapt — Data model notes (sellable taste-graph + territory intelligence)
 
 ## Event-first taste-graph fields (the atomic sellable unit = one check-in)
 - checkin_event.id uuid PK

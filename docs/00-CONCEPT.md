@@ -1,15 +1,15 @@
-# Pilsy — Founding Concept  *(working name — pending owner confirmation)*
+# Tapt — Founding Concept  *(name locked)*
 
 > Generated from a 3-fleet research program (market, audience, data, monetization, culture, naming, tech + a sellability/M&A/maps/privacy supplement + a 74-source data-sourcing sweep). Raw agent outputs in `docs/RESEARCH-RAW/`.
 
 ## The concept
-Pilsy is a free, global, scan-first beer passport — point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, and see what's actually good on tap near you. Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, brewery menus — Pilsy gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries fund the party.
+Tapt is a free, global, scan-first beer passport — point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, and see what's actually good on tap near you. Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, brewery menus — Tapt gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries fund the party.
 
 ## Name
-- **Recommendation:** Pilsy
-- **Verified-cleanest ranking:** Pilsy, Steiny, Hoply, Brewt, Froth, Suds, Cheerz, Nectar, Clink, Tappr
+- **Recommendation:** Tapt
+- **Verified-cleanest ranking:** Tapt, Steiny, Hoply, Brewt, Froth, Suds, Cheerz, Nectar, Clink, Tappr
 - **Shortlist w/ tradeoffs:**
-- Pilsy (low collision risk — verification's cleanest; coined + ownable; lager connotation is a marketing problem, not a legal one)
+- Tapt (low collision risk — verification's cleanest; coined + ownable; lager connotation is a marketing problem, not a legal one)
 - Steiny (medium — strongest brand/gamification fit but Steinlager nickname collision; primary fallback)
 - Hoply (medium — clearly beer, exact string free, but one letter off live 'Hoppy' app)
 - Brewt (medium — invented + ownable, but real 'Brewt's' cocktail-mixer brand in the same channel)
@@ -17,11 +17,11 @@ Pilsy is a free, global, scan-first beer passport — point your camera at any l
 ## Stack decision
 **Native Swift 6 / SwiftUI (iOS 18+) with a Supabase backend (Postgres + PostGIS + Auth + Storage + Realtime + Edge Functions). No separate app server at MVP.**
 
-Every Pilsy differentiator lands exactly where native wins in 2026: label/barcode scanning (the hero) uses VisionKit DataScanner + AVFoundation which ship day-one at WWDC while RN wrappers lag 3–12 months; a fluid image-heavy social feed benefits from SwiftUI + ProMotion 120Hz; premium feel comes from Dynamic Island / Live Activities / haptics; CoreLocation gives precise + background/geofence location and MapKit is free for venue maps; SwiftData handles offline check-ins at tailgates and the back nine. RN's New Architecture closed the CRUD-perf gap but not the platform-integration or polish gap. The account already ships native Swift (Lore, Nalee) with an Apple Developer account and no stated Android deadline, so cross-platform is premature optimization. Critical rule: keep 100% of business logic server-side (Postgres RPCs, RLS, Edge Functions) so a future Kotlin Android client — or RN only if team constraints force it — is a thin view layer over the identical backend. Supabase matches existing Nalee/Lore muscle memory; PostGIS powers 'popular near me' via geography(Point,4326) + GiST index + ST_DWithin/ST_Distance; auth is Sign in with Apple + Google via signInWithIdToken (test the nonce SHA256-hash footgun early); push is a direct APNs .p8 JWT from an Edge Function, no Firebase.
+Every Tapt differentiator lands exactly where native wins in 2026: label/barcode scanning (the hero) uses VisionKit DataScanner + AVFoundation which ship day-one at WWDC while RN wrappers lag 3–12 months; a fluid image-heavy social feed benefits from SwiftUI + ProMotion 120Hz; premium feel comes from Dynamic Island / Live Activities / haptics; CoreLocation gives precise + background/geofence location and MapKit is free for venue maps; SwiftData handles offline check-ins at tailgates and the back nine. RN's New Architecture closed the CRUD-perf gap but not the platform-integration or polish gap. The account already ships native Swift (Lore, Nalee) with an Apple Developer account and no stated Android deadline, so cross-platform is premature optimization. Critical rule: keep 100% of business logic server-side (Postgres RPCs, RLS, Edge Functions) so a future Kotlin Android client — or RN only if team constraints force it — is a thin view layer over the identical backend. Supabase matches existing Nalee/Lore muscle memory; PostGIS powers 'popular near me' via geography(Point,4326) + GiST index + ST_DWithin/ST_Distance; auth is Sign in with Apple + Google via signInWithIdToken (test the nonce SHA256-hash footgun early); push is a direct APNs .p8 JWT from an Edge Function, no Firebase.
 
 ## MVP features (the hero loop first)
 - Scan → identify → rate: VisionKit/AVFoundation reads label/barcode/tap-list, fuzzy-matches (pg_trgm) to catalog, manual-search fallback — the hero loop
-- Style-normalized + personalized 'predicted-for-you' score — the reason to trust Pilsy where Untappd is distrusted
+- Style-normalized + personalized 'predicted-for-you' score — the reason to trust Tapt where Untappd is distrusted
 - The Cellar — personal collection + wishlist where every pour is logged
 - Log a Pour (check-in) with optional photo, flavor-tag chips, glassware, venue, rating — the atomic action
 - Tap List / 'On Near You' — nearby breweries & bars (Foursquare + Apple POI) plus 'popular beers near me' from our own check-ins
