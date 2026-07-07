@@ -9,8 +9,14 @@ struct GamesView: View {
                     GameTile(title: "Beer Trivia", subtitle: "How deep does your knowledge pour? Free, endless.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
                 }
                 .buttonStyle(.plain)
-                GameTile(title: "Card decks", subtitle: "House-built drinking-card games. Coming soon.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: false)
-                GameTile(title: "Table games", subtitle: "Dice, spinners, and Brewery Mode. Coming soon.", icon: "dice.fill", tint: Brand.copper, ready: false)
+                NavigationLink { CardDeckGame() } label: {
+                    GameTile(title: "Tapt Deck", subtitle: "A house-built card game for the table. Free.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: true)
+                }
+                .buttonStyle(.plain)
+                NavigationLink { BreweryModeView() } label: {
+                    GameTile(title: "Brewery Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
+                }
+                .buttonStyle(.plain)
             }
             .padding()
         }

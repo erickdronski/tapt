@@ -53,7 +53,13 @@ struct CellarView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Passport").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).padding(.horizontal)
+                NavigationLink { PassportView(checkins: checkins) } label: {
+                    HStack(spacing: 6) {
+                        Text("Passport").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                        Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Brand.muted)
+                    }
+                }
+                .buttonStyle(.plain).padding(.horizontal)
                 HStack(spacing: 12) {
                     stat("\(checkins.count)", "pours", "drop.fill", Brand.gold)
                     stat("\(styleCount)", "styles", "square.grid.2x2.fill", Brand.hop)
