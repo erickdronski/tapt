@@ -72,12 +72,6 @@ struct ProfileView: View {
     /// Persist beer-geek mode to the profile so it follows the account across devices.
     private func syncBeerGeek(_ value: Bool) {
         guard let id = session.user?.id else { return }
-        Task {
-            try? await Supa.client
-                .from("user_profile")
-                .update(["beer_geek_mode": value])
-                .eq("id", value: id.uuidString)
-                .execute()
-        }
+        Task { await ProfileService.setBeerGeek(value, userId: id) }
     }
 }

@@ -142,11 +142,8 @@ struct OnboardingView: View {
         if let uid = session.user?.id {
             let picked = Array(styles)
             Task {
-                try? await Supa.client.from("user_profile")
-                    .update(["region_code": region]).eq("id", value: uid.uuidString).execute()
-                struct TV: Encodable { let user_id: String; let top_styles: [String] }
-                try? await Supa.client.from("taste_vector")
-                    .upsert(TV(user_id: uid.uuidString, top_styles: picked)).execute()
+                await ProfileService.setRegion(region, userId: uid)
+                await ProfileService.setTopStyles(picked, userId: uid)
             }
         }
         withAnimation(.spring) { onboarded = true }
