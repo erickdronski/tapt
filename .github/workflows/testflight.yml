@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: macos-15
+    env:
+      PROFILE_NAME: "Tapt App Store CI"
+      BUNDLE_ID: app.tapt.tapt
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +22,26 @@ jobs:
         working-directory: app
         run: xcodegen generate
 
+      - name: Import signing assets
+        env:
+          CERT_P12: ${{ secrets.BUILD_CERT_P12 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          PROVISION: ${{ secrets.BUILD_PROVISION }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/tapt.keychain-db"
+          KPW=$(openssl rand -hex 12)
+          security create-keychain -p "$KPW" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KPW" "$KEYCHAIN"
+          echo "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KPW" "$KEYCHAIN" >/dev/null
+          security list-keychain -d user -s "$KEYCHAIN"
+          mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+          echo "$PROVISION" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/tapt.mobileprovision"
+          echo "--- available signing identities ---"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+
       - name: Write ASC API key
         run: |
           mkdir -p ~/private_keys
@@ -28,7 +51,7 @@ jobs:
         working-directory: app
         run: xcodebuild -resolvePackageDependencies -project Tapt.xcodeproj -scheme Tapt
 
-      - name: Archive (unsigned; signed at export)
+      - name: Archive (manual signing)
         working-directory: app
         run: |
           xcodebuild archive \
@@ -38,13 +61,16 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Tapt.xcarchive" \
             -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM=J9DMDH4S58 \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }}
 
       - name: Export and upload to TestFlight
         working-directory: app
         run: |
-          cat > "$RUNNER_TEMP/ExportOptions.plist" <<'PLIST'
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -52,7 +78,9 @@ jobs:
             <key>method</key><string>app-store-connect</string>
             <key>destination</key><string>upload</string>
             <key>teamID</key><string>J9DMDH4S58</string>
-            <key>signingStyle</key><string>automatic</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict><key>${BUNDLE_ID}</key><string>${PROFILE_NAME}</string></dict>
           </dict>
           </plist>
           PLIST
@@ -60,7 +88,6 @@ jobs:
             -archivePath "$RUNNER_TEMP/Tapt.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -exportPath "$RUNNER_TEMP/export" \
-            -allowProvisioningUpdates \
             -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
