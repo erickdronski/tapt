@@ -1,0 +1,1259 @@
+{
+ "allSources": [
+  {
+   "name": "openbrewerydb/openbrewerydb",
+   "url": "https://github.com/openbrewerydb/openbrewerydb",
+   "type": "dataset",
+   "data_provided": [
+    "breweries",
+    "geo/locations"
+   ],
+   "access": "free-open",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "coverage": "global; ~11,745 breweries, 79% field completeness",
+   "freshness": "actively maintained; README stats refreshed June 2026",
+   "quality": "high — normalized schema (name, brewery_type, address, city, state_province, postal_code, country, lat/long, phone, website_url)",
+   "notes": "Formats: breweries.csv / breweries.json / breweries.sql. THE commercial-safe brewery backbone. Community-maintained via PRs."
+  },
+  {
+   "name": "Open Brewery DB — hosted REST API",
+   "url": "https://api.openbrewerydb.org/v1/breweries",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "geo/locations"
+   ],
+   "access": "free-open",
+   "license": "MIT (Laravel API repo)",
+   "commercial_use": "yes",
+   "coverage": "global (mirrors the dataset)",
+   "freshness": "live/verified July 2026; Laravel API repo v1.1.0 dated May 2026",
+   "quality": "high — 15-field JSON, full-text search (Meilisearch), filtering/pagination, /random endpoint",
+   "notes": "No API key, no sign-up, no documented rate limit. Docs at api.openbrewerydb.org/docs. Backing repo: github.com/openbrewerydb/openbrewerydb-laravel-api (MIT). The older openbrewerydb-rails-api is DEPRECATED."
+  },
+  {
+   "name": "jsuchal/beer.db (+ openbeer org: world, us-united-states, by-bayern, etc.)",
+   "url": "https://github.com/openbeer/world",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "geo/locations",
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "Public Domain (explicit dedication, no restrictions)",
+   "commercial_use": "yes",
+   "coverage": "global, organized by country/region (~27 repos across the openbeer org)",
+   "freshness": "mature/older; low recent activity",
+   "quality": "moderate — plain-text fixtures (beers, breweries, tags, taggings); record counts not stated",
+   "notes": "openbeer.github.io is the project site. Truly unrestricted resale. Good supplemental global brewery/beer facts. jsuchal/beer.db is the original schema repo (public domain)."
+  },
+  {
+   "name": "beerjson/beerjson",
+   "url": "https://github.com/beerjson/beerjson",
+   "type": "reference",
+   "data_provided": [
+    "styles",
+    "hops/malt",
+    "recipe/ingredient schema"
+   ],
+   "access": "free-open",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "coverage": "spec/standard (not a data dump)",
+   "freshness": "v1.0.2 released Oct 2021; actively maintained via CI",
+   "quality": "high — JSON Schema + TypeScript defs + XSD; supports detailed hop oil content, culture flocculation, pof, glucoamylase, maltster spec-sheet fields",
+   "notes": "162 stars. The interchange FORMAT for recipes/ingredients (successor to BeerXML 2). NPM @beerjson/beerjson. Use as product data model; contains schema not populated ingredient DB."
+  },
+  {
+   "name": "beerjson/bjcp-json",
+   "url": "https://github.com/beerjson/bjcp-json",
+   "type": "reference",
+   "data_provided": [
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "coverage": "BJCP 2015, 2017, 2021 style guidelines in JSON",
+   "freshness": "stable (5 commits; guidelines are periodic)",
+   "quality": "high — machine-readable style categories + numeric ranges (ABV/IBU/SRM/OG/FG)",
+   "notes": "CAVEAT: repo/code is MIT but BJCP Style Guideline PROSE is BJCP copyright. Names + numeric ranges are facts (safe); verify verbatim description reuse before selling. Alt: github.com/lrdodge/bjcp-style-data (MIT, multiple formats), bjcp-brasil/styleguide-2021 (JSON/XML/YAML), jrdn91/bjcp-guidelines-2021 (JSON + TS types)."
+  },
+  {
+   "name": "kasperg3/HopDatabase",
+   "url": "https://github.com/kasperg3/HopDatabase",
+   "type": "dataset",
+   "data_provided": [
+    "hops/malt"
+   ],
+   "access": "free-open",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "coverage": "500+ hop varieties, global",
+   "freshness": "actively maintained; v2026.05 release May 2026",
+   "quality": "high — alpha/beta acids, essential oils, cohumulone, aroma descriptors, country of origin, source attribution; JSON",
+   "notes": "Scraped from hop-supplier spec sheets: Hopsteiner, Yakima Chief Hops, BarthHaas, Crosby Hops. MIT-licensed repo; underlying values are published spec-sheet facts (low IP risk). Cleanest commercial-usable HOPS ingredient source."
+  },
+  {
+   "name": "stuartraetaylor/hops-json",
+   "url": "https://github.com/stuartraetaylor/hops-json",
+   "type": "dataset",
+   "data_provided": [
+    "hops/malt"
+   ],
+   "access": "free-open",
+   "license": "unclear — verify LICENSE file",
+   "commercial_use": "unclear",
+   "coverage": "hop varieties (JSON)",
+   "freshness": "older",
+   "quality": "moderate — hop database in JSON",
+   "notes": "Secondary hops source; confirm license before commercial use. Use kasperg3/HopDatabase as primary."
+  },
+  {
+   "name": "almet/hops-datasets",
+   "url": "https://github.com/almet/hops-datasets",
+   "type": "dataset",
+   "data_provided": [
+    "hops/malt"
+   ],
+   "access": "free-open",
+   "license": "unclear — verify",
+   "commercial_use": "unclear",
+   "coverage": "hop varieties: oils, lineage, age",
+   "freshness": "older",
+   "quality": "moderate — cohumulone %, caryophyllene, farnesene, geraniol, humulene, myrcene percentages",
+   "notes": "Chemistry-detail hops data (aroma-oil breakdown). Good enrichment layer; verify license."
+  },
+  {
+   "name": "sboulema/BrewDB",
+   "url": "https://github.com/sboulema/BrewDB",
+   "type": "dataset",
+   "data_provided": [
+    "hops/malt",
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "CC-BY-SA-4.0",
+   "commercial_use": "yes (with copyleft strings)",
+   "coverage": "hops + malts + yeast ingredient tables",
+   "freshness": "v6 release Oct 2022",
+   "quality": "high — SQLite; hops (usage/aromas/substitutions/aliases), malts (maltster/EBC/yield/protein), yeast (lab/temp/attenuation/flocculation/strain)",
+   "notes": "WARNING: ShareAlike is a poison pill for a proprietary/resold product — derivatives must be re-licensed CC-BY-SA-4.0. Usable for internal enrichment, risky if the sold DB must stay proprietary. Prefer kasperg3 (MIT) for hops."
+  },
+  {
+   "name": "nickhould/craft-beers-dataset (Kaggle: craft-cans)",
+   "url": "https://github.com/nickhould/craft-beers-dataset",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "unknown/unset (Kaggle mirror license unclear)",
+   "commercial_use": "unclear",
+   "coverage": "US only; ~2,410 canned craft beers, ~558 breweries",
+   "freshness": "static, older; source site CraftCans.com now defunct",
+   "quality": "moderate — CSV (beers.csv, breweries.csv): name, ABV, IBU, style, ounces, brewery, city, state",
+   "notes": "Scraped from CraftCans.com. Facts (name/ABV/IBU/style) low-risk but provenance/license weak. Good IPA/craft SEED or enrichment layer, not a clean licensed primary source. Kaggle: kaggle.com/datasets/nickhould/craft-cans."
+  },
+  {
+   "name": "brewdega/open-beer-database-dumps",
+   "url": "https://github.com/brewdega/open-beer-database-dumps",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "geo/locations"
+   ],
+   "access": "free-open",
+   "license": "verify (derived from Open Beer Database, historically open)",
+   "commercial_use": "unclear",
+   "coverage": "global; legacy Open Beer Database dump",
+   "freshness": "static legacy dump (older)",
+   "quality": "moderate — cleaned/sanitized beers.csv + breweries dumps",
+   "notes": "Sanitized dump of the original openbeerdb.com project. Useful legacy beers.csv seed; verify license lineage before commercial reuse. Overlaps with beer.db lineage."
+  },
+  {
+   "name": "alxiw/punkapi (Punk API v3 / BrewDog DIY Dog)",
+   "url": "https://github.com/alxiw/punkapi",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "hops/malt",
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "MIT (wrapper) — but DATA is BrewDog IP",
+   "commercial_use": "no (content is non-commercial/branded)",
+   "coverage": "415 BrewDog beers",
+   "freshness": "current replacement (original PunkAPI discontinued May 2024); ~30 commits",
+   "quality": "high — JSON: ABV, IBU, EBC, hops/malt/yeast w/ quantities, food pairing, brew methods/temps; extracted from BrewDog DIY Dog v8 PDF",
+   "notes": "FLAG: MIT on wrapper does NOT license BrewDog's proprietary recipes/branding; DIY Dog is a single commercial brand's catalog. Use as reference for ingredient/recipe STRUCTURE, not a resellable data asset. punkapi.com original service is dead."
+  },
+  {
+   "name": "philipperemy/beer-dataset",
+   "url": "https://github.com/philipperemy/beer-dataset",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "styles",
+    "labels/images"
+   ],
+   "access": "free-open (repo)",
+   "license": "none specified",
+   "commercial_use": "no",
+   "coverage": "~30,280 beers",
+   "freshness": "scraped late 2019; STALE; source (BreweryDB) shut down Jan 2020",
+   "quality": "rich fields (ABV, IBU, SRM color, glassware, availability, style flavor profiles, label images) but tainted",
+   "notes": "FLAG: scraped from BreweryDB (dead + pro-account ToS). No license. Do NOT commercialize. Same taint applies to aedobbyn/beer-data-science (also BreweryDB-derived) and raybuhr/w210_beer_demand (hops-brewerydb.csv)."
+  },
+  {
+   "name": "SNAP Stanford — BeerAdvocate & RateBeer review corpora",
+   "url": "https://snap.stanford.edu/data/web-BeerAdvocate.html",
+   "type": "dataset",
+   "data_provided": [
+    "reviews/ratings"
+   ],
+   "access": "scrape-required / academic-request-only",
+   "license": "SNAP code BSD; DATA withdrawn at BeerAdvocate's request",
+   "commercial_use": "no",
+   "coverage": "~1.5M BeerAdvocate reviews + ~3M RateBeer reviews (through Nov 2011)",
+   "freshness": "frozen 2011; no longer publicly downloadable",
+   "quality": "high research quality — 5-aspect ratings (appearance/aroma/palate/taste/overall)",
+   "notes": "RESEARCH-ONLY. Data pulled from public download at BeerAdvocate's request; academic-access only. The ONLY large ratings corpus but legally unusable commercially. Confirms: no clean open ratings source exists — biggest data gap for a monetizable ratings layer."
+  },
+  {
+   "name": "Beer rating/review scrapers (BeerAdvocate / RateBeer / Untappd)",
+   "url": "https://github.com/glederrey/ratebeer_crawler",
+   "type": "scrape",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "breweries"
+   ],
+   "access": "scrape-required",
+   "license": "varies (code only)",
+   "commercial_use": "no",
+   "coverage": "whatever the target sites hold",
+   "freshness": "tools; output depends on run date",
+   "quality": "n/a — code, not data",
+   "notes": "FLAG scrape-only + ToS-prohibited. Includes glederrey/ratebeer_crawler + glederrey/beeradvocate_crawler, sbuss/beeradvocate-scraper, vavlani/beer-scrape, zongqi-wang/Beer-Advocate-Scraper, harrisiirak/ratebeer-scraper, hadeli/beer-crawler, akionakamura/untappd-scraper, rikunert/beer_rating (R, multi-site). Untappd/BeerAdvocate/RateBeer ToS forbid scraping + commercial reuse; content owned by reviewers/sites. Do NOT use for a commercial product."
+  },
+  {
+   "name": "davestroud/BeerStudy",
+   "url": "https://github.com/davestroud/BeerStudy",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries"
+   ],
+   "access": "free-open",
+   "license": "unclear",
+   "commercial_use": "unclear",
+   "coverage": "US; 2,410 craft beers, 558 breweries",
+   "freshness": "static/older",
+   "quality": "moderate — same underlying CraftCans-derived data as nickhould set",
+   "notes": "Duplicate lineage of the craft-cans dataset. Marginal incremental value; verify license."
+  },
+  {
+   "name": "Open Brewery DB",
+   "url": "https://www.openbrewerydb.org/",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "geo/locations",
+    "styles"
+   ],
+   "access": "free-open",
+   "commercial_use": "yes",
+   "coverage": "global but US-heavy; ~11,745 breweries across 14 countries (US ~70%, Germany ~12%); brewpubs/cideries/bottleshops included; NO individual beers/reviews",
+   "freshness": "Dataset last updated June 2026; community-maintained via GitHub, weekly-ish updates. Originally scraped from Brewers Association ~Aug 2018.",
+   "license": "MIT (code + dataset; LICENSE file Copyright 2025 Open Brewery DB). FAQ: dataset 'will always be free and open-source'; 'welcome to use the dataset for any projects with credit to Open Brewery DB.'",
+   "quality": "Good structured brewery/location data; ~79% field completeness. Type taxonomy (micro, brewpub, regional, contract, planning, etc.).",
+   "notes": "LIVE. Endpoints (v1, no auth, no documented hard rate limit but be polite): GET /v1/breweries (list+filter by_city/by_state/by_country/by_type/by_dist), /v1/breweries/{obdb-id}, /v1/breweries/random, /v1/breweries/search?query=, /v1/breweries/meta. Bulk CSV + PostgreSQL SQL + JSON downloads on GitHub — USE THESE for commercial/production (self-host) rather than the community API (maintainer explicitly discourages relying on the hosted API for production/SLA). Fields: id, name, brewery_type, address_1/2/3, city, state_province, postal_code, country, longitude, latitude, phone, website_url. Cleanest commercial anchor for the brewery layer. GitHub: https://github.com/openbrewerydb/openbrewerydb"
+  },
+  {
+   "name": "Foursquare Open Source Places (FSQ OS Places)",
+   "url": "https://opensource.foursquare.com/os-places/",
+   "type": "dataset",
+   "data_provided": [
+    "breweries",
+    "geo/locations",
+    "menus/taplists"
+   ],
+   "access": "free-open",
+   "commercial_use": "yes",
+   "coverage": "global; 100M+ POIs worldwide across all categories — filter to beer categories (brewery, brewpub, beer bar, beer garden, taproom, bottle shop). No beer-product data, no ABV/styles.",
+   "freshness": "Released GA Nov 2024; refreshed monthly. Actively maintained through 2026.",
+   "license": "Apache License 2.0 — full commercial use, redistribution, monetization, and RESALE permitted; NO share-alike/copyleft. Attribution/NOTICE file requirement only.",
+   "quality": "Foundational POI dataset; 22+ core attributes (name, address, region/city/country, lat/lng, category, website, social handles, hours where available). Venue-grade, not beer-catalog-grade.",
+   "notes": "LIVE. Best worldwide VENUE/GEO layer with a fully resalable license. Distributed as Parquet/GeoParquet on Amazon S3 + Hugging Face (foursquare/fsq-os-places). Bulk download, not a live query API — you host/serve it. HF: https://huggingface.co/datasets/foursquare/fsq-os-places . Pair with Open Brewery DB for brewery identity + FSQ for bars/taprooms globally."
+  },
+  {
+   "name": "Overture Maps Foundation — Places theme",
+   "url": "https://docs.overturemaps.org/guides/places/",
+   "type": "geospatial",
+   "data_provided": [
+    "geo/locations",
+    "breweries"
+   ],
+   "access": "free-open",
+   "commercial_use": "yes",
+   "coverage": "global; ~60M+ POIs conflated from Meta, Microsoft, Foursquare, PinMeTo, RenderSEO, AllThePlaces, etc. Filter by category to beer venues. No beer-product data.",
+   "freshness": "Monthly releases (e.g., 2025-09 added ~6M POIs from FSQ OS Places). Actively maintained 2026; backed by Linux Foundation (AWS/Meta/Microsoft/TomTom).",
+   "license": "Per-row by source: CDLA Permissive 2.0 (Meta, Microsoft, PinMeTo, Krick, RenderSEO, DAC, BrightQuery), Apache 2.0 (Foursquare), CC0 1.0 (AllThePlaces). ALL permissive — commercial redistribution, monetization, and resale allowed; NO copyleft/share-alike. Minimal attribution.",
+   "quality": "Production-grade, deduplicated/conflated POIs with stable GERS IDs — cleaner than raw single-source POI dumps.",
+   "notes": "LIVE. Download via AWS S3 / Azure (Registry of Open Data on AWS: https://registry.opendata.aws/overture/) or Overture CLI as GeoParquet. Bulk data, self-host. Strong resalable alternative/complement to FSQ OS Places for the venue layer. Attribution page: https://docs.overturemaps.org/attribution/"
+  },
+  {
+   "name": "Catalog.beer",
+   "url": "https://catalog.beer/api-docs",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "geo/locations"
+   ],
+   "access": "free-api-key",
+   "commercial_use": "yes",
+   "coverage": "US-centric (addresses/location search US-only; intl brewers addable with country code). ~60,604 beers + ~6,760 brewers.",
+   "freshness": "Live and community-editable (CRUD endpoints let users add/verify data). Actively serving in 2026.",
+   "license": "Creative Commons Attribution 4.0 (CC BY 4.0) — commercial use and resale permitted WITH mandatory attribution; excludes breweries' name/brand/trademark rights. Attribution is a real obligation to design around in a sold product.",
+   "quality": "One of very few LIVE sources with actual per-BEER attributes (name, style, ABV, IBU, description) + nested brewer object. US-focused, crowd-editable so completeness/accuracy varies.",
+   "notes": "LIVE. Auth = API key via HTTP Basic (key as username, blank password, base64). Free tier = 1,000 requests/month (resets 1st of month); higher volume by contacting them (cost-recovery pricing). Endpoints: brewers, beers, locations (find by coordinates/ZIP/city), users, usage — full CRUD + search. Best available commercially-licensed BEER catalog (vs brewery-only sources), but confirm CC BY attribution mechanics are acceptable for a resold/monetized dataset. API usage/pricing: https://catalog.beer/api-usage"
+  },
+  {
+   "name": "OpenStreetMap (breweries/bars via Overpass API + planet extracts)",
+   "url": "https://wiki.openstreetmap.org/wiki/Key:brewery",
+   "type": "geospatial",
+   "data_provided": [
+    "breweries",
+    "geo/locations"
+   ],
+   "access": "free-open",
+   "commercial_use": "yes",
+   "coverage": "global; breweries via craft=brewery, microbrewery=yes, industrial=brewery; bars/pubs via amenity=bar/pub. Coverage uneven by region (strong in Europe). No beer-product data.",
+   "freshness": "Continuously updated (real-time edits). Overpass = live queries; planet/Geofabrik extracts refreshed daily/weekly.",
+   "license": "Open Database License (ODbL 1.0) — commercial use ALLOWED but SHARE-ALIKE/copyleft: any publicly distributed derived DATABASE must be offered under ODbL, plus attribution. This is the licensing catch for a 'sold/monetized' product — OK for internal enrichment or ODbL-licensed outputs, risky if you want a proprietary resalable dataset.",
+   "quality": "Good geo + tags (name, website, brewery, opening_hours), variable completeness. brewmap.openstreetmap.de + openbeermap.github.io visualize it.",
+   "notes": "LIVE. Query via Overpass API / Overpass Turbo, or bulk via Geofabrik extracts. FLAG: ODbL share-alike makes clean resale of a derived proprietary DB legally awkward — treat as reference/enrichment, not the resale core, unless you accept ODbL on outputs. OpenBeerMap: https://openbeermap.github.io/"
+  },
+  {
+   "name": "Foursquare Places API (commercial / PAYG)",
+   "url": "https://foursquare.com/products/places-api/",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "geo/locations",
+    "reviews/ratings",
+    "menus/taplists"
+   ],
+   "access": "paid",
+   "commercial_use": "yes",
+   "coverage": "global POIs incl. beer venues; richer live attributes (tips, hours, popularity, photos) than the OS dataset.",
+   "freshness": "Live, continuously updated managed API. New Places API/V2 Pro endpoint rates effective June 1, 2026 (500 free Pro calls included).",
+   "license": "Commercial API License Agreement (PAYG) — usage-based; permits use in your service but RESTRICTS resale/redistribution of raw Places Data: you must make 'commercially reasonable efforts' to prevent your service's Places Data from being crawled; contractual anti-crawl terms on your end users required. NOT for reselling the underlying data as a dataset.",
+   "quality": "High — managed, enriched, deduplicated venue data + live signals.",
+   "notes": "LIVE, PAID. Good as a live lookup/enrichment layer inside the product, but its ToS blocks reselling the raw data as a transferable dataset. For a data-monetization/resale business, prefer FSQ OS Places (Apache 2.0) over this API. Terms: https://foursquare.com/legal/terms/apilicenseagreement/ ; Pricing: https://foursquare.com/pricing/"
+  },
+  {
+   "name": "Google Places API (New)",
+   "url": "https://developers.google.com/maps/documentation/places/web-service/usage-and-billing",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "geo/locations",
+    "reviews/ratings"
+   ],
+   "access": "paid",
+   "commercial_use": "no",
+   "coverage": "global; best-in-class venue coverage/freshness for breweries, brewpubs, beer bars incl. ratings, hours, photos, reviews.",
+   "freshness": "Live, constantly updated. Per-SKU billing (the flat $200 monthly credit was retired ~2025; now per-SKU free tiers).",
+   "license": "Google Maps Platform ToS — HIGHLY RESTRICTIVE for a data business: no permanent storage of most Places content (limited caching; only place_id may be stored long-term, content must be refreshed ~every 30 days), no pre-fetching/building/creating a database or dataset from the content, and no using the data to build/train/improve a competing dataset or product. Effectively NON-transferable / non-resalable.",
+   "quality": "Excellent live data quality, but legally a dead end for resale.",
+   "notes": "LIVE, PAID. 2026 indicative pricing per 1,000: Place Details Pro ~$17; Text/Nearby Search Pro ~$32; Enterprise ~$35; Enterprise+Atmosphere (reviews, etc.) ~$40. USE ONLY as a runtime lookup you don't persist/resell. FLAG: prohibits building a stored/derived database — incompatible with 'data monetized and sold.' Pricing analysis: https://openplacesapi.com/blog/google-places-api-pricing"
+  },
+  {
+   "name": "Untappd API (v4 public + Untappd for Business)",
+   "url": "https://untappd.com/terms/api",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "reviews/ratings",
+    "menus/taplists",
+    "geo/locations"
+   ],
+   "access": "free-api-key",
+   "commercial_use": "no",
+   "coverage": "global; the largest beer + check-in/rating + venue taplist graph (huge beer catalog w/ styles/ABV, ratings, venues).",
+   "freshness": "Live and current; the richest live beer dataset. Public API v4 still exists in 2026 via approval form (~2 business days); UFB API is Premium-subscriber-only.",
+   "license": "API ToS EXPRESSLY PROHIBITS commercial data use: 'You will not sell, rent, or trade any data acquired from the Untappd API'; 'You cannot use the Untappd data to build your own beer database'; no analytics/mining; MUST delete caches every 24 hours; no mass marketing. Rate limit 100 calls/hour/key.",
+   "quality": "Best-in-class beer/rating/venue data — but legally unusable for this project.",
+   "notes": "LIVE but DO-NOT-USE for a commercialized/resalable product. FLAG: cache-purge-every-24h + no-resale + no-own-database clauses make it incompatible with data monetization and transfer. Owned by Next Glass. Scraping Untappd (e.g., Apify 'Untappd Scraper') also violates ToS — avoid. Public API docs: https://untappd.com/api/docs ; UFB: https://docs.business.untappd.com/"
+  },
+  {
+   "name": "beer.db / Open Beer Database (openbeer)",
+   "url": "https://openbeer.github.io/",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "geo/locations"
+   ],
+   "access": "free-open",
+   "commercial_use": "yes",
+   "coverage": "global-ish, patchy; plain-text (CSV) fixtures for beers, breweries, brewpubs + beer maps (Austria, Bayern, Belgium, Czechia, etc.).",
+   "freshness": "STALE — repos last meaningful commits early 2024 (some assets 2023). Effectively dormant/community-archived in 2026. Verify before depending on it.",
+   "license": "PUBLIC DOMAIN — 'schema, data and scripts are dedicated to the public domain. Use it as you please with no restrictions whatsoever.' Cleanest possible license for commercial use + resale (public-domain, like CC0).",
+   "quality": "Structured (name, ABV, style, brewery, geo) but modest size and outdated; good as seed/reference data, not a live source.",
+   "notes": "Cleanest LICENSE of any beer-product source, but the data is old. Best use: one-time public-domain seed for beer/style reference tables, then maintain yourself. GitHub org: https://github.com/openbeer ; tools: https://github.com/beerkit/beer.db . jsuchal mirror: https://github.com/jsuchal/beer.db"
+  },
+  {
+   "name": "Punk API v3 (BrewDog DIY Dog — alxiw fork)",
+   "url": "https://github.com/alxiw/punkapi",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "styles",
+    "hops/malt"
+   ],
+   "access": "free-open",
+   "commercial_use": "unclear",
+   "coverage": "single-brewery: all 415 BrewDog DIY Dog recipes only. Rich per-beer detail (ABV, IBU, EBC, SRM, malts, hops, yeast, food pairings, brewing tips, image). NOT a market catalog.",
+   "freshness": "Original punkapi.com by Sam Mason SHUT DOWN May 1, 2024 (domain now dead — punkapi.com does not resolve). alxiw fork is the maintained successor, live at https://punkapi-alxiw.amvera.io/v3/ (self-hosted; small project, no SLA).",
+   "license": "Fork CODE is MIT. Underlying DATA = BrewDog's 'DIY Dog' recipe book, which BrewDog released free 'to the homebrew community' — the source data's commercial-use/redistribution status is NOT clearly licensed for resale. FLAG as unclear for a sold product.",
+   "quality": "High detail but tiny scope (one brewery's recipes); useful as demo/sample or homebrew-recipe reference, not core catalog.",
+   "notes": "Original DEAD; fork LIVE. Endpoints mirror v2: /v3/beers, /v3/beers/{id}, /v3/beers/random (pagination via page/per_page). Treat as a niche recipe dataset; get clarity on DIY Dog reuse rights before monetizing. Wrappers often bundle offline data as fallback."
+  },
+  {
+   "name": "WineVybe Beer API (via RapidAPI)",
+   "url": "https://winevybe.com/beer-api/",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "labels/images"
+   ],
+   "access": "paid",
+   "commercial_use": "unclear",
+   "coverage": "claims 'beers from all over the globe'; beers + breweries, ABV, descriptions, food pairing, awards, classifications (beers/malts/ales), packaging dims/weights. Unverified size.",
+   "freshness": "Live on RapidAPI marketplace in 2026; provenance and update cadence undisclosed.",
+   "license": "Not clearly stated. WineVybe explicitly 'does not claim ownership of any of the images or data provided by the API' — meaning THEY don't grant you rights to underlying third-party data/images; resale rights are unclear and likely limited by the original (unnamed) sources. FLAG.",
+   "quality": "Unknown/opaque — no named data source; treat with caution. Sister 'beer9'/Liquor APIs on same account.",
+   "notes": "LIVE, PAID (~$0.02/request; free RapidAPI account to start). Auth via RapidAPI (OAuth2/OpenID). FLAG for commercialization: undisclosed data provenance + explicit no-ownership disclaimer = weak/unclear resale rights. Do diligence before relying on it. RapidAPI: https://rapidapi.com/winevybe/api/beer9"
+  },
+  {
+   "name": "BreweryDB.com (PintLabs)",
+   "url": "https://www.brewerydb.com/developers/docs",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "labels/images"
+   ],
+   "access": "scrape-required",
+   "commercial_use": "no",
+   "coverage": "was the largest structured beer+brewery+style catalog (US-strong).",
+   "freshness": "DEAD for self-serve. Public API discontinued (wound down ~2020); site now states no public API access — data-partnership inquiries only (case-by-case, not open).",
+   "license": "N/A publicly — no self-serve terms; any access is a private negotiated partnership.",
+   "quality": "Historically excellent, but inaccessible now.",
+   "notes": "CONFIRMED not available as a live self-serve API in 2026. Listed so it's explicitly ruled out (this is the classic 'dead beer API'). Only route is contacting them for a private data partnership; do not design around it. Historical dumps floating on GitHub are stale and of uncertain license — avoid for a sold product."
+  },
+  {
+   "name": "RateBeer API / data",
+   "url": "https://www.ratebeer.com/api.asp",
+   "type": "reference",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "reviews/ratings"
+   ],
+   "access": "scrape-required",
+   "commercial_use": "no",
+   "coverage": "was a large beer + expert-review corpus (owned by ZX Ventures / AB InBev).",
+   "freshness": "DEAD — RateBeer.com shut down Feb 1, 2025; API had been down/approval-only well before. Site and API effectively gone in 2026.",
+   "license": "Former API required pre-approved licensee agreement (restricted). Review corpus is proprietary AB InBev data — never open/commercially licensable to third parties.",
+   "quality": "Historically strong reviews, now inaccessible.",
+   "notes": "CONFIRMED DEAD (shutdown Feb 2025). FLAG as a restricted/defunct review corpus — do not rely on it. Any scraped RateBeer data is ToS-violating and AB-InBev-owned; unusable for resale. Included to explicitly rule out. Shutdown coverage: https://www.forbes.com/sites/dontse/2025/01/22/why-ratebeer-is-shutting-down-and-the-person-trying-to-save-it/"
+  },
+  {
+   "name": "TapHunter → Evergreen (taplist/menu data)",
+   "url": "https://www.taphunter.com/",
+   "type": "reference",
+   "data_provided": [
+    "menus/taplists",
+    "beers",
+    "geo/locations"
+   ],
+   "access": "paid",
+   "commercial_use": "unclear",
+   "coverage": "US-focused draft/taplist + beverage menu data; historically a 300,000+ entry beverage database + venue taplists.",
+   "freshness": "TapHunter acquired by and absorbed into Evergreen (evergreenhq.com); the standalone public JSON website-menu feed is legacy. No open public API in 2026.",
+   "license": "No public/open data license; it's a B2B SaaS for breweries/bars. Any data access would be a commercial contract, and it's their customers' menu data — resale rights not offered.",
+   "quality": "Good live taplist/menu data, but locked inside a SaaS, not available as an open feed.",
+   "notes": "No self-serve API for third-party data resale. Legacy TapHunter 'Website Menu JSON feed' was for a venue to embed its OWN menu, not a bulk data source. Contact Evergreen for partnership; do not assume resale rights. BeerMenus (competitor) explicitly has NO public API (help.beermenus.com/article/44)."
+  },
+  {
+   "name": "Open Brewery DB (GitHub dataset + API)",
+   "url": "https://github.com/openbrewerydb/openbrewerydb",
+   "type": "dataset",
+   "data_provided": [
+    "breweries",
+    "geo/locations"
+   ],
+   "coverage": "global (23 countries), ~11,745 breweries; ~79% field completeness",
+   "freshness": "Last full dataset update 2024; stats regenerated 2026-06-28; community-maintained via PRs",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "access": "free-open",
+   "quality": "Good, curated, actively maintained; brewery-level only (no per-beer ABV/IBU/style)",
+   "notes": "Fields: id, name, brewery_type, street, city, state_province, postal_code, country, longitude, latitude, phone, website_url. Formats: CSV, JSON, PostgreSQL SQL. Companion JSON API at api.openbrewerydb.org has no key/rate limit. THE cleanest resale-safe brewery source. Does NOT contain a beer catalog."
+  },
+  {
+   "name": "TTB Public COLA Registry (live)",
+   "url": "https://www.ttbonline.gov/colasonline/publicSearchColasBasic.do",
+   "type": "reference",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "labels/images",
+    "styles"
+   ],
+   "coverage": "US — effectively every alcohol beverage legally sold in the US; COLAs 1999–present (some pre-1996 partial)",
+   "freshness": "Continuous; new approvals appear ~48h after approval",
+   "license": "US Government public domain (CC0 for the data.gov mirror)",
+   "commercial_use": "yes",
+   "access": "scrape-required",
+   "quality": "Authoritative federal registry; fields include brand name, fanciful name, class/type (style), applicant/brewer name+address, ABV (on many), serial number, approval/expiry dates, and scanned label images. No IBU or tasting profiles.",
+   "notes": "No registration to search/view. Bulk download is via the registry's search-and-download UI (no clean bulk API) — build a compliant extractor. Public-domain data is resale-safe. Best single source for the US beer universe + ABV + label art."
+  },
+  {
+   "name": "TTB COLA Registry snapshot (data.gov)",
+   "url": "https://catalog.data.gov/dataset/ttb-public-cola-registry-search-and-download-extract-data-about-colas-that-meet-specified-",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "labels/images"
+   ],
+   "coverage": "US COLA extract",
+   "freshness": "STALE — dataset frozen ~2014-02-06; catalog entry last checked 2025-08",
+   "license": "CC0 1.0 (US public domain)",
+   "commercial_use": "yes",
+   "access": "free-open",
+   "quality": "Public-domain but badly outdated; use only as a historical baseline. Prefer the live registry above.",
+   "notes": "Confirms the CC0/public-domain status of COLA data. HTML/interface access."
+  },
+  {
+   "name": "TTB Beer Statistics (Beer Reports)",
+   "url": "https://www.ttb.gov/regulated-commodities/beverage-alcohol/beer/statistics",
+   "type": "reference",
+   "data_provided": [
+    "styles"
+   ],
+   "coverage": "US national/state production, removals, excise volumes",
+   "freshness": "Monthly + yearly releases from Brewer's Report of Operations (TTB F 5130.9 / 5130.26)",
+   "license": "US Government public domain",
+   "commercial_use": "yes",
+   "access": "free-open",
+   "quality": "Aggregate industry stats (production/tax volumes), NOT a per-beer catalog. Good for market-sizing features.",
+   "notes": "Downloadable report tables. Public-domain, resale-safe."
+  },
+  {
+   "name": "beer.db (openbeer / jsuchal)",
+   "url": "https://github.com/openbeer/beers",
+   "type": "github-repo",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles"
+   ],
+   "coverage": "Global sample; breweries with founding year+location, beers with ABV+style, brands, country",
+   "freshness": "Low activity / older data; community fixtures",
+   "license": "Public Domain dedication ('use as you please, no restrictions whatsoever')",
+   "commercial_use": "yes",
+   "access": "free-open",
+   "quality": "Modest coverage but the licensing is the cleanest possible (explicit public-domain). Plain-text CSV fixtures, buildable into SQL.",
+   "notes": "Also see jsuchal/beer.db (https://github.com/jsuchal/beer.db) and site https://openbeer.github.io/. Great resale-safe seed for beer+brewery+style with ABV; no IBU/tasting profiles."
+  },
+  {
+   "name": "BrewDog DIY Dog + Punk API v3 (community)",
+   "url": "https://github.com/alxiw/punkapi",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "styles",
+    "hops/malt",
+    "reviews/ratings"
+   ],
+   "coverage": "415 BrewDog beers (DIY Dog v8); IPA-heavy",
+   "freshness": "DIY Dog v8 (2019 catalogue); API re-hosted after original Punk API retired May 2024",
+   "license": "API code MIT; underlying DIY Dog recipe DATA released free by BrewDog for homebrewers (no explicit resale grant)",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "High-quality, fully-specified beer records: name, tagline, description, ABV, IBU, EBC, SRM, target OG/FG, pH, attenuation, mash/fermentation method, hops+malt+yeast with amounts, food pairings, brewer's tips, image. JSON + PNG.",
+   "notes": "Excellent IPA-specific seed set. MIT covers the code, NOT necessarily the right to resell BrewDog's data — safe for enrichment/prototyping; get written permission before selling the raw corpus. Original punkapi.com (v2) discontinued; source PDF: BrewDog DIY Dog V8 (brewdogmedia.s3...2019+DIY+DOG+-+V8.pdf), also drink.brewdog.com/uk/diy-dog with BeerXML downloads."
+  },
+  {
+   "name": "Kaggle — Brewer's Friend Beer Recipes (jtrofe)",
+   "url": "https://www.kaggle.com/datasets/jtrofe/beer-recipes",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "styles",
+    "hops/malt"
+   ],
+   "coverage": "~75,000 homebrew recipes",
+   "freshness": "Static snapshot (older; ~2018)",
+   "license": "Listed on Kaggle (verify current license field) — data scraped from brewersfriend.com",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "Rich recipe fields: Style, StyleID, Size, OG, FG, ABV, IBU, Color(SRM), BoilSize/Time, Efficiency, Mash thickness, Sugar scale, Brew method, Pitch rate, Primary temp. CSV.",
+   "notes": "Great for style/ABV/IBU/recipe ML. Provenance is scraped homebrew recipes — fine for prototyping; re-verify Kaggle license + Brewer's Friend ToS before reselling derived data."
+  },
+  {
+   "name": "Kaggle — Homebrew Beer Recipes / larger Brewer's Friend set",
+   "url": "https://www.kaggle.com/datasets/angeredsquid/brewers-friend-beer-recipes",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "styles",
+    "hops/malt"
+   ],
+   "coverage": "180k+ homebrew recipes (larger variant)",
+   "freshness": "Static snapshot",
+   "license": "Kaggle-listed (verify); scraped from Brewer's Friend",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "Same style/ABV/IBU/OG/FG recipe schema as above, larger volume.",
+   "notes": "See also Compubeer's 400,000+ BeerXML corpus (https://compubeer.net) for an even larger homebrew set. Scraped provenance — prototyping/ML, not clean resale."
+  },
+  {
+   "name": "Kaggle — Beer Profile and Ratings (ruthgn)",
+   "url": "https://www.kaggle.com/datasets/ruthgn/beer-profile-and-ratings-data-set",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "styles",
+    "reviews/ratings"
+   ],
+   "coverage": "~3,197 beers with tasting-profile vectors",
+   "freshness": "Static (derived from BeerAdvocate)",
+   "license": "Kaggle-listed; DERIVED FROM BeerAdvocate reviews",
+   "commercial_use": "no",
+   "access": "free-open",
+   "quality": "Unique flavor/aroma/mouthfeel numeric profiles + Name, Style, Brewery, ABV, Min/Max IBU, Astringency, Body, Alcohol, Bitter, Sweet, Sour, Salty, Fruits, Hoppy, Spices, Malty, plus review scores.",
+   "notes": "Very useful tasting-profile features BUT upstream is BeerAdvocate (whose data was pulled from SNAP at their request). Treat as research/prototyping; do NOT resell derived tasting data without clearing BeerAdvocate rights."
+  },
+  {
+   "name": "Kaggle — Craft Beers Dataset (nickhould / craft-cans)",
+   "url": "https://www.kaggle.com/datasets/nickhould/craft-cans",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles"
+   ],
+   "coverage": "2,410 US canned craft beers, 510 breweries",
+   "freshness": "Static (~2017, scraped from CraftCans.com which is itself defunct)",
+   "license": "Kaggle-listed (commonly cited as open; verify) — scraped from CraftCans.com",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "Clean small catalog: beers.csv (abv, ibu, id, name, style, brewery_id, ounces) + breweries.csv (name, city, state). Also mirrored at github.com/nickhould/craft-beers-dataset.",
+   "notes": "Popular teaching dataset with real ABV+IBU+style. Small and dated. Scraped provenance — verify before resale."
+  },
+  {
+   "name": "UCSD/McAuley RecSys Datasets — BeerAdvocate & RateBeer reviews",
+   "url": "https://cseweb.ucsd.edu/~jmcauley/datasets.html",
+   "type": "dataset",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "styles"
+   ],
+   "coverage": "BeerAdvocate ~1.5M reviews; RateBeer ~3M reviews (recrawled version extends to Aug 2017); 5 aspects each (appearance, aroma, palate, taste, overall)",
+   "freshness": "Historical (to 2011; recrawl to 2017)",
+   "license": "Academic/research use only; RateBeer (RelBench mirror) explicitly CC BY-NC-SA 4.0 (NON-COMMERCIAL)",
+   "commercial_use": "no",
+   "access": "free-open",
+   "quality": "The canonical large beer-review NLP corpora — excellent for models, radioactive for a sellable product.",
+   "notes": "RESEARCH-ONLY. Flagged per instructions. Do not embed in a commercialized/monetized product."
+  },
+  {
+   "name": "SNAP Stanford — Web data: BeerAdvocate / RateBeer reviews",
+   "url": "https://snap.stanford.edu/data/web-BeerAdvocate.html",
+   "type": "dataset",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "styles"
+   ],
+   "coverage": "BeerAdvocate 1.59M reviews, 33,387 users, 66,051 beers (1998–2011); RateBeer counterpart at snap.stanford.edu/data/web-RateBeer.html",
+   "freshness": "Historical",
+   "license": "Research use; BeerAdvocate download REMOVED at BeerAdvocate's request",
+   "commercial_use": "no",
+   "access": "scrape-required",
+   "quality": "Historically important; now DE-LISTED ('As per request from BeerAdvocate the data is no longer available').",
+   "notes": "Strong signal of the legal risk around review corpora. Non-commercial and no longer distributed. Avoid for a sellable app."
+  },
+  {
+   "name": "data.world — BeerAdvocate (socialmediadata) & beer collection",
+   "url": "https://data.world/datasets/beer",
+   "type": "dataset",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "breweries"
+   ],
+   "coverage": "~38 beer datasets incl. socialmediadata/beeradvocate (BeerAdvocate 1.5M reviews mirror)",
+   "freshness": "Varies; platform SHUTTING DOWN",
+   "license": "Mixed/per-dataset; BeerAdvocate mirror inherits BeerAdvocate restrictions (non-commercial)",
+   "commercial_use": "no",
+   "access": "free-api-key",
+   "quality": "Aggregator; convenient but the community/open-data portal is being retired 2026-07-11.",
+   "notes": "URGENT: data.world Open Data Community closes 2026-07-11 — download anything needed before then. BeerAdvocate mirror is not resale-safe."
+  },
+  {
+   "name": "philipperemy/beer-dataset (BreweryDB scrape)",
+   "url": "https://github.com/philipperemy/beer-dataset",
+   "type": "github-repo",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "labels/images"
+   ],
+   "coverage": "30,280 beers",
+   "freshness": "Scraped late 2019 from the now-defunct BreweryDB",
+   "license": "NONE stated",
+   "commercial_use": "no",
+   "access": "free-open",
+   "quality": "Rich fields (name, style, ABV, IBU, description, brewery, glass, SRM/color, availability, serving temp, label images, timestamps) BUT unlicensed scrape of a shut-down API.",
+   "notes": "BreweryDB shut down 2020. No license = legally unusable for a sellable product despite being technically downloadable. Listed as a WARNING, not a recommendation."
+  },
+  {
+   "name": "Brewers Association — Official Brewery Directory",
+   "url": "https://www.brewersassociation.org/directories/breweries/",
+   "type": "reference",
+   "data_provided": [
+    "breweries",
+    "geo/locations"
+   ],
+   "coverage": "Most comprehensive US + intl brewery list; independent-craft seal flags",
+   "freshness": "Continuously updated by BA staff",
+   "license": "Proprietary; no public bulk download/API; member-benefit data",
+   "commercial_use": "no",
+   "access": "scrape-required",
+   "quality": "Authoritative but locked — web directory only, no license to extract/resell.",
+   "notes": "Industry data sets (production, excise) at brewersassociation.org/statistics-and-data are member-gated. Not a resale-safe source; contact BA for licensing."
+  },
+  {
+   "name": "Zenodo — Beer Ontology",
+   "url": "https://zenodo.org/records/4672337",
+   "type": "reference",
+   "data_provided": [
+    "styles",
+    "hops/malt"
+   ],
+   "coverage": "Ontology for beer + ingredient traceability, process control, style identification",
+   "freshness": "Static (DOI-versioned)",
+   "license": "Zenodo record license (typically CC — verify on record; commonly CC-BY)",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "A schema/ontology, NOT a records dataset — useful for modeling styles/ingredients relationships, not for populating a catalog.",
+   "notes": "Good complement for taxonomy/normalization of styles and ingredients."
+  },
+  {
+   "name": "HuggingFace — trungpq/beer-com-reviews & arize-ai beer_reviews_label_drift",
+   "url": "https://huggingface.co/datasets/trungpq/beer-com-reviews",
+   "type": "dataset",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "styles"
+   ],
+   "coverage": "Beer.com / BeerAdvocate-style review sets (multi-aspect ratings 0–5)",
+   "freshness": "Static",
+   "license": "Per-dataset on HF (verify card); review provenance typically restricted",
+   "commercial_use": "unclear",
+   "access": "free-open",
+   "quality": "Convenient ML-ready review data; arize-ai/beer_reviews_label_drift_neutral is a drift-monitoring slice.",
+   "notes": "Check each dataset card's license; review-derived data carries the same non-commercial risk as the source. Prototyping/ML, not resale."
+  },
+  {
+   "name": "OpenStreetMap via Overpass API + Geofabrik extracts",
+   "url": "https://download.geofabrik.de/",
+   "type": "geospatial",
+   "data_provided": [
+    "breweries",
+    "bars",
+    "pubs",
+    "geo/locations",
+    "styles",
+    "taplists"
+   ],
+   "coverage": "global; craft=brewery ~11,388 objects, microbrewery=yes ~7,958, amenity=pub ~198,654, amenity=bar ~242,091 (taginfo 2026-07-07)",
+   "freshness": "Geofabrik daily; Overpass live but rate-limited (~10k req/day, <1GB/day)",
+   "license": "ODbL 1.0",
+   "access": "free-open",
+   "commercial_use": "yes",
+   "quality": "High for EU/DACH + Anglosphere beer venues; volunteer-tagged so attribute completeness varies",
+   "notes": "Commercial use AND resale permitted, BUT attribution to OpenStreetMap required and SHARE-ALIKE applies to derivative databases you publicly distribute. Internal use triggers no share-alike. Overpass NOT for bulk extraction — use Geofabrik static PBF/shapefiles for that. brewmap.openstreetmap.de renders these tags. Join key: OSM object id."
+  },
+  {
+   "name": "Foursquare Open Source (OS) Places",
+   "url": "https://opensource.foursquare.com/os-places/",
+   "type": "dataset",
+   "data_provided": [
+    "breweries",
+    "bars",
+    "pubs",
+    "geo/locations",
+    "styles"
+   ],
+   "coverage": "global; 100M+ POIs, 1000+ categories",
+   "freshness": "periodic refreshes; ~11GB download (Parquet)",
+   "license": "Apache-2.0",
+   "access": "free-open",
+   "commercial_use": "yes",
+   "quality": "Broad global coverage; category precision and freshness vary vs Overture",
+   "notes": "Fully resellable (Apache-2.0). Available via Hugging Face (foursquare/fsq-os-places), AWS, and Source Cooperative (Fused GeoParquet). Also a single 100M+ PMTiles file (github.com/wipfli/foursquare-os-places-pmtiles). Same Foursquare data also flows into Overture. Join key: fsq_id."
+  },
+  {
+   "name": "Wikidata — brewery entities (SPARQL)",
+   "url": "https://query.wikidata.org/",
+   "type": "reference",
+   "data_provided": [
+    "breweries",
+    "geo/locations",
+    "styles"
+   ],
+   "coverage": "global; ~1,806 breweries (instance/subclass of Q131734) with coordinate location P625",
+   "freshness": "live / continuously edited",
+   "license": "CC0-1.0",
+   "access": "free-api-key",
+   "commercial_use": "yes",
+   "quality": "Small but high-quality structured facts (name, website, founding date, parent company, logo)",
+   "notes": "CC0 = no strings, fully resellable. Too small to be a base layer; ideal zero-obligation ENRICHMENT joined via QID. Query: P31/P279* Q131734 + P625."
+  },
+  {
+   "name": "Geoapify Places API",
+   "url": "https://www.geoapify.com/places-api/",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "bars",
+    "pubs",
+    "geo/locations",
+    "styles"
+   ],
+   "coverage": "global; 800+ categories incl. catering.pub / catering.bar; built on OSM/open data",
+   "freshness": "derived from OSM (near-OSM freshness)",
+   "license": "permissive commercial (provider terms allow storing/caching results, incl. commercially)",
+   "access": "free-api-key",
+   "commercial_use": "yes",
+   "quality": "Convenient OSM-derived API; ultimately OSM lineage so ODbL attribution prudence advised",
+   "notes": "Free plan 3,000 credits/day (20 places = 1 credit), commercial use allowed within quota; explicitly permits storing/caching derived place data unlike Google. Useful as a managed query layer over OSM without self-hosting Overpass. Because data is OSM-derived, retain OSM attribution to be safe."
+  },
+  {
+   "name": "Apple MapKit — MKLocalPointsOfInterestRequest (.brewery)",
+   "url": "https://developer.apple.com/documentation/mapkit/mklocalpointsofinterestrequest",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "bars",
+    "pubs",
+    "geo/locations"
+   ],
+   "coverage": "global (Apple Maps POI); native to the target platform",
+   "freshness": "live runtime",
+   "license": "Apple Developer Program License Agreement / Apple Maps Terms of Use",
+   "access": "free-api-key",
+   "commercial_use": "no",
+   "quality": "High native quality and best UX fit for an Apple Maps feature — but unusable as stored data",
+   "notes": "RUNTIME-ONLY. MKPointOfInterestCategory.brewery exists (iOS 13+); iOS 14+ POI-only search via init(request:). ToS FORBID caching/prefetch/storage beyond temporary perf, FORBID any secondary/derived database, FORBID bulk download/scraping/model training, and FORBID using data to build a competing map service. Use solely as an in-app live fallback; it can NEVER feed the monetized catalog."
+  },
+  {
+   "name": "Google Places API",
+   "url": "https://developers.google.com/maps/documentation/places/web-service/policies",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "bars",
+    "pubs",
+    "geo/locations",
+    "reviews/ratings"
+   ],
+   "coverage": "global; very high POI quality",
+   "freshness": "live",
+   "license": "Google Maps Platform Service Specific Terms",
+   "access": "paid",
+   "commercial_use": "no",
+   "quality": "High data quality but legally incompatible with the use case",
+   "notes": "DISQUALIFIED for a stored/resellable Apple Maps dataset: only place_id may be stored indefinitely; other content cannot be cached/stored; lat/lng cacheable max 30 days; and Places content must NOT be used with a non-Google map (fatal for an Apple Maps feature). No resale of derived data."
+  },
+  {
+   "name": "BreweryDB API",
+   "url": "https://www.brewerydb.com/developers",
+   "type": "api",
+   "data_provided": [
+    "breweries",
+    "styles"
+   ],
+   "coverage": "formerly global",
+   "freshness": "DEAD",
+   "license": "n/a",
+   "access": "scrape-required",
+   "commercial_use": "no",
+   "quality": "Defunct",
+   "notes": "Public API no longer available (shut down ~2020). Superseded by Open Brewery DB. Do not build on it."
+  },
+  {
+   "name": "RateBeer",
+   "url": "https://www.ratebeer.com/",
+   "type": "reference",
+   "data_provided": [
+    "reviews/ratings",
+    "breweries",
+    "styles"
+   ],
+   "coverage": "formerly global",
+   "freshness": "DEAD — ceased operations Feb 1, 2025",
+   "license": "proprietary ToS (scraping prohibited)",
+   "access": "scrape-required",
+   "commercial_use": "no",
+   "quality": "Defunct",
+   "notes": "Site ceased operations Feb 1 2025 (per BeerAdvocate community). ToS forbade crawling/scraping. Non-commercial, dead — avoid."
+  },
+  {
+   "name": "Untappd (for Business API)",
+   "url": "https://docs.business.untappd.com/",
+   "type": "api",
+   "data_provided": [
+    "reviews/ratings",
+    "beers",
+    "menus/taplists",
+    "breweries"
+   ],
+   "coverage": "global venues/menus",
+   "freshness": "live",
+   "license": "Untappd API Terms of Use",
+   "access": "free-api-key",
+   "commercial_use": "no",
+   "quality": "Rich taplist/menu + rating data, but non-resellable",
+   "notes": "Business Premium subscribers only. ToS explicitly: 'will not sell, rent, or trade any data acquired from the Untappd API'; no bulk marketing. Cannot feed a resold dataset. Flag as ToS-restricted."
+  },
+  {
+   "name": "BeerAdvocate",
+   "url": "https://www.beeradvocate.com/terms/",
+   "type": "reference",
+   "data_provided": [
+    "reviews/ratings",
+    "breweries",
+    "styles"
+   ],
+   "coverage": "global reviews",
+   "freshness": "live site",
+   "license": "proprietary ToS",
+   "access": "scrape-required",
+   "commercial_use": "no",
+   "quality": "Large review corpus but legally off-limits",
+   "notes": "ToS prohibits scraping and any unauthorized reuse of content. Research/editorial only — do NOT scrape or commercialize. Flag as scrape-forbidden / non-commercial."
+  },
+  {
+   "name": "BJCP Style Guidelines (official) + usage FAQ",
+   "url": "https://www.bjcp.org/faq/i-want-to-use-your-style-guidelines-can-i/",
+   "type": "reference",
+   "data_provided": [
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "© BJCP, all rights reserved; permission needed for reuse",
+   "commercial_use": "no",
+   "coverage": "global; ~100+ beer styles (2021), plus mead/cider",
+   "freshness": "2021 beer guidelines current in 2026 (cider updated 2025)",
+   "quality": "authoritative, canonical homebrew/competition taxonomy",
+   "notes": "FLAG: full descriptive prose is non-commercial ('resulting version must be provided for free if used in an app'). BUT explicitly allowed for reuse: 'Our naming and numbering system, the style parameters, and the overall impression section can be used for other purposes.' => Ingest numbers/names/ABV-IBU-SRM ranges only; write your own descriptions. Do not host full text."
+  },
+  {
+   "name": "beerjson/bjcp-json (BJCP styles as JSON in BeerJSON format)",
+   "url": "https://github.com/beerjson/bjcp-json",
+   "type": "github-repo",
+   "data_provided": [
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "MIT (repo code) — underlying BJCP/BA prose still BJCP/BA-copyright",
+   "commercial_use": "unclear",
+   "coverage": "BJCP 2015, BJCP 2021, BA 2017",
+   "freshness": "BJCP 2021 present",
+   "quality": "clean machine-readable style data",
+   "notes": "Convenient JSON of styles, but the descriptive TEXT inherits BJCP/BA non-commercial constraints. Use structural fields (name, number, stats); avoid shipping full prose in a paid product."
+  },
+  {
+   "name": "BeerJSON specification (interchange schema)",
+   "url": "https://github.com/beerjson/beerjson",
+   "type": "github-repo",
+   "data_provided": [
+    "styles",
+    "hops/malt/yeast"
+   ],
+   "access": "free-open",
+   "license": "MIT",
+   "commercial_use": "yes",
+   "coverage": "global schema standard; docs at beerjson.github.io/beerjson",
+   "freshness": "BeerJSON 1.0",
+   "quality": "the de-facto modern brewing data interchange format (successor to BeerXML)",
+   "notes": "Use as your canonical schema for styles + ingredient objects (fermentable/hop/culture/misc types). MIT = fully commercial. Schema only — you supply the data."
+  },
+  {
+   "name": "Brewers Association Beer Style Guidelines",
+   "url": "https://www.brewersassociation.org/educational-publications/beer-styles/",
+   "type": "reference",
+   "data_provided": [
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "© Brewers Association; 'used with permission' attribution required",
+   "commercial_use": "no",
+   "coverage": "global; ~180+ competition styles; updated yearly (2026 PDF live)",
+   "freshness": "2026 guidelines (updated 12/31/2025); annual updates",
+   "quality": "authoritative, GABF/World Beer Cup taxonomy",
+   "notes": "HARD FLAG: 'Permission ... is not granted when the end use is for a cost (that is, not provided free).' Cannot ship in a paid/sellable product. Free-only, attribution required. 2026 PDF: cdn.brewersassociation.org/wp-content/uploads/2025/12/19140641/2026_BA_Beer_Style_Guidelines.pdf"
+  },
+  {
+   "name": "lrdodge/bjcp-style-data (BJCP 2021 in JSON/XML/YAML)",
+   "url": "https://github.com/lrdodge/bjcp-style-data",
+   "type": "github-repo",
+   "data_provided": [
+    "styles"
+   ],
+   "access": "free-open",
+   "license": "repo tooling permissive; data = 'Copyright BJCP, used by permission'",
+   "commercial_use": "no",
+   "coverage": "BJCP 2021 beer styles",
+   "freshness": "2021",
+   "quality": "multi-format, easy to ingest",
+   "notes": "Same BJCP prose constraint. Good for style structure; not for reselling full descriptions."
+  },
+  {
+   "name": "Wikidata (beer & brewery entities)",
+   "url": "https://www.wikidata.org/wiki/Wikidata:Licensing",
+   "type": "reference",
+   "data_provided": [
+    "breweries",
+    "styles",
+    "geo/locations",
+    "canonical entity IDs",
+    "cross-links"
+   ],
+   "access": "free-open",
+   "license": "CC0 1.0 (public domain, all structured data)",
+   "commercial_use": "yes",
+   "coverage": "global; brewery items, beer brands (Q15075508 'beer brand'), styles; tens of thousands of relevant entities",
+   "freshness": "live, continuously updated; SPARQL endpoint + full dumps",
+   "quality": "canonical, cross-referenced; carries external IDs (Untappd, RateBeer, BeerAdvocate, Wikipedia, official website, logo image)",
+   "notes": "BEST license possible (CC0 — royalty-free, irrevocable, commercial OK, no attribution required). Use as the canonical ID spine and to cross-link to other sources. Query via WDQS SPARQL; bulk via Wikidata dumps."
+  },
+  {
+   "name": "DBpedia (dbo:Beer / brewery ontology)",
+   "url": "http://mappings.dbpedia.org/index.php/OntologyClass:Beer",
+   "type": "reference",
+   "data_provided": [
+    "breweries",
+    "styles",
+    "abstracts/prose"
+   ],
+   "access": "free-open",
+   "license": "CC-BY-SA 3.0",
+   "commercial_use": "yes",
+   "coverage": "global; Wikipedia-derived beer/brewery entities + abstracts",
+   "freshness": "monthly releases via DBpedia Databus",
+   "quality": "good for descriptive abstracts and infobox facts",
+   "notes": "CC-BY-SA = attribution + SHARE-ALIKE (viral). Wikidata (CC0) covers the same entities with a cleaner license — prefer Wikidata; use DBpedia only if you want CC-BY-SA prose abstracts and accept share-alike."
+  },
+  {
+   "name": "sboulema/BrewDB (SQLite brewing ingredients)",
+   "url": "https://github.com/sboulema/BrewDB",
+   "type": "dataset",
+   "data_provided": [
+    "hops/malt reference",
+    "yeast strains",
+    "fermentables"
+   ],
+   "access": "free-open",
+   "license": "CC-BY-SA-4.0",
+   "commercial_use": "yes",
+   "coverage": "hops (usage/aroma/subs/aliases), malts (maltster/EBC/yield/protein/diastatic power), yeast (lab/temp/attenuation/flocculation/alcohol tolerance)",
+   "freshness": "community-maintained",
+   "quality": "good structured multi-ingredient coverage; SQLite",
+   "notes": "FLAG: CC-BY-SA-4.0 share-alike is VIRAL — derivatives must stay CC-BY-SA. Data also compiled from producer sheets. Prefer MIT HopDatabase for hops; if using BrewDB for malt/yeast, isolate it in a share-alike layer or re-derive facts."
+  },
+  {
+   "name": "Open Beer Database dumps (brewdega mirror)",
+   "url": "https://github.com/brewdega/open-beer-database-dumps",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "styles",
+    "categories"
+   ],
+   "access": "free-open",
+   "license": "ODbL + Database Contents License (Open Data Commons)",
+   "commercial_use": "yes",
+   "coverage": "~5,900 beers / ~1,400 breweries, category+style tables (legacy 2011 vintage)",
+   "freshness": "STALE (~2011); original openbeerdb.com dead ('coming soon')",
+   "quality": "outdated for current beers; category/style lists still useful",
+   "notes": "FLAG: ODbL share-alike is viral on the database. Fine for seeding style/category taxonomy in a separable attributed layer; do not treat as current beer data. Original site openbeerdb.com is defunct."
+  },
+  {
+   "name": "Open Food Facts (barcode/UPC → product)",
+   "url": "https://world.openfoodfacts.org/data",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "labels/images",
+    "geo/locations",
+    "menus/product attrs"
+   ],
+   "access": "free-open",
+   "license": "database: ODbL; contents: DbCL; images: CC-BY-SA",
+   "commercial_use": "yes",
+   "coverage": "~36,900 alcoholic-beverage products (13,606 with nutrition), global; barcodes (EAN/UPC)",
+   "freshness": "live crowd-sourced; daily dumps + API",
+   "quality": "variable/crowd-sourced; real barcodes; some label photos",
+   "notes": "FLAG: ODbL SHARE-ALIKE (viral) on the DB and CC-BY-SA on images — a proprietary sellable DB derived from it must stay open/attributed. Usable if you keep OFF-derived data in a separable share-alike module. Label PHOTOS are user-uploaded and depict copyrighted/trademarked labels — CC-BY-SA covers the photo, NOT rights in the brewery's artwork/marks."
+  },
+  {
+   "name": "U.P.C. Data 4 Beverage Alcohol",
+   "url": "https://upcdata4spirits.com/",
+   "type": "dataset",
+   "data_provided": [
+    "beers",
+    "barcodes/UPC",
+    "product attrs (ABV, size, brand, container)"
+   ],
+   "access": "paid",
+   "license": "proprietary database license (commercial, no share-alike)",
+   "commercial_use": "yes",
+   "coverage": "150,000+ beer/wine/spirits records, manufacturer-sourced; UPC+EAN indexed",
+   "freshness": "monthly/quarterly updates",
+   "quality": "high — attributed, manufacturer-sourced; fields: UPC, manufacturer, brand, item, container, size, country, ABV, multipack, nutrition/allergens",
+   "notes": "Best CLEAN COMMERCIAL barcode→beer source: buy under a database license, no viral share-alike, resale terms negotiable. Contact-for-pricing (formats: ASCII/Excel/Access). This is the recommended paid path vs viral-licensed OFF."
+  },
+  {
+   "name": "Untappd API",
+   "url": "https://untappd.com/terms/api",
+   "type": "api",
+   "data_provided": [
+    "beers",
+    "breweries",
+    "reviews/ratings",
+    "checkins",
+    "labels/images"
+   ],
+   "access": "free-api-key",
+   "license": "restrictive ToS",
+   "commercial_use": "no",
+   "coverage": "very large global beer + checkin dataset",
+   "freshness": "live",
+   "quality": "richest consumer beer/rating data",
+   "notes": "HARD FLAG — DO NOT USE for a monetized/sold product. ToS: 'will not sell, rent, or trade any data acquired from the Untappd API'; 'You cannot use the Untappd data to build your own beer database'; cache must be deleted every 24h; no mining/analytics. Fatal for resale. (Untappd for Business is a separate paid product, not a data-licensing channel.)"
+  },
+  {
+   "name": "Brandfetch Logo/Brand API",
+   "url": "https://docs.brandfetch.com/logo-api/overview",
+   "type": "api",
+   "data_provided": [
+    "labels/logos",
+    "brand colors/fonts"
+   ],
+   "access": "free-api-key",
+   "license": "limited, non-transferable, non-sublicensable; 30-day cache",
+   "commercial_use": "no",
+   "coverage": "millions of company/brand logos incl. many breweries; free to 500k req/mo",
+   "freshness": "live, brand-verified",
+   "quality": "high, brand-verified logos",
+   "notes": "FLAG for a SOLD product: license is non-transferable/non-sublicensable and cached content must be refreshed every 30 days; logos remain third-party property. You cannot bake logos into a resold/transferred dataset. Fine as a live runtime lookup in a hosted app you operate; not for data resale."
+  },
+  {
+   "name": "Logo.dev Logo API",
+   "url": "https://www.logo.dev/pricing",
+   "type": "api",
+   "data_provided": [
+    "labels/logos"
+   ],
+   "access": "free-api-key",
+   "license": "attribution on free tier; self-host/cache on Pro+; no rights in underlying marks",
+   "commercial_use": "yes",
+   "coverage": "broad company/brand logos; free 500k req/mo",
+   "freshness": "live",
+   "quality": "good developer-focused logo API",
+   "notes": "Commercial use OK (paid tiers remove attribution/allow caching: Startup $280/yr, Pro $1,260/yr self-host/cache, Enterprise $2,800/yr custom legal). BUT like Brandfetch it grants no rights in the brewery's actual trademark/logo artwork — those remain the brewery's IP. Runtime logo display, not label-art resale."
+  },
+  {
+   "name": "Wikimedia Commons (beer labels / logos / imagery)",
+   "url": "https://commons.wikimedia.org/wiki/Commons:Licensing",
+   "type": "reference",
+   "data_provided": [
+    "labels/images",
+    "logos"
+   ],
+   "access": "free-open",
+   "license": "per-file: CC0/CC-BY/CC-BY-SA/PD-textlogo/threshold-of-originality",
+   "commercial_use": "unclear",
+   "coverage": "scattered beer labels, brewery logos, glassware/style imagery",
+   "freshness": "varies",
+   "quality": "inconsistent; must verify each file",
+   "notes": "FLAG: Commons only accepts freely-licensed/PD media and rejects fair-use, but the LABEL ARTWORK itself is copyright+trademark of the brewery. Only PD-textlogo / below-threshold-of-originality items are safe to reuse; many uploaded labels are actually copyvios. Never bulk-scrape labels. Use per-file, license-verified, for style/generic imagery or confirmed PD marks."
+  },
+  {
+   "name": "Beer Maverick (hops & yeast reference)",
+   "url": "https://beermaverick.com/hops/",
+   "type": "reference",
+   "data_provided": [
+    "hops/malt reference",
+    "yeast strains",
+    "styles"
+   ],
+   "access": "scrape-required",
+   "license": "proprietary; API internal-only",
+   "commercial_use": "no",
+   "coverage": "300+ hops, largest online yeast DB; substitutes, aroma, style pairings",
+   "freshness": "actively maintained",
+   "quality": "best-in-class hop/yeast reference detail",
+   "notes": "FLAG: no public/licensable API (API is internal-use only); content proprietary. Reference-only; do not scrape for resale. Use MIT HopDatabase instead for a commercial product."
+  },
+  {
+   "name": "UPCitemdb / Go-UPC / Barcode Lookup (general barcode APIs)",
+   "url": "https://www.upcitemdb.com/",
+   "type": "api",
+   "data_provided": [
+    "barcodes/UPC",
+    "beers (incidental)"
+   ],
+   "access": "paid",
+   "license": "proprietary paid tiers; redistribution limited by ToS",
+   "commercial_use": "yes",
+   "coverage": "700M+ barcodes (UPCitemdb); beer coverage incidental/uneven",
+   "freshness": "daily updates",
+   "quality": "broad but shallow for beer specifically",
+   "notes": "Usable as a paid fallback UPC lookup, but beer attribution is thin and their ToS limit bulk redistribution/resale of the underlying DB. For a beer-specific resellable dataset, U.P.C. Data 4 Beverage Alcohol is the stronger buy."
+  }
+ ],
+ "verifications": [
+  null,
+  null
+ ],
+ "synthesis": null
+}
