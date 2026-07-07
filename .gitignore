@@ -10,3 +10,8 @@ xcuserdata/
 build/
 DerivedData/
 .supabase/
+
+# XcodeGen output (regenerate with: cd app && xcodegen generate)
+app/*.xcodeproj/
+app/*.xcworkspace/
+.build/

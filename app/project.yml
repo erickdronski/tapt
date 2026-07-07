@@ -1,0 +1,38 @@
+name: Tapt
+options:
+  bundleIdPrefix: app.tapt
+  deploymentTarget:
+    iOS: "18.0"
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.0.0"
+targets:
+  Tapt:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources: [Tapt]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.tapt.tapt
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        DEVELOPMENT_TEAM: J9DMDH4S58
+        TARGETED_DEVICE_FAMILY: 1
+    info:
+      path: Tapt/Info.plist
+      properties:
+        CFBundleDisplayName: Tapt
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: "Tapt uses the camera to scan beer labels, barcodes, and tap lists."
+        NSLocationWhenInUseUsageDescription: "Tapt uses your location to show what is good on tap near you."
+    entitlements:
+      path: Tapt/Tapt.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
+    dependencies:
+      - package: Supabase
+        product: Supabase
