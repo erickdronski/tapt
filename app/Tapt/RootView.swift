@@ -12,6 +12,8 @@ struct RootView: View {
                 .tabItem { Label("On Tap", systemImage: "mappin.and.ellipse") }
             GamesView()
                 .tabItem { Label("Games", systemImage: "die.face.5") }
+            ProfileView()
+                .tabItem { Label("You", systemImage: "person.crop.circle") }
         }
     }
 }
