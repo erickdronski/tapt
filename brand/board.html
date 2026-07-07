@@ -1,0 +1,379 @@
+<style>
+  :root{
+    --malt:#1A1206; --foam:#FBF6EC; --gold:#F2A900; --hop:#3F8F5B; --copper:#B4531F;
+    /* semantic tokens - LIGHT (default) */
+    --bg:#FBF6EC; --surface:#FFFCF4; --surface-2:#F1E7D3;
+    --text:#1A1206; --muted:#6E6046; --line:rgba(26,18,6,.14);
+    --accent:#F2A900; --accent-ink:#1A1206; --c-hop:#3F8F5B; --c-copper:#B4531F;
+    --shadow:0 20px 50px rgba(26,18,6,.14);
+    --font-display:"Clash Display","Söhne Breit",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+    --font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --maxw:1120px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#140E05; --surface:#20160B; --surface-2:#2A1E0F;
+      --text:#FBF6EC; --muted:#B7A88B; --line:rgba(251,246,236,.14);
+      --accent:#F2A900; --accent-ink:#1A1206; --c-hop:#5BAE78; --c-copper:#D8763E;
+      --shadow:0 24px 60px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#140E05; --surface:#20160B; --surface-2:#2A1E0F;
+    --text:#FBF6EC; --muted:#B7A88B; --line:rgba(251,246,236,.14);
+    --accent:#F2A900; --accent-ink:#1A1206; --c-hop:#5BAE78; --c-copper:#D8763E;
+    --shadow:0 24px 60px rgba(0,0,0,.5);
+  }
+  :root[data-theme="light"]{
+    --bg:#FBF6EC; --surface:#FFFCF4; --surface-2:#F1E7D3;
+    --text:#1A1206; --muted:#6E6046; --line:rgba(26,18,6,.14);
+    --accent:#F2A900; --accent-ink:#1A1206; --c-hop:#3F8F5B; --c-copper:#B4531F;
+    --shadow:0 20px 50px rgba(26,18,6,.14);
+  }
+
+  *{box-sizing:border-box;}
+  .page{
+    font-family:var(--font-body); color:var(--text); background:var(--bg);
+    line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    position:relative;
+  }
+  /* subtle grain, fixed, non-interactive */
+  .grain{position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode:soft-light;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+  .section{padding:88px 0; border-top:1px solid var(--line);}
+  h1,h2,h3{font-family:var(--font-display); font-weight:800; letter-spacing:-.02em; text-wrap:balance; margin:0;}
+  p{margin:0; max-width:64ch;}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted);}
+  .lede{font-size:19px; color:var(--muted);}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  /* ---- wordmark ---- */
+  .wordmark{font-family:var(--font-display); font-weight:800; letter-spacing:-.045em; line-height:.9; display:inline-flex; align-items:baseline;}
+  .wordmark .drop{position:relative;}
+  .wordmark .drop::after{content:""; position:absolute; top:-.34em; left:50%; transform:translateX(-50%);
+    width:.16em; height:.16em; border-radius:50% 50% 50% 50%/60% 60% 40% 40%; background:var(--accent);}
+
+  /* ---- hero ---- */
+  .hero{position:relative; z-index:1; padding:118px 0 84px;}
+  .hero-grid{display:grid; grid-template-columns:1.25fr .75fr; gap:48px; align-items:center;}
+  .hero h1{font-size:clamp(64px,12vw,148px); line-height:.86;}
+  .hero .tagline{margin-top:22px; font-size:20px; max-width:34ch; color:var(--muted);}
+  .badge{display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border:1px solid var(--line);
+    border-radius:999px; font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+  .badge b{color:var(--accent); font-weight:700;}
+
+  /* the pour glass */
+  .glass-stage{display:flex; justify-content:center;}
+  .glass{position:relative; width:172px; height:236px; border-radius:14px 14px 26px 26px;
+    background:var(--surface); border:2px solid var(--line); overflow:hidden; box-shadow:var(--shadow);}
+  .beer{position:absolute; left:0; right:0; bottom:0; height:0;
+    background:linear-gradient(180deg,#FFC64D,var(--accent) 40%,#D98A00);}
+  .foam{position:absolute; left:0; right:0; height:26px; background:#FFF7E6; border-radius:40% 40% 12% 12%/60%;
+    top:-13px; box-shadow:0 2px 0 rgba(255,255,255,.5) inset;}
+  @media (prefers-reduced-motion: no-preference){
+    .beer{animation:pour 1.6s cubic-bezier(.22,1,.36,1) .25s forwards;}
+    .beer::after{content:""; position:absolute; inset:0; opacity:.3;
+      background:radial-gradient(6px 6px at 30% 20%,rgba(255,255,255,.9),transparent),
+                 radial-gradient(5px 5px at 62% 40%,rgba(255,255,255,.7),transparent),
+                 radial-gradient(4px 4px at 46% 62%,rgba(255,255,255,.6),transparent);
+      animation:rise 3.2s linear .8s infinite;}
+  }
+  @media (prefers-reduced-motion: reduce){ .beer{height:78%;} }
+  @keyframes pour{from{height:0} to{height:78%}}
+  @keyframes rise{from{transform:translateY(30px);opacity:0} 20%{opacity:.5} to{transform:translateY(-120px);opacity:0}}
+
+  /* ---- palette ---- */
+  .grid{display:grid; gap:18px;}
+  .swatches{grid-template-columns:repeat(3,1fr);}
+  .swatch{border-radius:16px; overflow:hidden; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow);}
+  .chip{height:120px; display:flex; align-items:flex-end; padding:14px;}
+  .chip .hx{font-family:var(--font-mono); font-size:12.5px; padding:4px 8px; border-radius:7px; background:rgba(255,255,255,.82); color:#1A1206;}
+  .swatch .meta{padding:14px 16px;}
+  .swatch .nm{font-weight:700; font-family:var(--font-display); letter-spacing:-.01em;}
+  .swatch .use{color:var(--muted); font-size:13.5px; margin-top:2px;}
+
+  /* ---- type specimen ---- */
+  .type-card{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:34px; box-shadow:var(--shadow);}
+  .type-row{display:flex; align-items:baseline; justify-content:space-between; gap:18px; padding:16px 0; border-top:1px solid var(--line); flex-wrap:wrap;}
+  .type-row:first-of-type{border-top:0;}
+  .type-row .label{font-family:var(--font-mono); font-size:12px; color:var(--muted); letter-spacing:.08em; white-space:nowrap;}
+  .stat-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:8px;}
+  .stat{font-family:var(--font-mono); font-variant-numeric:tabular-nums; font-size:14px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; color:var(--muted);}
+  .stat b{color:var(--text);}
+
+  /* ---- icons ---- */
+  .icons{grid-template-columns:repeat(6,1fr);}
+  .ic{display:flex; flex-direction:column; align-items:center; gap:10px; padding:20px 8px; border:1px solid var(--line); border-radius:16px; background:var(--surface);}
+  .ic svg{width:30px; height:30px; stroke:var(--text); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .ic .fill{fill:var(--accent); stroke:none;}
+  .ic span{font-size:12.5px; color:var(--muted); font-family:var(--font-mono); letter-spacing:.02em;}
+
+  /* ---- motion demos ---- */
+  .demos{grid-template-columns:repeat(3,1fr);}
+  .demo{background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:24px; box-shadow:var(--shadow); text-align:center;}
+  .demo h3{font-size:17px; margin-bottom:4px;}
+  .demo p{font-size:13px; color:var(--muted); margin:0 auto;}
+  .demo .stage{height:120px; display:flex; align-items:center; justify-content:center; margin-bottom:14px;}
+  /* score ring (pour-fill) */
+  .ring{--v:87; width:96px; height:96px; border-radius:50%; display:grid; place-items:center;
+    background:conic-gradient(var(--accent) calc(var(--v)*1%), var(--surface-2) 0); position:relative; cursor:pointer;}
+  .ring::before{content:""; position:absolute; inset:9px; border-radius:50%; background:var(--surface); border:1px solid var(--line);}
+  .ring b{position:relative; font-family:var(--font-mono); font-weight:700; font-size:24px; font-variant-numeric:tabular-nums;}
+  @media (prefers-reduced-motion: no-preference){ .ring{transition:none;} }
+  /* tap ripple */
+  .tapbtn{position:relative; overflow:hidden; border:0; cursor:pointer; padding:15px 26px; border-radius:14px;
+    background:var(--accent); color:var(--accent-ink); font-family:var(--font-display); font-weight:800; font-size:16px; letter-spacing:-.01em;}
+  .tapbtn .rip{position:absolute; border-radius:50%; transform:translate(-50%,-50%) scale(0); background:rgba(26,18,6,.28); pointer-events:none;}
+  @media (prefers-reduced-motion: no-preference){ .tapbtn .rip{animation:rip .6s ease-out forwards;} }
+  @keyframes rip{to{transform:translate(-50%,-50%) scale(9); opacity:0;}}
+  /* stamp */
+  .stamp{width:92px; height:92px; border-radius:50%; border:3px solid var(--c-copper); color:var(--c-copper);
+    display:grid; place-items:center; font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:.1em; cursor:pointer; text-align:center;}
+  .stamp.hit{animation:stamp .45s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes stamp{0%{transform:scale(1.5) rotate(-8deg);opacity:0} 60%{transform:scale(.92) rotate(-8deg);opacity:1} 100%{transform:scale(1) rotate(-8deg)}}
+
+  /* ---- app screens ---- */
+  .phones{grid-template-columns:repeat(3,1fr); align-items:start;}
+  .phone{background:var(--surface); border:1px solid var(--line); border-radius:34px; padding:12px; box-shadow:var(--shadow);}
+  .screen{background:var(--bg); border-radius:24px; overflow:hidden; height:420px; position:relative; border:1px solid var(--line);}
+  .notch{position:absolute; top:8px; left:50%; transform:translateX(-50%); width:64px; height:6px; border-radius:99px; background:var(--line); z-index:3;}
+  .scr-pad{padding:26px 16px 16px;}
+  .scr-cap{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+  .scr-h{font-family:var(--font-display); font-weight:800; letter-spacing:-.02em; font-size:22px; margin-top:6px;}
+  .viewf{position:absolute; inset:44px 26px auto 26px; height:150px; border-radius:16px; border:2px solid var(--accent);}
+  .viewf::before,.viewf::after{content:""; position:absolute; width:20px; height:20px; border:3px solid var(--accent);}
+  .viewf::before{top:-2px; left:-2px; border-right:0; border-bottom:0; border-radius:8px 0 0 0;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:12px;}
+  .pin{position:absolute; width:26px; height:26px; border-radius:50% 50% 50% 0; background:var(--accent); transform:rotate(-45deg); box-shadow:var(--shadow);}
+  .pin.b{background:var(--c-hop);} .pin.c{background:var(--c-copper);}
+  .heat{position:absolute; border-radius:50%; background:radial-gradient(closest-side,rgba(242,169,0,.55),transparent);}
+
+  /* ---- cheers marquee ---- */
+  .marquee{overflow:hidden; border-block:1px solid var(--line); background:var(--surface); padding:16px 0;}
+  .marq-track{display:flex; gap:44px; width:max-content; white-space:nowrap;}
+  .marq-track span{font-family:var(--font-display); font-weight:800; font-size:22px; letter-spacing:-.01em; color:var(--muted);}
+  .marq-track span b{color:var(--accent);}
+  @media (prefers-reduced-motion: no-preference){ .marq-track{animation:marq 26s linear infinite;} }
+  @keyframes marq{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+  .voice-grid{grid-template-columns:1fr 1fr; gap:16px;}
+  .quote{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:12px; padding:18px 20px;}
+  .quote .k{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px;}
+  .quote p{font-size:17px;}
+
+  .foot{padding:64px 0; text-align:center; border-top:1px solid var(--line);}
+  .foot .wordmark{font-size:56px;}
+  .foot p{margin:14px auto 0; color:var(--muted); font-size:14px;}
+
+  @media (max-width:900px){
+    .hero-grid{grid-template-columns:1fr; gap:36px;}
+    .swatches,.icons,.demos,.phones,.voice-grid{grid-template-columns:1fr 1fr;}
+    .hero{padding:80px 0 56px;}
+  }
+  @media (max-width:560px){
+    .swatches,.icons,.demos,.phones,.voice-grid{grid-template-columns:1fr;}
+    .icons{grid-template-columns:1fr 1fr;}
+    .section{padding:60px 0;}
+  }
+</style>
+
+<div class="page">
+  <div class="grain"></div>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="badge"><b>&#9679;</b> Positioning &middot; THE beer app</span>
+        <h1 class="wordmark" style="margin-top:20px">Tap<span class="drop">t</span></h1>
+        <p class="tagline">A free, global, scan-first beer passport. Rate what you drink, keep your Cellar, and find what is good on tap near you.</p>
+      </div>
+      <div class="glass-stage" aria-hidden="true">
+        <div class="glass"><div class="beer"><div class="foam"></div></div></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CHEERS MOTIF -->
+  <div class="marquee" aria-label="Cheers around the world">
+    <div class="marq-track">
+      <span>Prost <b>&middot;</b> Salud <b>&middot;</b> Kanpai <b>&middot;</b> Sk&aring;l <b>&middot;</b> Sa&uacute;de <b>&middot;</b> Na zdrowie <b>&middot;</b> Sl&agrave;inte <b>&middot;</b> &#20094;&#26479; <b>&middot;</b> Cheers <b>&middot;</b> &#928;&#961;&#972;&#963;&#953;&#964; <b>&middot;</b> Salut <b>&middot;</b>&nbsp;</span>
+      <span>Prost <b>&middot;</b> Salud <b>&middot;</b> Kanpai <b>&middot;</b> Sk&aring;l <b>&middot;</b> Sa&uacute;de <b>&middot;</b> Na zdrowie <b>&middot;</b> Sl&agrave;inte <b>&middot;</b> &#20094;&#26479; <b>&middot;</b> Cheers <b>&middot;</b> &#928;&#961;&#972;&#963;&#953;&#964; <b>&middot;</b> Salut <b>&middot;</b>&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- PALETTE -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">Color</span>
+      <h2 style="font-size:34px; margin:10px 0 6px">Malt and Foam, with one gold pour</h2>
+      <p class="lede">Warm neutrals biased toward gold. One accent, locked everywhere. Never a cool grey, never pure black.</p>
+      <div class="grid swatches" style="margin-top:28px">
+        <div class="swatch"><div class="chip" style="background:#1A1206"><span class="hx">#1A1206</span></div><div class="meta"><div class="nm">Malt</div><div class="use">Text, dark surfaces, the roasty backdrop</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#FBF6EC"><span class="hx">#FBF6EC</span></div><div class="meta"><div class="nm">Foam</div><div class="use">Warm off-white ground, the head on a pour</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#F2A900"><span class="hx">#F2A900</span></div><div class="meta"><div class="nm">Pour Gold</div><div class="use">The signature. CTAs, active, the fill</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#3F8F5B"><span class="hx">#3F8F5B</span></div><div class="meta"><div class="nm">Hop</div><div class="use">The No / Low lens, fresh, success</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#B4531F"><span class="hx">#B4531F</span></div><div class="meta"><div class="nm">Copper</div><div class="use">Amber and dark-style accent, depth</div></div></div>
+        <div class="swatch"><div class="chip" style="background:#EFE7D6"><span class="hx">#EFE7D6</span></div><div class="meta"><div class="nm">Haze</div><div class="use">Warm neutral surface, chips, dividers</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">Typography</span>
+      <h2 style="font-size:34px; margin:10px 0 22px">A confident display, a calm body, honest numerals</h2>
+      <div class="type-card">
+        <div class="type-row"><div style="font-family:var(--font-display); font-weight:800; letter-spacing:-.03em; font-size:44px">Crushable, curious, worldly</div><div class="label">Display &middot; Clash Display 800</div></div>
+        <div class="type-row"><div style="font-size:18px; max-width:46ch; color:var(--muted)">The knowledgeable friend at the bar who is genuinely thrilled you are curious. Never the snob quizzing you.</div><div class="label">Body &middot; SF Pro / Inter</div></div>
+        <div class="type-row">
+          <div class="stat-row">
+            <div class="stat">ABV <b>6.8%</b></div>
+            <div class="stat">IBU <b>62</b></div>
+            <div class="stat">SRM <b>7</b></div>
+            <div class="stat">Match <b>92</b></div>
+          </div>
+          <div class="label">Numerals &middot; Mono, tabular</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ICONS -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">Iconography</span>
+      <h2 style="font-size:34px; margin:10px 0 6px">One custom set, 2px rounded stroke</h2>
+      <p class="lede">Friendly geometry, a gold duotone fill on the active glyph. Drawn for beer, not borrowed.</p>
+      <div class="grid icons" style="margin-top:28px">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M6 3h12l-1 15a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3L6 3z"/><path class="fill" d="M6.6 11h10.8l-.5 7a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3l-.3-7z"/></svg><span>pour</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 4h4l-.5 12a1.5 1.5 0 0 1-3 0L5 4z"/><path d="M10.5 4h3l-.4 12a1.1 1.1 0 0 1-2.2 0L10.5 4z"/><path d="M15 4h4l-.5 12a1.5 1.5 0 0 1-3 0L15 4z"/></svg><span>flight</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3c3 2 3 5 0 7-3-2-3-5 0-7z"/><path d="M12 10c3 2 3 5 0 7-3-2-3-5 0-7z"/><path d="M12 3v14"/></svg><span>hop</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="4"/><path d="M5 9h14M5 15h14"/></svg><span>keg</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 5h6v4H7z"/><path d="M13 7h4v3"/><path d="M9 9v7a1 1 0 0 0 2 0V9"/></svg><span>tap</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M10 3h4v3l1 2v11a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V8l1-2z"/></svg><span>growler</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"/><circle class="fill" cx="12" cy="10" r="2.4"/></svg><span>near you</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle class="fill" cx="8.5" cy="8.5" r="1.4"/><circle class="fill" cx="15.5" cy="15.5" r="1.4"/><circle class="fill" cx="15.5" cy="8.5" r="1.4"/></svg><span>games</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5L12 3z"/></svg><span>rate</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg><span>scan</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path class="fill" d="M9 12l2 2 4-4 1 1-5 5-3-3z"/></svg><span>passport</span></div>
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="16" cy="9" r="2.4"/><path d="M4 19a5 5 0 0 1 10 0M14 19a4.5 4.5 0 0 1 6-4"/></svg><span>crew</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOTION -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">Motion &middot; the Pour system</span>
+      <h2 style="font-size:34px; margin:10px 0 6px">Everything fills, ripples, or settles</h2>
+      <p class="lede">One motion language. Warm springs, short and motivated. It all collapses to a fade under reduced motion.</p>
+      <div class="grid demos" style="margin-top:28px">
+        <div class="demo">
+          <div class="stage"><div class="ring" id="ring"><b class="mono" id="ringv">87</b></div></div>
+          <h3>Pour fill</h3><p>Scores, the Passport, and progress rise like a pour. Tap to re-pour.</p>
+        </div>
+        <div class="demo">
+          <div class="stage"><button class="tapbtn" id="tap">Tick a Pour</button></div>
+          <h3>Tap ripple</h3><p>Press feedback ripples from the touch point. On brand, by name.</p>
+        </div>
+        <div class="demo">
+          <div class="stage"><div class="stamp" id="stamp">EXPLORER<br>&#9733;</div></div>
+          <h3>Stamp press</h3><p>Badge and Passport unlocks press in like a stamp. Tap it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP IN THE BRAND -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">The app, in-brand</span>
+      <h2 style="font-size:34px; margin:10px 0 22px">Scan it. Score it. Find it on tap.</h2>
+      <div class="grid phones">
+        <!-- scan -->
+        <div class="phone"><div class="screen"><div class="notch"></div>
+          <div class="viewf"></div>
+          <div class="scr-pad" style="position:absolute; bottom:0; left:0; right:0">
+            <div class="scr-cap">Point at a can, tap list, or label</div>
+            <div class="card" style="margin-top:10px; display:flex; align-items:center; gap:10px">
+              <div style="width:30px;height:30px;border-radius:7px;background:var(--accent)"></div>
+              <div><div style="font-weight:700">Hazy Little Thing</div><div class="scr-cap">Sierra Nevada &middot; Hazy IPA</div></div>
+            </div>
+          </div>
+        </div></div>
+        <!-- score -->
+        <div class="phone"><div class="screen"><div class="notch"></div>
+          <div class="scr-pad">
+            <div class="scr-cap">In your Cellar</div>
+            <div class="scr-h">Pliny the Elder</div>
+            <div class="scr-cap" style="margin-top:2px">Russian River &middot; Double IPA</div>
+            <div style="display:flex; align-items:center; gap:16px; margin-top:20px">
+              <div class="ring" style="--v:92; width:88px; height:88px"><b class="mono" style="font-size:22px">92</b></div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div class="stat">ABV <b>8.0%</b></div>
+                <div class="stat">IBU <b>100</b></div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:18px"><div class="scr-cap">Your match, style-fair</div><div style="margin-top:4px; font-size:14px; color:var(--muted)">Scored against Double IPAs, not the whole board.</div></div>
+          </div>
+        </div></div>
+        <!-- map -->
+        <div class="phone"><div class="screen"><div class="notch"></div>
+          <div style="position:absolute; inset:0; background:var(--surface-2)">
+            <div class="heat" style="width:120px;height:120px; top:60px; left:40px"></div>
+            <div class="heat" style="width:80px;height:80px; top:150px; left:150px; background:radial-gradient(closest-side,rgba(63,143,91,.5),transparent)"></div>
+            <div class="pin" style="top:96px; left:78px"></div>
+            <div class="pin b" style="top:180px; left:180px"></div>
+            <div class="pin c" style="top:150px; left:96px"></div>
+          </div>
+          <div class="scr-pad" style="position:absolute; bottom:0; left:0; right:0">
+            <div class="card"><div class="scr-cap">On tap near you</div><div style="font-weight:700; margin-top:2px">Good City Brewing</div><div class="scr-cap">6 fresh pours &middot; 0.3 mi</div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section class="section">
+    <div class="wrap">
+      <span class="eyebrow">Voice</span>
+      <h2 style="font-size:34px; margin:10px 0 22px">Curiosity over capacity</h2>
+      <div class="grid voice-grid">
+        <div class="quote"><span class="k">Empty Cellar</span><p>Your Cellar is looking thirsty. Scan your first pour.</p></div>
+        <div class="quote"><span class="k">No / Low lens</span><p>Big flavor, zero proof. These count just as much.</p></div>
+        <div class="quote"><span class="k">Passport unlock</span><p>Nice. That is 12 styles and 4 countries. The world is on tap.</p></div>
+        <div class="quote"><span class="k">Brewery Mode</span><p>Whole table is in. Trivia is live. May the best palate win.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="wrap">
+      <div class="wordmark">Tap<span class="drop">t</span></div>
+      <p>THE beer app. Free for drinkers, forever. Beer fans around the world.</p>
+    </div>
+  </footer>
+</div>
+
+<script>
+  (function(){
+    var ring=document.getElementById('ring'), rv=document.getElementById('ringv');
+    if(ring){ring.addEventListener('click',function(){
+      var n=Math.floor(70+Math.random()*29); ring.style.setProperty('--v',n); if(rv) rv.textContent=n;
+    });}
+    var tap=document.getElementById('tap');
+    if(tap){tap.addEventListener('click',function(e){
+      var r=document.createElement('span'); r.className='rip';
+      var b=tap.getBoundingClientRect(); r.style.left=(e.clientX-b.left)+'px'; r.style.top=(e.clientY-b.top)+'px';
+      r.style.width=r.style.height='16px'; tap.appendChild(r); setTimeout(function(){r.remove();},600);
+    });}
+    var st=document.getElementById('stamp');
+    if(st){st.addEventListener('click',function(){st.classList.remove('hit'); void st.offsetWidth; st.classList.add('hit');});}
+  })();
+</script>
