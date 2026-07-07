@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// The data behind a shareable card. Comes from a real check-in.
-struct PourCard {
+struct PourCard: Identifiable {
+    var id = UUID()
     var beer: String
     var brewery: String
     var style: String
