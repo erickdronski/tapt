@@ -6,9 +6,7 @@ import SwiftUI
 //   On Tap -> MapKit breweries + "popular near me" from first-party check-ins
 //   Games  -> trivia / card / table games (Brewery Mode)
 
-struct ScanView: View {
-    var body: some View { BrandScreen(title: "Scan", subtitle: "Point at a can, tap list, or label.", symbol: "viewfinder") }
-}
+// ScanView -> Features/Scan/ScanView.swift
 
 // CellarView -> Features/Cellar/CellarView.swift
 
