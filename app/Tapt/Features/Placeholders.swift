@@ -12,9 +12,7 @@ struct ScanView: View {
 
 // CellarView -> Features/Cellar/CellarView.swift
 
-struct NearYouView: View {
-    var body: some View { BrandScreen(title: "On Tap Near You", subtitle: "See what is good on tap around you.", symbol: "mappin.and.ellipse") }
-}
+// NearYouView -> Features/NearYou/NearYouView.swift
 
 // GamesView -> Features/Games/GamesView.swift
 
