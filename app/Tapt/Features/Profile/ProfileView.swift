@@ -52,6 +52,18 @@ struct ProfileView: View {
                     Text("Beer-geek mode swaps in the lexicon: Cellar, Tick a Pour, Whales, Haul.")
                 }
 
+                Section {
+                    Label("Drink responsibly. Never drink and drive.", systemImage: "hand.raised.fill")
+                        .foregroundStyle(Brand.text)
+                    Link(destination: URL(string: "tel://18006624357")!) {
+                        Label("Get support (SAMHSA, US)", systemImage: "phone.fill")
+                    }
+                } header: {
+                    Text("Responsibility")
+                } footer: {
+                    Text("Tapt is for people of legal drinking age and does not sell alcohol.")
+                }
+
                 Section("About") {
                     LabeledContent("Version", value: AppInfo.version)
                     Link("Privacy Policy", destination: URL(string: "https://tapt.app/privacy")!)
