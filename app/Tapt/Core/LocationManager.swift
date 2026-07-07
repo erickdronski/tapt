@@ -26,7 +26,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         let status = manager.authorizationStatus
         Task { @MainActor in
             self.authorized = status == .authorizedWhenInUse || status == .authorizedAlways
-            if self.authorized { manager.startUpdatingLocation() }
+            if self.authorized { self.manager.startUpdatingLocation() }
         }
     }
 

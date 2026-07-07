@@ -21,6 +21,7 @@ targets:
         SWIFT_VERSION: "6.0"
         DEVELOPMENT_TEAM: J9DMDH4S58
         TARGETED_DEVICE_FAMILY: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     info:
       path: Tapt/Info.plist
       properties:
