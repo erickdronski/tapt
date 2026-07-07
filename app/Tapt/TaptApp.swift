@@ -4,16 +4,19 @@ import SwiftUI
 struct TaptApp: App {
     @State private var session = Session()
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
+    @AppStorage("onboarded") private var onboarded = false
 
     var body: some Scene {
         WindowGroup {
             Group {
                 if session.isLoading {
                     ProgressView().tint(Brand.accent)
-                } else if session.user != nil {
+                } else if session.user == nil {
+                    SignInView()
+                } else if onboarded {
                     RootView()
                 } else {
-                    SignInView()
+                    OnboardingView()
                 }
             }
             .tint(Brand.accent)
