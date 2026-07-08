@@ -17,7 +17,8 @@ OBDB  = "https://api.openbrewerydb.org/v1/breweries"
 
 def fetch(page, per=50):
     url = f"{OBDB}?per_page={per}&page={page}&by_country=united_states"
-    with urllib.request.urlopen(url) as r:
+    req = urllib.request.Request(url, headers={"User-Agent": "Tapt/1.0 (brewery-seed)"})
+    with urllib.request.urlopen(req) as r:
         return json.loads(r.read().decode())
 
 def rows():
