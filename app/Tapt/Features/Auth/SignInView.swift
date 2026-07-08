@@ -1,12 +1,14 @@
 import SwiftUI
 import AuthenticationServices
 import CryptoKit
+import Security
 import Supabase
 
 /// Sign in with Apple (native) -> Supabase. Bundle id app.tapt.tapt is registered
 /// with the Sign in with Apple capability; enable the Apple provider in Supabase and
 /// add app.tapt.tapt to its Authorized Client IDs (see docs/07-APPLE-SETUP.md).
 struct SignInView: View {
+    @Environment(Session.self) private var session
     @State private var currentNonce: String?
     @State private var errorText: String?
 
@@ -39,7 +41,14 @@ struct SignInView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal, 36)
 
-                if let errorText {
+                VStack(spacing: 10) {
+                    oauthButton("Continue with Google", "globe", .google)
+                    oauthButton("Continue with Facebook", "person.2.fill", .facebook)
+                    oauthButton("Continue with X", "x.circle.fill", .x)
+                }
+                .padding(.horizontal, 36)
+
+                if let errorText = errorText ?? session.authError {
                     Text(errorText).font(.footnote).foregroundStyle(.red).padding(.horizontal, 36)
                 }
 
@@ -49,6 +58,21 @@ struct SignInView: View {
                     .padding(.bottom, 24)
             }
         }
+    }
+
+    private func oauthButton(_ title: String, _ icon: String, _ provider: Provider) -> some View {
+        Button {
+            Task { await session.signInWithOAuth(provider) }
+        } label: {
+            Label(title, systemImage: icon)
+                .font(.system(.headline, design: .rounded))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(Brand.text)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+        }
+        .buttonStyle(.plain)
     }
 
     private func handle(_ result: Result<ASAuthorization, Error>) {

@@ -1,28 +1,22 @@
 import Foundation
 
-/// A row from `beer_trend` joined with its beer + brewery (PostgREST nested select).
+/// A flattened row from `beer_trend`.
 struct TrendRow: Decodable {
+    let beerId: String
+    let name: String
+    let style: String?
+    let abv: Double?
+    let breweryName: String?
+    let country: String?
     let popularity: Int
     let momentum: Int
     let avgRating: Double?
-    let beer: BeerJoin
 
     enum CodingKeys: String, CodingKey {
-        case popularity, momentum
+        case name, style, abv, country, popularity, momentum
+        case beerId = "beer_id"
+        case breweryName = "brewery_name"
         case avgRating = "avg_rating"
-        case beer = "beer_catalog"
-    }
-
-    struct BeerJoin: Decodable {
-        let id: String
-        let name: String
-        let style: String?
-        let abv: Double?
-        let brewery: BreweryJoin?
-    }
-    struct BreweryJoin: Decodable {
-        let name: String?
-        let country: String?
     }
 }
 
@@ -39,12 +33,12 @@ struct TrendedBeer: Identifiable {
     let avgRating: Double?
 
     init(_ r: TrendRow) {
-        id = r.beer.id
-        name = r.beer.name
-        brewery = r.beer.brewery?.name ?? ""
-        country = r.beer.brewery?.country ?? ""
-        style = r.beer.style ?? ""
-        abv = r.beer.abv
+        id = r.beerId
+        name = r.name
+        brewery = r.breweryName ?? ""
+        country = r.country ?? ""
+        style = r.style ?? ""
+        abv = r.abv
         popularity = r.popularity
         momentum = r.momentum
         avgRating = r.avgRating

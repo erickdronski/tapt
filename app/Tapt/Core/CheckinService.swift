@@ -10,6 +10,37 @@ struct CatalogBeer: Identifiable, Decodable {
     struct Brewery: Decodable { let name: String?; let country: String? }
     var breweryName: String { brewery?.name ?? "" }
     var country: String { brewery?.country ?? "" }
+    var pick: BeerPick {
+        BeerPick(id: id, name: name, style: style, abv: abv, breweryName: breweryName, country: country)
+    }
+}
+
+struct BeerPick: Identifiable, Sendable {
+    let id: String
+    let name: String
+    let style: String?
+    let abv: Double?
+    let breweryName: String
+    let country: String
+}
+
+struct ScannedBeer: Identifiable, Decodable {
+    let id: String
+    let name: String
+    let style: String?
+    let abv: Double?
+    let breweryName: String?
+    let country: String?
+    let confidence: Double
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, style, abv, country, confidence
+        case breweryName = "brewery_name"
+    }
+
+    var pick: BeerPick {
+        BeerPick(id: id, name: name, style: style, abv: abv, breweryName: breweryName ?? "", country: country ?? "")
+    }
 }
 
 struct MyCheckin: Identifiable, Decodable {
@@ -43,16 +74,45 @@ enum CheckinService {
             .execute().value
     }
 
-    static func log(beer: CatalogBeer, userId: UUID, rating: Double) async throws {
+    static func matchScan(_ raw: String) async throws -> [ScannedBeer] {
+        struct Params: Encodable {
+            let p_query: String
+            let p_limit: Int
+        }
+        return try await Supa.client.rpc("match_beers", params: Params(p_query: raw, p_limit: 8))
+            .execute()
+            .value
+    }
+
+    static func log(
+        beer: BeerPick,
+        userId: UUID,
+        rating: Double,
+        flavorTags: [String] = [],
+        glassware: String? = nil,
+        occasion: String? = nil
+    ) async throws {
         struct Row: Encodable {
             let user_id: String
             let beer_id: String
             let style: String?
             let abv: Double?
             let rating: Double
+            let flavor_tags: [String]
+            let glassware: String?
+            let occasion: String?
         }
         try await Supa.client.from("checkin_event")
-            .insert(Row(user_id: userId.uuidString, beer_id: beer.id, style: beer.style, abv: beer.abv, rating: rating))
+            .insert(Row(
+                user_id: userId.uuidString,
+                beer_id: beer.id,
+                style: beer.style,
+                abv: beer.abv,
+                rating: rating,
+                flavor_tags: flavorTags,
+                glassware: glassware,
+                occasion: occasion
+            ))
             .execute()
     }
 

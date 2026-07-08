@@ -7,6 +7,8 @@ struct ProfileView: View {
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("beerGeekMode") private var beerGeekMode = false
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @State private var deletionRequested = false
+    @State private var deletionError: String?
 
     private var displayName: String {
         if let name = session.user?.userMetadata["full_name"]?.stringValue, !name.isEmpty { return name }
@@ -74,6 +76,21 @@ struct ProfileView: View {
                     Button("Sign out", role: .destructive) {
                         Task { await session.signOut() }
                     }
+                    Button("Request account deletion", role: .destructive) {
+                        requestDeletion()
+                    }
+                }
+
+                if deletionRequested || deletionError != nil {
+                    Section {
+                        if deletionRequested {
+                            Label("Deletion request received.", systemImage: "checkmark.seal.fill")
+                                .foregroundStyle(Brand.hop)
+                        }
+                        if let deletionError {
+                            Text(deletionError).foregroundStyle(.red)
+                        }
+                    }
                 }
             }
             .navigationTitle("You")
@@ -85,5 +102,18 @@ struct ProfileView: View {
     private func syncBeerGeek(_ value: Bool) {
         guard let id = session.user?.id else { return }
         Task { await ProfileService.setBeerGeek(value, userId: id) }
+    }
+
+    private func requestDeletion() {
+        guard let id = session.user?.id else { return }
+        deletionError = nil
+        Task {
+            do {
+                try await ProfileService.requestAccountDeletion(userId: id)
+                deletionRequested = true
+            } catch {
+                deletionError = error.localizedDescription
+            }
+        }
     }
 }

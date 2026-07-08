@@ -23,6 +23,9 @@ struct TaptApp: App {
             .environment(session)
             .preferredColorScheme(Appearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
             .task { await session.start() }
+            .onOpenURL { url in
+                session.handleOAuthCallback(url)
+            }
         }
     }
 }

@@ -31,6 +31,9 @@ targets:
       path: Tapt/Info.plist
       properties:
         CFBundleDisplayName: Tapt
+        CFBundleURLTypes:
+          - CFBundleURLName: app.tapt.tapt.auth
+            CFBundleURLSchemes: [tapt]
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: "Tapt uses the camera to scan beer labels, barcodes, and tap lists."

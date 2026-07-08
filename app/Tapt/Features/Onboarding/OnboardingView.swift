@@ -13,10 +13,14 @@ struct OnboardingView: View {
     @State private var step = 0
     @State private var styles: Set<String> = []
     @State private var region = "New Jersey"
+    @State private var legalAgeConfirmed = false
+    @State private var locationConsent = true
+    @State private var aggregateConsent = true
+    @State private var dataSaleConsent = false
 
     private let allStyles = ["IPA", "Hazy IPA", "Pilsner", "Lager", "Stout", "Porter",
                              "Sour", "Belgian", "Wheat", "Pale Ale", "No / Low"]
-    private let total = 4
+    private let total = 5
 
     var body: some View {
         ZStack {
@@ -25,9 +29,10 @@ struct OnboardingView: View {
                 progress
                 TabView(selection: $step) {
                     welcome.tag(0)
-                    stylesStep.tag(1)
-                    regionStep.tag(2)
-                    finishStep.tag(3)
+                    legalStep.tag(1)
+                    stylesStep.tag(2)
+                    regionStep.tag(3)
+                    finishStep.tag(4)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .animation(.spring(response: 0.5, dampingFraction: 0.8), value: step)
@@ -66,6 +71,27 @@ struct OnboardingView: View {
             stepTitle("What do you love?", "Pick your go-to styles. We will tune your feed.")
             ScrollView { FlowChips(items: allStyles, selection: $styles) }
             Spacer(minLength: 0)
+        }
+    }
+
+    private var legalStep: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            stepTitle("Before the first pour", "Tapt is for adults. Your privacy choices stay attached to your account.")
+            VStack(spacing: 12) {
+                Toggle("I am of legal drinking age where I live.", isOn: $legalAgeConfirmed)
+                Toggle("Use my location for nearby breweries and local recommendations.", isOn: $locationConsent)
+                Toggle("Use my check-ins for anonymous aggregate trend reports.", isOn: $aggregateConsent)
+                Toggle("Include my anonymous aggregate data in partner insights.", isOn: $dataSaleConsent)
+            }
+            .toggleStyle(.switch)
+            .font(.system(.body, design: .rounded))
+            .foregroundStyle(Brand.text)
+            .padding(16)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+            Text("We store only the age confirmation, not your date of birth. You can change optional data choices later.")
+                .font(.footnote)
+                .foregroundStyle(Brand.muted)
+            Spacer()
         }
     }
 
@@ -118,6 +144,8 @@ struct OnboardingView: View {
             .font(.system(.headline, design: .rounded))
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background(Brand.gold, in: Capsule()).foregroundStyle(Brand.malt)
+            .disabled(step == 1 && !legalAgeConfirmed)
+            .opacity(step == 1 && !legalAgeConfirmed ? 0.45 : 1)
         }
     }
 
@@ -142,8 +170,30 @@ struct OnboardingView: View {
         if let uid = session.user?.id {
             let picked = Array(styles)
             Task {
+                await ProfileService.confirmLegalAge(userId: uid)
                 await ProfileService.setRegion(region, userId: uid)
                 await ProfileService.setTopStyles(picked, userId: uid)
+                await ProfileService.recordConsent(
+                    purpose: "location",
+                    granted: locationConsent,
+                    uiText: "Use my location for nearby breweries and local recommendations.",
+                    source: "onboarding",
+                    userId: uid
+                )
+                await ProfileService.recordConsent(
+                    purpose: "aggregate_analytics",
+                    granted: aggregateConsent,
+                    uiText: "Use my check-ins for anonymous aggregate trend reports.",
+                    source: "onboarding",
+                    userId: uid
+                )
+                await ProfileService.recordConsent(
+                    purpose: "data_sale",
+                    granted: dataSaleConsent,
+                    uiText: "Include my anonymous aggregate data in partner insights.",
+                    source: "onboarding",
+                    userId: uid
+                )
             }
         }
         withAnimation(.spring) { onboarded = true }

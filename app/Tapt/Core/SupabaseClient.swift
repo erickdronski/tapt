@@ -7,6 +7,7 @@ import Supabase
 enum Supa {
     static let url = URL(string: "https://qfwiizvqxrhjlthbjosz.supabase.co")!
     static let publishableKey = "sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF"
+    static let authRedirectURL = URL(string: "tapt://auth-callback")!
 
     static let client = SupabaseClient(
         supabaseURL: url,
