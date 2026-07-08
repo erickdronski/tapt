@@ -28,23 +28,32 @@ struct SignInView: View {
                     .foregroundStyle(Brand.muted)
                 Spacer()
 
-                SignInWithAppleButton(.continue) { request in
-                    let nonce = Self.randomNonce()
-                    currentNonce = nonce
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = Self.sha256(nonce)
-                } onCompletion: { result in
-                    handle(result)
-                }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .padding(.horizontal, 36)
-
                 VStack(spacing: 10) {
                     oauthButton("Continue with Google", "globe", .google)
                     oauthButton("Continue with Facebook", "person.2.fill", .facebook)
                     oauthButton("Continue with X", "x.circle.fill", .x)
+                }
+                .padding(.horizontal, 36)
+
+                VStack(spacing: 6) {
+                    SignInWithAppleButton(.continue) { request in
+                        let nonce = Self.randomNonce()
+                        currentNonce = nonce
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = Self.sha256(nonce)
+                    } onCompletion: { result in
+                        handle(result)
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .disabled(true)
+                    .opacity(0.45)
+
+                    Text("Apple sign-in is being configured. Use Google, Facebook, or X for now.")
+                        .font(.caption2)
+                        .foregroundStyle(Brand.muted)
+                        .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 36)
 
