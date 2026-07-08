@@ -61,10 +61,6 @@ jobs:
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Tapt.xcarchive" \
             -skipMacroValidation \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM=J9DMDH4S58 \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             CURRENT_PROJECT_VERSION=${{ github.run_number }}
 
       - name: Export and upload to TestFlight
