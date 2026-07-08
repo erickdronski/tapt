@@ -5,15 +5,19 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       PROFILE_NAME: "Tapt App Store CI"
       BUNDLE_ID: app.tapt.tapt
     steps:
       - uses: actions/checkout@v4
 
-      - name: Xcode version
-        run: xcodebuild -version
+      - name: Select newest Xcode
+        run: |
+          ls -d /Applications/Xcode_*.app 2>/dev/null || true
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then sudo xcode-select -s "$LATEST/Contents/Developer"; fi
+          xcodebuild -version
 
       - name: Install XcodeGen
         run: brew install xcodegen
