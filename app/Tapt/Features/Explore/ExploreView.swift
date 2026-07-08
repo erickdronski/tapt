@@ -10,6 +10,7 @@ struct ExploreView: View {
     @State private var beers: [TrendedBeer] = []
     @State private var loading = false
     @State private var myVotes: [String: Int] = [:]
+    @State private var appeared = false
 
     private var visibleBeers: [TrendedBeer] {
         guard noLowDefault else { return beers }
@@ -22,11 +23,14 @@ struct ExploreView: View {
     }
     private var movers: [TrendedBeer] { visibleBeers.sorted { $0.momentum > $1.momentum } }
     private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
+    private var heroBeer: TrendedBeer? { movers.first ?? top.first }
+    private var totalMomentum: Int { movers.prefix(8).map(\.momentum).reduce(0, +) }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    hero
                     mapLink
                     regionPicker
                     moversSection
@@ -38,10 +42,25 @@ struct ExploreView: View {
             .navigationTitle("Explore")
             .onAppear {
                 if region.isEmpty { region = homeRegion }
+                withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
             .task(id: region) { await load() }
             .overlay { if loading && beers.isEmpty { ProgressView().tint(Brand.gold) } }
         }
+    }
+
+    private var hero: some View {
+        TaptHeroPanel(
+            title: heroBeer?.name ?? "Your beer radar",
+            subtitle: heroBeer.map { "\($0.brewery) is moving in \(region.isEmpty ? homeRegion : region)." }
+                ?? "Track what is hot, scan new pours, and build a beer passport that follows your taste.",
+            metric: heroBeer.map { "+\($0.momentum)" } ?? "LIVE",
+            caption: noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat",
+            icon: "chart.line.uptrend.xyaxis"
+        )
+        .padding(.horizontal)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 18)
     }
 
     private var mapLink: some View {
@@ -103,6 +122,8 @@ struct ExploreView: View {
         .padding(12).frame(width: 152, height: 110, alignment: .leading)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.1)))
+        .scaleEffect(myVotes[b.id] == 1 ? 1.03 : 1)
+        .animation(.spring(response: 0.35, dampingFraction: 0.72), value: myVotes[b.id])
     }
 
     private func momentum(_ m: Int) -> some View {
@@ -142,7 +163,10 @@ struct ExploreView: View {
                 voteButton(b, -1, "hand.thumbsdown.fill", Brand.copper)
             }
         }
-        .padding(12).background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+        .padding(12)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(myVotes[b.id] == 1 ? Brand.hop.opacity(0.6) : Brand.malt.opacity(0.08)))
+        .animation(.spring(response: 0.35, dampingFraction: 0.75), value: myVotes[b.id])
     }
 
     private func voteButton(_ b: TrendedBeer, _ v: Int, _ icon: String, _ color: Color) -> some View {

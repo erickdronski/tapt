@@ -2,10 +2,23 @@ import SwiftUI
 
 /// The "Discover" tab: a hub for the fun, secondary surfaces (Beer School + Games).
 struct DiscoverView: View {
+    @State private var appeared = false
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
+                    TaptHeroPanel(
+                        title: "Beer culture mode",
+                        subtitle: "Learn styles, run table games, and turn every pour into a better beer night.",
+                        metric: "PLAY",
+                        caption: "School + games",
+                        icon: "sparkles",
+                        tint: Brand.gold
+                    )
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 18)
+
                     DiscoverTile(title: "Beer School",
                                  subtitle: "How it's made, the lingo, the history, the legends.",
                                  icon: "graduationcap.fill", tint: Brand.gold) { LearnView() }
@@ -17,6 +30,9 @@ struct DiscoverView: View {
             }
             .background(Brand.background)
             .navigationTitle("Discover")
+            .onAppear {
+                withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
+            }
         }
     }
 }
@@ -48,6 +64,7 @@ private struct DiscoverTile<Destination: View>: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Brand.surface, in: RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(tint.opacity(0.22), lineWidth: 1))
         }
         .buttonStyle(.plain)
     }

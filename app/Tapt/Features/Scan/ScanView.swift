@@ -11,6 +11,7 @@ struct ScanView: View {
     @State private var selected: BeerPick?
     @State private var rating: Double = 4
     @State private var saving = false
+    @State private var loggedPour: PourCard?
 
     private var scannerAvailable: Bool {
         DataScannerViewController.isSupported && DataScannerViewController.isAvailable
@@ -36,6 +37,36 @@ struct ScanView: View {
                 }
             }
             .sheet(isPresented: $showResult, onDismiss: { scanned = nil }) { resultSheet }
+            .sheet(item: $loggedPour) { pour in
+                NavigationStack {
+                    ScrollView {
+                        VStack(spacing: 14) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 44))
+                                .foregroundStyle(Brand.hop)
+                                .symbolEffect(.bounce, value: pour.id)
+                            Text("Pour logged")
+                                .font(.system(.title, design: .rounded).weight(.heavy))
+                                .foregroundStyle(Brand.text)
+                            Text("Your Cellar and Passport just got a little deeper.")
+                                .font(.subheadline)
+                                .foregroundStyle(Brand.muted)
+                                .multilineTextAlignment(.center)
+                            CardShareView(pour: pour)
+                        }
+                        .padding(.top, 22)
+                        .padding(.bottom, 28)
+                    }
+                    .background(Brand.background)
+                    .navigationTitle("Nice pour")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { loggedPour = nil }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -167,9 +198,24 @@ struct ScanView: View {
         guard let uid = session.user?.id else { return }
         saving = true
         Task {
-            try? await CheckinService.log(beer: beer, userId: uid, rating: rating)
-            saving = false
-            showResult = false
+            do {
+                try await CheckinService.log(beer: beer, userId: uid, rating: rating)
+                let pour = PourCard(
+                    beer: beer.name,
+                    brewery: beer.breweryName.isEmpty ? "Tapt Cellar" : beer.breweryName,
+                    style: beer.style ?? "Beer",
+                    score: Int(rating * 20),
+                    user: session.user?.email?.split(separator: "@").first.map(String.init) ?? "beerfan",
+                    abv: beer.abv.map { String(format: "%.1f%%", $0) }
+                )
+                saving = false
+                showResult = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    loggedPour = pour
+                }
+            } catch {
+                saving = false
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ struct CellarView: View {
     @Environment(Session.self) private var session
     @State private var checkins: [MyCheckin] = []
     @State private var showLog = false
+    @State private var appeared = false
 
     private var styleCount: Int {
         Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil }).count
@@ -28,6 +29,9 @@ struct CellarView: View {
                 }
             }
             .task { await load() }
+            .onAppear {
+                withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
+            }
             .sheet(isPresented: $showLog) {
                 LogPourView(onLogged: { Task { await load() } })
             }
@@ -35,24 +39,30 @@ struct CellarView: View {
     }
 
     private var empty: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "square.stack.3d.up.fill").font(.system(size: 44)).foregroundStyle(Brand.gold)
-            Text("Your Cellar is thirsty").font(.system(.title, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-            Text("Log your first pour to start your Cellar and fill your Passport.")
-                .font(.body).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal, 36)
-            Button { showLog = true } label: {
-                Label("Log a pour", systemImage: "plus.circle.fill")
-                    .font(.system(.headline, design: .rounded))
-                    .padding(.horizontal, 20).padding(.vertical, 13)
-                    .background(Brand.gold, in: Capsule()).foregroundStyle(Brand.malt)
-            }
-            .padding(.top, 6)
-        }
+        TaptEmptyState(
+            icon: "square.stack.3d.up.fill",
+            title: "Your Cellar is thirsty",
+            message: "Log your first pour to start your Cellar, unlock Passport stamps, and build your beer taste graph.",
+            actionTitle: "Log a pour",
+            action: { showLog = true }
+        )
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 14)
     }
 
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                TaptHeroPanel(
+                    title: "Passport progress",
+                    subtitle: "\(checkins.count) pours logged across \(styleCount) styles and \(countryCount) countries.",
+                    metric: "\(checkins.count)",
+                    caption: nextMilestone,
+                    icon: "seal.fill",
+                    tint: Brand.hop
+                )
+                .padding(.horizontal)
+
                 NavigationLink { PassportView(checkins: checkins) } label: {
                     HStack(spacing: 6) {
                         Text("Passport").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
@@ -85,6 +95,8 @@ struct CellarView: View {
         }
         .frame(maxWidth: .infinity).padding(.vertical, 14)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.22), lineWidth: 1))
+        .contentTransition(.numericText())
     }
 
     private func row(_ c: MyCheckin) -> some View {
@@ -104,6 +116,14 @@ struct CellarView: View {
             }
         }
         .padding(12).background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private var nextMilestone: String {
+        if checkins.count < 5 { return "\(5 - checkins.count) pours to first flight" }
+        if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
+        if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
+        return "Passport is warming up"
     }
 
     private func load() async {
