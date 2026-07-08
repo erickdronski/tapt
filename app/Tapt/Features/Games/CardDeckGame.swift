@@ -1,25 +1,24 @@
 import SwiftUI
 
 private let deckPrompts = [
-    "Waterfall. Everyone starts, no one stops before the person to your left.",
-    "Categories: pick a beer style. Go around naming one. First to blank sips.",
-    "Never have I ever. Say one. Anyone who has, sips.",
+    "Categories: pick a beer style. Go around naming one. First to blank picks the next style.",
+    "Never have I ever. Say one. Anyone who has, shares the story or passes.",
     "Cheers to the person on your right.",
     "Make a rule. Everyone follows it until the next rule card.",
-    "Most likely to. Everyone points. Most points sips.",
-    "Thumb master. Put a thumb on the table. Last to notice sips.",
-    "Name three hop varieties in ten seconds, or sip.",
+    "Most likely to. Everyone points. Most points gives a toast.",
+    "Thumb master. Put a thumb on the table. Last to notice draws next.",
+    "Name three hop varieties in ten seconds, or ask the table for help.",
     "Toast. Everyone raise a glass and say cheers in a new language.",
-    "Truth or sip. Someone asks you a question.",
-    "Pick a drinking buddy. You match sips until the next card.",
-    "Quick trivia: what does IBU measure? Wrong answer sips.",
-    "Categories: name a country famous for beer. First to blank sips.",
-    "Silent table. No talking until the next card. Slip up, sip.",
-    "You are the DJ. Pick the next song or sip.",
+    "Truth or pass. Someone asks you a question.",
+    "Pick a tasting buddy. Both name one flavor note in the next pour.",
+    "Quick trivia: what does IBU measure? Wrong answer asks for a hint.",
+    "Categories: name a country famous for beer. First to blank picks the next category.",
+    "Silent table. No talking until the next card. Slip up, draw next.",
+    "You are the DJ. Pick the next song.",
     "Group cheers. Everyone clinks. Skal.",
 ]
 
-/// The Tapt Deck: a house-built card game for the table. Sips are optional and NA-friendly.
+/// The Tapt Deck: a house-built card game for the table. NA-friendly by default.
 struct CardDeckGame: View {
     @State private var order = deckPrompts.shuffled()
     @State private var index = 0
@@ -35,7 +34,7 @@ struct CardDeckGame: View {
                     .font(.system(.headline, design: .rounded))
                     .frame(maxWidth: .infinity).padding(.vertical, 15)
                     .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14)).foregroundStyle(Brand.malt)
-                Text("Sip = your call. Water counts. Play safe.")
+                Text("NA counts. Water counts. Play safe.")
                     .font(.caption2).foregroundStyle(Brand.muted)
             }
             .padding()

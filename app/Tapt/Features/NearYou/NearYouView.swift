@@ -1,9 +1,10 @@
 import SwiftUI
 import MapKit
 
-/// "On Tap Near You": a live map of nearby breweries (Apple POI), the signature surface.
+/// A local map of nearby breweries and beer spots from Apple POI.
 /// Our own tap-list + check-in data layers on top once check-ins exist.
 struct NearYouView: View {
+    @AppStorage("locationConsent") private var locationConsent = true
     @State private var location = LocationManager()
     @State private var camera: MapCameraPosition = .automatic
     @State private var breweries: [MKMapItem] = []
@@ -24,7 +25,10 @@ struct NearYouView: View {
                 .frame(height: 320)
 
                 List {
-                    if !location.authorized {
+                    if !locationConsent {
+                        Text("Location is off in your Tapt privacy choices.")
+                            .foregroundStyle(Brand.muted)
+                    } else if !location.authorized {
                         Button {
                             location.request()
                         } label: {
@@ -45,9 +49,11 @@ struct NearYouView: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("On Tap Near You")
+            .navigationTitle("Breweries Near You")
             .navigationBarTitleDisplayMode(.inline)
-            .task { location.request() }
+            .task {
+                if locationConsent { location.request() }
+            }
             .onChange(of: location.location) { _, loc in
                 if let loc, breweries.isEmpty { search(near: loc.coordinate) }
             }

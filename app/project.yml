@@ -13,6 +13,8 @@ targets:
     platform: iOS
     deploymentTarget: "18.0"
     sources: [Tapt]
+    resources:
+      - Tapt/PrivacyInfo.xcprivacy
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.tapt.tapt

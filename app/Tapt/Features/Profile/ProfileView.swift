@@ -7,6 +7,9 @@ struct ProfileView: View {
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("beerGeekMode") private var beerGeekMode = false
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @AppStorage("locationConsent") private var locationConsent = true
+    @AppStorage("aggregateConsent") private var aggregateConsent = true
+    @AppStorage("dataSaleConsent") private var dataSaleConsent = false
     @State private var deletionRequested = false
     @State private var deletionError: String?
 
@@ -55,6 +58,16 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    Toggle("Nearby brewery location", isOn: $locationConsent)
+                    Toggle("Anonymous trend reports", isOn: $aggregateConsent)
+                    Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
+                } header: {
+                    Text("Privacy Choices")
+                } footer: {
+                    Text("These choices are saved to your account and can be changed any time.")
+                }
+
+                Section {
                     Label("Drink responsibly. Never drink and drive.", systemImage: "hand.raised.fill")
                         .foregroundStyle(Brand.text)
                     Link(destination: URL(string: "tel://18006624357")!) {
@@ -95,6 +108,15 @@ struct ProfileView: View {
             }
             .navigationTitle("You")
             .onChange(of: beerGeekMode) { _, newValue in syncBeerGeek(newValue) }
+            .onChange(of: locationConsent) { _, newValue in
+                syncPrivacy("location", granted: newValue, text: "Nearby brewery location")
+            }
+            .onChange(of: aggregateConsent) { _, newValue in
+                syncPrivacy("aggregate_analytics", granted: newValue, text: "Anonymous trend reports")
+            }
+            .onChange(of: dataSaleConsent) { _, newValue in
+                syncPrivacy("data_sale", granted: newValue, text: "Partner insight aggregates")
+            }
         }
     }
 
@@ -102,6 +124,18 @@ struct ProfileView: View {
     private func syncBeerGeek(_ value: Bool) {
         guard let id = session.user?.id else { return }
         Task { await ProfileService.setBeerGeek(value, userId: id) }
+    }
+
+    private func syncPrivacy(_ purpose: String, granted: Bool, text: String) {
+        guard let id = session.user?.id else { return }
+        Task {
+            await ProfileService.setPrivacyChoice(
+                purpose: purpose,
+                granted: granted,
+                uiText: text,
+                userId: id
+            )
+        }
     }
 
     private func requestDeletion() {

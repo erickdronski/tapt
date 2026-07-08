@@ -4,7 +4,7 @@ import SwiftUI
 struct TaptApp: App {
     @State private var session = Session()
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
-    @AppStorage("onboarded") private var onboarded = false
+    @AppStorage("onboardedUserIDs") private var onboardedUserIDs = ""
 
     var body: some Scene {
         WindowGroup {
@@ -13,7 +13,7 @@ struct TaptApp: App {
                     ProgressView().tint(Brand.accent)
                 } else if session.user == nil {
                     SignInView()
-                } else if onboarded {
+                } else if currentUserOnboarded {
                     RootView()
                 } else {
                     OnboardingView()
@@ -27,5 +27,10 @@ struct TaptApp: App {
                 session.handleOAuthCallback(url)
             }
         }
+    }
+
+    private var currentUserOnboarded: Bool {
+        guard let id = session.user?.id.uuidString else { return false }
+        return Set(onboardedUserIDs.split(separator: ",").map(String.init)).contains(id)
     }
 }

@@ -4,13 +4,24 @@ import SwiftUI
 /// country, and live up/down voting. The screen a beer fan opens first.
 struct ExploreView: View {
     @Environment(Session.self) private var session
-    @State private var region = "New Jersey"
+    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
+    @AppStorage("noLowDefault") private var noLowDefault = false
+    @State private var region = ""
     @State private var beers: [TrendedBeer] = []
     @State private var loading = false
     @State private var myVotes: [String: Int] = [:]
 
-    private var movers: [TrendedBeer] { beers.sorted { $0.momentum > $1.momentum } }
-    private var top: [TrendedBeer] { beers.sorted { $0.popularity > $1.popularity } }
+    private var visibleBeers: [TrendedBeer] {
+        guard noLowDefault else { return beers }
+        return beers.filter { beer in
+            beer.style.localizedCaseInsensitiveContains("low")
+            || beer.style.localizedCaseInsensitiveContains("non")
+            || beer.name.localizedCaseInsensitiveContains("low")
+            || beer.name.localizedCaseInsensitiveContains("non")
+        }
+    }
+    private var movers: [TrendedBeer] { visibleBeers.sorted { $0.momentum > $1.momentum } }
+    private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
 
     var body: some View {
         NavigationStack {
@@ -25,6 +36,9 @@ struct ExploreView: View {
             }
             .background(Brand.background)
             .navigationTitle("Explore")
+            .onAppear {
+                if region.isEmpty { region = homeRegion }
+            }
             .task(id: region) { await load() }
             .overlay { if loading && beers.isEmpty { ProgressView().tint(Brand.gold) } }
         }
@@ -37,7 +51,7 @@ struct ExploreView: View {
                     .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Breweries near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("See what is good on tap around you").font(.caption).foregroundStyle(Brand.muted)
+                    Text("Find nearby beer spots and save your favorites").font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
             }
@@ -101,10 +115,17 @@ struct ExploreView: View {
     private var topSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             header(region == "Global" ? "Trending worldwide" : "Top in \(region)", "Tap to vote it up or down")
-            VStack(spacing: 10) {
-                ForEach(Array(top.prefix(15).enumerated()), id: \.element.id) { i, b in row(i + 1, b) }
+            if top.isEmpty && noLowDefault {
+                Text("No No / Low picks are trending here yet. Turn off the lens in You to see the full board.")
+                    .font(.subheadline)
+                    .foregroundStyle(Brand.muted)
+                    .padding(.horizontal)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(Array(top.prefix(15).enumerated()), id: \.element.id) { i, b in row(i + 1, b) }
+                }
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 
@@ -150,6 +171,7 @@ struct ExploreView: View {
     }
 
     private func load() async {
+        guard !region.isEmpty else { return }
         loading = true
         defer { loading = false }
         do { beers = try await BeerService.trends(region: region) } catch { beers = [] }

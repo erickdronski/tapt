@@ -5,10 +5,13 @@ import Supabase
 /// and it seeds the taste profile (region_code + taste_vector.top_styles).
 struct OnboardingView: View {
     @Environment(Session.self) private var session
-    @AppStorage("onboarded") private var onboarded = false
+    @AppStorage("onboardedUserIDs") private var onboardedUserIDs = ""
     @AppStorage("favoriteStyles") private var favoriteStyles = ""
     @AppStorage("homeRegion") private var homeRegion = "New Jersey"
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @AppStorage("locationConsent") private var savedLocationConsent = true
+    @AppStorage("aggregateConsent") private var savedAggregateConsent = true
+    @AppStorage("dataSaleConsent") private var savedDataSaleConsent = false
 
     @State private var step = 0
     @State private var styles: Set<String> = []
@@ -17,6 +20,8 @@ struct OnboardingView: View {
     @State private var locationConsent = true
     @State private var aggregateConsent = true
     @State private var dataSaleConsent = false
+    @State private var saving = false
+    @State private var saveError: String?
 
     private let allStyles = ["IPA", "Hazy IPA", "Pilsner", "Lager", "Stout", "Porter",
                              "Sour", "Belgian", "Wheat", "Pale Ale", "No / Low"]
@@ -144,8 +149,22 @@ struct OnboardingView: View {
             .font(.system(.headline, design: .rounded))
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background(Brand.gold, in: Capsule()).foregroundStyle(Brand.malt)
-            .disabled(step == 1 && !legalAgeConfirmed)
-            .opacity(step == 1 && !legalAgeConfirmed ? 0.45 : 1)
+            .disabled((step == 1 && !legalAgeConfirmed) || saving)
+            .opacity((step == 1 && !legalAgeConfirmed) || saving ? 0.45 : 1)
+        }
+        .overlay(alignment: .top) {
+            if saving {
+                ProgressView("Saving...")
+                    .padding(10)
+                    .background(Brand.surface, in: Capsule())
+            } else if let saveError {
+                Text(saveError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+                    .padding(10)
+                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
+            }
         }
     }
 
@@ -164,39 +183,34 @@ struct OnboardingView: View {
     }
 
     private func complete() {
+        guard let uid = session.user?.id else { return }
         favoriteStyles = styles.sorted().joined(separator: ",")
         homeRegion = region
         noLowDefault = styles.contains("No / Low")
-        if let uid = session.user?.id {
-            let picked = Array(styles)
-            Task {
-                await ProfileService.confirmLegalAge(userId: uid)
-                await ProfileService.setRegion(region, userId: uid)
-                await ProfileService.setTopStyles(picked, userId: uid)
-                await ProfileService.recordConsent(
-                    purpose: "location",
-                    granted: locationConsent,
-                    uiText: "Use my location for nearby breweries and local recommendations.",
-                    source: "onboarding",
-                    userId: uid
+        savedLocationConsent = locationConsent
+        savedAggregateConsent = aggregateConsent
+        savedDataSaleConsent = dataSaleConsent
+        saving = true
+        saveError = nil
+        let picked = Array(styles)
+        Task {
+            do {
+                try await ProfileService.completeOnboarding(
+                    userId: uid,
+                    region: region,
+                    topStyles: picked,
+                    locationConsent: locationConsent,
+                    aggregateConsent: aggregateConsent,
+                    dataSaleConsent: dataSaleConsent
                 )
-                await ProfileService.recordConsent(
-                    purpose: "aggregate_analytics",
-                    granted: aggregateConsent,
-                    uiText: "Use my check-ins for anonymous aggregate trend reports.",
-                    source: "onboarding",
-                    userId: uid
-                )
-                await ProfileService.recordConsent(
-                    purpose: "data_sale",
-                    granted: dataSaleConsent,
-                    uiText: "Include my anonymous aggregate data in partner insights.",
-                    source: "onboarding",
-                    userId: uid
-                )
+                var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
+                ids.insert(uid.uuidString)
+                onboardedUserIDs = ids.sorted().joined(separator: ",")
+            } catch {
+                saveError = "Could not save your setup. Try again."
             }
+            saving = false
         }
-        withAnimation(.spring) { onboarded = true }
     }
 }
 
