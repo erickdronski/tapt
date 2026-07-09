@@ -22,6 +22,9 @@ struct DiscoverView: View {
                     DiscoverTile(title: "Flights",
                                  subtitle: "Guided tasting quests that reward curiosity, not volume.",
                                  icon: "map.fill", tint: Brand.gold) { FlightsView() }
+                    DiscoverTile(title: "Tonight",
+                                 subtitle: "Live beer heat, friend pours, your taste graph, and safety controls.",
+                                 icon: "flame.fill", tint: Brand.copper) { TonightView() }
                     DiscoverTile(title: "Beer School",
                                  subtitle: "How it's made, the lingo, the history, the legends.",
                                  icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
