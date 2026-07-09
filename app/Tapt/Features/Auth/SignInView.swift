@@ -9,6 +9,9 @@ import Supabase
 /// add app.tapt.tapt to its Authorized Client IDs (see docs/07-APPLE-SETUP.md).
 struct SignInView: View {
     @Environment(Session.self) private var session
+    @State private var email = ""
+    @State private var isSendingEmail = false
+    @State private var emailLinkSent = false
     @State private var currentNonce: String?
     @State private var errorText: String?
 
@@ -27,6 +30,42 @@ struct SignInView: View {
                     .font(.subheadline)
                     .foregroundStyle(Brand.muted)
                 Spacer()
+
+                VStack(spacing: 10) {
+                    TextField("Email address", text: $email)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.system(.body, design: .rounded))
+                        .padding(.horizontal, 16)
+                        .frame(height: 52)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(Brand.text)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+
+                    Button {
+                        Task { await sendEmailLink() }
+                    } label: {
+                        Label(isSendingEmail ? "Sending link..." : "Email me a sign-in link", systemImage: "envelope.fill")
+                            .font(.system(.headline, design: .rounded))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(.black)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSendEmail || isSendingEmail)
+                    .opacity(canSendEmail && !isSendingEmail ? 1 : 0.55)
+
+                    if emailLinkSent {
+                        Text("Check your email on this iPhone and tap the Tapt sign-in link.")
+                            .font(.caption)
+                            .foregroundStyle(Brand.muted)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.horizontal, 36)
 
                 VStack(spacing: 10) {
                     oauthButton("Continue with Google", "globe", .google)
@@ -50,7 +89,7 @@ struct SignInView: View {
                     .disabled(true)
                     .opacity(0.45)
 
-                    Text("Apple sign-in is being configured. Use Google, Facebook, or X for now.")
+                    Text("Apple sign-in is being configured. Use email, Google, Facebook, or X for now.")
                         .font(.caption2)
                         .foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
@@ -67,6 +106,17 @@ struct SignInView: View {
                     .padding(.bottom, 24)
             }
         }
+    }
+
+    private var canSendEmail: Bool {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
+    }
+
+    private func sendEmailLink() async {
+        isSendingEmail = true
+        errorText = nil
+        emailLinkSent = await session.sendEmailSignInLink(to: email)
+        isSendingEmail = false
     }
 
     private func oauthButton(_ title: String, _ icon: String, _ provider: Provider) -> some View {
