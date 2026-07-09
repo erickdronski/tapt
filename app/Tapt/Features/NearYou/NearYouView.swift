@@ -8,13 +8,19 @@ struct NearYouView: View {
     @State private var location = LocationManager()
     @State private var camera: MapCameraPosition = .automatic
     @State private var breweries: [MKMapItem] = []
+    @State private var taptVenues: [BreweryMapVenue] = []
     @State private var loading = false
+    @State private var radarLoading = false
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Map(position: $camera) {
                     UserAnnotation()
+                    ForEach(taptVenues) { venue in
+                        Marker(venue.name, systemImage: "mappin.and.ellipse", coordinate: venue.coordinate)
+                            .tint(Brand.hop)
+                    }
                     ForEach(breweries, id: \.self) { item in
                         Marker(item.name ?? "Brewery", systemImage: "mug.fill",
                                coordinate: item.placemark.coordinate)
@@ -25,6 +31,22 @@ struct NearYouView: View {
                 .frame(height: 320)
 
                 List {
+                    if !taptVenues.isEmpty {
+                        Section {
+                            ForEach(taptVenues.prefix(60)) { venue in
+                                Button { focus(venue) } label: { taptRow(venue) }
+                                    .buttonStyle(.plain)
+                            }
+                        } header: {
+                            Text("Tapt brewery radar")
+                        } footer: {
+                            Text("Seeded from Tapt's license-safe brewery map layer. Local Apple results appear below when location is on.")
+                        }
+                    } else if radarLoading {
+                        Label("Loading Tapt brewery radar...", systemImage: "antenna.radiowaves.left.and.right")
+                            .foregroundStyle(Brand.muted)
+                    }
+
                     if !locationConsent {
                         Text("Location is off in your Tapt privacy choices.")
                             .foregroundStyle(Brand.muted)
@@ -52,6 +74,7 @@ struct NearYouView: View {
             .navigationTitle("Breweries Near You")
             .navigationBarTitleDisplayMode(.inline)
             .task {
+                await loadTaptRadar()
                 if locationConsent { location.request() }
             }
             .onChange(of: location.location) { _, loc in
@@ -78,10 +101,55 @@ struct NearYouView: View {
         .padding(.vertical, 4)
     }
 
+    private func taptRow(_ venue: BreweryMapVenue) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "mappin.and.ellipse")
+                .foregroundStyle(Brand.malt)
+                .frame(width: 40, height: 40)
+                .background(Brand.hop, in: RoundedRectangle(cornerRadius: 10))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(venue.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
+                Text(venue.subtitle.isEmpty ? "Tapt brewery map" : venue.subtitle)
+                    .font(.subheadline).foregroundStyle(Brand.muted).lineLimit(1)
+            }
+            Spacer()
+            Text("\(venue.heatScore)")
+                .font(.system(.caption, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.malt)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Brand.gold, in: Capsule())
+        }
+        .padding(.vertical, 4)
+    }
+
     private func focus(_ item: MKMapItem) {
         withAnimation {
             camera = .region(MKCoordinateRegion(center: item.placemark.coordinate,
                                                 latitudinalMeters: 1200, longitudinalMeters: 1200))
+        }
+    }
+
+    private func focus(_ venue: BreweryMapVenue) {
+        withAnimation {
+            camera = .region(MKCoordinateRegion(center: venue.coordinate,
+                                                latitudinalMeters: 2400, longitudinalMeters: 2400))
+        }
+    }
+
+    private func loadTaptRadar() async {
+        radarLoading = true
+        defer { radarLoading = false }
+        do {
+            let venues = try await WorldBeerService.breweryMap(limit: 200)
+            taptVenues = venues
+            if location.location == nil, let first = venues.first {
+                camera = .region(MKCoordinateRegion(center: first.coordinate,
+                                                    latitudinalMeters: 4_500_000,
+                                                    longitudinalMeters: 4_500_000))
+            }
+        } catch {
+            taptVenues = []
         }
     }
 

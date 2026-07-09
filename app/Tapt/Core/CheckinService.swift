@@ -92,27 +92,40 @@ enum CheckinService {
         glassware: String? = nil,
         occasion: String? = nil
     ) async throws {
-        struct Row: Encodable {
-            let user_id: String
-            let beer_id: String
-            let style: String?
-            let abv: Double?
-            let rating: Double
-            let flavor_tags: [String]
-            let glassware: String?
-            let occasion: String?
+        struct Params: Encodable {
+            let p_beer_id: String
+            let p_rating: Double
+            let p_flavor_tags: [String]
+            let p_glassware: String?
+            let p_occasion: String?
+            let p_venue_id: String?
+            let p_on_off_premise: String?
+            let p_geo_bucket_h3: String?
+            let p_photo_url: String?
+            let p_price_paid: Double?
+            let p_price_tier: String?
+            let p_purchase_intent_flags: [String: Bool]
+            let p_source: String
         }
-        try await Supa.client.from("checkin_event")
-            .insert(Row(
-                user_id: userId.uuidString,
-                beer_id: beer.id,
-                style: beer.style,
-                abv: beer.abv,
-                rating: rating,
-                flavor_tags: flavorTags,
-                glassware: glassware,
-                occasion: occasion
-            ))
+
+        try await Supa.client.rpc(
+            "log_checkin",
+            params: Params(
+                p_beer_id: beer.id,
+                p_rating: rating,
+                p_flavor_tags: flavorTags,
+                p_glassware: glassware,
+                p_occasion: occasion,
+                p_venue_id: nil,
+                p_on_off_premise: nil,
+                p_geo_bucket_h3: nil,
+                p_photo_url: nil,
+                p_price_paid: nil,
+                p_price_tier: nil,
+                p_purchase_intent_flags: [:],
+                p_source: "manual"
+            )
+        )
             .execute()
     }
 

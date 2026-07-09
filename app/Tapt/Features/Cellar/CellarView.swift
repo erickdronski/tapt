@@ -4,6 +4,7 @@ import SwiftUI
 struct CellarView: View {
     @Environment(Session.self) private var session
     @State private var checkins: [MyCheckin] = []
+    @State private var guides: [RegionBeerGuide] = []
     @State private var showLog = false
     @State private var appeared = false
 
@@ -63,7 +64,7 @@ struct CellarView: View {
                 )
                 .padding(.horizontal)
 
-                NavigationLink { PassportView(checkins: checkins) } label: {
+                NavigationLink { PassportView(checkins: checkins, guides: guides) } label: {
                     HStack(spacing: 6) {
                         Text("Passport").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
                         Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Brand.muted)
@@ -76,6 +77,8 @@ struct CellarView: View {
                     stat("\(countryCount)", "countries", "globe", Brand.copper)
                 }
                 .padding(.horizontal)
+
+                regionalShelves
 
                 Text("Your pours").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).padding(.horizontal).padding(.top, 4)
                 VStack(spacing: 10) {
@@ -97,6 +100,57 @@ struct CellarView: View {
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.22), lineWidth: 1))
         .contentTransition(.numericText())
+    }
+
+    private var regionalShelves: some View {
+        let visited = guides.filter { guide in
+            guide.scope == "country" && checkins.contains { $0.country == guide.name }
+        }
+        let suggestions = guides.filter { $0.scope == "country" && !visited.contains($0) }.prefix(4)
+        let shelves = visited + Array(suggestions)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            Text("Regional shelves")
+                .font(.system(.title3, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.text)
+                .padding(.horizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(shelves.prefix(8)) { guide in
+                        let unlocked = visited.contains(guide)
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text(flag(guide.flag)).font(.title2)
+                                Spacer()
+                                Image(systemName: unlocked ? "checkmark.seal.fill" : "lock.fill")
+                                    .foregroundStyle(unlocked ? Brand.hop : Brand.muted)
+                            }
+                            Text(guide.name)
+                                .font(.system(.headline, design: .rounded).weight(.bold))
+                                .foregroundStyle(Brand.text)
+                                .lineLimit(1)
+                            Text(unlocked ? guide.passportPhrase : guide.cellarPrompt)
+                                .font(.caption)
+                                .foregroundStyle(Brand.muted)
+                                .lineLimit(3)
+                            Spacer(minLength: 0)
+                            Text(guide.heroStyle)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Brand.malt)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background((unlocked ? Brand.gold : Brand.haze).opacity(unlocked ? 1 : 0.65), in: Capsule())
+                        }
+                        .padding(14)
+                        .frame(width: 184, height: 178, alignment: .leading)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+                        .overlay(RoundedRectangle(cornerRadius: 16).stroke((unlocked ? Brand.gold : Brand.malt).opacity(0.18)))
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
     }
 
     private func row(_ c: MyCheckin) -> some View {
@@ -129,5 +183,21 @@ struct CellarView: View {
     private func load() async {
         guard let uid = session.user?.id else { return }
         checkins = (try? await CheckinService.mine(userId: uid)) ?? []
+        guides = (try? await WorldBeerService.regionGuides()) ?? []
+    }
+
+    private func flag(_ code: String?) -> String {
+        switch code {
+        case "BE": return "🇧🇪"
+        case "CZ": return "🇨🇿"
+        case "DE": return "🇩🇪"
+        case "IE": return "🇮🇪"
+        case "JP": return "🇯🇵"
+        case "MX": return "🇲🇽"
+        case "PL": return "🇵🇱"
+        case "GB": return "🇬🇧"
+        case "US": return "🇺🇸"
+        default: return "🍺"
+        }
     }
 }

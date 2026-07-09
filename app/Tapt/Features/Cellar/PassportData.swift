@@ -38,5 +38,8 @@ enum PassportData {
     static let countries: [(name: String, flag: String)] = [
         ("United States", "🇺🇸"), ("Germany", "🇩🇪"), ("Poland", "🇵🇱"), ("Czechia", "🇨🇿"),
         ("Belgium", "🇧🇪"), ("Ireland", "🇮🇪"), ("United Kingdom", "🇬🇧"), ("Mexico", "🇲🇽"),
+        ("Japan", "🇯🇵"), ("Canada", "🇨🇦"), ("Spain", "🇪🇸"), ("Netherlands", "🇳🇱"),
+        ("Denmark", "🇩🇰"), ("Norway", "🇳🇴"), ("Sweden", "🇸🇪"), ("Italy", "🇮🇹"),
+        ("France", "🇫🇷"), ("Brazil", "🇧🇷"), ("Australia", "🇦🇺"), ("New Zealand", "🇳🇿"),
     ]
 }

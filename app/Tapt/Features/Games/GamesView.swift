@@ -5,6 +5,10 @@ struct GamesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5) } label: {
+                    GameTile(title: "Daily 5", subtitle: "A quick five-question run from the beer world.", icon: "calendar.badge.clock", tint: Brand.hop, ready: true)
+                }
+                .buttonStyle(.plain)
                 NavigationLink { TriviaGame() } label: {
                     GameTile(title: "Beer Trivia", subtitle: "How deep does your knowledge pour? Free, endless.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
                 }
@@ -62,7 +66,9 @@ private struct GameTile: View {
 
 // MARK: - Beer Trivia (playable)
 struct TriviaGame: View {
-    @State private var order = TriviaData.questions.shuffled()
+    let title: String
+    let questionLimit: Int?
+    @State private var order: [TriviaQuestion]
     @State private var index = 0
     @State private var selected: Int?
     @State private var score = 0
@@ -71,12 +77,18 @@ struct TriviaGame: View {
 
     private var q: TriviaQuestion { order[index] }
 
+    init(title: String = "Beer Trivia", questionLimit: Int? = nil) {
+        self.title = title
+        self.questionLimit = questionLimit
+        _order = State(initialValue: Self.pickQuestions(limit: questionLimit))
+    }
+
     var body: some View {
         ZStack {
             Brand.background.ignoresSafeArea()
             if finished { results } else { question }
         }
-        .navigationTitle("Beer Trivia")
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -171,6 +183,12 @@ struct TriviaGame: View {
     }
 
     private func restart() {
-        order = TriviaData.questions.shuffled(); index = 0; selected = nil; score = 0; streak = 0; finished = false
+        order = Self.pickQuestions(limit: questionLimit); index = 0; selected = nil; score = 0; streak = 0; finished = false
+    }
+
+    private static func pickQuestions(limit: Int?) -> [TriviaQuestion] {
+        let shuffled = TriviaData.questions.shuffled()
+        guard let limit else { return shuffled }
+        return Array(shuffled.prefix(max(1, min(limit, shuffled.count))))
     }
 }

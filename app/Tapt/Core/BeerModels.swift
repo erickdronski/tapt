@@ -46,6 +46,15 @@ struct TrendedBeer: Identifiable {
 }
 
 enum BeerRegions {
-    static let all = ["New Jersey", "California", "Global", "Germany", "Poland",
-                      "Czechia", "Belgium", "Ireland", "United Kingdom", "Mexico"]
+    static let states = [
+        "New Jersey", "California", "Colorado", "Massachusetts", "Maine", "Michigan",
+        "Minnesota", "Missouri", "New York", "North Carolina", "Ohio", "Oregon",
+        "Pennsylvania", "Texas", "Vermont", "Washington", "Alabama", "Alaska",
+        "Arizona", "Delaware", "Florida", "Georgia", "Illinois"
+    ]
+    static let countries = [
+        "Belgium", "Czechia", "Germany", "Ireland", "Japan", "Mexico", "Poland",
+        "United Kingdom"
+    ]
+    static let all = states + ["Global"] + countries
 }

@@ -3,6 +3,7 @@ import SwiftUI
 /// The Passport: countries collected, styles explored, and earned badges.
 struct PassportView: View {
     let checkins: [MyCheckin]
+    var guides: [RegionBeerGuide] = []
 
     private var stats: PassportStats {
         PassportStats(pours: checkins.count, styles: visitedStyles.count, countries: visitedCountries.count)
@@ -45,6 +46,35 @@ struct PassportView: View {
                     }
                 }
 
+                if !guides.isEmpty {
+                    section("World shelves", "\(visitedGuideCount) unlocked") {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                            ForEach(guides.filter { $0.scope == "country" }.prefix(12)) { guide in
+                                let visited = visitedCountries.contains(guide.name)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        Text(flag(guide.flag)).font(.title2)
+                                        Spacer()
+                                        Image(systemName: visited ? "seal.fill" : "lock.fill")
+                                            .foregroundStyle(visited ? Brand.gold : Brand.muted)
+                                    }
+                                    Text(guide.name)
+                                        .font(.system(.headline, design: .rounded).weight(.bold))
+                                        .foregroundStyle(Brand.text)
+                                    Text(visited ? guide.passportPhrase : guide.heroStyle)
+                                        .font(.caption)
+                                        .foregroundStyle(Brand.muted)
+                                        .lineLimit(3)
+                                }
+                                .padding(12)
+                                .frame(maxWidth: .infinity, minHeight: 126, alignment: .leading)
+                                .background(visited ? Brand.gold.opacity(0.14) : Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(visited ? Brand.gold : Brand.malt.opacity(0.08)))
+                            }
+                        }
+                    }
+                }
+
                 section("Badges", "") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 158), spacing: 12)], spacing: 12) {
                         ForEach(PassportData.badges) { badge in
@@ -72,6 +102,25 @@ struct PassportView: View {
         .background(Brand.background)
         .navigationTitle("Passport")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var visitedGuideCount: Int {
+        guides.filter { $0.scope == "country" && visitedCountries.contains($0.name) }.count
+    }
+
+    private func flag(_ code: String?) -> String {
+        switch code {
+        case "BE": return "🇧🇪"
+        case "CZ": return "🇨🇿"
+        case "DE": return "🇩🇪"
+        case "IE": return "🇮🇪"
+        case "JP": return "🇯🇵"
+        case "MX": return "🇲🇽"
+        case "PL": return "🇵🇱"
+        case "GB": return "🇬🇧"
+        case "US": return "🇺🇸"
+        default: return "🍺"
+        }
     }
 
     private func section<Content: View>(_ title: String, _ trailing: String, @ViewBuilder _ content: () -> Content) -> some View {

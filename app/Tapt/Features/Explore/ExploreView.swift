@@ -8,9 +8,11 @@ struct ExploreView: View {
     @AppStorage("noLowDefault") private var noLowDefault = false
     @State private var region = ""
     @State private var beers: [TrendedBeer] = []
+    @State private var guides: [RegionBeerGuide] = []
     @State private var loading = false
     @State private var myVotes: [String: Int] = [:]
     @State private var appeared = false
+    @State private var feedNote: String?
 
     private var visibleBeers: [TrendedBeer] {
         guard noLowDefault else { return beers }
@@ -25,12 +27,16 @@ struct ExploreView: View {
     private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
     private var heroBeer: TrendedBeer? { movers.first ?? top.first }
     private var totalMomentum: Int { movers.prefix(8).map(\.momentum).reduce(0, +) }
+    private var activeGuide: RegionBeerGuide? {
+        guides.first { $0.name == region }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     hero
+                    if let activeGuide { guideCard(activeGuide) }
                     mapLink
                     regionPicker
                     moversSection
@@ -45,6 +51,7 @@ struct ExploreView: View {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
             .task(id: region) { await load() }
+            .task { await loadGuides() }
             .overlay { if loading && beers.isEmpty { ProgressView().tint(Brand.gold) } }
         }
     }
@@ -53,9 +60,10 @@ struct ExploreView: View {
         TaptHeroPanel(
             title: heroBeer?.name ?? "Your beer radar",
             subtitle: heroBeer.map { "\($0.brewery) is moving in \(region.isEmpty ? homeRegion : region)." }
+                ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
                 ?? "Track what is hot, scan new pours, and build a beer passport that follows your taste.",
             metric: heroBeer.map { "+\($0.momentum)" } ?? "LIVE",
-            caption: noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat",
+            caption: feedNote ?? (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat"),
             icon: "chart.line.uptrend.xyaxis"
         )
         .padding(.horizontal)
@@ -70,13 +78,44 @@ struct ExploreView: View {
                     .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Breweries near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Find nearby beer spots and save your favorites").font(.caption).foregroundStyle(Brand.muted)
+                    Text("Tapt-seeded breweries plus local Apple beer spots").font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
             }
             .padding(14).background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(.plain).padding(.horizontal)
+    }
+
+    private func guideCard(_ guide: RegionBeerGuide) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Text(displayFlag(guide))
+                    .font(.title2)
+                    .frame(width: 42, height: 42)
+                    .background(Brand.background, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(guide.name) beer guide")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                    Text(guide.heroStyle)
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                }
+                Spacer()
+            }
+
+            Text(guide.cellarPrompt)
+                .font(.subheadline)
+                .foregroundStyle(Brand.text)
+                .fixedSize(horizontal: false, vertical: true)
+
+            FlowTags(items: guide.topStyles + Array(guide.flavorNotes.prefix(3)), tint: Brand.gold)
+        }
+        .padding(16)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.22)))
+        .padding(.horizontal)
     }
 
     private var regionPicker: some View {
@@ -189,6 +228,21 @@ struct ExploreView: View {
         .padding(.horizontal)
     }
 
+    private func displayFlag(_ guide: RegionBeerGuide) -> String {
+        switch guide.flag {
+        case "US": return "🇺🇸"
+        case "BE": return "🇧🇪"
+        case "CZ": return "🇨🇿"
+        case "DE": return "🇩🇪"
+        case "IE": return "🇮🇪"
+        case "JP": return "🇯🇵"
+        case "MX": return "🇲🇽"
+        case "PL": return "🇵🇱"
+        case "GB": return "🇬🇧"
+        default: return "🍺"
+        }
+    }
+
     private func flag(_ country: String) -> String {
         ["United States": "🇺🇸", "Germany": "🇩🇪", "Poland": "🇵🇱", "Czechia": "🇨🇿",
          "Belgium": "🇧🇪", "Ireland": "🇮🇪", "United Kingdom": "🇬🇧", "Mexico": "🇲🇽"][country] ?? "🍺"
@@ -198,7 +252,27 @@ struct ExploreView: View {
         guard !region.isEmpty else { return }
         loading = true
         defer { loading = false }
-        do { beers = try await BeerService.trends(region: region) } catch { beers = [] }
+        do {
+            let regional = try await BeerService.trends(region: region)
+            if regional.isEmpty && region != "Global" {
+                beers = try await BeerService.trends(region: "Global")
+                feedNote = "\(region) guide + Global radar"
+            } else {
+                beers = regional
+                feedNote = nil
+            }
+        } catch {
+            beers = []
+            feedNote = "Guide mode"
+        }
+    }
+
+    private func loadGuides() async {
+        do {
+            guides = try await WorldBeerService.regionGuides()
+        } catch {
+            guides = []
+        }
     }
 
     private func vote(_ b: TrendedBeer, _ v: Int) {
@@ -206,5 +280,26 @@ struct ExploreView: View {
         myVotes[b.id] = newValue
         guard let uid = session.user?.id, let value = newValue else { return }
         Task { try? await BeerService.vote(beerId: b.id, userId: uid, value: value) }
+    }
+}
+
+private struct FlowTags: View {
+    let items: [String]
+    let tint: Color
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 86), spacing: 7)], alignment: .leading, spacing: 7) {
+            ForEach(Array(items.prefix(6)), id: \.self) { item in
+                Text(item)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Brand.malt)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity)
+                    .background(tint.opacity(0.22), in: Capsule())
+            }
+        }
     }
 }

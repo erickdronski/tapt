@@ -9,11 +9,11 @@ struct BreweryModeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Text("Everyone at the table, pass the phone. Games for the whole crew.")
+                Text("Everyone at the table, pass the phone. Games for the whole crew, with NA-friendly play built in.")
                     .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal)
 
                 VStack(spacing: 14) {
-                    Text("Who's buying the round?").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                    Text("Pick the next captain").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
                     Stepper("Seats: \(players)", value: $players, in: 2...12).padding(.horizontal, 40)
                     ZStack {
                         Circle().stroke(Brand.haze, lineWidth: 10).frame(width: 150, height: 150)
@@ -32,7 +32,7 @@ struct BreweryModeView: View {
                     tile("Tapt Deck", "Draw a card, play the table", "rectangle.on.rectangle.angled", Brand.hop)
                 }.buttonStyle(.plain)
                 NavigationLink { TriviaGame() } label: {
-                    tile("Beer Trivia", "Wrong answer sips", "brain.head.profile", Brand.copper)
+                    tile("Beer Trivia", "Miss one, pass the phone", "brain.head.profile", Brand.copper)
                 }.buttonStyle(.plain)
             }
             .padding()

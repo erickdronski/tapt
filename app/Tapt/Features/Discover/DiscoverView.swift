@@ -19,6 +19,8 @@ struct DiscoverView: View {
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 18)
 
+                    quickPlayRail
+
                     DiscoverTile(title: "Flights",
                                  subtitle: "Guided tasting quests that reward curiosity, not volume.",
                                  icon: "map.fill", tint: Brand.gold) { FlightsView() }
@@ -40,6 +42,56 @@ struct DiscoverView: View {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
         }
+    }
+
+    private var quickPlayRail: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                QuickPlayTile(title: "Daily 5", icon: "calendar.badge.clock", tint: Brand.hop) {
+                    TriviaGame(title: "Daily 5", questionLimit: 5)
+                }
+                QuickPlayTile(title: "Trivia", icon: "brain.head.profile", tint: Brand.gold) {
+                    TriviaGame()
+                }
+                QuickPlayTile(title: "Deck", icon: "rectangle.on.rectangle.angled", tint: Brand.hop) {
+                    CardDeckGame()
+                }
+                QuickPlayTile(title: "Brewery Mode", icon: "person.3.fill", tint: Brand.copper) {
+                    BreweryModeView()
+                }
+            }
+            .padding(.horizontal, 1)
+        }
+    }
+}
+
+private struct QuickPlayTile<Destination: View>: View {
+    let title: String
+    let icon: String
+    let tint: Color
+    @ViewBuilder var destination: () -> Destination
+
+    var body: some View {
+        NavigationLink {
+            destination()
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 46, height: 46)
+                    .background(tint, in: RoundedRectangle(cornerRadius: 12))
+                Text(title)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Brand.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+            }
+            .frame(width: 104, height: 94)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.18)))
+        }
+        .buttonStyle(.plain)
     }
 }
 

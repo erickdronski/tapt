@@ -15,6 +15,7 @@ struct LogPourView: View {
     @State private var occasion = "bar"
     @State private var saving = false
     @State private var sharePour: PourCard?
+    @State private var errorMessage: String?
 
     private let tags = ["hoppy", "malty", "crisp", "fruity", "roasty", "sour", "sweet", "dry"]
     private let glasswareOptions = ["Pint", "Can", "Bottle", "Tulip", "Snifter", "Flight"]
@@ -49,6 +50,14 @@ struct LogPourView: View {
                         .navigationTitle("Share your pour").navigationBarTitleDisplayMode(.inline)
                         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
                 }
+            }
+            .alert("Could not log pour", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "Try again in a moment.")
             }
         }
     }
@@ -151,21 +160,30 @@ struct LogPourView: View {
         guard let uid = session.user?.id else { return }
         saving = true
         Task {
-            try? await CheckinService.log(
-                beer: beer,
-                userId: uid,
-                rating: rating,
-                flavorTags: Array(flavorTags).sorted(),
-                glassware: glassware,
-                occasion: occasion
-            )
-            saving = false
-            onLogged()
-            sharePour = PourCard(
-                beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
-                score: Int(rating / 5 * 100), user: "you",
-                abv: beer.abv.map { String(format: "%.1f%%", $0) }
-            )
+            do {
+                try await CheckinService.log(
+                    beer: beer,
+                    userId: uid,
+                    rating: rating,
+                    flavorTags: Array(flavorTags).sorted(),
+                    glassware: glassware,
+                    occasion: occasion
+                )
+                await MainActor.run {
+                    saving = false
+                    onLogged()
+                    sharePour = PourCard(
+                        beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
+                        score: Int(rating / 5 * 100), user: "you",
+                        abv: beer.abv.map { String(format: "%.1f%%", $0) }
+                    )
+                }
+            } catch {
+                await MainActor.run {
+                    saving = false
+                    errorMessage = "Tapt could not save that pour yet. Please try again."
+                }
+            }
         }
     }
 }

@@ -104,33 +104,33 @@ enum LiveBeerService {
     }
 
     static func report(checkinId: String, userId: UUID, reason: String) async throws {
-        struct Row: Encodable {
-            let reporter_id: String
-            let target_type: String
-            let target_id: String
-            let reason: String
+        struct Params: Encodable {
+            let p_target_type: String
+            let p_target_id: String
+            let p_reason: String
+            let p_details: String?
         }
 
         try await Supa.client
-            .from("content_report")
-            .insert(Row(
-                reporter_id: userId.uuidString,
-                target_type: "checkin",
-                target_id: checkinId,
-                reason: reason
-            ))
+            .rpc(
+                "report_content",
+                params: Params(
+                    p_target_type: "checkin",
+                    p_target_id: checkinId,
+                    p_reason: reason,
+                    p_details: nil
+                )
+            )
             .execute()
     }
 
     static func block(actorId: String, userId: UUID) async throws {
-        struct Row: Encodable {
-            let blocker_id: String
-            let blocked_id: String
+        struct Params: Encodable {
+            let p_blocked_id: String
         }
 
         try await Supa.client
-            .from("user_block")
-            .upsert(Row(blocker_id: userId.uuidString, blocked_id: actorId))
+            .rpc("block_user", params: Params(p_blocked_id: actorId))
             .execute()
     }
 }
