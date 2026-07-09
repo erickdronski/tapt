@@ -10,21 +10,24 @@ struct DiscoverView: View {
                 VStack(spacing: 16) {
                     TaptHeroPanel(
                         title: "Beer culture mode",
-                        subtitle: "Learn styles, run table games, and turn every pour into a better beer night.",
+                        subtitle: "Run guided flights, learn styles, play table games, and turn every pour into a better beer night.",
                         metric: "PLAY",
-                        caption: "School + games",
+                        caption: "Flights + school + games",
                         icon: "sparkles",
                         tint: Brand.gold
                     )
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 18)
 
+                    DiscoverTile(title: "Flights",
+                                 subtitle: "Guided tasting quests that reward curiosity, not volume.",
+                                 icon: "map.fill", tint: Brand.gold) { FlightsView() }
                     DiscoverTile(title: "Beer School",
                                  subtitle: "How it's made, the lingo, the history, the legends.",
-                                 icon: "graduationcap.fill", tint: Brand.gold) { LearnView() }
+                                 icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
                     DiscoverTile(title: "Games",
                                  subtitle: "Trivia and table games for the bar. All free.",
-                                 icon: "die.face.5.fill", tint: Brand.hop) { GamesView() }
+                                 icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
                 }
                 .padding()
             }
