@@ -18,7 +18,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.tapt.tapt
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: 1
         SWIFT_VERSION: "6.0"
         DEVELOPMENT_TEAM: J9DMDH4S58
@@ -33,6 +33,8 @@ targets:
       path: Tapt/Info.plist
       properties:
         CFBundleDisplayName: Tapt
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleURLTypes:
           - CFBundleURLName: app.tapt.tapt.auth
             CFBundleURLSchemes: [tapt]
