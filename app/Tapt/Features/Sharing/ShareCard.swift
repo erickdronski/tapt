@@ -9,6 +9,7 @@ struct PourCard: Identifiable {
     var score: Int
     var user: String
     var abv: String?
+    var place: String? = nil
 }
 
 /// A brand-locked 9:16 card built to look identical wherever it is shared
@@ -44,6 +45,14 @@ struct ShareCard: View {
             VStack(spacing: 5) {
                 Text(pour.beer).font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.malt).multilineTextAlignment(.center)
                 Text(pour.brewery).font(.system(size: 17, weight: .semibold, design: .rounded)).foregroundStyle(Brand.malt.opacity(0.7))
+                if let place = pour.place, !place.isEmpty {
+                    Text(place)
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(Brand.malt.opacity(0.55))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.top, 2)
+                }
                 HStack(spacing: 8) {
                     tag(pour.style)
                     if let abv = pour.abv { tag("ABV \(abv)") }

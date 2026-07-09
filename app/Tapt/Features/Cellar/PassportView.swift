@@ -6,10 +6,18 @@ struct PassportView: View {
     var guides: [RegionBeerGuide] = []
 
     private var stats: PassportStats {
-        PassportStats(pours: checkins.count, styles: visitedStyles.count, countries: visitedCountries.count)
+        PassportStats(
+            pours: checkins.count,
+            styles: visitedStyles.count,
+            states: visitedStates.count,
+            countries: visitedCountries.count
+        )
     }
     private var visitedCountries: Set<String> {
-        Set(checkins.map(\.country).filter { !$0.isEmpty })
+        Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
+    }
+    private var visitedStates: Set<String> {
+        Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
     }
     private var visitedStyles: [String] {
         Array(Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil })).sorted()
@@ -18,6 +26,33 @@ struct PassportView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                section("States", "\(stats.states) / \(BeerRegions.states.count)") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], spacing: 8) {
+                        ForEach(BeerRegions.states, id: \.self) { state in
+                            let visited = visitedStates.contains(state)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: visited ? "checkmark.seal.fill" : "mappin.circle.fill")
+                                        .foregroundStyle(visited ? Brand.gold : Brand.muted)
+                                    Spacer()
+                                    Text(stateCode(for: state))
+                                        .font(.system(.caption2, design: .rounded).weight(.heavy))
+                                        .foregroundStyle(visited ? Brand.malt : Brand.muted)
+                                }
+                                Text(state)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(visited ? Brand.text : Brand.muted)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.72)
+                            }
+                            .padding(10)
+                            .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
+                            .background(visited ? Brand.gold.opacity(0.16) : Brand.surface, in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(visited ? Brand.gold : Brand.malt.opacity(0.08), lineWidth: 1.3))
+                        }
+                    }
+                }
+
                 section("Countries", "\(stats.countries) / \(PassportData.countries.count)") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 10)], spacing: 10) {
                         ForEach(PassportData.countries, id: \.name) { item in
@@ -47,29 +82,20 @@ struct PassportView: View {
                 }
 
                 if !guides.isEmpty {
+                    section("State shelves", "\(visitedStateGuideCount) unlocked") {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                            ForEach(guides.filter { $0.scope == "state" }.prefix(12)) { guide in
+                                let visited = visitedStates.contains(guide.name)
+                                shelfCard(guide, visited: visited)
+                            }
+                        }
+                    }
+
                     section("World shelves", "\(visitedGuideCount) unlocked") {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
                             ForEach(guides.filter { $0.scope == "country" }.prefix(12)) { guide in
                                 let visited = visitedCountries.contains(guide.name)
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Text(flag(guide.flag)).font(.title2)
-                                        Spacer()
-                                        Image(systemName: visited ? "seal.fill" : "lock.fill")
-                                            .foregroundStyle(visited ? Brand.gold : Brand.muted)
-                                    }
-                                    Text(guide.name)
-                                        .font(.system(.headline, design: .rounded).weight(.bold))
-                                        .foregroundStyle(Brand.text)
-                                    Text(visited ? guide.passportPhrase : guide.heroStyle)
-                                        .font(.caption)
-                                        .foregroundStyle(Brand.muted)
-                                        .lineLimit(3)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, minHeight: 126, alignment: .leading)
-                                .background(visited ? Brand.gold.opacity(0.14) : Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(visited ? Brand.gold : Brand.malt.opacity(0.08)))
+                                shelfCard(guide, visited: visited)
                             }
                         }
                     }
@@ -106,6 +132,37 @@ struct PassportView: View {
 
     private var visitedGuideCount: Int {
         guides.filter { $0.scope == "country" && visitedCountries.contains($0.name) }.count
+    }
+
+    private var visitedStateGuideCount: Int {
+        guides.filter { $0.scope == "state" && visitedStates.contains($0.name) }.count
+    }
+
+    private func shelfCard(_ guide: RegionBeerGuide, visited: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(flag(guide.flag)).font(.title2)
+                Spacer()
+                Image(systemName: visited ? "seal.fill" : "lock.fill")
+                    .foregroundStyle(visited ? Brand.gold : Brand.muted)
+            }
+            Text(guide.name)
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.text)
+                .lineLimit(1)
+            Text(visited ? guide.passportPhrase : guide.heroStyle)
+                .font(.caption)
+                .foregroundStyle(Brand.muted)
+                .lineLimit(3)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, minHeight: 126, alignment: .leading)
+        .background(visited ? Brand.gold.opacity(0.14) : Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(visited ? Brand.gold : Brand.malt.opacity(0.08)))
+    }
+
+    private func stateCode(for state: String) -> String {
+        guides.first { $0.scope == "state" && $0.name == state }?.stateCode ?? ""
     }
 
     private func flag(_ code: String?) -> String {

@@ -49,21 +49,51 @@ struct MyCheckin: Identifiable, Decodable {
     let style: String?
     let eventTs: String
     let beer: BeerJoin
+    let venue: VenueJoin?
 
     enum CodingKeys: String, CodingKey {
         case id, rating, style
         case eventTs = "event_ts"
         case beer = "beer_catalog"
+        case venue
     }
     struct BeerJoin: Decodable {
         let name: String
         let brewery: BreweryJoin?
     }
     struct BreweryJoin: Decodable { let name: String?; let country: String? }
+    struct VenueJoin: Decodable {
+        let name: String?
+        let externalIds: VenueMetadata?
+
+        enum CodingKeys: String, CodingKey {
+            case name
+            case externalIds = "external_ids"
+        }
+    }
+    struct VenueMetadata: Decodable {
+        let city: String?
+        let region: String?
+        let country: String?
+        let breweryType: String?
+
+        enum CodingKeys: String, CodingKey {
+            case city, region, country
+            case breweryType = "brewery_type"
+        }
+    }
 
     var beerName: String { beer.name }
     var breweryName: String { beer.brewery?.name ?? "" }
     var country: String { beer.brewery?.country ?? "" }
+    var venueName: String { venue?.name ?? "" }
+    var venueCity: String { venue?.externalIds?.city ?? "" }
+    var venueRegion: String { venue?.externalIds?.region ?? "" }
+    var venueCountry: String { venue?.externalIds?.country ?? "" }
+    var passportCountry: String { venueCountry.isEmpty ? country : venueCountry }
+    var placeSubtitle: String {
+        [venueCity, venueRegion, venueCountry].filter { !$0.isEmpty }.joined(separator: ", ")
+    }
 }
 
 enum CheckinService {
@@ -90,7 +120,8 @@ enum CheckinService {
         rating: Double,
         flavorTags: [String] = [],
         glassware: String? = nil,
-        occasion: String? = nil
+        occasion: String? = nil,
+        venue: BreweryMapVenue? = nil
     ) async throws {
         struct Params: Encodable {
             let p_beer_id: String
@@ -116,14 +147,14 @@ enum CheckinService {
                 p_flavor_tags: flavorTags,
                 p_glassware: glassware,
                 p_occasion: occasion,
-                p_venue_id: nil,
+                p_venue_id: venue?.venueId,
                 p_on_off_premise: nil,
                 p_geo_bucket_h3: nil,
                 p_photo_url: nil,
                 p_price_paid: nil,
                 p_price_tier: nil,
                 p_purchase_intent_flags: [:],
-                p_source: "manual"
+                p_source: venue == nil ? "manual" : "manual_with_venue"
             )
         )
             .execute()
@@ -131,7 +162,7 @@ enum CheckinService {
 
     static func mine(userId: UUID) async throws -> [MyCheckin] {
         try await Supa.client.from("checkin_event")
-            .select("id,rating,style,event_ts,beer_catalog(name,brewery(name,country))")
+            .select("id,rating,style,event_ts,beer_catalog(name,brewery(name,country)),venue(name,external_ids)")
             .eq("user_id", value: userId.uuidString)
             .order("event_ts", ascending: false).limit(100)
             .execute().value

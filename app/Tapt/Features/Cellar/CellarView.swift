@@ -11,8 +11,17 @@ struct CellarView: View {
     private var styleCount: Int {
         Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil }).count
     }
+    private var visitedCountries: Set<String> {
+        Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
+    }
+    private var visitedStates: Set<String> {
+        Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
+    }
     private var countryCount: Int {
-        Set(checkins.map(\.country).filter { !$0.isEmpty }).count
+        visitedCountries.count
+    }
+    private var stateCount: Int {
+        visitedStates.count
     }
 
     var body: some View {
@@ -56,7 +65,7 @@ struct CellarView: View {
             VStack(alignment: .leading, spacing: 16) {
                 TaptHeroPanel(
                     title: "Passport progress",
-                    subtitle: "\(checkins.count) pours logged across \(styleCount) styles and \(countryCount) countries.",
+                    subtitle: "\(checkins.count) pours logged across \(styleCount) styles, \(stateCount) states, and \(countryCount) countries.",
                     metric: "\(checkins.count)",
                     caption: nextMilestone,
                     icon: "seal.fill",
@@ -71,9 +80,10 @@ struct CellarView: View {
                     }
                 }
                 .buttonStyle(.plain).padding(.horizontal)
-                HStack(spacing: 12) {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                     stat("\(checkins.count)", "pours", "drop.fill", Brand.gold)
                     stat("\(styleCount)", "styles", "square.grid.2x2.fill", Brand.hop)
+                    stat("\(stateCount)", "states", "map.fill", Brand.copper)
                     stat("\(countryCount)", "countries", "globe", Brand.copper)
                 }
                 .padding(.horizontal)
@@ -103,11 +113,23 @@ struct CellarView: View {
     }
 
     private var regionalShelves: some View {
-        let visited = guides.filter { guide in
-            guide.scope == "country" && checkins.contains { $0.country == guide.name }
+        let unlockedGuides = guides.filter { guide in
+            if guide.scope == "state" {
+                return visitedStates.contains(guide.name)
+            }
+            if guide.scope == "country" {
+                return visitedCountries.contains(guide.name)
+            }
+            return false
         }
-        let suggestions = guides.filter { $0.scope == "country" && !visited.contains($0) }.prefix(4)
-        let shelves = visited + Array(suggestions)
+        let suggestions = guides.filter { guide in
+            guard !unlockedGuides.contains(guide) else { return false }
+            if guide.scope == "state" {
+                return guide.country == "United States"
+            }
+            return guide.scope == "country"
+        }.prefix(5)
+        let shelves = unlockedGuides + Array(suggestions)
 
         return VStack(alignment: .leading, spacing: 10) {
             Text("Regional shelves")
@@ -118,7 +140,7 @@ struct CellarView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(shelves.prefix(8)) { guide in
-                        let unlocked = visited.contains(guide)
+                        let unlocked = unlockedGuides.contains(guide)
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Text(flag(guide.flag)).font(.title2)
@@ -130,6 +152,9 @@ struct CellarView: View {
                                 .font(.system(.headline, design: .rounded).weight(.bold))
                                 .foregroundStyle(Brand.text)
                                 .lineLimit(1)
+                            Text(guide.scope == "state" ? "State shelf" : "World shelf")
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(unlocked ? Brand.copper : Brand.muted)
                             Text(unlocked ? guide.passportPhrase : guide.cellarPrompt)
                                 .font(.caption)
                                 .foregroundStyle(Brand.muted)
@@ -160,6 +185,12 @@ struct CellarView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(c.beerName).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                 Text("\(c.breweryName)  \(c.style ?? "")").font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                if !c.venueName.isEmpty {
+                    Text([c.venueName, c.placeSubtitle].filter { !$0.isEmpty }.joined(separator: " - "))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Brand.copper)
+                        .lineLimit(1)
+                }
             }
             Spacer()
             if let r = c.rating {
@@ -176,6 +207,7 @@ struct CellarView: View {
     private var nextMilestone: String {
         if checkins.count < 5 { return "\(5 - checkins.count) pours to first flight" }
         if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
+        if stateCount < 3 { return "\(3 - stateCount) states to tap trail" }
         if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
         return "Passport is warming up"
     }
