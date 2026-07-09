@@ -18,19 +18,20 @@ struct TaptHeroPanel: View {
                 endPoint: .bottomTrailing
             )
             .overlay {
-                TimelineView(.animation) { timeline in
-                    GeometryReader { proxy in
-                        let t = timeline.date.timeIntervalSinceReferenceDate
-                        ForEach(0..<10, id: \.self) { i in
-                            let phase = CGFloat((t * 0.22) + Double(i) * 0.37)
-                            let x = proxy.size.width * CGFloat((Double(i) * 0.173).truncatingRemainder(dividingBy: 1))
-                            let y = proxy.size.height - ((phase.truncatingRemainder(dividingBy: 1)) * proxy.size.height)
-                            let r = CGFloat(5 + (i % 4) * 4)
-                            Circle()
-                                .fill(Brand.foam.opacity(0.11))
-                                .frame(width: r, height: r)
-                                .position(x: x, y: y)
-                        }
+                GeometryReader { proxy in
+                    ForEach(0..<10, id: \.self) { i in
+                        let x = proxy.size.width * CGFloat((Double(i) * 0.173).truncatingRemainder(dividingBy: 1))
+                        let r = CGFloat(5 + (i % 4) * 4)
+                        Circle()
+                            .fill(Brand.foam.opacity(0.11))
+                            .frame(width: r, height: r)
+                            .position(x: x, y: poured ? -20 : proxy.size.height + 20)
+                            .animation(
+                                .linear(duration: Double(7 + (i % 5)))
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(i) * 0.28),
+                                value: poured
+                            )
                     }
                 }
             }
