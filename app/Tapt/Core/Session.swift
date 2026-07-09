@@ -30,6 +30,26 @@ final class Session {
         }
     }
 
+    func sendEmailSignInLink(to email: String) async -> Bool {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedEmail.isEmpty else {
+            authError = "Enter your email address."
+            return false
+        }
+
+        authError = nil
+        do {
+            try await Supa.client.auth.signInWithOTP(
+                email: normalizedEmail,
+                redirectTo: Supa.authRedirectURL
+            )
+            return true
+        } catch {
+            authError = error.localizedDescription
+            return false
+        }
+    }
+
     nonisolated func handleOAuthCallback(_ url: URL) {
         Supa.client.auth.handle(url)
     }
