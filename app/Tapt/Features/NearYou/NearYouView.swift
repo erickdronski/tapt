@@ -11,6 +11,38 @@ struct NearYouView: View {
     @State private var taptVenues: [BreweryMapVenue] = []
     @State private var loading = false
     @State private var radarLoading = false
+    @State private var radarFilter: RadarFilter = .all
+    @State private var searchText = ""
+
+    private var visibleTaptVenues: [BreweryMapVenue] {
+        let filtered = taptVenues.filter { venue in
+            switch radarFilter {
+            case .all:
+                return true
+            case .unitedStates:
+                return venue.country == "United States"
+            case .world:
+                return venue.country != "United States"
+            }
+        }
+
+        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return filtered
+        }
+
+        let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return filtered.filter { venue in
+            [venue.name, venue.city, venue.region, venue.country, venue.breweryType]
+                .compactMap { $0 }
+                .contains { $0.localizedCaseInsensitiveContains(term) }
+        }
+    }
+
+    private var radarSummary: String {
+        let countries = Set(taptVenues.compactMap(\.country).filter { !$0.isEmpty }).count
+        let states = Set(taptVenues.filter { $0.country == "United States" }.compactMap(\.region).filter { !$0.isEmpty }).count
+        return "\(taptVenues.count) breweries • \(states) states • \(countries) countries"
+    }
 
     var body: some View {
         NavigationStack {
@@ -33,14 +65,32 @@ struct NearYouView: View {
                 List {
                     if !taptVenues.isEmpty {
                         Section {
-                            ForEach(taptVenues.prefix(60)) { venue in
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text(radarSummary)
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    .foregroundStyle(Brand.text)
+                                Picker("Radar filter", selection: $radarFilter) {
+                                    ForEach(RadarFilter.allCases) { filter in
+                                        Text(filter.rawValue).tag(filter)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                            }
+                            .padding(.vertical, 4)
+
+                            if visibleTaptVenues.isEmpty {
+                                Text("No breweries match that search yet.")
+                                    .foregroundStyle(Brand.muted)
+                            }
+
+                            ForEach(visibleTaptVenues.prefix(120)) { venue in
                                 Button { focus(venue) } label: { taptRow(venue) }
                                     .buttonStyle(.plain)
                             }
                         } header: {
                             Text("Tapt brewery radar")
                         } footer: {
-                            Text("Seeded from Tapt's license-safe brewery map layer. Local Apple results appear below when location is on.")
+                            Text("Seeded from Tapt's license-safe brewery map layer and Open Brewery DB. Local Apple results appear below when location is on.")
                         }
                     } else if radarLoading {
                         Label("Loading Tapt brewery radar...", systemImage: "antenna.radiowaves.left.and.right")
@@ -73,6 +123,7 @@ struct NearYouView: View {
             }
             .navigationTitle("Breweries Near You")
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Search brewery, city, state")
             .task {
                 await loadTaptRadar()
                 if locationConsent { location.request() }
@@ -111,10 +162,14 @@ struct NearYouView: View {
                 Text(venue.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                 Text(venue.subtitle.isEmpty ? "Tapt brewery map" : venue.subtitle)
                     .font(.subheadline).foregroundStyle(Brand.muted).lineLimit(1)
+                Text("\(venue.typeLabel.capitalized) • \(venue.sourceLabel ?? "Tapt map")")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(Brand.muted)
+                    .lineLimit(1)
             }
             Spacer()
-            Text("\(venue.heatScore)")
-                .font(.system(.caption, design: .rounded).weight(.bold))
+            Text(venue.sourceBadge)
+                .font(.system(.caption2, design: .rounded).weight(.heavy))
                 .foregroundStyle(Brand.malt)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
@@ -141,7 +196,7 @@ struct NearYouView: View {
         radarLoading = true
         defer { radarLoading = false }
         do {
-            let venues = try await WorldBeerService.breweryMap(limit: 200)
+            let venues = try await WorldBeerService.breweryMap(limit: 800)
             taptVenues = venues
             if location.location == nil, let first = venues.first {
                 camera = .region(MKCoordinateRegion(center: first.coordinate,
@@ -166,4 +221,12 @@ struct NearYouView: View {
             }
         }
     }
+}
+
+private enum RadarFilter: String, CaseIterable, Identifiable {
+    case all = "All"
+    case unitedStates = "U.S."
+    case world = "World"
+
+    var id: String { rawValue }
 }

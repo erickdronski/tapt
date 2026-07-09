@@ -39,7 +39,8 @@ enum PassportData {
         ("United States", "🇺🇸"), ("Germany", "🇩🇪"), ("Poland", "🇵🇱"), ("Czechia", "🇨🇿"),
         ("Belgium", "🇧🇪"), ("Ireland", "🇮🇪"), ("United Kingdom", "🇬🇧"), ("Mexico", "🇲🇽"),
         ("Japan", "🇯🇵"), ("Canada", "🇨🇦"), ("Spain", "🇪🇸"), ("Netherlands", "🇳🇱"),
-        ("Denmark", "🇩🇰"), ("Norway", "🇳🇴"), ("Sweden", "🇸🇪"), ("Italy", "🇮🇹"),
-        ("France", "🇫🇷"), ("Brazil", "🇧🇷"), ("Australia", "🇦🇺"), ("New Zealand", "🇳🇿"),
+        ("Austria", "🇦🇹"), ("Denmark", "🇩🇰"), ("Norway", "🇳🇴"), ("Sweden", "🇸🇪"),
+        ("Italy", "🇮🇹"), ("France", "🇫🇷"), ("South Korea", "🇰🇷"), ("Brazil", "🇧🇷"),
+        ("Australia", "🇦🇺"), ("New Zealand", "🇳🇿"),
     ]
 }

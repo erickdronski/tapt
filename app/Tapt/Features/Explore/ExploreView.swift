@@ -230,22 +230,38 @@ struct ExploreView: View {
 
     private func displayFlag(_ guide: RegionBeerGuide) -> String {
         switch guide.flag {
+        case "AT": return "🇦🇹"
+        case "AU": return "🇦🇺"
         case "US": return "🇺🇸"
         case "BE": return "🇧🇪"
+        case "BR": return "🇧🇷"
+        case "CA": return "🇨🇦"
         case "CZ": return "🇨🇿"
+        case "DK": return "🇩🇰"
         case "DE": return "🇩🇪"
-        case "IE": return "🇮🇪"
-        case "JP": return "🇯🇵"
-        case "MX": return "🇲🇽"
-        case "PL": return "🇵🇱"
+        case "ES": return "🇪🇸"
+        case "FR": return "🇫🇷"
         case "GB": return "🇬🇧"
+        case "IE": return "🇮🇪"
+        case "IT": return "🇮🇹"
+        case "JP": return "🇯🇵"
+        case "KR": return "🇰🇷"
+        case "MX": return "🇲🇽"
+        case "NL": return "🇳🇱"
+        case "PL": return "🇵🇱"
         default: return "🍺"
         }
     }
 
     private func flag(_ country: String) -> String {
-        ["United States": "🇺🇸", "Germany": "🇩🇪", "Poland": "🇵🇱", "Czechia": "🇨🇿",
-         "Belgium": "🇧🇪", "Ireland": "🇮🇪", "United Kingdom": "🇬🇧", "Mexico": "🇲🇽"][country] ?? "🍺"
+        [
+            "Australia": "🇦🇺", "Austria": "🇦🇹", "Belgium": "🇧🇪", "Brazil": "🇧🇷",
+            "Canada": "🇨🇦", "Czechia": "🇨🇿", "Denmark": "🇩🇰", "France": "🇫🇷",
+            "Germany": "🇩🇪", "Ireland": "🇮🇪", "Italy": "🇮🇹", "Japan": "🇯🇵",
+            "Mexico": "🇲🇽", "Netherlands": "🇳🇱", "Poland": "🇵🇱",
+            "South Korea": "🇰🇷", "Spain": "🇪🇸", "United Kingdom": "🇬🇧",
+            "United States": "🇺🇸"
+        ][country] ?? "🍺"
     }
 
     private func load() async {

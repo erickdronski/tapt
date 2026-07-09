@@ -110,14 +110,24 @@ struct PassportView: View {
 
     private func flag(_ code: String?) -> String {
         switch code {
+        case "AT": return "🇦🇹"
+        case "AU": return "🇦🇺"
         case "BE": return "🇧🇪"
+        case "BR": return "🇧🇷"
+        case "CA": return "🇨🇦"
         case "CZ": return "🇨🇿"
+        case "DK": return "🇩🇰"
         case "DE": return "🇩🇪"
-        case "IE": return "🇮🇪"
-        case "JP": return "🇯🇵"
-        case "MX": return "🇲🇽"
-        case "PL": return "🇵🇱"
+        case "ES": return "🇪🇸"
+        case "FR": return "🇫🇷"
         case "GB": return "🇬🇧"
+        case "IE": return "🇮🇪"
+        case "IT": return "🇮🇹"
+        case "JP": return "🇯🇵"
+        case "KR": return "🇰🇷"
+        case "MX": return "🇲🇽"
+        case "NL": return "🇳🇱"
+        case "PL": return "🇵🇱"
         case "US": return "🇺🇸"
         default: return "🍺"
         }

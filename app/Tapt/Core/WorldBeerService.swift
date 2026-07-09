@@ -13,6 +13,8 @@ struct BreweryMapVenue: Identifiable, Decodable, Sendable {
     let sourceLabel: String?
     let heatScore: Int
     let updatedAt: String?
+    let breweryType: String?
+    let websiteURL: String?
 
     var id: String { venueId }
     var subtitle: String {
@@ -24,6 +26,16 @@ struct BreweryMapVenue: Identifiable, Decodable, Sendable {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+    var typeLabel: String {
+        guard let breweryType, !breweryType.isEmpty else { return "brewery" }
+        return breweryType.replacingOccurrences(of: "_", with: " ")
+    }
+    var sourceBadge: String {
+        if let sourceLabel, sourceLabel.localizedCaseInsensitiveContains("Open Brewery DB") {
+            return "OBDB"
+        }
+        return "Tapt"
+    }
 
     enum CodingKeys: String, CodingKey {
         case venueId = "venue_id"
@@ -31,6 +43,8 @@ struct BreweryMapVenue: Identifiable, Decodable, Sendable {
         case sourceLabel = "source_label"
         case heatScore = "heat_score"
         case updatedAt = "updated_at"
+        case breweryType = "brewery_type"
+        case websiteURL = "website_url"
     }
 }
 
@@ -66,7 +80,7 @@ struct RegionBeerGuide: Identifiable, Decodable, Hashable, Sendable {
 enum WorldBeerService {
     private struct EmptyParams: Encodable {}
 
-    static func breweryMap(limit: Int = 200) async throws -> [BreweryMapVenue] {
+    static func breweryMap(limit: Int = 800) async throws -> [BreweryMapVenue] {
         struct Params: Encodable { let p_limit: Int }
 
         return try await Supa.client
