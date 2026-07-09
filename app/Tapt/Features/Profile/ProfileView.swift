@@ -68,6 +68,24 @@ struct ProfileView: View {
                 }
 
                 Section {
+                    NewsletterCard()
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                } header: {
+                    Text("The Tapt Dispatch")
+                }
+
+                Section {
+                    NavigationLink { PartnerInquiryView() } label: {
+                        Label("Partner with Tapt", systemImage: "storefront.fill")
+                    }
+                } header: {
+                    Text("For breweries & bars")
+                } footer: {
+                    Text("Free profiles forever. Featured placement puts your taps and events in front of nearby beer fans.")
+                }
+
+                Section {
                     Label("Drink responsibly. Never drink and drive.", systemImage: "hand.raised.fill")
                         .foregroundStyle(Brand.text)
                     Link(destination: URL(string: "tel://18006624357")!) {

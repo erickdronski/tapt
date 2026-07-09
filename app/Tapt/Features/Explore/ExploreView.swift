@@ -41,6 +41,8 @@ struct ExploreView: View {
                     regionPicker
                     moversSection
                     topSection
+                    leaderboardLink
+                    FeaturedPartnersRail()
                 }
                 .padding(.vertical)
             }
@@ -218,6 +220,22 @@ struct ExploreView: View {
                 .overlay(Circle().stroke(color.opacity(0.5)))
         }
         .buttonStyle(.plain)
+    }
+
+    private var leaderboardLink: some View {
+        NavigationLink { LeaderboardsView() } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "trophy.fill").foregroundStyle(Brand.malt)
+                    .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Leaderboards").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                    Text("Top beers, tasters, and styles — all first-party signal").font(.caption).foregroundStyle(Brand.muted)
+                }
+                Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+            }
+            .padding(14).background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain).padding(.horizontal)
     }
 
     private func header(_ t: String, _ s: String) -> some View {

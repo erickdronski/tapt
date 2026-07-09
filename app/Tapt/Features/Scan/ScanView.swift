@@ -12,6 +12,8 @@ struct ScanView: View {
     @State private var rating: Double = 4
     @State private var saving = false
     @State private var loggedPour: PourCard?
+    @State private var offBeer: OFFBeer?
+    @State private var addingOFF = false
 
     private var scannerAvailable: Bool {
         DataScannerViewController.isSupported && DataScannerViewController.isAvailable
@@ -111,6 +113,8 @@ struct ScanView: View {
 
                     if loadingMatches {
                         ProgressView().tint(Brand.gold).padding(.top, 16)
+                    } else if matches.isEmpty, let offBeer {
+                        offCard(offBeer)
                     } else if matches.isEmpty {
                         Text("No catalog match yet. Try a clearer barcode or log it manually from Cellar.")
                             .font(.footnote)
@@ -187,11 +191,101 @@ struct ScanView: View {
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(isSelected ? Brand.gold : Brand.malt.opacity(0.1)))
     }
 
+    /// A card for a barcode that missed our catalog but exists in Open Food
+    /// Facts — one tap adds the real product to Tapt (GTIN-dedup'd) and logs it.
+    private func offCard(_ off: OFFBeer) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                AsyncImage(url: off.imageURL.flatMap(URL.init)) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Image(systemName: "mug.fill").foregroundStyle(Brand.malt)
+                }
+                .frame(width: 54, height: 54)
+                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(off.name)
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                        .lineLimit(2)
+                    Text([off.brand, off.abv.map { String(format: "%.1f%% ABV", $0) }]
+                        .compactMap { $0 }.joined(separator: "  "))
+                        .font(.caption).foregroundStyle(Brand.muted)
+                }
+                Spacer(minLength: 0)
+            }
+
+            Text(off.isBeerCategory
+                 ? "Found in Open Food Facts — new to Tapt. Add it and be the first to log it worldwide."
+                 : "Found in Open Food Facts, but it may not be a beer. Add it only if it belongs in the Cellar.")
+                .font(.caption)
+                .foregroundStyle(Brand.muted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 8) {
+                ForEach(1...5, id: \.self) { i in
+                    Image(systemName: Double(i) <= rating ? "star.fill" : "star")
+                        .foregroundStyle(Brand.gold)
+                        .onTapGesture { rating = Double(i) }
+                }
+                Spacer()
+                Button(addingOFF ? "Adding..." : "Add to Tapt + log") { addAndLog(off) }
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(Brand.hop, in: Capsule())
+                    .foregroundStyle(Brand.malt)
+                    .disabled(addingOFF)
+            }
+        }
+        .padding(14)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.hop.opacity(0.35)))
+        .padding(.horizontal)
+    }
+
+    private func addAndLog(_ off: OFFBeer) {
+        guard let uid = session.user?.id else { return }
+        addingOFF = true
+        Task {
+            do {
+                if let pick = try await BarcodeCatalogService.addToCatalog(off) {
+                    try await CheckinService.log(beer: pick, userId: uid, rating: rating)
+                    let pour = PourCard(
+                        beer: pick.name,
+                        brewery: pick.breweryName.isEmpty ? "First on Tapt" : pick.breweryName,
+                        style: pick.style ?? "Beer",
+                        score: Int(rating * 20),
+                        user: session.user?.email?.split(separator: "@").first.map(String.init) ?? "beerfan",
+                        abv: pick.abv.map { String(format: "%.1f%%", $0) }
+                    )
+                    addingOFF = false
+                    showResult = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        loggedPour = pour
+                    }
+                } else {
+                    addingOFF = false
+                }
+            } catch {
+                addingOFF = false
+            }
+        }
+    }
+
     private func loadMatches(_ raw: String) async {
         loadingMatches = true
         selected = nil
+        offBeer = nil
         defer { loadingMatches = false }
         matches = (try? await CheckinService.matchScan(raw)) ?? []
+
+        // Barcode with no catalog hit -> ask Open Food Facts (free, open data).
+        let digits = raw.filter(\.isNumber)
+        if matches.isEmpty, digits.count >= 8, digits.count <= 14, digits.count == raw.trimmingCharacters(in: .whitespaces).count {
+            offBeer = try? await BarcodeCatalogService.lookup(barcode: digits)
+        }
     }
 
     private func save(_ beer: BeerPick) {

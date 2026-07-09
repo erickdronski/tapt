@@ -104,6 +104,23 @@ struct TonightView: View {
     private var socialSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader("Your circle is drinking", "Your pours and people you follow")
+
+            NavigationLink { FindFriendsView() } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "person.badge.plus").foregroundStyle(Brand.malt)
+                        .frame(width: 40, height: 40).background(Brand.hop, in: RoundedRectangle(cornerRadius: 11))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Find friends").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                        Text("Follow your crew to fill this feed").font(.caption).foregroundStyle(Brand.muted)
+                    }
+                    Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+                }
+                .padding(12)
+                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal)
+
             if pours.isEmpty {
                 TaptEmptyState(
                     icon: "person.2.fill",

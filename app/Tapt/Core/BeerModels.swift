@@ -60,8 +60,9 @@ enum BeerRegions {
     ]
     static let countries = [
         "Australia", "Austria", "Belgium", "Brazil", "Canada", "Czechia",
-        "Denmark", "France", "Germany", "Ireland", "Italy", "Japan",
-        "Mexico", "Netherlands", "Poland", "South Korea", "Spain",
+        "Denmark", "Finland", "France", "Germany", "Ireland", "Italy",
+        "Japan", "Mexico", "Netherlands", "New Zealand", "Poland",
+        "Portugal", "Singapore", "South Africa", "South Korea", "Spain",
         "United Kingdom"
     ]
     static let all = states + ["Global"] + countries

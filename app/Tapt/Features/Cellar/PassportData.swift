@@ -38,12 +38,19 @@ enum PassportData {
         .init(id: "century",  title: "Centurion",       detail: "100 pours",           icon: "trophy.fill",           metric: .pours,     threshold: 100),
     ]
 
+    /// Every country with real beers or venues in the Tapt catalog.
     static let countries: [(name: String, flag: String)] = [
         ("United States", "🇺🇸"), ("Germany", "🇩🇪"), ("Poland", "🇵🇱"), ("Czechia", "🇨🇿"),
         ("Belgium", "🇧🇪"), ("Ireland", "🇮🇪"), ("United Kingdom", "🇬🇧"), ("Mexico", "🇲🇽"),
         ("Japan", "🇯🇵"), ("Canada", "🇨🇦"), ("Spain", "🇪🇸"), ("Netherlands", "🇳🇱"),
         ("Austria", "🇦🇹"), ("Denmark", "🇩🇰"), ("Norway", "🇳🇴"), ("Sweden", "🇸🇪"),
         ("Italy", "🇮🇹"), ("France", "🇫🇷"), ("South Korea", "🇰🇷"), ("Brazil", "🇧🇷"),
-        ("Australia", "🇦🇺"), ("New Zealand", "🇳🇿"),
+        ("Australia", "🇦🇺"), ("New Zealand", "🇳🇿"), ("China", "🇨🇳"), ("Thailand", "🇹🇭"),
+        ("Vietnam", "🇻🇳"), ("Singapore", "🇸🇬"), ("Philippines", "🇵🇭"), ("India", "🇮🇳"),
+        ("Sri Lanka", "🇱🇰"), ("Taiwan", "🇹🇼"), ("Iceland", "🇮🇸"), ("Finland", "🇫🇮"),
+        ("Lithuania", "🇱🇹"), ("Ukraine", "🇺🇦"), ("Estonia", "🇪🇪"), ("Russia", "🇷🇺"),
+        ("Switzerland", "🇨🇭"), ("Greece", "🇬🇷"), ("Turkey", "🇹🇷"), ("Argentina", "🇦🇷"),
+        ("Peru", "🇵🇪"), ("Jamaica", "🇯🇲"), ("South Africa", "🇿🇦"), ("Namibia", "🇳🇦"),
+        ("Kenya", "🇰🇪"), ("Nigeria", "🇳🇬"), ("Portugal", "🇵🇹"),
     ]
 }

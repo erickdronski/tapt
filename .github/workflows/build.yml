@@ -1,0 +1,38 @@
+name: Build
+
+# Compile-verify every push (simulator build, no signing, no upload).
+# TestFlight delivery stays in testflight.yml (manual dispatch).
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then sudo xcode-select -s "$LATEST/Contents/Developer"; fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: app
+        run: xcodegen generate
+
+      - name: Build (iOS Simulator, unsigned)
+        working-directory: app
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Tapt.xcodeproj \
+            -scheme Tapt \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            | tail -60

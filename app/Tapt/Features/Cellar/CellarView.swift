@@ -3,10 +3,13 @@ import SwiftUI
 /// Cellar: your logged pours + a Passport strip (pours, styles, countries). Log flow wired in.
 struct CellarView: View {
     @Environment(Session.self) private var session
+    @AppStorage("beerGeekMode") private var beerGeekMode = false
     @State private var checkins: [MyCheckin] = []
     @State private var guides: [RegionBeerGuide] = []
     @State private var showLog = false
     @State private var appeared = false
+
+    private var logVerb: String { beerGeekMode ? "Tick a pour" : "Log a pour" }
 
     private var styleCount: Int {
         Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil }).count
@@ -53,7 +56,7 @@ struct CellarView: View {
             icon: "square.stack.3d.up.fill",
             title: "Your Cellar is thirsty",
             message: "Log your first pour to start your Cellar, unlock Passport stamps, and build your beer taste graph.",
-            actionTitle: "Log a pour",
+            actionTitle: logVerb,
             action: { showLog = true }
         )
         .opacity(appeared ? 1 : 0)

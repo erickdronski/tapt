@@ -20,6 +20,7 @@ struct OnboardingView: View {
     @State private var locationConsent = true
     @State private var aggregateConsent = true
     @State private var dataSaleConsent = false
+    @State private var newsletterOptIn = false
     @State private var saving = false
     @State private var saveError: String?
 
@@ -130,8 +131,23 @@ struct OnboardingView: View {
             PourGlass()
             Text("You are all set\(firstName)")
                 .font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text).multilineTextAlignment(.center)
-            Text("\(styles.count) styles picked, home base \(region). Time to fill your Cellar.")
+            Text("\(styles.count) styles picked, home base \(region). Scan any beer on Earth, log the pour, stamp the Passport.")
                 .font(.body).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal, 24)
+
+            Toggle(isOn: $newsletterOptIn) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Send me The Tapt Dispatch")
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                    Text("The free beer newsletter: trends, new spots, what the world is pouring.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                }
+            }
+            .toggleStyle(.switch)
+            .padding(14)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 24)
             Spacer()
         }
     }
@@ -203,6 +219,9 @@ struct OnboardingView: View {
                     aggregateConsent: aggregateConsent,
                     dataSaleConsent: dataSaleConsent
                 )
+                if newsletterOptIn, let email = session.user?.email, email.contains("@") {
+                    try? await NewsletterService.subscribe(email: email, source: "onboarding")
+                }
                 var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
                 ids.insert(uid.uuidString)
                 onboardedUserIDs = ids.sorted().joined(separator: ",")

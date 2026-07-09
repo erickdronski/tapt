@@ -27,12 +27,23 @@ struct DiscoverView: View {
                     DiscoverTile(title: "Tonight",
                                  subtitle: "Live beer heat, friend pours, your taste graph, and safety controls.",
                                  icon: "flame.fill", tint: Brand.copper) { TonightView() }
+                    DiscoverTile(title: "Leaderboards",
+                                 subtitle: "Top beers, top tasters, top styles — powered by real votes and pours.",
+                                 icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
+                    DiscoverTile(title: "Find friends",
+                                 subtitle: "Follow your crew. Their pours light up your Tonight feed.",
+                                 icon: "person.badge.plus", tint: Brand.hop) { FindFriendsView() }
                     DiscoverTile(title: "Beer School",
                                  subtitle: "How it's made, the lingo, the history, the legends.",
                                  icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
                     DiscoverTile(title: "Games",
                                  subtitle: "Trivia and table games for the bar. All free.",
                                  icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
+                    DiscoverTile(title: "Partner with Tapt",
+                                 subtitle: "Breweries, bars, pubs, taprooms: get featured to fans near you.",
+                                 icon: "storefront.fill", tint: Brand.copper) { PartnerInquiryView() }
+
+                    NewsletterCard()
                 }
                 .padding()
             }

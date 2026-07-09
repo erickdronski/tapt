@@ -139,7 +139,10 @@ struct NearYouView: View {
                 if locationConsent { location.request() }
             }
             .onChange(of: location.location) { _, loc in
-                if let loc, breweries.isEmpty { search(near: loc.coordinate) }
+                if let loc, breweries.isEmpty {
+                    search(near: loc.coordinate)
+                    Task { await loadNearbyRadar(loc.coordinate) }
+                }
             }
         }
     }
@@ -249,6 +252,17 @@ struct NearYouView: View {
         } catch {
             taptVenues = []
         }
+    }
+
+    /// Once we know where the user is, swap the global sample for a
+    /// distance-ordered radar around them (keeps a global tail for browsing).
+    private func loadNearbyRadar(_ coord: CLLocationCoordinate2D) async {
+        guard let nearby = try? await WorldBeerService.breweryMapNear(
+            latitude: coord.latitude, longitude: coord.longitude, km: 80, limit: 250
+        ), !nearby.isEmpty else { return }
+        let nearbyIds = Set(nearby.map(\.venueId))
+        let globalTail = taptVenues.filter { !nearbyIds.contains($0.venueId) }.prefix(350)
+        taptVenues = nearby + Array(globalTail)
     }
 
     private func search(near coord: CLLocationCoordinate2D) {
