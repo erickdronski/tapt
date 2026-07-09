@@ -1,6 +1,6 @@
-# Tapt 🍺
+# Tapt
 
-A free, global, scan-first **beer passport**: point your camera at any label, tap list, or barcode → instant personalized, style-fair match score → log the pour to your **Cellar** → see what's actually good **on tap near you**. Free to drinkers forever; breweries fund the party. Built to scale worldwide — and structured from day one as a sellable taste-graph + territory-intelligence asset.
+**The Beer Superapp.** A free, global, scan-first beer passport: point your camera at any label, tap list, or barcode, get a personalized style-fair match score, log the pour to your **Cellar**, play beer-night games, and see what's actually good near you. Tapt is for breweries, pubs, bars, taprooms, beer gardens, beer festivals, and every local place where beer culture happens.
 
 **Stack:** native Swift 6 / SwiftUI (iOS 18+) · Supabase (Postgres + PostGIS + Auth + Storage + Realtime + Edge Functions) · Apple Sign In + Google Sign In · MapKit.
 

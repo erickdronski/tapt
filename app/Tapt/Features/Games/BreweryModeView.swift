@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Brewery Mode: pass-the-phone group play. Round roulette + the table games.
+/// Beer Night Mode: pass-the-phone group play. Round roulette + the table games.
 struct BreweryModeView: View {
     @State private var players = 4
     @State private var picked: Int?
@@ -31,6 +31,12 @@ struct BreweryModeView: View {
                 NavigationLink { CardDeckGame() } label: {
                     tile("Tapt Deck", "Draw a card, play the table", "rectangle.on.rectangle.angled", Brand.hop)
                 }.buttonStyle(.plain)
+                NavigationLink { BarGamesView(starting: .beerPong) } label: {
+                    tile("Beer Pong", "Clear a rack in pass-the-phone mode", "circle.grid.cross.fill", Brand.gold)
+                }.buttonStyle(.plain)
+                NavigationLink { BarGamesView(starting: .flipCup) } label: {
+                    tile("Flip Cup", "Fast hands, best times, table streaks", "cup.and.saucer.fill", Brand.hop)
+                }.buttonStyle(.plain)
                 NavigationLink { TriviaGame() } label: {
                     tile("Beer Trivia", "Miss one, pass the phone", "brain.head.profile", Brand.copper)
                 }.buttonStyle(.plain)
@@ -38,7 +44,7 @@ struct BreweryModeView: View {
             .padding()
         }
         .background(Brand.background)
-        .navigationTitle("Brewery Mode")
+        .navigationTitle("Beer Night Mode")
         .navigationBarTitleDisplayMode(.inline)
     }
 

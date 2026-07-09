@@ -1,8 +1,8 @@
 import SwiftUI
 import MapKit
 
-/// A local map of nearby breweries and beer spots from Apple POI.
-/// Our own tap-list + check-in data layers on top once check-ins exist.
+/// A local map of nearby beer spots from Tapt, Apple, and live local search.
+/// Includes breweries, pubs, bars, taprooms, beer gardens, and restaurants with beer energy.
 struct NearYouView: View {
     @AppStorage("locationConsent") private var locationConsent = true
     @State private var location = LocationManager()
@@ -41,7 +41,11 @@ struct NearYouView: View {
     private var radarSummary: String {
         let countries = Set(taptVenues.compactMap(\.country).filter { !$0.isEmpty }).count
         let states = Set(taptVenues.filter { $0.country == "United States" }.compactMap(\.region).filter { !$0.isEmpty }).count
-        return "\(taptVenues.count) breweries • \(states) states • \(countries) countries"
+        return "\(taptVenues.count) beer spots • \(states) states • \(countries) countries"
+    }
+
+    private var spotlightVenue: BreweryMapVenue? {
+        visibleTaptVenues.first ?? taptVenues.first
     }
 
     var body: some View {
@@ -54,15 +58,21 @@ struct NearYouView: View {
                             .tint(Brand.hop)
                     }
                     ForEach(breweries, id: \.self) { item in
-                        Marker(item.name ?? "Brewery", systemImage: "mug.fill",
+                        Marker(item.name ?? "Beer spot", systemImage: "mug.fill",
                                coordinate: item.placemark.coordinate)
                             .tint(Brand.gold)
                     }
                 }
-                .mapStyle(.standard(pointsOfInterest: .including([.brewery, .nightlife, .winery])))
+                .mapStyle(.standard(pointsOfInterest: .including([.brewery, .nightlife, .restaurant, .winery])))
                 .frame(height: 320)
 
                 List {
+                    if let spotlightVenue {
+                        Section {
+                            spotlight(spotlightVenue)
+                        }
+                    }
+
                     if !taptVenues.isEmpty {
                         Section {
                             VStack(alignment: .leading, spacing: 10) {
@@ -79,7 +89,7 @@ struct NearYouView: View {
                             .padding(.vertical, 4)
 
                             if visibleTaptVenues.isEmpty {
-                                Text("No breweries match that search yet.")
+                                Text("No beer spots match that search yet.")
                                     .foregroundStyle(Brand.muted)
                             }
 
@@ -88,12 +98,12 @@ struct NearYouView: View {
                                     .buttonStyle(.plain)
                             }
                         } header: {
-                            Text("Tapt brewery radar")
+                            Text("Tapt beer radar")
                         } footer: {
-                            Text("Seeded from Tapt's license-safe brewery map layer and Open Brewery DB. Local Apple results appear below when location is on.")
+                            Text("Seeded from Tapt's license-safe venue map layer. Local pubs, bars, taprooms, and beer gardens appear below when location is on.")
                         }
                     } else if radarLoading {
-                        Label("Loading Tapt brewery radar...", systemImage: "antenna.radiowaves.left.and.right")
+                        Label("Loading Tapt beer radar...", systemImage: "antenna.radiowaves.left.and.right")
                             .foregroundStyle(Brand.muted)
                     }
 
@@ -104,14 +114,14 @@ struct NearYouView: View {
                         Button {
                             location.request()
                         } label: {
-                            Label("Turn on location to find breweries near you", systemImage: "location.fill")
+                            Label("Turn on location to find beer spots near you", systemImage: "location.fill")
                                 .foregroundStyle(Brand.copper)
                         }
                     } else if loading {
-                        Label("Finding breweries near you...", systemImage: "hourglass")
+                        Label("Finding pubs, bars, taprooms, and beer gardens near you...", systemImage: "hourglass")
                             .foregroundStyle(Brand.muted)
                     } else if breweries.isEmpty {
-                        Text("No breweries found nearby yet.").foregroundStyle(Brand.muted)
+                        Text("No beer spots found nearby yet.").foregroundStyle(Brand.muted)
                     } else {
                         ForEach(breweries, id: \.self) { item in
                             Button { focus(item) } label: { row(item) }
@@ -121,9 +131,9 @@ struct NearYouView: View {
                 }
                 .listStyle(.plain)
             }
-            .navigationTitle("Breweries Near You")
+            .navigationTitle("Beer Near You")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search brewery, city, state")
+            .searchable(text: $searchText, prompt: "Search brewery, pub, city, state")
             .task {
                 await loadTaptRadar()
                 if locationConsent { location.request() }
@@ -141,7 +151,7 @@ struct NearYouView: View {
                 .frame(width: 40, height: 40)
                 .background(Brand.gold, in: RoundedRectangle(cornerRadius: 10))
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.name ?? "Brewery").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                Text(item.name ?? "Beer spot").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
                 if let city = item.placemark.locality {
                     Text(city).font(.subheadline).foregroundStyle(Brand.muted)
                 }
@@ -152,6 +162,39 @@ struct NearYouView: View {
         .padding(.vertical, 4)
     }
 
+    private func spotlight(_ venue: BreweryMapVenue) -> some View {
+        Button { focus(venue) } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "megaphone.fill")
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 42, height: 42)
+                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Local beer spotlight")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Brand.copper)
+                    Text(venue.name)
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                        .lineLimit(1)
+                    Text(venue.subtitle.isEmpty ? "Fresh taps, events, and game nights nearby" : venue.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Text("SPOT")
+                    .font(.system(.caption2, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Brand.hop.opacity(0.75), in: Capsule())
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+    }
+
     private func taptRow(_ venue: BreweryMapVenue) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "mappin.and.ellipse")
@@ -160,7 +203,7 @@ struct NearYouView: View {
                 .background(Brand.hop, in: RoundedRectangle(cornerRadius: 10))
             VStack(alignment: .leading, spacing: 2) {
                 Text(venue.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
-                Text(venue.subtitle.isEmpty ? "Tapt brewery map" : venue.subtitle)
+                Text(venue.subtitle.isEmpty ? "Tapt beer map" : venue.subtitle)
                     .font(.subheadline).foregroundStyle(Brand.muted).lineLimit(1)
                 Text("\(venue.typeLabel.capitalized) • \(venue.sourceLabel ?? "Tapt map")")
                     .font(.caption2.weight(.semibold))
@@ -210,8 +253,9 @@ struct NearYouView: View {
 
     private func search(near coord: CLLocationCoordinate2D) {
         loading = true
-        let request = MKLocalPointsOfInterestRequest(center: coord, radius: 8000)
-        request.pointOfInterestFilter = MKPointOfInterestFilter(including: [.brewery, .nightlife, .winery])
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = "brewery pub bar taproom beer garden"
+        request.region = MKCoordinateRegion(center: coord, latitudinalMeters: 9000, longitudinalMeters: 9000)
         MKLocalSearch(request: request).start { response, _ in
             Task { @MainActor in
                 loading = false

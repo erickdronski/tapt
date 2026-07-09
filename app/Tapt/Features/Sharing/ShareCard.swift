@@ -22,7 +22,7 @@ struct ShareCard: View {
             HStack {
                 Text("Tapt").font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.malt)
                 Spacer()
-                Text("THE beer app").font(.system(size: 12, weight: .bold, design: .rounded)).foregroundStyle(Brand.malt.opacity(0.55))
+                Text("THE BEER SUPERAPP").font(.system(size: 12, weight: .bold, design: .rounded)).foregroundStyle(Brand.malt.opacity(0.55))
             }
             .padding(.horizontal, 28).padding(.top, 28)
 

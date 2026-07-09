@@ -65,7 +65,7 @@ struct OnboardingView: View {
             PourGlass()
             Text("Welcome to Tapt")
                 .font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
-            Text("The whole beer world, in your pocket. Scan it, score it, and see what the planet is drinking.")
+            Text("The Beer Superapp in your pocket. Scan it, score it, play a round, and find local beer spots.")
                 .font(.body).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal, 24)
             Spacer()
         }
@@ -84,7 +84,7 @@ struct OnboardingView: View {
             stepTitle("Before the first pour", "Tapt is for adults. Your privacy choices stay attached to your account.")
             VStack(spacing: 12) {
                 Toggle("I am of legal drinking age where I live.", isOn: $legalAgeConfirmed)
-                Toggle("Use my location for nearby breweries and local recommendations.", isOn: $locationConsent)
+                Toggle("Use my location for nearby pubs, bars, breweries, taprooms, and beer gardens.", isOn: $locationConsent)
                 Toggle("Use my check-ins for anonymous aggregate trend reports.", isOn: $aggregateConsent)
                 Toggle("Include my anonymous aggregate data in partner insights.", isOn: $dataSaleConsent)
             }

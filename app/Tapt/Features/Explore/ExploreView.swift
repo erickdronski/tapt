@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The discovery home: breweries near you, the beer "stock market", a global lens by
+/// The discovery home: beer spots near you, the beer "stock market", a global lens by
 /// country, and live up/down voting. The screen a beer fan opens first.
 struct ExploreView: View {
     @Environment(Session.self) private var session
@@ -61,7 +61,7 @@ struct ExploreView: View {
             title: heroBeer?.name ?? "Your beer radar",
             subtitle: heroBeer.map { "\($0.brewery) is moving in \(region.isEmpty ? homeRegion : region)." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
-                ?? "Track what is hot, scan new pours, and build a beer passport that follows your taste.",
+                ?? "Track what is hot, scan new pours, and build The Beer Superapp around your taste.",
             metric: heroBeer.map { "+\($0.momentum)" } ?? "LIVE",
             caption: feedNote ?? (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat"),
             icon: "chart.line.uptrend.xyaxis"
@@ -77,8 +77,8 @@ struct ExploreView: View {
                 Image(systemName: "map.fill").foregroundStyle(Brand.malt)
                     .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Breweries near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Tapt-seeded breweries plus local Apple beer spots").font(.caption).foregroundStyle(Brand.muted)
+                    Text("Beer near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                    Text("Breweries, pubs, bars, taprooms, and beer gardens").font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
             }

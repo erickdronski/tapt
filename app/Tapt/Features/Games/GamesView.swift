@@ -17,8 +17,20 @@ struct GamesView: View {
                     GameTile(title: "Tapt Deck", subtitle: "A house-built card game for the table. Free.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: true)
                 }
                 .buttonStyle(.plain)
+                NavigationLink { BarGamesView(starting: .beerPong) } label: {
+                    GameTile(title: "Beer Pong", subtitle: "A quick rack-clearing toss game for the table.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
+                }
+                .buttonStyle(.plain)
+                NavigationLink { BarGamesView(starting: .flipCup) } label: {
+                    GameTile(title: "Flip Cup", subtitle: "Reaction-time table play with streaks and best times.", icon: "cup.and.saucer.fill", tint: Brand.hop, ready: true)
+                }
+                .buttonStyle(.plain)
+                NavigationLink { BarGamesView(starting: .quarters) } label: {
+                    GameTile(title: "Quarters", subtitle: "Dial in the bounce and chase the clean center.", icon: "circle.hexagongrid.fill", tint: Brand.copper, ready: true)
+                }
+                .buttonStyle(.plain)
                 NavigationLink { BreweryModeView() } label: {
-                    GameTile(title: "Brewery Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
+                    GameTile(title: "Beer Night Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
                 }
                 .buttonStyle(.plain)
             }

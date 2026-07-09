@@ -3,8 +3,8 @@ import SwiftUI
 // First-pass branded screens. Each becomes a real feature next:
 //   Scan   -> VisionKit DataScanner -> identify -> rate
 //   Cellar -> your logged pours + wishlist
-//   On Tap -> MapKit breweries + "popular near me" from first-party check-ins
-//   Games  -> trivia / card / table games (Brewery Mode)
+//   Near You -> MapKit beer spots + "popular near me" from first-party check-ins
+//   Games    -> trivia / card / table games (Beer Night Mode)
 
 // ScanView -> Features/Scan/ScanView.swift
 

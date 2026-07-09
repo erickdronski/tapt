@@ -12,7 +12,7 @@ struct DiscoverView: View {
                         title: "Beer culture mode",
                         subtitle: "Run guided flights, learn styles, play table games, and turn every pour into a better beer night.",
                         metric: "PLAY",
-                        caption: "Flights + school + games",
+                        caption: "The Beer Superapp",
                         icon: "sparkles",
                         tint: Brand.gold
                     )
@@ -56,7 +56,13 @@ struct DiscoverView: View {
                 QuickPlayTile(title: "Deck", icon: "rectangle.on.rectangle.angled", tint: Brand.hop) {
                     CardDeckGame()
                 }
-                QuickPlayTile(title: "Brewery Mode", icon: "person.3.fill", tint: Brand.copper) {
+                QuickPlayTile(title: "Pong", icon: "circle.grid.cross.fill", tint: Brand.gold) {
+                    BarGamesView(starting: .beerPong)
+                }
+                QuickPlayTile(title: "Flip Cup", icon: "cup.and.saucer.fill", tint: Brand.hop) {
+                    BarGamesView(starting: .flipCup)
+                }
+                QuickPlayTile(title: "Beer Night", icon: "person.3.fill", tint: Brand.copper) {
                     BreweryModeView()
                 }
             }

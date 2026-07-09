@@ -58,7 +58,7 @@ struct ProfileView: View {
                 }
 
                 Section {
-                    Toggle("Nearby brewery location", isOn: $locationConsent)
+                    Toggle("Nearby beer spots", isOn: $locationConsent)
                     Toggle("Anonymous trend reports", isOn: $aggregateConsent)
                     Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
                 } header: {
@@ -109,7 +109,7 @@ struct ProfileView: View {
             .navigationTitle("You")
             .onChange(of: beerGeekMode) { _, newValue in syncBeerGeek(newValue) }
             .onChange(of: locationConsent) { _, newValue in
-                syncPrivacy("location", granted: newValue, text: "Nearby brewery location")
+                syncPrivacy("location", granted: newValue, text: "Nearby beer spots")
             }
             .onChange(of: aggregateConsent) { _, newValue in
                 syncPrivacy("aggregate_analytics", granted: newValue, text: "Anonymous trend reports")
