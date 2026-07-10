@@ -80,7 +80,7 @@ struct DiscoverView: View {
                     ConnectFourGame()
                 }
                 QuickPlayTile(title: "Daily 5", icon: "calendar.badge.clock", tint: Brand.hop) {
-                    TriviaGame(title: "Daily 5", questionLimit: 5)
+                    TriviaGame(title: "Daily 5", questionLimit: 5, category: .mixed)
                 }
                 QuickPlayTile(title: "Trivia", icon: "brain.head.profile", tint: Brand.gold) {
                     TriviaGame()

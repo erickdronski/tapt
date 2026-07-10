@@ -13,12 +13,12 @@ struct GamesView: View {
                     GameTile(title: "Connect 4", subtitle: "Gravity drops, four in a row, table bragging rights.", icon: "circle.grid.3x3.fill", tint: Brand.gold, ready: true)
                 }
                 .buttonStyle(.taptPress)
-                NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5) } label: {
+                NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5, category: .mixed) } label: {
                     GameTile(title: "Daily 5", subtitle: "A quick five-question run from the beer world.", icon: "calendar.badge.clock", tint: Brand.hop, ready: true)
                 }
                 .buttonStyle(.taptPress)
                 NavigationLink { TriviaGame() } label: {
-                    GameTile(title: "Beer Trivia", subtitle: "How deep does your knowledge pour? Free, endless.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
+                    GameTile(title: "Trivia", subtitle: "Beer, pop culture, wild facts, general. Pick your topic.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
                 }
                 .buttonStyle(.taptPress)
                 NavigationLink { CardDeckGame() } label: {
@@ -99,11 +99,12 @@ private struct GameTile: View {
     }
 }
 
-// MARK: - Beer Trivia (playable)
+// MARK: - Trivia (playable, mixed topics)
 struct TriviaGame: View {
     let title: String
     let questionLimit: Int?
-    @State private var order: [TriviaQuestion]
+    @State private var category: TriviaCategory?
+    @State private var order: [TriviaQuestion] = []
     @State private var index = 0
     @State private var selected: Int?
     @State private var score = 0
@@ -112,19 +113,80 @@ struct TriviaGame: View {
 
     private var q: TriviaQuestion { order[index] }
 
-    init(title: String = "Beer Trivia", questionLimit: Int? = nil) {
+    /// Pass a category to skip the chooser (e.g. Daily 5 -> .mixed).
+    init(title: String = "Trivia", questionLimit: Int? = nil, category: TriviaCategory? = nil) {
         self.title = title
         self.questionLimit = questionLimit
-        _order = State(initialValue: Self.pickQuestions(limit: questionLimit))
+        _category = State(initialValue: category)
+        if let category {
+            _order = State(initialValue: Self.pickQuestions(limit: questionLimit, category: category))
+        }
     }
 
     var body: some View {
         ZStack {
             Brand.background.ignoresSafeArea()
-            if finished { results } else { question }
+            if category == nil { chooser }
+            else if finished { results }
+            else { question }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var chooser: some View {
+        ScrollView {
+            VStack(spacing: 14) {
+                Text("Pick a category")
+                    .font(.system(.title2, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.text)
+                    .padding(.top, 10)
+                Text("Beer, pop culture, wild facts, or general, play what you know.")
+                    .font(.subheadline).foregroundStyle(Brand.muted)
+                    .multilineTextAlignment(.center)
+                ForEach(TriviaCategory.allCases) { cat in
+                    Button {
+                        Haptic.tap()
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            category = cat
+                            order = Self.pickQuestions(limit: questionLimit, category: cat)
+                        }
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: cat.icon)
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundStyle(Brand.malt)
+                                .frame(width: 50, height: 50)
+                                .background(catTint(cat), in: RoundedRectangle(cornerRadius: 13))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(cat.rawValue)
+                                    .font(.system(.headline, design: .rounded).weight(.bold))
+                                    .foregroundStyle(Brand.text)
+                                Text("\(TriviaData.pool(cat).count) questions")
+                                    .font(.caption).foregroundStyle(Brand.muted)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+                        }
+                        .padding(14)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(catTint(cat).opacity(0.25)))
+                    }
+                    .buttonStyle(.taptPress)
+                }
+            }
+            .padding()
+        }
+    }
+
+    private func catTint(_ c: TriviaCategory) -> Color {
+        switch c {
+        case .mixed: Brand.gold
+        case .beer: Brand.copper
+        case .popCulture: Brand.hop
+        case .funFacts: Brand.gold
+        case .general: Brand.copper
+        }
     }
 
     private var question: some View {
@@ -192,10 +254,10 @@ struct TriviaGame: View {
     }
 
     private var verdict: String {
-        switch Double(score) / Double(order.count) {
-        case 0.9...: "Certified beer nerd. Whale-hunter status."
-        case 0.6..<0.9: "Solid pour. You know your stuff."
-        case 0.3..<0.6: "Getting there. Keep tasting."
+        switch Double(score) / Double(max(order.count, 1)) {
+        case 0.9...: "Genius level. Take a bow."
+        case 0.6..<0.9: "Sharp. You know your stuff."
+        case 0.3..<0.6: "Getting there. Run it back."
         default: "Everyone starts somewhere. Cheers."
         }
     }
@@ -210,19 +272,21 @@ struct TriviaGame: View {
     private func choose(_ i: Int) {
         guard selected == nil else { return }
         selected = i
-        if i == q.correct { score += 1; streak += 1 } else { streak = 0 }
+        if i == q.correct { score += 1; streak += 1; Haptic.success() } else { streak = 0; Haptic.tap() }
     }
 
     private func next() {
-        if index + 1 < order.count { index += 1; selected = nil } else { finished = true }
+        Haptic.tap()
+        if index + 1 < order.count { index += 1; selected = nil } else { finished = true; Haptic.celebrate() }
     }
 
     private func restart() {
-        order = Self.pickQuestions(limit: questionLimit); index = 0; selected = nil; score = 0; streak = 0; finished = false
+        order = Self.pickQuestions(limit: questionLimit, category: category ?? .mixed)
+        index = 0; selected = nil; score = 0; streak = 0; finished = false
     }
 
-    private static func pickQuestions(limit: Int?) -> [TriviaQuestion] {
-        let shuffled = TriviaData.questions.shuffled()
+    private static func pickQuestions(limit: Int?, category: TriviaCategory) -> [TriviaQuestion] {
+        let shuffled = TriviaData.pool(category).shuffled()
         guard let limit else { return shuffled }
         return Array(shuffled.prefix(max(1, min(limit, shuffled.count))))
     }
