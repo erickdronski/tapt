@@ -131,17 +131,27 @@ struct BeerGlassView: View {
                     )
 
                 // Beer body with depth + live bubbles, clipped to the glass
-                TimelineView(AnimationTimelineSchedule(minimumInterval: 1.0 / 30.0, paused: false)) { timeline in
-                    let t = timeline.date.timeIntervalSinceReferenceDate
-                    ZStack(alignment: .bottom) {
-                        beerBody(h: h)
-                        bubbles(t: t, w: w, h: h)
-                        foam(w: w)
-                            .offset(y: -h * fill + 2)
-                            .frame(maxHeight: .infinity, alignment: .bottom)
+                ZStack(alignment: .bottom) {
+                    beerBody(h: h)
+                    ForEach(0..<12, id: \.self) { i in
+                        let bx = w * (0.18 + CGFloat((Double(i) * 0.618).truncatingRemainder(dividingBy: 1.0)) * 0.64)
+                        let size = CGFloat(2 + (i % 4))
+                        Circle()
+                            .fill(Brand.foam.opacity(i % 3 == 0 ? 0.55 : 0.35))
+                            .frame(width: size, height: size)
+                            .position(x: bx, y: poured ? h * (1 - fill) + 10 : h - 6)
+                            .animation(
+                                .linear(duration: Double(3 + (i % 5)))
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(i) * 0.4),
+                                value: poured
+                            )
                     }
-                    .frame(width: w, height: h, alignment: .bottom)
+                    foam(w: w)
+                        .offset(y: -h * fill + 2)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
                 }
+                .frame(width: w, height: h, alignment: .bottom)
                 .clipShape(glass)
 
                 // Glass shine streak
@@ -170,9 +180,12 @@ struct BeerGlassView: View {
         }
         .aspectRatio(0.62, contentMode: .fit)
         .onAppear {
-            guard animatesPour else { return }
-            poured = false
-            withAnimation(.spring(response: 1.5, dampingFraction: 0.82).delay(0.25)) {
+            if animatesPour {
+                poured = false
+                withAnimation(.spring(response: 1.5, dampingFraction: 0.82).delay(0.25)) {
+                    poured = true
+                }
+            } else {
                 poured = true
             }
         }
@@ -191,24 +204,6 @@ struct BeerGlassView: View {
                 )
             )
             .frame(height: h * fill)
-    }
-
-    /// Rising bubbles on deterministic per-index paths.
-    private func bubbles(t: TimeInterval, w: CGFloat, h: CGFloat) -> some View {
-        let beerTop: CGFloat = h * (1 - fill)
-        return ForEach(0..<14, id: \.self) { i in
-            let speed: Double = 0.10 + Double(i % 5) * 0.035
-            let phase: Double = Double(i) * 0.37
-            let progress: Double = (t * speed + phase).truncatingRemainder(dividingBy: 1.0)
-            let bx: CGFloat = w * (0.18 + CGFloat((Double(i) * 0.618).truncatingRemainder(dividingBy: 1.0)) * 0.64)
-            let wobble: CGFloat = CGFloat(sin(t * 1.7 + Double(i))) * 2.5
-            let size: CGFloat = CGFloat(2 + (i % 4))
-            let by: CGFloat = h - CGFloat(progress) * (h * fill * 0.92)
-            Circle()
-                .fill(Brand.foam.opacity(0.5 - progress * 0.35))
-                .frame(width: size, height: size)
-                .position(x: bx + wobble, y: max(by, beerTop + 8))
-        }
     }
 
     /// Classic pint silhouette: wider lip, gentle taper, rounded base.
