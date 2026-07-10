@@ -1,7 +1,6 @@
 import SwiftUI
 
 enum BarGameKind: String, CaseIterable, Identifiable {
-    case beerPong = "Beer Pong"
     case flipCup = "Flip Cup"
     case quarters = "Quarters"
 
@@ -12,7 +11,7 @@ enum BarGameKind: String, CaseIterable, Identifiable {
 struct BarGamesView: View {
     @State private var selected: BarGameKind
 
-    init(starting: BarGameKind = .beerPong) {
+    init(starting: BarGameKind = .flipCup) {
         _selected = State(initialValue: starting)
     }
 
@@ -28,8 +27,6 @@ struct BarGamesView: View {
 
                 Group {
                     switch selected {
-                    case .beerPong:
-                        BeerPongMiniGame()
                     case .flipCup:
                         FlipCupMiniGame()
                     case .quarters:

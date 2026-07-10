@@ -89,7 +89,7 @@ struct DiscoverView: View {
                     CardDeckGame()
                 }
                 QuickPlayTile(title: "Pong", icon: "circle.grid.cross.fill", tint: Brand.gold) {
-                    BarGamesView(starting: .beerPong)
+                    BeerPongGame()
                 }
                 QuickPlayTile(title: "Flip Cup", icon: "cup.and.saucer.fill", tint: Brand.hop) {
                     BarGamesView(starting: .flipCup)

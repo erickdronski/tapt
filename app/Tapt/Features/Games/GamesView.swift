@@ -25,8 +25,8 @@ struct GamesView: View {
                     GameTile(title: "Tapt Deck", subtitle: "A house-built card game for the table. Free.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: true)
                 }
                 .buttonStyle(.taptPress)
-                NavigationLink { BarGamesView(starting: .beerPong) } label: {
-                    GameTile(title: "Beer Pong", subtitle: "A quick rack-clearing toss game for the table.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
+                NavigationLink { BeerPongGame() } label: {
+                    GameTile(title: "Beer Pong", subtitle: "Flick to throw. Real arc physics, clear the rack, pass-and-play.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
                 }
                 .buttonStyle(.taptPress)
                 NavigationLink { BarGamesView(starting: .flipCup) } label: {
