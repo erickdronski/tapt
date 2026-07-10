@@ -6,6 +6,9 @@ on:
 jobs:
   build:
     runs-on: macos-26
+    # Archives have taken ~40 min; macOS bills 10x, so an uncapped hang would
+    # bill the 360-min default (~3,600 min). 75 keeps headroom.
+    timeout-minutes: 75
     env:
       PROFILE_NAME: "Tapt App Store CI"
       BUNDLE_ID: app.tapt.tapt

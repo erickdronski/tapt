@@ -8,6 +8,7 @@ on:
 jobs:
   asc-admin:
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # tiny API job; a hang must not bill the 360-min default
     steps:
       - uses: actions/checkout@v4
 

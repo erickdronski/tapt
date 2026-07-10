@@ -1,15 +1,29 @@
 name: Build
 
-# Compile-verify every push (simulator build, no signing, no upload).
-# TestFlight delivery stays in testflight.yml (manual dispatch).
+# Compile-verify pushes that touch app code (simulator build, no signing, no
+# upload). TestFlight delivery stays in testflight.yml (manual dispatch).
+# COST: this runs on a macOS runner (bills ~10x Linux, ~110 billed min/push),
+# so it path-filters to app sources, cancels superseded runs, and hard-caps
+# runtime — an uncapped hang would bill the 360-min default at 10x.
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: macos-26
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
