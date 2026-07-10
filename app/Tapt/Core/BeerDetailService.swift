@@ -47,7 +47,7 @@ struct BeerDetail: Decodable, Sendable {
         let sourceUrl: String?
         let note: String?
 
-        var id: String { [awardBody, year.map(String.init), category].compactMap { $0 }.joined(separator: "-") }
+        var id: String { [awardBody, year.map(String.init), category, medal, scope, region].compactMap { $0 }.joined(separator: "-") }
 
         var medalEmoji: String {
             switch medal {

@@ -219,7 +219,7 @@ struct LeaderboardsView: View {
     private func load() async {
         loading = true
         defer { loading = false }
-        async let b: [LeaderBeer] = (try? LeaderboardService.beers()) ?? []
+        async let b: [LeaderBeer] = (try? LeaderboardService.beers(naOnly: naOnly)) ?? []
         async let t: [LeaderTaster] = (try? LeaderboardService.tasters()) ?? []
         async let s: [LeaderStyle] = (try? LeaderboardService.styles()) ?? []
         beers = await b

@@ -40,4 +40,28 @@ enum BeerService {
             )
             .execute()
     }
+
+    /// The caller's current vote for a beer (+1 / -1), or nil if they haven't voted.
+    static func currentVote(beerId: String, userId: UUID) async throws -> Int? {
+        struct Row: Decodable { let value: Int }
+        let rows: [Row] = try await Supa.client
+            .from("beer_vote")
+            .select("value")
+            .eq("user_id", value: userId.uuidString)
+            .eq("beer_id", value: beerId)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first?.value
+    }
+
+    /// Remove the caller's vote for a beer (toggling a thumb back off).
+    static func unvote(beerId: String, userId: UUID) async throws {
+        try await Supa.client
+            .from("beer_vote")
+            .delete(returning: .minimal)
+            .eq("user_id", value: userId.uuidString)
+            .eq("beer_id", value: beerId)
+            .execute()
+    }
 }

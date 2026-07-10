@@ -26,10 +26,14 @@ struct SignInView: View {
             Brand.background.ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 18) {
-                    Spacer(minLength: 40)
-                    Text("Tapt")
-                        .font(.system(size: 60, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Brand.text)
+                    Spacer(minLength: 28)
+                    BeerGlassView(pour: 0.82)
+                        .frame(width: 92)
+                    HStack(spacing: 0) {
+                        Text("Tapt").foregroundStyle(Brand.text)
+                        Text(".").foregroundStyle(Brand.gold)
+                    }
+                    .font(.system(size: 60, weight: .heavy, design: .rounded))
                     Text("THE Beer Superapp")
                         .font(.system(.headline, design: .rounded))
                         .foregroundStyle(Brand.muted)

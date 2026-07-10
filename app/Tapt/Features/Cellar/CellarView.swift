@@ -219,7 +219,7 @@ struct CellarView: View {
     private var nextMilestone: String {
         if checkins.count < 5 { return "\(5 - checkins.count) pours to first flight" }
         if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
-        if stateCount < 3 { return "\(3 - stateCount) states to tap trail" }
+        if stateCount < 5 { return "\(5 - stateCount) states to tap trail" }
         if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
         return "Passport is warming up"
     }

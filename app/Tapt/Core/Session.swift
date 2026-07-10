@@ -1,5 +1,6 @@
 import SwiftUI
 import Supabase
+import AuthenticationServices
 
 /// App-wide auth state, driven by Supabase.
 @MainActor
@@ -26,8 +27,26 @@ final class Session {
                 redirectTo: Supa.authRedirectURL
             )
         } catch {
+            // Backing out of the provider sheet is not an error, don't scare the
+            // user with a red message (mirrors the Sign in with Apple path).
+            if isCancellation(error) { return }
             authError = error.localizedDescription
         }
+    }
+
+    /// True when the user simply dismissed/cancelled the web auth sheet.
+    private func isCancellation(_ error: Error) -> Bool {
+        if let asError = error as? ASWebAuthenticationSessionError, asError.code == .canceledLogin {
+            return true
+        }
+        let ns = error as NSError
+        if ns.domain == ASWebAuthenticationSessionError.errorDomain,
+           ns.code == ASWebAuthenticationSessionError.canceledLogin.rawValue {
+            return true
+        }
+        // Supabase/URLSession cancellations surface as NSURLErrorCancelled too.
+        if ns.domain == NSURLErrorDomain, ns.code == NSURLErrorCancelled { return true }
+        return false
     }
 
     func sendEmailSignInLink(to email: String) async -> Bool {

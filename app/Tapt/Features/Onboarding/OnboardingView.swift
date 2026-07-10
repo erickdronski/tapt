@@ -6,6 +6,8 @@ import Supabase
 struct OnboardingView: View {
     @Environment(Session.self) private var session
     @AppStorage("onboardedUserIDs") private var onboardedUserIDs = ""
+    @AppStorage("passport.seenBadges") private var seenBadgesRaw = ""
+    @AppStorage("passport.badgesSeeded") private var badgesSeeded = false
     @AppStorage("favoriteStyles") private var favoriteStyles = ""
     @AppStorage("homeRegion") private var homeRegion = "New Jersey"
     @AppStorage("noLowDefault") private var noLowDefault = false
@@ -225,6 +227,10 @@ struct OnboardingView: View {
                 var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
                 ids.insert(uid.uuidString)
                 onboardedUserIDs = ids.sorted().joined(separator: ",")
+                // Seed the passport badge tracker at this known-empty point so
+                // the very first badge (First Pour) still gets its celebration.
+                seenBadgesRaw = ""
+                badgesSeeded = true
             } catch {
                 saveError = "Could not save your setup. Try again."
             }

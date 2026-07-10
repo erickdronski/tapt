@@ -11,6 +11,7 @@ struct BeerDetailView: View {
     @State private var detail: BeerDetail?
     @State private var loading = true
     @State private var myVote: Int?
+    @State private var loadedVote: Int?     // the caller's vote at load, so counts don't double-count
 
     var body: some View {
         ScrollView {
@@ -125,8 +126,8 @@ struct BeerDetailView: View {
 
     private func communityBar(_ d: BeerDetail) -> some View {
         HStack(spacing: 12) {
-            voteButton(d, 1, "hand.thumbsup.fill", Brand.hop, count: d.ups + (myVote == 1 ? 1 : 0))
-            voteButton(d, -1, "hand.thumbsdown.fill", Brand.copper, count: d.downs + (myVote == -1 ? 1 : 0))
+            voteButton(d, 1, "hand.thumbsup.fill", Brand.hop, count: max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + (myVote == 1 ? 1 : 0))
+            voteButton(d, -1, "hand.thumbsdown.fill", Brand.copper, count: max(0, d.downs - (loadedVote == -1 ? 1 : 0)) + (myVote == -1 ? 1 : 0))
             Spacer()
             if d.checkinCount > 0 {
                 VStack(alignment: .trailing, spacing: 1) {
@@ -157,14 +158,18 @@ struct BeerDetailView: View {
             if newValue != nil { Haptic.firm() } else { Haptic.tap() }
             // Animate so the digit rolls up and the thumb bounces as the vote lands.
             withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = newValue }
-            if let v = newValue {
-                Task { try? await BeerService.vote(beerId: d.id, userId: uid, value: v) }
+            Task {
+                if let v = newValue {
+                    try? await BeerService.vote(beerId: d.id, userId: uid, value: v)
+                } else {
+                    try? await BeerService.unvote(beerId: d.id, userId: uid)
+                }
             }
         } label: {
             Label {
                 Text("\(count)").contentTransition(.numericText(value: Double(count)))
             } icon: {
-                Image(systemName: icon).symbolEffect(.bounce, value: myVote)
+                Image(systemName: icon).symbolEffect(.bounce, value: myVote == value)
             }
             .font(.system(.subheadline, design: .rounded).weight(.bold))
             .foregroundStyle(active ? Brand.malt : color)
@@ -493,6 +498,12 @@ struct BeerDetailView: View {
         loading = true
         defer { loading = false }
         detail = try? await BeerDetailService.detail(beerId: beerId)
+        // Reflect the user's existing vote so the thumbs + counts are correct.
+        if let uid = session.user?.id {
+            let existing = try? await BeerService.currentVote(beerId: beerId, userId: uid)
+            loadedVote = existing
+            myVote = existing
+        }
     }
 }
 

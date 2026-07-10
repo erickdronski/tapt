@@ -5,6 +5,7 @@ import VisionKit
 struct ScanView: View {
     @Environment(Session.self) private var session
     @State private var scanned: String?
+    @State private var scanLabel = ""        // header text for the result sheet (never re-triggers matching)
     @State private var showResult = false
     @State private var matches: [ScannedBeer] = []
     @State private var loadingMatches = false
@@ -65,6 +66,7 @@ struct ScanView: View {
                     scanned = nil
                     return
                 }
+                scanLabel = value
                 showResult = true
                 Task { await loadMatches(value) }
             }
@@ -138,7 +140,7 @@ struct ScanView: View {
                     Text(matches.isEmpty ? "Scanned" : "Possible matches")
                         .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundStyle(Brand.text)
-                    Text(scanned ?? "")
+                    Text(scanLabel)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
@@ -320,7 +322,7 @@ struct ScanView: View {
         }
         matches = found
         offBeer = nil
-        scanned = "Menu scan: \(visibleLines.count) lines read"
+        scanLabel = "Menu scan: \(visibleLines.count) lines read"
         showResult = true
     }
 

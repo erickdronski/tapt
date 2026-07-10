@@ -140,9 +140,11 @@ struct BeerGlassView: View {
                             .frame(width: size, height: size)
                             .position(x: bx, y: poured ? h * (1 - fill) + 10 : h - 6)
                             .animation(
-                                .linear(duration: Double(3 + (i % 5)))
-                                .repeatForever(autoreverses: false)
-                                .delay(Double(i) * 0.4),
+                                animatesPour
+                                    ? .linear(duration: Double(3 + (i % 5)))
+                                        .repeatForever(autoreverses: false)
+                                        .delay(Double(i) * 0.4)
+                                    : nil,
                                 value: poured
                             )
                     }

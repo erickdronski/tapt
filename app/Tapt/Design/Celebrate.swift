@@ -181,7 +181,8 @@ struct CelebrationOverlay: View {
 
     @MainActor private func run() async {
         if reduceMotion {
-            appear = true; reveal = true; confetti = true
+            // No flying confetti under Reduce Motion, just show the moment.
+            appear = true; reveal = true
             Haptic.success()
         } else {
             Haptic.firm()

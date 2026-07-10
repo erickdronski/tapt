@@ -202,12 +202,18 @@ struct CatalogView: View {
     @MainActor private func reload() async {
         loading = true
         try? await Task.sleep(for: .milliseconds(280))  // debounce typing
-        if Task.isCancelled { return }
+        if Task.isCancelled { loading = false; return }
         do {
             let page = try await CatalogService.search(query: query, style: style, naOnly: naOnly,
                                                        limit: pageSize, offset: 0)
+            // A superseded (cancelled) search must not clobber the newer one's results.
+            if Task.isCancelled { return }
             results = page
             total = page.first?.total ?? page.count
+        } catch is CancellationError {
+            return
+        } catch let error as URLError where error.code == .cancelled {
+            return
         } catch {
             results = []; total = 0
         }

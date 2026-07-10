@@ -64,7 +64,10 @@ struct FindFriendsView: View {
                 try? await Task.sleep(for: .milliseconds(350))
                 guard !Task.isCancelled else { return }
                 searching = true
-                results = (try? await SocialGraphService.search(term)) ?? []
+                let found = (try? await SocialGraphService.search(term)) ?? []
+                // Don't let a superseded search overwrite newer results.
+                guard !Task.isCancelled, term == query.trimmingCharacters(in: .whitespaces) else { return }
+                results = found
                 searching = false
             }
         }

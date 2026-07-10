@@ -70,6 +70,16 @@ enum ProfileService {
             .execute()
     }
 
+    /// Whether this user already finished onboarding on the server (region set).
+    /// Lets a reinstall / new device skip onboarding instead of repeating it.
+    static func isOnboarded(userId: UUID) async -> Bool {
+        struct Row: Decodable { let region_code: String? }
+        let rows: [Row]? = try? await Supa.client.from("user_profile")
+            .select("region_code").eq("id", value: userId.uuidString).limit(1)
+            .execute().value
+        return (rows?.first?.region_code?.isEmpty == false)
+    }
+
     static func completeOnboarding(
         userId: UUID,
         region: String,
