@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapt — App Preview (web prototype)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#F2A900; --malt:#1A1206; --foam:#FBF6EC; --hop:#3F8F5B; --copper:#B4531F;
+    --surface:#FFFCF4; --muted:#6E6046; --haze:#EFE7D6; --line:rgba(26,18,6,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',system-ui,sans-serif;background:#efe9dc;color:var(--malt);
+       min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 12px 40px}
+  .note{max-width:430px;text-align:center;font-size:.82rem;color:#6b5e49;line-height:1.5}
+  .note b{color:var(--copper)}
+  .live{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--hop)}
+  .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 0 rgba(63,143,91,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,143,91,.5)}70%{box-shadow:0 0 0 8px rgba(63,143,91,0)}100%{box-shadow:0 0 0 0 rgba(63,143,91,0)}}
+
+  /* device */
+  .device{width:392px;max-width:96vw;height:812px;max-height:86vh;background:var(--foam);border-radius:46px;
+    box-shadow:0 30px 70px rgba(26,18,6,.34), inset 0 0 0 12px #0c0a07, inset 0 0 0 14px #2a2118;
+    position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:118px;height:32px;background:#000;border-radius:20px;z-index:60}
+  .statusbar{height:52px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 6px;font-size:.78rem;font-weight:700;color:var(--malt);flex:0 0 auto}
+  .screen{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;-webkit-overflow-scrolling:touch}
+  .screen::-webkit-scrollbar{display:none}
+  .pane{display:none;padding:6px 0 96px}
+  .pane.on{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* tabbar */
+  .tabbar{position:absolute;left:0;right:0;bottom:0;height:84px;background:rgba(251,246,236,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:flex-start;padding-top:9px;z-index:50}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.62rem;font-weight:600;color:#a99e88;background:none;border:none;cursor:pointer;width:62px}
+  .tab svg{width:24px;height:24px;fill:none;stroke:#a99e88;stroke-width:1.8}
+  .tab.on{color:var(--malt)} .tab.on svg{stroke:var(--gold);fill:var(--gold)}
+
+  h2{font-family:'Poppins';font-weight:800}
+  .px{padding-left:18px;padding-right:18px}
+  .title{font-family:'Poppins';font-weight:800;font-size:1.7rem;padding:6px 18px 2px}
+  .kicker{font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+
+  /* hero */
+  .hero{margin:8px 18px;border-radius:22px;padding:18px;color:var(--foam);position:relative;overflow:hidden;
+    background:radial-gradient(120% 120% at 80% 10%, #3a2a12 0%, #1a1206 60%)}
+  .hero .glow{position:absolute;width:220px;height:220px;right:-40px;top:-40px;background:var(--gold);opacity:.18;filter:blur(30px);border-radius:50%}
+  .hero .k{font-size:.68rem;font-weight:800;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+  .hero h3{font-family:'Poppins';font-weight:800;font-size:1.35rem;margin:6px 0 4px;position:relative}
+  .hero p{font-size:.82rem;color:#d8cbb0;line-height:1.45;position:relative;max-width:74%}
+  .hero .metric{position:absolute;right:16px;bottom:16px;font-family:'Poppins';font-weight:800;color:var(--gold);font-size:1.1rem}
+  .hglass{position:absolute;right:14px;top:12px;width:76px}
+
+  /* search bar entry */
+  .catbar{margin:2px 18px 0;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;padding:12px 14px;font-size:.9rem;color:var(--muted);cursor:pointer}
+  .catbar .books{margin-left:auto;color:var(--gold)}
+
+  .duo{display:flex;gap:12px;margin:14px 18px}
+  .duo .t{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer}
+  .duo .t .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:1rem;margin-bottom:10px}
+  .duo .t b{font-family:'Poppins';font-size:.95rem;display:block}
+  .duo .t span{font-size:.72rem;color:var(--muted)}
+
+  .bow{margin:6px 18px;border-radius:18px;padding:16px;background:linear-gradient(120deg,#fff4d6,#fbe6b8);position:relative;overflow:hidden}
+  .bow .crown{position:absolute;right:14px;top:12px;font-size:1.6rem}
+  .bow .k{color:var(--copper)} .bow b{font-family:'Poppins';font-size:1.15rem;display:block;margin-top:4px}
+  .bow span{font-size:.78rem;color:#7a6a49}
+
+  .sec{padding:16px 18px 4px;display:flex;align-items:center;justify-content:space-between}
+  .sec h2{font-size:1.05rem}
+  .rail{display:flex;gap:12px;overflow-x:auto;padding:0 18px 6px;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .mv{flex:0 0 132px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .mv .up{font-size:.7rem;font-weight:800;color:var(--hop)}
+  .mv b{font-family:'Poppins';font-size:.9rem;display:block;margin-top:8px;line-height:1.15}
+  .mv span{font-size:.72rem;color:var(--muted)}
+
+  /* catalog */
+  .searchwrap{padding:8px 18px 4px;position:sticky;top:0;background:var(--foam);z-index:5}
+  .searchwrap input{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:13px;padding:12px 14px;font-size:.92rem;font-family:inherit}
+  .searchwrap input:focus{outline:none;border-color:var(--gold)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 18px 4px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;font-size:.76rem;font-weight:600;padding:7px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--line);cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--gold);color:var(--malt);border-color:var(--gold)}
+  .count{padding:6px 18px;font-size:.8rem;font-weight:700;color:var(--malt)}
+  .count small{color:var(--muted);font-weight:500}
+  .row{display:flex;gap:12px;align-items:center;padding:9px 18px;cursor:pointer;border-bottom:1px solid rgba(26,18,6,.05)}
+  .row .thumb{width:52px;height:52px;border-radius:11px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto;overflow:hidden;display:grid;place-items:center}
+  .row .thumb img{width:100%;height:100%;object-fit:contain;padding:3px}
+  .row .thumb.ph{font-size:1.1rem;color:rgba(242,169,0,.7)}
+  .row .info b{font-family:'Poppins';font-size:.9rem;display:block;line-height:1.15}
+  .row .info .sub{font-size:.74rem;color:var(--muted);margin-top:1px}
+  .row .info .meta{font-size:.7rem;font-weight:700;color:var(--copper);margin-top:2px}
+  .row .info .na{color:var(--hop)}
+  .row .chev{margin-left:auto;color:#c9bca0}
+  .loading{padding:30px;text-align:center;color:var(--muted);font-size:.85rem}
+
+  /* scan */
+  .scan{margin:20px 18px;height:440px;border-radius:22px;background:radial-gradient(circle at 50% 40%,#241608,#0e0802);position:relative;overflow:hidden;display:grid;place-items:center}
+  .reticle{width:210px;height:210px;border-radius:26px;box-shadow:0 0 0 3px rgba(242,169,0,.9), 0 0 0 2000px rgba(14,8,2,.55)}
+  .reticle::before{content:"";position:absolute;left:0;right:0;height:2px;background:var(--gold);box-shadow:0 0 12px var(--gold);animation:scanline 2.4s ease-in-out infinite}
+  @keyframes scanline{0%,100%{top:6%}50%{top:94%}}
+  .scanhint{position:absolute;bottom:20px;left:0;right:0;text-align:center;color:#e9dcc0;font-size:.82rem}
+
+  /* generic detail / celebration overlays */
+  .overlay{position:absolute;inset:0;z-index:80;display:none}
+  .overlay.on{display:block}
+  .sheet{position:absolute;inset:0;background:var(--foam);overflow-y:auto;padding-bottom:30px;animation:slideup .32s cubic-bezier(.22,1,.36,1)}
+  @keyframes slideup{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+  .sheet .close{position:sticky;top:0;background:var(--foam);padding:12px 18px;font-weight:700;color:var(--gold);cursor:pointer;z-index:2}
+  .dhero{margin:0 18px;border-radius:20px;overflow:hidden;background:#fff;border:1px solid var(--line);height:230px;display:grid;place-items:center}
+  .dhero img{max-width:100%;max-height:100%;object-fit:contain;padding:14px}
+  .dname{font-family:'Poppins';font-weight:800;font-size:1.4rem;padding:16px 18px 2px}
+  .dsub{padding:0 18px;color:var(--muted)}
+  .dstats{display:flex;gap:10px;padding:16px 18px}
+  .dstat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+  .dstat b{display:block;font-family:'Poppins';font-size:1.2rem}
+  .dstat span{font-size:.68rem;color:var(--muted)}
+  .votebar{display:flex;gap:10px;padding:6px 18px}
+  .vote{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer}
+  .vote.up{color:var(--hop)} .vote.dn{color:var(--copper)}
+  .logbtn{margin:16px 18px 0;padding:15px;border-radius:14px;background:var(--gold);color:var(--malt);font-family:'Poppins';font-weight:700;text-align:center;cursor:pointer}
+
+  /* celebration */
+  .celeb{position:absolute;inset:0;z-index:120;display:none;align-items:center;justify-content:center}
+  .celeb.on{display:flex}
+  .celeb .scrim{position:absolute;inset:0;background:rgba(26,18,6,.62)}
+  .celeb .core{position:relative;text-align:center;color:var(--foam)}
+  .cglass{width:150px;margin:0 auto}
+  .stamp{position:absolute;left:50%;top:60px;width:120px;height:120px;border-radius:50%;background:rgba(251,246,236,.95);
+    border:5px solid var(--copper);color:var(--copper);display:grid;place-items:center;transform:translate(-50%,0) scale(1.9) rotate(-34deg);opacity:0;
+    font-family:'Poppins';font-weight:800;transition:transform .4s cubic-bezier(.3,1.4,.5,1),opacity .3s}
+  .stamp.on{transform:translate(-50%,0) scale(1) rotate(-13deg);opacity:.93}
+  .stamp small{font-size:.7rem;letter-spacing:.1em}
+  .ctitle{font-family:'Poppins';font-weight:800;font-size:1.4rem;margin-top:16px}
+  .cnote{font-size:.85rem;color:#e9dcc0;margin-top:6px}
+  .confetti{position:absolute;top:-10px;width:8px;height:13px;border-radius:2px;opacity:0}
+  .confetti.go{animation:fall var(--d) ease-in forwards}
+  @keyframes fall{0%{opacity:1;transform:translateY(0) rotate(0)}100%{opacity:0;transform:translateY(560px) rotate(var(--r))}}
+</style>
+</head>
+<body>
+  <div class="note">
+    <span class="live">Live prototype</span> — a <b>web mockup</b> of the Tapt app using its real design system, and
+    <b>real, live beer data</b> from Supabase. It is <b>not</b> the compiled iOS app, so native camera, gestures and haptics are simulated.
+    Tap the tabs. Open a beer. Hit <b>Log it</b> to see the celebration.
+  </div>
+
+  <div class="device">
+    <div class="island"></div>
+    <div class="statusbar"><span>9:41</span><span>Tapt ●</span></div>
+    <div class="screen">
+
+      <!-- EXPLORE -->
+      <section class="pane on" id="p-explore">
+        <div class="title">Explore</div>
+        <div class="hero">
+          <div class="glow"></div>
+          <div class="hglass" id="heroGlass"></div>
+          <div class="k">Your beer radar · LIVE</div>
+          <h3>Track what's pouring</h3>
+          <p>Ride the live beer market, scan new pours, and build The Beer Superapp around your taste.</p>
+          <div class="metric">+heat</div>
+        </div>
+        <div class="catbar" onclick="go('catalog')">
+          <span>🔍</span><span>Search every beer, brewery, style</span><span class="books">📚</span>
+        </div>
+        <div class="duo">
+          <div class="t" onclick="go('catalog')"><div class="ic" style="background:rgba(242,169,0,.16);color:var(--gold)">🏆</div><b>Leaderboards</b><span>Beers · tasters · styles</span></div>
+          <div class="t" onclick="go('catalog')"><div class="ic" style="background:rgba(63,143,91,.16);color:var(--hop)">📍</div><b>Beer near you</b><span>Breweries, pubs & bars</span></div>
+        </div>
+        <div class="bow">
+          <div class="crown">👑</div>
+          <div class="k kicker">Beer of the Week</div>
+          <b id="bowName">—</b>
+          <span id="bowSub">Vote standings reset Monday</span>
+        </div>
+        <div class="sec"><h2>On the come up</h2><span class="kicker" style="color:var(--muted)">this week</span></div>
+        <div class="rail" id="moversRail"></div>
+        <div class="sec"><h2>Fresh in the catalog</h2></div>
+        <div class="rail" id="freshRail"></div>
+      </section>
+
+      <!-- CATALOG -->
+      <section class="pane" id="p-catalog">
+        <div class="title">Catalog</div>
+        <div class="searchwrap"><input id="q" placeholder="Search every beer, brewery, style" autocomplete="off"></div>
+        <div class="chips" id="chips"></div>
+        <div class="count" id="count"><small>Loading the catalog…</small></div>
+        <div id="list"></div>
+      </section>
+
+      <!-- SCAN -->
+      <section class="pane" id="p-scan">
+        <div class="title">Scan</div>
+        <div class="scan">
+          <div class="reticle"></div>
+          <div class="scanhint">Point at a label, barcode, or a whole menu</div>
+        </div>
+        <div class="px" style="color:var(--muted);font-size:.85rem;text-align:center">Scans resolve against the live catalog. Unknown barcodes get added automatically.</div>
+      </section>
+
+      <!-- CELLAR -->
+      <section class="pane" id="p-cellar">
+        <div class="title">Cellar</div>
+        <div class="px">
+          <div class="bow" style="background:linear-gradient(120deg,#eafaf0,#d7f0e0)">
+            <div class="k kicker" style="color:var(--hop)">Passport</div>
+            <b>50 states · 47 countries</b>
+            <span>Log a pour to stamp your Passport</span>
+          </div>
+          <div class="logbtn" onclick="celebrate()">Log a pour</div>
+          <p style="color:var(--muted);font-size:.82rem;margin-top:14px;text-align:center">Tap “Log a pour” to preview the pour → passport-stamp celebration.</p>
+        </div>
+      </section>
+
+      <!-- YOU -->
+      <section class="pane" id="p-you">
+        <div class="title">You</div>
+        <div class="px" style="color:var(--muted);font-size:.9rem">Profile, sign-in (Apple / Google / email), badges, and settings live here.</div>
+      </section>
+
+    </div><!-- /screen -->
+
+    <!-- beer detail overlay -->
+    <div class="overlay" id="detail">
+      <div class="sheet">
+        <div class="close" onclick="closeDetail()">‹ Catalog</div>
+        <div class="dhero"><img id="dImg" alt=""></div>
+        <div class="dname" id="dName">—</div>
+        <div class="dsub" id="dSub">—</div>
+        <div class="dstats">
+          <div class="dstat"><b id="dAbv">—</b><span>ABV</span></div>
+          <div class="dstat"><b id="dStyle">—</b><span>STYLE</span></div>
+          <div class="dstat"><b id="dCountry">—</b><span>ORIGIN</span></div>
+        </div>
+        <div class="votebar">
+          <div class="vote up" onclick="bump(this,'▲')"><span>👍</span><span class="n">0</span></div>
+          <div class="vote dn" onclick="bump(this,'▼')"><span>👎</span><span class="n">0</span></div>
+        </div>
+        <div class="logbtn" onclick="celebrate()">Log it</div>
+      </div>
+    </div>
+
+    <!-- celebration overlay -->
+    <div class="celeb" id="celeb">
+      <div class="scrim"></div>
+      <div class="core">
+        <div style="position:relative">
+          <div class="cglass" id="celebGlass"></div>
+          <div class="stamp" id="stamp"><div><div style="font-size:1.4rem">✓</div><small>LOGGED</small></div></div>
+        </div>
+        <div class="ctitle" id="cTitle">Logged!</div>
+        <div class="cnote">Added to your Passport</div>
+      </div>
+    </div>
+
+    <!-- tabbar -->
+    <div class="tabbar">
+      <button class="tab on" data-t="explore" onclick="go('explore')"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 5-8 4 5"/></svg>Explore</button>
+      <button class="tab" data-t="scan" onclick="go('scan')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/></svg>Scan</button>
+      <button class="tab" data-t="cellar" onclick="go('cellar')"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="5"/><rect x="4" y="10" width="16" height="5"/><rect x="4" y="16" width="16" height="4"/></svg>Cellar</button>
+      <button class="tab" data-t="catalog" onclick="go('catalog')"><svg viewBox="0 0 24 24"><path d="M4 5h11v15H4z"/><path d="M15 5l5 2v13l-5-2"/></svg>Catalog</button>
+      <button class="tab" data-t="you" onclick="go('you')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 20c1-4 13-4 14 0"/></svg>You</button>
+    </div>
+  </div>
+
+<script>
+const SUPA='https://qfwiizvqxrhjlthbjosz.supabase.co';
+const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmd2lpenZxeHJoamx0aGJqb3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NDUwNDQsImV4cCI6MjA5OTAyMTA0NH0.eFEsqnWBP8NA6unyq8-Jyl3gIJIJ4GMPNlYcz4d6Zhg';
+
+// Baked real fallback (clean OFF beers) if live fetch is blocked.
+const SEED=[
+ {name:"Salvator Doppelbock",style:"Doppelbock",abv:7.9,brewery_name:"Paulaner",country:"Germany",image_url:"https://images.openfoodfacts.org/images/products/406/660/064/1803/front_fr.3.400.jpg"},
+ {name:"Disco Soleil",style:"Pale Ale",abv:6.5,brewery_name:"Dieu du Ciel !",country:"Canada",image_url:"https://images.openfoodfacts.org/images/products/064/348/595/6426/front_fr.5.400.jpg"},
+ {name:"Atlantic Pale Ale",style:"Pale Ale",abv:4.5,brewery_name:"Sharp's",country:"United Kingdom",image_url:"https://images.openfoodfacts.org/images/products/501/003/849/5827/front_en.6.400.jpg"},
+ {name:"Psycho DDH IPA",style:"IPA",abv:6.3,brewery_name:"Naparbier",country:"Spain",image_url:"https://images.openfoodfacts.org/images/products/843/701/244/4911/front_es.5.400.jpg"},
+ {name:"Schäffler Weissbier",style:"Weissbier",abv:5.2,brewery_name:"Schäffler Bräu",country:"Germany",image_url:"https://images.openfoodfacts.org/images/products/402/197/400/0076/front_de.4.400.jpg"},
+ {name:"Météor Cerise",style:"Fruit Beer",abv:5.5,brewery_name:"Météor",country:"France",image_url:"https://images.openfoodfacts.org/images/products/315/614/073/8161/front_fr.3.400.jpg"},
+ {name:"Pelfort Brune",style:"Brown Ale",abv:6.5,brewery_name:"Pelforth",country:"France",image_url:"https://images.openfoodfacts.org/images/products/311/978/026/7446/front_fr.21.400.jpg"},
+ {name:"Southwold Summer Beer",style:"Golden Ale",abv:5,brewery_name:"Adnams",country:"United Kingdom",image_url:"https://images.openfoodfacts.org/images/products/000/000/070/8470/front_en.9.400.jpg"}
+];
+
+function glassSVG(w){return `<svg viewBox="0 0 400 520" width="${w}" xmlns="http://www.w3.org/2000/svg">
+ <defs><linearGradient id="bg${w}" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse">
+ <stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+ <linearGradient id="fg${w}" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+ <clipPath id="cl${w}"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath></defs>
+ <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#FBF6EC" fill-opacity=".14"/>
+ <g clip-path="url(#cl${w})"><rect x="80" y="140" width="245" height="345" fill="url(#bg${w})"/>
+ <rect x="126" y="166" width="22" height="286" rx="11" fill="#fff" opacity=".2"/></g>
+ <path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#fg${w})" stroke="#130A02" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+ <circle cx="150" cy="102" r="7" fill="#fff"/><circle cx="205" cy="88" r="9" fill="#fff"/><circle cx="256" cy="106" r="6" fill="#fff"/>
+ <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/></svg>`;}
+document.getElementById('heroGlass').innerHTML=glassSVG(76);
+document.getElementById('celebGlass').innerHTML=glassSVG(150);
+
+const STYLES=["IPA","Lager","Pilsner","Stout","Porter","Sour","Wheat","Pale Ale","Amber"];
+let activeStyle=null, lastQ="", timer=null;
+
+function go(t){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+t).classList.add('on');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  document.querySelector('.screen').scrollTop=0;
+  if(t==='catalog' && !document.getElementById('list').dataset.loaded) search('');
+}
+
+async function fetchCatalog(q, style, na, limit=30, offset=0){
+  const r=await fetch(SUPA+'/rest/v1/rpc/catalog_search',{method:'POST',
+    headers:{'Content-Type':'application/json','apikey':ANON,'Authorization':'Bearer '+ANON},
+    body:JSON.stringify({p_query:q||null,p_style:style||null,p_na_only:!!na,p_limit:limit,p_offset:offset})});
+  if(!r.ok) throw new Error('http '+r.status);
+  return r.json();
+}
+
+function rowHTML(b){
+  const img=b.image_url?`<img src="${b.image_url}" loading="lazy" onerror="this.style.display='none';this.parentNode.classList.add('ph');this.parentNode.textContent='🍺'">`:'🍺';
+  const meta=[b.style, b.abv!=null?(b.abv+'%'):null, b.is_na_low?'NA/Low':null].filter(Boolean);
+  return `<div class="row" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'>
+    <div class="thumb ${b.image_url?'':'ph'}">${img}</div>
+    <div class="info"><b>${esc(b.name)}</b>
+      <div class="sub">${esc([b.brewery_name,b.country].filter(Boolean).join(' · '))}</div>
+      <div class="meta">${meta.map((m,i)=>i===2?`<span class="na">${m}</span>`:esc(m)).join(' · ')}</div></div>
+    <div class="chev">›</div></div>`;
+}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function search(q){
+  const list=document.getElementById('list'), cnt=document.getElementById('count');
+  list.dataset.loaded='1';
+  cnt.innerHTML='<small>Searching…</small>';
+  list.innerHTML='<div class="loading">Loading real beers…</div>';
+  try{
+    const rows=await fetchCatalog(q, activeStyle, false, 40, 0);
+    const total=rows[0]?.total ?? rows.length;
+    cnt.innerHTML = rows.length? `${Number(total).toLocaleString()} beers <small>· live from Supabase</small>` : 'No matches';
+    list.innerHTML = rows.map(rowHTML).join('') || '<div class="loading">No beers match that yet.</div>';
+  }catch(e){
+    // offline / CORS fallback: baked real seed
+    cnt.innerHTML=`${SEED.length} beers <small>· offline sample</small>`;
+    list.innerHTML=SEED.filter(b=>!q||b.name.toLowerCase().includes(q.toLowerCase())||(b.brewery_name||'').toLowerCase().includes(q.toLowerCase())).map(rowHTML).join('');
+  }
+}
+
+function buildChips(){
+  const c=document.getElementById('chips');
+  c.innerHTML=`<div class="chip on" data-s="">All</div>`+STYLES.map(s=>`<div class="chip" data-s="${s}">${s}</div>`).join('');
+  c.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
+    c.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); ch.classList.add('on');
+    activeStyle=ch.dataset.s||null; search(document.getElementById('q').value.trim());
+  });
+}
+buildChips();
+document.getElementById('q').addEventListener('input',e=>{clearTimeout(timer);timer=setTimeout(()=>search(e.target.value.trim()),300);});
+
+function openDetail(b){
+  document.getElementById('dImg').src=b.image_url||'';
+  document.getElementById('dName').textContent=b.name;
+  document.getElementById('dSub').textContent=[b.brewery_name,b.country].filter(Boolean).join(' · ')||'—';
+  document.getElementById('dAbv').textContent=b.abv!=null?b.abv+'%':'—';
+  document.getElementById('dStyle').textContent=b.style||'—';
+  document.getElementById('dCountry').textContent=b.country||'—';
+  document.querySelectorAll('#detail .vote .n').forEach(n=>n.textContent='0');
+  document.getElementById('detail').classList.add('on');
+}
+function closeDetail(){document.getElementById('detail').classList.remove('on');}
+function bump(el,dir){const n=el.querySelector('.n');n.textContent=(+n.textContent)+1;el.style.transform='scale(1.08)';setTimeout(()=>el.style.transform='',180);}
+
+// Beer of the Week + rails from live data (or seed)
+async function fillExplore(){
+  let beers=SEED;
+  try{ beers=await fetchCatalog('', null, false, 12, 0); }catch(e){}
+  if(!beers.length) beers=SEED;
+  const b0=beers.find(b=>b.image_url)||beers[0];
+  document.getElementById('bowName').textContent=b0.name;
+  document.getElementById('bowSub').textContent=(b0.brewery_name||'')+(b0.country?' · '+b0.country:'');
+  const card=b=>`<div class="mv" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'><div class="up">▲ trending</div><b>${esc(b.name)}</b><span>${esc(b.brewery_name||b.style||'')}</span></div>`;
+  document.getElementById('moversRail').innerHTML=beers.slice(0,6).map(card).join('');
+  document.getElementById('freshRail').innerHTML=beers.slice(6,12).map(card).join('');
+}
+fillExplore();
+
+// Celebration: pour → stamp → confetti
+let celebBusy=false;
+function celebrate(){
+  if(celebBusy) return; celebBusy=true;
+  closeDetail();
+  const c=document.getElementById('celeb'), stamp=document.getElementById('stamp');
+  c.classList.add('on'); stamp.classList.remove('on');
+  setTimeout(()=>{ stamp.classList.add('on'); confettiBurst(c); }, 650);
+  setTimeout(()=>{ c.classList.remove('on'); celebBusy=false; }, 2600);
+}
+function confettiBurst(root){
+  const colors=['#F2A900','#FBF6EC','#3F8F5B','#B4531F','#FFD24D'];
+  for(let i=0;i<34;i++){
+    const p=document.createElement('div'); p.className='confetti';
+    p.style.left=(10+Math.random()*80)+'%';
+    p.style.background=colors[i%colors.length];
+    p.style.setProperty('--d',(1.1+Math.random()*0.8)+'s');
+    p.style.setProperty('--r',(Math.random()*720-360)+'deg');
+    p.style.animationDelay=(Math.random()*0.25)+'s';
+    root.appendChild(p);
+    requestAnimationFrame(()=>p.classList.add('go'));
+    setTimeout(()=>p.remove(),2400);
+  }
+}
+</script>
+</body>
+</html>
