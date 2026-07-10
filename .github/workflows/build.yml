@@ -29,10 +29,16 @@ jobs:
       - name: Build (iOS Simulator, unsigned)
         working-directory: app
         run: |
-          set -o pipefail
-          xcodebuild build \
+          if ! xcodebuild build \
             -project Tapt.xcodeproj \
             -scheme Tapt \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
-            | tail -60
+            > "$RUNNER_TEMP/xcodebuild.log" 2>&1; then
+            echo "---- compile errors ----"
+            grep -E "error:" "$RUNNER_TEMP/xcodebuild.log" | head -30
+            echo "---- log tail ----"
+            tail -40 "$RUNNER_TEMP/xcodebuild.log"
+            exit 1
+          fi
+          tail -25 "$RUNNER_TEMP/xcodebuild.log"
