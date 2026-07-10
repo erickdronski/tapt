@@ -21,27 +21,42 @@ struct DiscoverView: View {
 
                     quickPlayRail
 
-                    DiscoverTile(title: "Flights",
-                                 subtitle: "Guided tasting quests that reward curiosity, not volume.",
-                                 icon: "map.fill", tint: Brand.gold) { FlightsView() }
-                    DiscoverTile(title: "Tonight",
-                                 subtitle: "Live beer heat, friend pours, your taste graph, and safety controls.",
-                                 icon: "flame.fill", tint: Brand.copper) { TonightView() }
                     DiscoverTile(title: "Leaderboards",
                                  subtitle: "Top beers, top tasters, top styles — powered by real votes and pours.",
                                  icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
-                    DiscoverTile(title: "Find friends",
-                                 subtitle: "Follow your crew. Their pours light up your Tonight feed.",
-                                 icon: "person.badge.plus", tint: Brand.hop) { FindFriendsView() }
-                    DiscoverTile(title: "Beer School",
-                                 subtitle: "How it's made, the lingo, the history, the legends.",
-                                 icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
-                    DiscoverTile(title: "Games",
-                                 subtitle: "Trivia and table games for the bar. All free.",
-                                 icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
-                    DiscoverTile(title: "Partner with Tapt",
-                                 subtitle: "Breweries, bars, pubs, taprooms: get featured to fans near you.",
-                                 icon: "storefront.fill", tint: Brand.copper) { PartnerInquiryView() }
+
+                    TaptCollapse(title: "Community",
+                                 subtitle: "Tonight's feed and your beer circle",
+                                 icon: "person.3.fill", tint: Brand.copper, startExpanded: true) {
+                        DiscoverTile(title: "Tonight",
+                                     subtitle: "Live beer heat, friend pours, your taste graph.",
+                                     icon: "flame.fill", tint: Brand.copper) { TonightView() }
+                        DiscoverTile(title: "Find friends",
+                                     subtitle: "Follow your crew. Their pours light up your feed.",
+                                     icon: "person.badge.plus", tint: Brand.hop) { FindFriendsView() }
+                    }
+
+                    TaptCollapse(title: "Learn & play",
+                                 subtitle: "Flights, Beer School, and the games library",
+                                 icon: "graduationcap.fill", tint: Brand.hop) {
+                        DiscoverTile(title: "Flights",
+                                     subtitle: "Guided tasting quests that reward curiosity.",
+                                     icon: "map.fill", tint: Brand.gold) { FlightsView() }
+                        DiscoverTile(title: "Beer School",
+                                     subtitle: "How it's made, the lingo, the history, the legends.",
+                                     icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
+                        DiscoverTile(title: "Games",
+                                     subtitle: "Trivia, table games, Beer Olympics. All free.",
+                                     icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
+                    }
+
+                    TaptCollapse(title: "For breweries & bars",
+                                 subtitle: "Free tools, featured placement, partnerships",
+                                 icon: "storefront.fill", tint: Brand.copper) {
+                        DiscoverTile(title: "Partner with Tapt",
+                                     subtitle: "Get featured to beer fans near you.",
+                                     icon: "storefront.fill", tint: Brand.copper) { PartnerInquiryView() }
+                    }
 
                     NewsletterCard()
                 }

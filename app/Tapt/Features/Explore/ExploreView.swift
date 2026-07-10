@@ -40,9 +40,24 @@ struct ExploreView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     hero
+                    quickDuo
                     BeerOfWeekCard().padding(.horizontal)
-                    if let activeGuide { guideCard(activeGuide) }
-                    mapLink
+                    if let activeGuide {
+                        TaptCollapse(
+                            title: "\(activeGuide.name) beer guide",
+                            subtitle: activeGuide.heroStyle,
+                            icon: "book.fill",
+                            tint: Brand.hop
+                        ) {
+                            Text(activeGuide.cellarPrompt)
+                                .font(.subheadline)
+                                .foregroundStyle(Brand.text)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            FlowTags(items: activeGuide.topStyles + Array(activeGuide.flavorNotes.prefix(3)), tint: Brand.gold)
+                        }
+                        .padding(.horizontal)
+                    }
                     regionPicker
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
@@ -50,7 +65,6 @@ struct ExploreView: View {
                         moversSection
                         topSection
                     }
-                    leaderboardLink
                     FeaturedPartnersRail()
                 }
                 .padding(.vertical)
@@ -82,20 +96,40 @@ struct ExploreView: View {
         .offset(y: appeared ? 0 : 18)
     }
 
-    private var mapLink: some View {
-        NavigationLink { NearYouView() } label: {
-            HStack(spacing: 12) {
-                Image(systemName: "map.fill").foregroundStyle(Brand.malt)
-                    .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Beer near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Breweries, pubs, bars, taprooms, and beer gardens").font(.caption).foregroundStyle(Brand.muted)
-                }
-                Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
-            }
-            .padding(14).background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+    /// First-glance duo: Leaderboards + the map, side by side under the hero.
+    private var quickDuo: some View {
+        HStack(spacing: 12) {
+            duoTile("Leaderboards", "Beers · tasters · styles", "trophy.fill", Brand.gold) { LeaderboardsView() }
+            duoTile("Beer near you", "Breweries, pubs & bars", "map.fill", Brand.hop) { NearYouView() }
         }
-        .buttonStyle(.plain).padding(.horizontal)
+        .padding(.horizontal)
+    }
+
+    private func duoTile<D: View>(_ title: String, _ subtitle: String, _ icon: String, _ tint: Color, @ViewBuilder destination: @escaping () -> D) -> some View {
+        NavigationLink { destination() } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 19, weight: .bold))
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 40, height: 40)
+                    .background(tint, in: RoundedRectangle(cornerRadius: 11))
+                Text(title)
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(Brand.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.25)))
+        }
+        .buttonStyle(.taptPress)
     }
 
     private func guideCard(_ guide: RegionBeerGuide) -> some View {

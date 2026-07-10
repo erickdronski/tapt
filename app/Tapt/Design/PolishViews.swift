@@ -119,6 +119,68 @@ struct TaptHeroPanel: View {
     }
 }
 
+/// Collapsible section — tap the header to expand/collapse. Saves real estate
+/// on dense screens; springy chevron, remembers nothing (fresh per screen).
+struct TaptCollapse<Content: View>: View {
+    let title: String
+    var subtitle: String? = nil
+    let icon: String
+    var tint: Color = Brand.gold
+    @State private var expanded: Bool
+    @ViewBuilder var content: () -> Content
+
+    init(title: String, subtitle: String? = nil, icon: String, tint: Color = Brand.gold,
+         startExpanded: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.subtitle = subtitle
+        self.icon = icon
+        self.tint = tint
+        self.content = content
+        _expanded = State(initialValue: startExpanded)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                Haptic.tap()
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { expanded.toggle() }
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(Brand.malt)
+                        .frame(width: 38, height: 38)
+                        .background(tint, in: RoundedRectangle(cornerRadius: 11))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(title)
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Brand.text)
+                        if let subtitle {
+                            Text(subtitle).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                        }
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(Brand.muted)
+                        .rotationEffect(.degrees(expanded ? 180 : 0))
+                }
+                .padding(14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.taptPress)
+
+            if expanded {
+                VStack(spacing: 10) { content() }
+                    .padding([.horizontal, .bottom], 12)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(tint.opacity(0.18)))
+    }
+}
+
 /// Branded empty state with a gently floating icon and glow ring.
 /// Honest empty > fake content, so make empty beautiful.
 struct TaptEmptyState: View {
