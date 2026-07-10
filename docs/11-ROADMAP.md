@@ -60,6 +60,13 @@ afterthought.
 - Partner asset uploads = the legal path to official high-res imagery.
 - Later: self-serve portal; until then the in-app inquiry + owner curation is
   the pipeline.
+- **Distributor channel:** regional distributors (e.g. Manhattan Beer in
+  NYC/NJ — home turf) touch hundreds of accounts each; one distributor
+  relationship can seed venue claims at fleet scale and is a natural buyer of
+  the Phase-6 territory data. Producer lists (VinePair top-40, Thomasnet) are
+  reference-only for target mapping — never data sources. Compliance rail:
+  keep manufacturer/distributor money in separate lanes from retailer
+  placement (tied-house rules, per docs/01).
 
 ## Phase 6 — data authority (the sellable layer, per docs/02)
 Aggregate-only territory intelligence once density exists (k≥10, consent-gated

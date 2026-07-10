@@ -33,6 +33,21 @@ struct GamesView: View {
                     GameTile(title: "Beer Night Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
                 }
                 .buttonStyle(.plain)
+                NavigationLink { BeerOlympicsView() } label: {
+                    GameTile(title: "Beer Olympics", subtitle: "Teams, events, medal table, champion. The big one.", icon: "trophy.fill", tint: Brand.gold, ready: true)
+                }
+                .buttonStyle(.plain)
+                NavigationLink { GameNightGuidesView() } label: {
+                    GameTile(title: "Game Night Guides", subtitle: "Classic card + no-prop games, explained in a minute. Real deck or no props.", icon: "book.fill", tint: Brand.hop, ready: true)
+                }
+                .buttonStyle(.plain)
+
+                Label(GameGuidesData.safetyLine, systemImage: "hand.raised.fill")
+                    .font(.caption)
+                    .foregroundStyle(Brand.muted)
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Brand.surface.opacity(0.7), in: RoundedRectangle(cornerRadius: 13))
             }
             .padding()
         }

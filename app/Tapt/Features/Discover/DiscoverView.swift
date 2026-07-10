@@ -73,6 +73,9 @@ struct DiscoverView: View {
                 QuickPlayTile(title: "Flip Cup", icon: "cup.and.saucer.fill", tint: Brand.hop) {
                     BarGamesView(starting: .flipCup)
                 }
+                QuickPlayTile(title: "Olympics", icon: "trophy.fill", tint: Brand.gold) {
+                    BeerOlympicsView()
+                }
                 QuickPlayTile(title: "Beer Night", icon: "person.3.fill", tint: Brand.copper) {
                     BreweryModeView()
                 }
