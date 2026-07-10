@@ -36,6 +36,7 @@ struct ExploreView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     hero
+                    BeerOfWeekCard().padding(.horizontal)
                     if let activeGuide { guideCard(activeGuide) }
                     mapLink
                     regionPicker
@@ -151,20 +152,23 @@ struct ExploreView: View {
     }
 
     private func ticker(_ b: TrendedBeer) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(b.name).font(.system(.subheadline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).lineLimit(1)
-            Text(b.brewery).font(.caption2).foregroundStyle(Brand.muted).lineLimit(1)
-            Spacer(minLength: 4)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("\(b.popularity)").font(.system(.title2, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                momentum(b.momentum)
+        NavigationLink { BeerDetailView(beerId: b.id) } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(b.name).font(.system(.subheadline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).lineLimit(1)
+                Text(b.brewery).font(.caption2).foregroundStyle(Brand.muted).lineLimit(1)
+                Spacer(minLength: 4)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(b.popularity)").font(.system(.title2, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
+                    momentum(b.momentum)
+                }
             }
+            .padding(12).frame(width: 152, height: 110, alignment: .leading)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.1)))
+            .scaleEffect(myVotes[b.id] == 1 ? 1.03 : 1)
+            .animation(.spring(response: 0.35, dampingFraction: 0.72), value: myVotes[b.id])
         }
-        .padding(12).frame(width: 152, height: 110, alignment: .leading)
-        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.1)))
-        .scaleEffect(myVotes[b.id] == 1 ? 1.03 : 1)
-        .animation(.spring(response: 0.35, dampingFraction: 0.72), value: myVotes[b.id])
+        .buttonStyle(.plain)
     }
 
     private func momentum(_ m: Int) -> some View {
@@ -193,12 +197,17 @@ struct ExploreView: View {
 
     private func row(_ rank: Int, _ b: TrendedBeer) -> some View {
         HStack(spacing: 12) {
-            Text("\(rank)").font(.system(.headline, design: .monospaced)).foregroundStyle(Brand.muted).frame(width: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(b.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
-                Text("\(b.brewery)  \(flag(b.country))  \(b.style)").font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+            NavigationLink { BeerDetailView(beerId: b.id) } label: {
+                HStack(spacing: 12) {
+                    Text("\(rank)").font(.system(.headline, design: .monospaced)).foregroundStyle(Brand.muted).frame(width: 22)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(b.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
+                        Text("\(b.brewery)  \(flag(b.country))  \(b.style)").font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                    }
+                    Spacer(minLength: 6)
+                }
             }
-            Spacer(minLength: 6)
+            .buttonStyle(.plain)
             HStack(spacing: 6) {
                 voteButton(b, 1, "hand.thumbsup.fill", Brand.hop)
                 voteButton(b, -1, "hand.thumbsdown.fill", Brand.copper)

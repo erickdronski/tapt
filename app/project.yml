@@ -1,6 +1,7 @@
 name: Tapt
 options:
   bundleIdPrefix: app.tapt
+  developmentLanguage: en
   deploymentTarget:
     iOS: "18.0"
 packages:
@@ -40,6 +41,7 @@ targets:
             CFBundleURLSchemes: [tapt]
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
+        CFBundleLocalizations: [en, es, de, fr, ja, pt-BR]
         NSCameraUsageDescription: "Tapt uses the camera to scan beer labels, barcodes, and tap lists."
         NSLocationWhenInUseUsageDescription: "Tapt uses your location to show what is good on tap near you."
         LSApplicationQueriesSchemes: [instagram-stories]

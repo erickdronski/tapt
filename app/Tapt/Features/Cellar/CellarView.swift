@@ -182,7 +182,7 @@ struct CellarView: View {
     }
 
     private func row(_ c: MyCheckin) -> some View {
-        HStack(spacing: 12) {
+        let content = HStack(spacing: 12) {
             Image(systemName: "mug.fill").foregroundStyle(Brand.malt)
                 .frame(width: 40, height: 40).background(Brand.gold, in: RoundedRectangle(cornerRadius: 10))
             VStack(alignment: .leading, spacing: 2) {
@@ -204,6 +204,15 @@ struct CellarView: View {
             }
         }
         .padding(12).background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+
+        return Group {
+            if let beerId = c.beerId {
+                NavigationLink { BeerDetailView(beerId: beerId) } label: { content }
+                    .buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 

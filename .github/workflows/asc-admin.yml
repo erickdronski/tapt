@@ -1,0 +1,27 @@
+name: ASC Admin
+
+# TestFlight metadata admin (beta description, feedback flags, whatsNew).
+# Runs where the ASC API key lives (repo secrets). Manual dispatch only.
+on:
+  workflow_dispatch:
+
+jobs:
+  asc-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write ASC API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Install deps
+        run: pip install pyjwt cryptography
+
+      - name: Run TestFlight admin
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+        run: python scripts/asc_testflight_admin.py

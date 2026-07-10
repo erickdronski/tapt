@@ -50,6 +50,23 @@ final class Session {
         }
     }
 
+    /// Verify the 6-digit code from the sign-in email. Works even when the
+    /// magic-link redirect can't (different device, link scanners, etc.).
+    func verifyEmailCode(email: String, code: String) async -> Bool {
+        authError = nil
+        do {
+            try await Supa.client.auth.verifyOTP(
+                email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                token: code.trimmingCharacters(in: .whitespacesAndNewlines),
+                type: .email
+            )
+            return true
+        } catch {
+            authError = "That code didn't work. Codes expire quickly — request a fresh one."
+            return false
+        }
+    }
+
     nonisolated func handleOAuthCallback(_ url: URL) {
         Supa.client.auth.handle(url)
     }

@@ -1,0 +1,1604 @@
+{
+ "sourceLanguage": "en",
+ "version": "1.0",
+ "strings": {
+  "Explore": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Explorar"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Erkunden"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Explorer"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "探索"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Explorar"
+     }
+    }
+   }
+  },
+  "Scan": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Escanear"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Scannen"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Scanner"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "スキャン"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Escanear"
+     }
+    }
+   }
+  },
+  "Cellar": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bodega"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Keller"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cave"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "セラー"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Adega"
+     }
+    }
+   }
+  },
+  "Discover": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Descubrir"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Entdecken"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Découvrir"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "発見"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Descobrir"
+     }
+    }
+   }
+  },
+  "You": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tú"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vous"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "あなた"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Você"
+     }
+    }
+   }
+  },
+  "Welcome to Tapt": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bienvenido a Tapt"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Willkommen bei Tapt"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bienvenue sur Tapt"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Taptへようこそ"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bem-vindo ao Tapt"
+     }
+    }
+   }
+  },
+  "Continue": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Weiter"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuer"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "続ける"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar"
+     }
+    }
+   }
+  },
+  "Back": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Atrás"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Zurück"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Retour"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "戻る"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Voltar"
+     }
+    }
+   }
+  },
+  "Start pouring": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Empieza a servir"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einschenken"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "C'est parti"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "注ぎ始める"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Começar a servir"
+     }
+    }
+   }
+  },
+  "What do you love?": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "¿Qué te gusta?"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Was magst du?"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Qu'aimez-vous ?"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "好きなスタイルは？"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "O que você ama?"
+     }
+    }
+   }
+  },
+  "Where is home base?": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "¿Dónde está tu base?"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wo ist deine Homebase?"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Où est ton QG ?"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ホームはどこ？"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Onde é sua base?"
+     }
+    }
+   }
+  },
+  "Before the first pour": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Antes del primer trago"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vor dem ersten Schluck"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Avant la première pinte"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "最初の一杯の前に"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Antes do primeiro gole"
+     }
+    }
+   }
+  },
+  "Log a pour": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Registrar una cerveza"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bier eintragen"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enregistrer une bière"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ビールを記録"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Registrar uma cerveja"
+     }
+    }
+   }
+  },
+  "Leaderboards": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Clasificaciones"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestenlisten"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Classements"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ランキング"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Classificações"
+     }
+    }
+   }
+  },
+  "Find friends": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Buscar amigos"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Freunde finden"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Trouver des amis"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "友達を探す"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Encontrar amigos"
+     }
+    }
+   }
+  },
+  "Beer School": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Escuela de cerveza"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bierschule"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "École de la bière"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ビアスクール"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Escola da cerveja"
+     }
+    }
+   }
+  },
+  "Games": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Juegos"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spiele"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Jeux"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ゲーム"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Jogos"
+     }
+    }
+   }
+  },
+  "Tonight": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Esta noche"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Heute Abend"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ce soir"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "今夜"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hoje à noite"
+     }
+    }
+   }
+  },
+  "Flights": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Catas"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Verkostungen"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dégustations"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "テイスティング"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Degustações"
+     }
+    }
+   }
+  },
+  "Passport": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pasaporte"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pass"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passeport"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "パスポート"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passaporte"
+     }
+    }
+   }
+  },
+  "Beer Near You": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cerveza cerca de ti"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bier in deiner Nähe"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bière près de vous"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "近くのビール"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cerveja perto de você"
+     }
+    }
+   }
+  },
+  "Beer of the Week": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cerveza de la semana"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bier der Woche"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bière de la semaine"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "今週のビール"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cerveja da semana"
+     }
+    }
+   }
+  },
+  "Partner with Tapt": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Colabora con Tapt"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Partner von Tapt werden"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Devenir partenaire Tapt"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Taptと提携"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Seja parceiro do Tapt"
+     }
+    }
+   }
+  },
+  "Sign out": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cerrar sesión"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Abmelden"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Se déconnecter"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "サインアウト"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sair"
+     }
+    }
+   }
+  },
+  "Theme": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tema"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Design"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Thème"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "テーマ"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tema"
+     }
+    }
+   }
+  },
+  "Appearance": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Apariencia"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Darstellung"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Apparence"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "外観"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aparência"
+     }
+    }
+   }
+  },
+  "Preferences": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Preferencias"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einstellungen"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Préférences"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "設定"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Preferências"
+     }
+    }
+   }
+  },
+  "Privacy Choices": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Privacidad"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Datenschutz"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Confidentialité"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "プライバシー設定"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Privacidade"
+     }
+    }
+   }
+  },
+  "Language": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Idioma"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sprache"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Langue"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "言語"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Idioma"
+     }
+    }
+   }
+  },
+  "Beers": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cervezas"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Biere"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bières"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ビール"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cervejas"
+     }
+    }
+   }
+  },
+  "Tasters": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Catadores"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Verkoster"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dégustateurs"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "テイスター"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Degustadores"
+     }
+    }
+   }
+  },
+  "Styles": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Estilos"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Stile"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Styles"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "スタイル"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Estilos"
+     }
+    }
+   }
+  },
+  "Friends": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Amigos"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Freunde"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Amis"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "友達"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Amigos"
+     }
+    }
+   }
+  },
+  "Taste": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gusto"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Geschmack"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Goût"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "テイスト"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Paladar"
+     }
+    }
+   }
+  },
+  "Email me a sign-in link": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Envíame un enlace de acceso"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Anmeldelink senden"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "M'envoyer un lien de connexion"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ログインリンクを送信"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enviar link de acesso"
+     }
+    }
+   }
+  },
+  "Continue with Google": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar con Google"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Weiter mit Google"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuer avec Google"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Googleで続ける"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar com o Google"
+     }
+    }
+   }
+  },
+  "Continue with Facebook": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar con Facebook"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Weiter mit Facebook"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuer avec Facebook"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Facebookで続ける"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar com o Facebook"
+     }
+    }
+   }
+  },
+  "Continue with X": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar con X"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Weiter mit X"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuer avec X"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Xで続ける"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continuar com o X"
+     }
+    }
+   }
+  },
+  "or use email": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "o usa tu correo"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "oder per E-Mail"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ou par e-mail"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "またはメールで"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ou use e-mail"
+     }
+    }
+   }
+  },
+  "Verify": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Verificar"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestätigen"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vérifier"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "確認"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Verificar"
+     }
+    }
+   }
+  },
+  "By continuing you confirm you are of legal drinking age.": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Al continuar confirmas que tienes edad legal para beber."
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mit dem Fortfahren bestätigst du, dass du das gesetzliche Mindestalter für Alkohol erreicht hast."
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "En continuant, vous confirmez avoir l'âge légal pour consommer de l'alcool."
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "続行することで、法定飲酒年齢に達していることを確認したものとみなされます。"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ao continuar, você confirma que tem idade legal para beber."
+     }
+    }
+   }
+  },
+  "Hoppiness": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lupulado"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hopfigkeit"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Houblonné"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ホップ感"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lupulado"
+     }
+    }
+   }
+  },
+  "Strength": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fuerza"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Stärke"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Force"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "強さ"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Força"
+     }
+    }
+   }
+  },
+  "Nutrition (per 100 ml)": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nutrición (por 100 ml)"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nährwerte (pro 100 ml)"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nutrition (pour 100 ml)"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "栄養成分（100mlあたり）"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nutrição (por 100 ml)"
+     }
+    }
+   }
+  },
+  "Where you'll find it": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dónde encontrarla"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wo du es findest"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Où la trouver"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "どこで見つかる"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Onde encontrar"
+     }
+    }
+   }
+  },
+  "How beer is made": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cómo se hace la cerveza"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wie Bier gebraut wird"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Comment la bière est faite"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ビールの作り方"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Como a cerveja é feita"
+     }
+    }
+   }
+  },
+  "The story": {
+   "localizations": {
+    "es": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "La historia"
+     }
+    },
+    "de": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Die Geschichte"
+     }
+    },
+    "fr": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "L'histoire"
+     }
+    },
+    "ja": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "ストーリー"
+     }
+    },
+    "pt-BR": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "A história"
+     }
+    }
+   }
+  }
+ }
+}

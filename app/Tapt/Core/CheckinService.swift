@@ -45,6 +45,7 @@ struct ScannedBeer: Identifiable, Decodable {
 
 struct MyCheckin: Identifiable, Decodable {
     let id: String
+    let beerId: String?
     let rating: Double?
     let style: String?
     let eventTs: String
@@ -53,6 +54,7 @@ struct MyCheckin: Identifiable, Decodable {
 
     enum CodingKeys: String, CodingKey {
         case id, rating, style
+        case beerId = "beer_id"
         case eventTs = "event_ts"
         case beer = "beer_catalog"
         case venue
@@ -162,7 +164,7 @@ enum CheckinService {
 
     static func mine(userId: UUID) async throws -> [MyCheckin] {
         try await Supa.client.from("checkin_event")
-            .select("id,rating,style,event_ts,beer_catalog(name,brewery(name,country)),venue(name,external_ids)")
+            .select("id,beer_id,rating,style,event_ts,beer_catalog(name,brewery(name,country)),venue(name,external_ids)")
             .eq("user_id", value: userId.uuidString)
             .order("event_ts", ascending: false).limit(100)
             .execute().value

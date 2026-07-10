@@ -71,32 +71,35 @@ struct LeaderboardsView: View {
                 )
             } else {
                 ForEach(Array(beers.enumerated()), id: \.element.id) { i, beer in
-                    HStack(spacing: 12) {
-                        rankBadge(i + 1)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(beer.name)
-                                .font(.system(.headline, design: .rounded).weight(.bold))
-                                .foregroundStyle(Brand.text).lineLimit(1)
-                            Text([beer.breweryName, beer.style, beer.country].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "  "))
-                                .font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
-                        }
-                        Spacer(minLength: 8)
-                        VStack(alignment: .trailing, spacing: 3) {
-                            HStack(spacing: 6) {
-                                Label("\(beer.ups)", systemImage: "hand.thumbsup.fill")
-                                    .font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
-                                Label("\(beer.downs)", systemImage: "hand.thumbsdown.fill")
-                                    .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
+                    NavigationLink { BeerDetailView(beerId: beer.beerId) } label: {
+                        HStack(spacing: 12) {
+                            rankBadge(i + 1)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(beer.name)
+                                    .font(.system(.headline, design: .rounded).weight(.bold))
+                                    .foregroundStyle(Brand.text).lineLimit(1)
+                                Text([beer.breweryName, beer.style, beer.country].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: "  "))
+                                    .font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
                             }
-                            if beer.checkinCount > 0 {
-                                Text("\(beer.checkinCount) pours")
-                                    .font(.caption2.weight(.semibold)).foregroundStyle(Brand.muted)
+                            Spacer(minLength: 8)
+                            VStack(alignment: .trailing, spacing: 3) {
+                                HStack(spacing: 6) {
+                                    Label("\(beer.ups)", systemImage: "hand.thumbsup.fill")
+                                        .font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
+                                    Label("\(beer.downs)", systemImage: "hand.thumbsdown.fill")
+                                        .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
+                                }
+                                if beer.checkinCount > 0 {
+                                    Text("\(beer.checkinCount) pours")
+                                        .font(.caption2.weight(.semibold)).foregroundStyle(Brand.muted)
+                                }
                             }
                         }
+                        .padding(13)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 15))
+                        .overlay(RoundedRectangle(cornerRadius: 15).stroke(Brand.gold.opacity(i == 0 ? 0.5 : 0.12)))
                     }
-                    .padding(13)
-                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 15))
-                    .overlay(RoundedRectangle(cornerRadius: 15).stroke(Brand.gold.opacity(i == 0 ? 0.5 : 0.12)))
+                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 0)
             }

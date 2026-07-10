@@ -10,6 +10,8 @@ struct ProfileView: View {
     @AppStorage("locationConsent") private var locationConsent = true
     @AppStorage("aggregateConsent") private var aggregateConsent = true
     @AppStorage("dataSaleConsent") private var dataSaleConsent = false
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
+    @State private var languageChanged = false
     @State private var deletionRequested = false
     @State private var deletionError: String?
 
@@ -46,6 +48,23 @@ struct ProfileView: View {
                         ForEach(Appearance.allCases) { Text($0.label).tag($0.rawValue) }
                     }
                     .pickerStyle(.segmented)
+                }
+
+                Section {
+                    Picker("Language", selection: $appLanguage) {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Text(lang.label).tag(lang.rawValue)
+                        }
+                    }
+                    if languageChanged {
+                        Label("Close and reopen Tapt to apply the new language.", systemImage: "arrow.triangle.2.circlepath")
+                            .font(.footnote)
+                            .foregroundStyle(Brand.copper)
+                    }
+                } header: {
+                    Text("Language")
+                } footer: {
+                    Text("Tapt is global. Core screens are translated today; more strings and languages roll out over time.")
                 }
 
                 Section {
@@ -125,6 +144,10 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("You")
+            .onChange(of: appLanguage) { _, newValue in
+                (AppLanguage(rawValue: newValue) ?? .system).apply()
+                languageChanged = true
+            }
             .onChange(of: beerGeekMode) { _, newValue in syncBeerGeek(newValue) }
             .onChange(of: locationConsent) { _, newValue in
                 syncPrivacy("location", granted: newValue, text: "Nearby beer spots")
