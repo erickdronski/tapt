@@ -4,6 +4,17 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tapt for Business · Free menu hosting</title>
 <meta name="description" content="Free forever for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu. No subscription, ever.">
+<meta property="og:title" content="Tapt for Business · Free menu hosting forever">
+<meta property="og:description" content="Claim your venue, publish your tap list, print your QR menu. Free forever, no subscription.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://tapt-landing-three.vercel.app/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tapt-landing-three.vercel.app/og.png">
+<meta name="theme-color" content="#1A1206">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
@@ -37,6 +48,11 @@ a{color:var(--copper)}
 .evline{display:grid;grid-template-columns:1.2fr 2fr auto;gap:6px;margin-bottom:6px}
 .evline input,.evline select{margin:0;padding:9px 10px;font-size:.9rem}
 textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
+.wrap{animation:portalIn .7s cubic-bezier(.22,1,.36,1) both}
+.card{animation:cardIn .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes portalIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.wrap,.card{animation:none}}
 </style>
 </head>
 <body>

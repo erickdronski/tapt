@@ -4,6 +4,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Tapt Admin · Claims</title>
+<meta name="theme-color" content="#1A1206">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
@@ -29,6 +33,9 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
 .stat.hot b{color:var(--copper)}
 .stat span{font-size:.78rem;color:var(--slate)}
 textarea:focus,input:focus{outline:none;border-color:var(--gold)}
+.wrap{animation:adminIn .6s cubic-bezier(.22,1,.36,1) both}
+@keyframes adminIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.wrap{animation:none}}
 </style>
 </head>
 <body>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#241608"/>
+      <stop offset="1" stop-color="#0E0802"/>
+    </linearGradient>
+    <linearGradient id="beer" x1="512" y1="286" x2="512" y2="812" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD24D"/>
+      <stop offset=".45" stop-color="#F2A900"/>
+      <stop offset="1" stop-color="#C56B10"/>
+    </linearGradient>
+    <linearGradient id="foam" x1="512" y1="150" x2="512" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F3E7CC"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="330" y1="250" x2="694" y2="812" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF6EC" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#FBF6EC" stop-opacity=".06"/>
+    </linearGradient>
+    <clipPath id="glassClip">
+      <path d="M336 262 C348 526 366 720 404 800 Q512 830 620 800 C658 720 676 526 688 262 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Premium dark rounded background -->
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="228" fill="none" stroke="#F2A900" stroke-opacity=".14" stroke-width="4"/>
+
+  <!-- Soft glow behind the glass -->
+  <ellipse cx="512" cy="560" rx="250" ry="300" fill="#F2A900" opacity=".10"/>
+
+  <!-- Glass back -->
+  <path d="M336 262 C348 526 366 720 404 800 Q512 830 620 800 C658 720 676 526 688 262 Z" fill="url(#glass)"/>
+
+  <!-- Beer + shine, clipped to the glass -->
+  <g clip-path="url(#glassClip)">
+    <rect x="320" y="288" width="384" height="560" fill="url(#beer)"/>
+    <!-- rising bubbles -->
+    <circle cx="470" cy="640" r="9" fill="#FFF3D7" opacity=".55"/>
+    <circle cx="548" cy="560" r="7" fill="#FFF3D7" opacity=".5"/>
+    <circle cx="500" cy="470" r="6" fill="#FFF3D7" opacity=".5"/>
+    <circle cx="560" cy="700" r="6" fill="#FFF3D7" opacity=".45"/>
+    <!-- vertical shine -->
+    <rect x="392" y="300" width="34" height="470" rx="17" fill="#FFFFFF" opacity=".18"/>
+  </g>
+
+  <!-- Centered foam dome (symmetric), sits on the lip -->
+  <path d="M322 286
+           C314 214 384 168 452 190
+           C480 150 544 150 572 190
+           C640 168 710 214 702 286
+           C702 318 660 330 512 330
+           C364 330 322 318 322 286 Z"
+        fill="url(#foam)" stroke="#130A02" stroke-width="26" stroke-linejoin="round"/>
+  <!-- foam bubbles -->
+  <circle cx="430" cy="250" r="20" fill="#FFFFFF"/>
+  <circle cx="512" cy="238" r="24" fill="#FFFFFF"/>
+  <circle cx="596" cy="250" r="20" fill="#FFFFFF"/>
+
+  <!-- Glass outline on top -->
+  <path d="M336 262 C348 526 366 720 404 800 Q512 830 620 800 C658 720 676 526 688 262"
+        fill="none" stroke="#130A02" stroke-width="30" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

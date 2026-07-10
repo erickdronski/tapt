@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#241608"/><stop offset="1" stop-color="#0E0802"/>
+    </linearGradient>
+    <linearGradient id="beer" x1="0" y1="255" x2="0" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/>
+    </linearGradient>
+    <linearGradient id="foam" x1="0" y1="150" x2="0" y2="270" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3E7CC"/>
+    </linearGradient>
+    <clipPath id="clip"><path d="M900 250 C907 430 918 540 940 580 Q968 596 996 580 C1018 540 1029 430 1036 250 Z"/></clipPath>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <ellipse cx="968" cy="360" rx="200" ry="240" fill="#F2A900" opacity=".12"/>
+
+  <!-- Wordmark + copy -->
+  <text x="90" y="230" font-family="Poppins, Arial, sans-serif" font-weight="800" font-size="92" fill="#FBF6EC">Tapt<tspan fill="#F2A900">.</tspan></text>
+  <text x="92" y="300" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="40" fill="#F2A900">THE Beer Superapp</text>
+  <text x="92" y="372" font-family="Inter, Arial, sans-serif" font-weight="400" font-size="30" fill="#C9BCA0">Scan any beer on Earth. Stamp your Passport.</text>
+  <text x="92" y="414" font-family="Inter, Arial, sans-serif" font-weight="400" font-size="30" fill="#C9BCA0">Free to download. Free menu hosting for bars.</text>
+  <rect x="92" y="470" width="360" height="66" rx="33" fill="#F2A900"/>
+  <text x="272" y="513" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="28" fill="#1A1206">Get the free app</text>
+
+  <!-- The glass (matches icon) -->
+  <path d="M900 250 C907 430 918 540 940 580 Q968 596 996 580 C1018 540 1029 430 1036 250 Z" fill="#FBF6EC" fill-opacity=".14"/>
+  <g clip-path="url(#clip)">
+    <rect x="895" y="270" width="146" height="320" fill="url(#beer)"/>
+    <rect x="925" y="278" width="13" height="270" rx="6" fill="#fff" opacity=".2"/>
+    <circle cx="965" cy="470" r="5" fill="#FFF3D7" opacity=".55"/><circle cx="990" cy="420" r="4" fill="#FFF3D7" opacity=".5"/>
+  </g>
+  <path d="M888 258 C883 208 923 182 960 197 C982 172 1014 172 1032 197 C1069 182 1109 208 1104 258 C1104 280 1064 288 968 288 C872 288 888 280 888 258 Z"
+        transform="translate(-40,0)" fill="url(#foam)" stroke="#130A02" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="928" cy="222" r="11" fill="#fff"/><circle cx="968" cy="216" r="14" fill="#fff"/><circle cx="1008" cy="222" r="11" fill="#fff"/>
+  <path d="M900 250 C907 430 918 540 940 580 Q968 596 996 580 C1018 540 1029 430 1036 250" fill="none" stroke="#130A02" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

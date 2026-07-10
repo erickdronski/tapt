@@ -4,6 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tapt · Pitch</title>
+<meta name="description" content="Tapt — THE Beer Superapp. Free to drinkers forever, breweries and bars pay. The pitch.">
+<meta property="og:title" content="Tapt · The pitch">
+<meta property="og:description" content="THE Beer Superapp. Free to drinkers forever, breweries and bars pay.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://tapt-landing-three.vercel.app/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tapt-landing-three.vercel.app/og.png">
+<meta name="theme-color" content="#1A1206">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
@@ -31,6 +43,11 @@
   .tag{display:inline-block;background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:8px 18px;font-size:.85rem;margin-top:26px}
   .cite{font-size:.75rem;color:rgba(251,246,236,.4);margin-top:22px}
   @media print{.slide{min-height:96vh}.foot{display:none};body{background:#1A1206}}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.07s}.reveal.d2{transition-delay:.14s}.reveal.d3{transition-delay:.21s}.reveal.d4{transition-delay:.28s}.reveal.d5{transition-delay:.35s}
+  @media print{.reveal{opacity:1;transform:none;transition:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
@@ -133,5 +150,20 @@
 </section>
 
 <div class="foot">Tapt · confidential-ish (it's mostly on the landing page) · enjoy responsibly</div>
+<script>
+  // Per-slide cinematic reveal: each slide's content fades + rises on entry, staggered.
+  (function(){
+    document.querySelectorAll('.slide').forEach(function(slide){
+      var kids = slide.querySelectorAll('.k, .big, .lede, .price, .tag, .cite, .card, .grid');
+      Array.prototype.forEach.call(kids, function(el, i){
+        el.classList.add('reveal', 'd' + Math.min(i+1, 5));
+      });
+    });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  })();
+</script>
 </body>
 </html>
