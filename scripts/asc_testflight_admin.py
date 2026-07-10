@@ -118,12 +118,27 @@ def main():
             print(f"  -> feedbackEnabled=true PATCH {s2}"
                   + ("" if s2 == 200 else f" {json.dumps(d2)[:300]}"))
 
-    # 3. Recent builds report + whatsNew on the latest
-    s, d = api("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=5")
+    # 3. Recent builds: distribution state, export compliance fix, group assignment
+    s, d = api("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=6&include=buildBetaDetail&fields[buildBetaDetails]=internalBuildState,externalBuildState")
     builds = d.get("data", [])
+    detail_states = {i["id"]: i["attributes"] for i in d.get("included", []) if i["type"] == "buildBetaDetails"}
+    s2, groups = api("GET", f"/v1/apps/{app_id}/betaGroups?fields[betaGroups]=name,isInternalGroup")
+    group_ids = [g["id"] for g in groups.get("data", [])]
     for b in builds:
         a = b["attributes"]
-        print(f"BUILD {a.get('version')} uploaded={a.get('uploadedDate')} state={a.get('processingState')} expired={a.get('expired')}")
+        det_id = ((b.get("relationships", {}).get("buildBetaDetail", {}).get("data") or {}).get("id"))
+        det = detail_states.get(det_id, {})
+        print(f"BUILD {a.get('version')} state={a.get('processingState')} nonExemptEnc={a.get('usesNonExemptEncryption')} internal={det.get('internalBuildState')} external={det.get('externalBuildState')}")
+        # Fix export compliance when unanswered (app uses only exempt HTTPS crypto).
+        if a.get("usesNonExemptEncryption") is None:
+            s3, d3 = api("PATCH", f"/v1/builds/{b['id']}", {"data": {"type": "builds", "id": b["id"],
+                "attributes": {"usesNonExemptEncryption": False}}})
+            print(f"  -> compliance PATCH {s3}")
+        # Ensure the build is assigned to every group (idempotent).
+        for gid in group_ids:
+            s4, d4 = api("POST", f"/v1/betaGroups/{gid}/relationships/builds",
+                         {"data": [{"type": "builds", "id": b["id"]}]})
+            print(f"  -> group {gid[:8]} assign {s4}")
     builds = builds[:1]
     if builds:
         build_id = builds[0]["id"]
