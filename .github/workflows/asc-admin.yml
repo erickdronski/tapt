@@ -4,13 +4,22 @@ name: ASC Admin
 # Runs where the ASC API key lives (repo secrets). Manual dispatch only.
 on:
   workflow_dispatch:
+  # Auto-run after every TestFlight upload: waits out ASC processing, then
+  # answers export compliance + assigns the new build to all tester groups.
+  workflow_run:
+    workflows: ["TestFlight"]
+    types: [completed]
 
 jobs:
   asc-admin:
     runs-on: ubuntu-latest
-    timeout-minutes: 10 # tiny API job; a hang must not bill the 360-min default
+    timeout-minutes: 15 # API job + optional 10-min ASC processing wait
     steps:
       - uses: actions/checkout@v4
+
+      - name: Wait for ASC processing (only after uploads)
+        if: github.event_name == 'workflow_run'
+        run: sleep 600
 
       - name: Write ASC API key
         run: |
