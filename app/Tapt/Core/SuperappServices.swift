@@ -376,9 +376,25 @@ struct VenueMenuRow: Identifiable, Decodable, Sendable {
     }
 }
 
+struct VenueEvent: Identifiable, Decodable, Sendable {
+    let kind: String
+    let title: String
+    let details: String?
+
+    var id: String { kind + title }
+    var kindLabel: String { kind.replacingOccurrences(of: "_", with: " ").capitalized }
+
+    enum CodingKeys: String, CodingKey { case kind, title, details }
+}
+
 enum VenueMenuService {
     static func menu(venueId: String) async throws -> [VenueMenuRow] {
         struct Params: Encodable { let p_venue: String }
         return try await Supa.client.rpc("venue_menu", params: Params(p_venue: venueId)).execute().value
+    }
+
+    static func events(venueId: String) async throws -> [VenueEvent] {
+        struct Params: Encodable { let p_venue: String }
+        return try await Supa.client.rpc("venue_events", params: Params(p_venue: venueId)).execute().value
     }
 }

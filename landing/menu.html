@@ -31,6 +31,7 @@ h1{font-family:'Poppins';font-size:2rem;letter-spacing:-.02em;margin:18px 0 2px}
   <h1 id="venue">Loading…</h1>
   <div class="sub" id="place"></div>
   <div class="updated" id="updated"></div>
+  <div id="events"></div>
   <div id="taps"></div>
   <div class="qrbox" id="qrbox" hidden>
     <div style="font-family:'Poppins';font-weight:800">Scan for the live menu</div>
@@ -67,6 +68,10 @@ async function load(){
       ${t.price_text ? `<div class="price">${esc(t.price_text)}</div>` : ''}</div>`).join('');
     el('qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(location.href);
     el('qrbox').hidden = false;
+    // Events / specials
+    fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/rest/v1/rpc/venue_events',{method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF'},body:JSON.stringify({p_venue:v})}).then(r=>r.json()).then(evs=>{
+      if(evs&&evs.length){el('events').innerHTML='<div style="margin-bottom:14px">'+evs.map(e=>`<div style="background:#FFF3D6;border-radius:12px;padding:10px 14px;margin-bottom:6px"><b>${esc(e.title)}</b> <span style="font-size:.78rem;color:var(--copper);text-transform:capitalize">· ${esc((e.kind||'').replace('_',' '))}</span>${e.details?`<div style="font-size:.85rem;color:var(--slate)">${esc(e.details)}</div>`:''}</div>`).join('')+'</div>';}
+    });
   }catch(e){
     el('venue').textContent = 'Menu unavailable';
     el('taps').innerHTML = '<div class="empty">Could not load this menu right now.</div>';

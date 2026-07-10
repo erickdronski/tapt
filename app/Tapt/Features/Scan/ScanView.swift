@@ -373,6 +373,7 @@ extension String: @retroactive Identifiable {
 struct PartnerMenuSheet: View {
     let venueId: String
     @State private var rows: [VenueMenuRow] = []
+    @State private var events: [VenueEvent] = []
     @State private var loading = true
 
     var body: some View {
@@ -391,6 +392,24 @@ struct PartnerMenuSheet: View {
                             .font(.system(.title, design: .rounded).weight(.heavy))
                             .foregroundStyle(Brand.text)
                             .padding(.horizontal)
+                        ForEach(events) { event in
+                            HStack(spacing: 10) {
+                                Image(systemName: "calendar.badge.clock").foregroundStyle(Brand.malt)
+                                    .frame(width: 34, height: 34)
+                                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 9))
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(event.title)
+                                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                        .foregroundStyle(Brand.text)
+                                    Text(event.kindLabel)
+                                        .font(.caption2.weight(.semibold)).foregroundStyle(Brand.copper)
+                                }
+                                Spacer()
+                            }
+                            .padding(11)
+                            .background(Brand.gold.opacity(0.14), in: RoundedRectangle(cornerRadius: 13))
+                            .padding(.horizontal)
+                        }
                         ForEach(rows) { row in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -423,7 +442,10 @@ struct PartnerMenuSheet: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .task {
-            rows = (try? await VenueMenuService.menu(venueId: venueId)) ?? []
+            async let m = VenueMenuService.menu(venueId: venueId)
+            async let e = VenueMenuService.events(venueId: venueId)
+            rows = (try? await m) ?? []
+            events = (try? await e) ?? []
             loading = false
         }
     }

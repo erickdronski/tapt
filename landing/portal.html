@@ -30,6 +30,13 @@ input:focus{outline:none;border-color:var(--gold)}
 .hint{font-size:.8rem;color:var(--slate);margin-top:8px}
 a{color:var(--copper)}
 @media(max-width:560px){.tapline{grid-template-columns:1fr 1fr;grid-auto-rows:auto}}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.stat{background:var(--foam);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-family:'Poppins';font-size:1.5rem;color:var(--malt)}
+.stat span{font-size:.75rem;color:var(--slate)}
+.evline{display:grid;grid-template-columns:1.2fr 2fr auto;gap:6px;margin-bottom:6px}
+.evline input,.evline select{margin:0;padding:9px 10px;font-size:.9rem}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -83,6 +90,22 @@ a{color:var(--copper)}
     <button class="btn" onclick="publish()">Publish menu</button>
     <div class="msg" id="pubMsg"></div>
     <div class="hint" id="menuLinks"></div>
+  </div>
+
+  <div class="card" id="eventsCard" hidden>
+    <h2>5 · Events &amp; specials</h2>
+    <p class="sub" style="margin-bottom:10px">Happy hours, tap takeovers, releases, trivia nights. Shows on your menu page and in the Tapt app.</p>
+    <div id="events"></div>
+    <button class="btn ghost" onclick="addEvent()">+ Add an event</button>
+    <button class="btn" onclick="publishEvents()">Save events</button>
+    <div class="msg" id="evMsg"></div>
+  </div>
+
+  <div class="card" id="numbersCard" hidden>
+    <h2>Your numbers</h2>
+    <p class="sub" style="margin-bottom:10px">Real activity at your venue, from Tapt drinkers. Free.</p>
+    <div id="numbers" class="stats"></div>
+    <div id="topBeers"></div>
   </div>
 
   <div class="card">
@@ -172,8 +195,12 @@ function openMenu(venueId, name) {
   approvedVenue = venueId;
   $('brandCard').hidden = false;
   $('menuCard').hidden = false;
+  $('eventsCard').hidden = false;
+  $('numbersCard').hidden = false;
   $('menuVenueName').textContent = name;
   if (!$('taps').children.length) addTap();
+  loadNumbers(venueId);
+  loadEvents(venueId);
   const url = `${location.origin}/menu?v=${venueId}`;
   $('menuLinks').innerHTML = `Your live menu + printable QR: <a href="${url}" target="_blank">${url}</a>`;
   supa.rpc('venue_brand', { p_venue: venueId }).then(({ data }) => {
@@ -206,6 +233,45 @@ window.addTap = (beer = '', brewery = '', style = '', price = '') => {
   const div = document.createElement('div'); div.className = 'tapline';
   div.innerHTML = `<input placeholder="Beer name" value="${esc(beer)}"><input placeholder="Brewery" value="${esc(brewery || '')}"><input placeholder="Style" value="${esc(style || '')}"><input placeholder="$" value="${esc(price || '')}"><button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove()">✕</button>`;
   $('taps').appendChild(div);
+};
+
+async function loadNumbers(venueId) {
+  const { data, error } = await supa.rpc('venue_analytics', { p_venue: venueId });
+  if (error || !data) return;
+  $('numbers').innerHTML = [
+    ['pours_total','Pours logged'],['pours_7d','This week'],['unique_drinkers','Drinkers'],
+    ['avg_rating','Avg rating']
+  ].map(([k,l]) => `<div class="stat"><b>${data[k] ?? 0}</b><span>${l}</span></div>`).join('');
+  const top = data.top_beers || [];
+  $('topBeers').innerHTML = top.length
+    ? '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">Top poured: ' +
+      top.map(b => `${esc(b.name)} (${b.pours})`).join(', ') + '</div>'
+    : '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">No pours logged here yet, they show up as drinkers check in.</div>';
+}
+
+async function loadEvents(venueId) {
+  const { data } = await supa.rpc('venue_events', { p_venue: venueId });
+  $('events').innerHTML = '';
+  if (data && data.length) data.forEach(e => addEvent(e.kind, e.title, e.details));
+}
+
+window.addEvent = (kind = 'happy_hour', title = '', details = '') => {
+  const kinds = ['happy_hour','tap_takeover','release','live_music','trivia','other'];
+  const div = document.createElement('div'); div.className = 'evline';
+  div.innerHTML = `<select>${kinds.map(k => `<option value="${k}" ${k===kind?'selected':''}>${k.replace('_',' ')}</option>`).join('')}</select>
+    <input placeholder="Title (e.g. Fri 4-6pm Happy Hour)" value="${esc(title)}">
+    <button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove()">✕</button>`;
+  $('events').appendChild(div);
+};
+
+window.publishEvents = async () => {
+  const items = [...$('events').children].map(row => {
+    const kind = row.querySelector('select').value;
+    const title = row.querySelector('input').value.trim();
+    return title ? { kind, title } : null;
+  }).filter(Boolean);
+  const { data, error } = await supa.rpc('set_venue_events', { p_venue: approvedVenue, p_events: items });
+  $('evMsg').textContent = error ? error.message : `Saved ${data} events. Live on your menu + in the app. 🎉`;
 };
 
 window.publish = async () => {
