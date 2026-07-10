@@ -1,0 +1,37 @@
+name: Ingest beers (BULK, full OFF export)
+
+# One-shot: loads the ENTIRE beer catalog from the Open Food Facts bulk CSV
+# export in a single run (streams + filters, no search-API throttling).
+# Manual only. The weekly ingest-beers.yml keeps it fresh afterward.
+#
+# Needs the repo secret SUPABASE_SERVICE_ROLE_KEY.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ingest-beers
+  cancel-in-progress: false
+
+jobs:
+  bulk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Load the full beer catalog from the OFF bulk export
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BATCH: "300"
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is not set."
+            exit 1
+          fi
+          python3 scripts/ingest_off_csv.py
