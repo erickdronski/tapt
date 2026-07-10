@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tapt Admin · Claims</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt)}
+.wrap{max-width:720px;margin:0 auto;padding:36px 20px 80px}
+.brand{font-family:'Poppins';font-weight:800;font-size:1.3rem}.brand span{color:var(--gold)}
+h1{font-family:'Poppins';font-size:1.6rem;margin:14px 0 18px}
+input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit;font-size:.98rem;margin-bottom:8px}
+.btn{background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:9px 18px;border:0;cursor:pointer;font-family:inherit}
+.btn.g{background:var(--hop);color:#fff}.btn.r{background:transparent;border:2px solid rgba(180,83,31,.4);color:var(--copper)}
+.claim{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:16px;padding:16px;margin-bottom:12px}
+.claim.pending{border-left:4px solid var(--gold)}
+.claim h3{font-family:'Poppins';font-size:1.05rem}
+.meta{font-size:.85rem;color:var(--slate);margin:4px 0 10px}
+.tag{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px}
+.tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}.tag.rejected{background:#F3E0DA;color:var(--copper)}
+.msg{font-weight:600;font-size:.9rem;margin-top:8px}
+.actions{display:flex;gap:8px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">admin</span></div>
+  <h1>Venue claim queue</h1>
+
+  <div id="authBox">
+    <input type="email" id="email" placeholder="Admin email">
+    <button class="btn" onclick="sendCode()">Email me a code</button>
+    <div id="codeRow" hidden style="margin-top:8px">
+      <input inputmode="numeric" id="code" placeholder="6-digit code">
+      <button class="btn" onclick="verifyCode()">Verify</button>
+    </div>
+    <div class="msg" id="authMsg"></div>
+  </div>
+
+  <div id="queue"></div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supa = createClient('https://qfwiizvqxrhjlthbjosz.supabase.co', 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF');
+const $ = id => document.getElementById(id);
+
+window.sendCode = async () => {
+  const { error } = await supa.auth.signInWithOtp({ email: $('email').value.trim() });
+  $('authMsg').textContent = error ? error.message : 'Enter the code below.';
+  if (!error) $('codeRow').hidden = false;
+};
+window.verifyCode = async () => {
+  const { error } = await supa.auth.verifyOtp({ email: $('email').value.trim(), token: $('code').value.trim(), type: 'email' });
+  $('authMsg').textContent = error ? 'Code failed.' : '';
+  if (!error) load();
+};
+
+async function load() {
+  const { data: isAdmin } = await supa.rpc('is_admin');
+  if (!isAdmin) { $('queue').innerHTML = '<p style="color:var(--copper)">This account is not an admin.</p>'; return; }
+  $('authBox').style.display = 'none';
+  const { data: claims } = await supa.rpc('admin_claims');
+  const q = $('queue'); q.innerHTML = '';
+  if (!claims || !claims.length) { q.innerHTML = '<p style="color:var(--slate)">No claims yet.</p>'; return; }
+  claims.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'claim ' + c.status;
+    const place = [c.city, c.region].filter(Boolean).map(esc).join(', ');
+    div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>${esc(c.venue_name)}</h3><span class="tag ${c.status}">${c.status}</span></div>
+      <div class="meta">${place} · ${esc(c.business_email)} · role: ${esc(c.claimant_role||'—')}</div>`;
+    if (c.status === 'pending') {
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const ap = document.createElement('button'); ap.className = 'btn g'; ap.textContent = 'Approve';
+      ap.onclick = () => setStatus(c.claim_id, 'approved');
+      const rj = document.createElement('button'); rj.className = 'btn r'; rj.textContent = 'Reject';
+      rj.onclick = () => setStatus(c.claim_id, 'rejected');
+      actions.append(ap, rj); div.appendChild(actions);
+    }
+    q.appendChild(div);
+  });
+}
+
+async function setStatus(id, status) {
+  const { error } = await supa.rpc('set_claim_status', { p_claim: id, p_status: status });
+  if (!error) load();
+  else alert(error.message);
+}
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+supa.auth.getSession().then(({ data }) => { if (data.session) load(); });
+</script>
+</body>
+</html>

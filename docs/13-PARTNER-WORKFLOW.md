@@ -63,16 +63,17 @@ BUSINESS                         TAPT BACKEND                    DRINKER
 
 ## What Tapt does at each step
 - **Verification (step 5):** claims are human-approved so nobody hijacks a
-  venue page. Today it is concierge (`update venue_claim set status='approved'
-  where id=...` after a quick check the email domain / person is legit).
-  Next: a lightweight admin surface + auto-approve for matching email domains.
+  venue page. **Now a one-click admin page** at `/admin` (sign in with the
+  owner email, see the pending queue, Approve/Reject). Gated by the `app_admin`
+  table + `is_admin()` — only the seeded owner account can see or act. Next:
+  auto-approve for matching email domains.
 - **Automation already live:** `partner_inquiry` and portal claims flow to the
   same tables; the ASC-style admin job pattern can email owners on approval.
 - **Automation next (the roadmap):**
-  1. **Admin approval UI** (a `/portal/admin` gated page) so approving is a
-     click, not SQL.
+  1. ✅ **Admin approval UI** — LIVE at `/admin` (owner signs in, one-click
+     Approve/Reject on the pending queue).
   2. **Email on approval + on inquiry** via the newsletter/Resend pipeline
-     ("your venue is live, here's your QR").
+     ("your venue is live, here's your QR"). Cost-gated (Resend free tier).
   3. **Auto-approve** when the claimant's email domain matches the venue's
      known website domain (from Open Brewery DB `website_url`).
   4. **Weekly "update your taps?" nudge** as snapshots near their 14-day
