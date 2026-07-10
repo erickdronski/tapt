@@ -353,3 +353,32 @@ enum BarcodeCatalogService {
         )
     }
 }
+
+// MARK: - Partner live menus (QR -> in-app)
+
+struct VenueMenuRow: Identifiable, Decodable, Sendable {
+    let venueName: String
+    let city: String?
+    let beerName: String
+    let breweryName: String?
+    let style: String?
+    let priceText: String?
+
+    var id: String { beerName + (breweryName ?? "") }
+
+    enum CodingKeys: String, CodingKey {
+        case venueName = "venue_name"
+        case city
+        case beerName = "beer_name"
+        case breweryName = "brewery_name"
+        case style
+        case priceText = "price_text"
+    }
+}
+
+enum VenueMenuService {
+    static func menu(venueId: String) async throws -> [VenueMenuRow] {
+        struct Params: Encodable { let p_venue: String }
+        return try await Supa.client.rpc("venue_menu", params: Params(p_venue: venueId)).execute().value
+    }
+}

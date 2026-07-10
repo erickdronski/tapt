@@ -14,6 +14,9 @@ struct ScanView: View {
     @State private var loggedPour: PourCard?
     @State private var offBeer: OFFBeer?
     @State private var addingOFF = false
+    @State private var visibleLines: [String] = []
+    @State private var menuMatching = false
+    @State private var partnerVenueId: String?
 
     private var scannerAvailable: Bool {
         DataScannerViewController.isSupported && DataScannerViewController.isAvailable
@@ -23,9 +26,29 @@ struct ScanView: View {
         NavigationStack {
             Group {
                 if scannerAvailable {
-                    DataScannerView(scanned: $scanned)
+                    DataScannerView(scanned: $scanned, visibleLines: $visibleLines)
                         .ignoresSafeArea(edges: .bottom)
                         .overlay(alignment: .bottom) { hint }
+                        .overlay(alignment: .bottomTrailing) {
+                            if visibleLines.count >= 3 && !showResult {
+                                Button {
+                                    Haptic.firm()
+                                    Task { await matchMenu() }
+                                } label: {
+                                    Label(menuMatching ? "Matching..." : "Match menu (\(visibleLines.count))",
+                                          systemImage: "list.bullet.rectangle.fill")
+                                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                        .foregroundStyle(Brand.malt)
+                                        .padding(.horizontal, 14).padding(.vertical, 10)
+                                        .background(Brand.gold, in: Capsule())
+                                        .shadow(color: Brand.malt.opacity(0.3), radius: 8, y: 4)
+                                }
+                                .buttonStyle(.taptPress)
+                                .disabled(menuMatching)
+                                .padding(.trailing, 16)
+                                .padding(.bottom, 76)
+                            }
+                        }
                 } else {
                     unsupported
                 }
@@ -33,10 +56,20 @@ struct ScanView: View {
             .navigationTitle("Scan")
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: scanned) { _, value in
-                if let value {
-                    showResult = true
-                    Task { await loadMatches(value) }
+                guard let value else { return }
+                // Partner QR: route straight to the venue's live menu in-app.
+                if value.contains("menu?v="),
+                   let venueId = value.components(separatedBy: "menu?v=").last?
+                       .components(separatedBy: "&").first, venueId.count == 36 {
+                    partnerVenueId = venueId
+                    scanned = nil
+                    return
                 }
+                showResult = true
+                Task { await loadMatches(value) }
+            }
+            .sheet(item: $partnerVenueId) { venueId in
+                PartnerMenuSheet(venueId: venueId)
             }
             .sheet(isPresented: $showResult, onDismiss: { scanned = nil }) { resultSheet }
             .sheet(item: $loggedPour) { pour in
@@ -275,6 +308,22 @@ struct ScanView: View {
         }
     }
 
+    /// Menu mode: batch-match every visible text line against the catalog.
+    private func matchMenu() async {
+        menuMatching = true
+        defer { menuMatching = false }
+        var found: [ScannedBeer] = []
+        for line in visibleLines.prefix(10) {
+            if let hits = try? await CheckinService.matchScan(line), let best = hits.first, best.confidence >= 0.3 {
+                if !found.contains(where: { $0.id == best.id }) { found.append(best) }
+            }
+        }
+        matches = found
+        offBeer = nil
+        scanned = "Menu scan: \(visibleLines.count) lines read"
+        showResult = true
+    }
+
     private func loadMatches(_ raw: String) async {
         loadingMatches = true
         selected = nil
@@ -312,6 +361,70 @@ struct ScanView: View {
             } catch {
                 saving = false
             }
+        }
+    }
+}
+
+extension String: @retroactive Identifiable {
+    public var id: String { self }
+}
+
+/// A partner's live tap list, opened from their Tapt QR code.
+struct PartnerMenuSheet: View {
+    let venueId: String
+    @State private var rows: [VenueMenuRow] = []
+    @State private var loading = true
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    if loading {
+                        TaptSkeletonList(rows: 4)
+                    } else if rows.isEmpty {
+                        TaptEmptyState(icon: "list.bullet.rectangle",
+                                       title: "No live menu yet",
+                                       message: "This venue hasn't published a current tap list. Tell them it's free, forever.",
+                                       actionTitle: nil)
+                    } else {
+                        Text(rows[0].venueName)
+                            .font(.system(.title, design: .rounded).weight(.heavy))
+                            .foregroundStyle(Brand.text)
+                            .padding(.horizontal)
+                        ForEach(rows) { row in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(row.beerName)
+                                        .font(.system(.headline, design: .rounded).weight(.bold))
+                                        .foregroundStyle(Brand.text)
+                                    Text([row.breweryName, row.style].compactMap { $0 }.joined(separator: " · "))
+                                        .font(.caption).foregroundStyle(Brand.muted)
+                                }
+                                Spacer()
+                                if let price = row.priceText {
+                                    Text(price)
+                                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                                        .foregroundStyle(Brand.copper)
+                                }
+                            }
+                            .padding(13)
+                            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                            .padding(.horizontal)
+                        }
+                        Text("Live tap list, published by the venue on Tapt")
+                            .font(.caption2).foregroundStyle(Brand.muted)
+                            .padding(.horizontal)
+                    }
+                }
+                .padding(.vertical)
+            }
+            .background(Brand.background)
+            .navigationTitle("On tap")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+        .task {
+            rows = (try? await VenueMenuService.menu(venueId: venueId)) ?? []
+            loading = false
         }
     }
 }
