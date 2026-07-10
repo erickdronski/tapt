@@ -25,16 +25,22 @@ app — which matches the "hard time" symptom exactly.
 
 ## 2. Enable Apple (native Sign in with Apple)
 Dashboard → Authentication → Providers → Apple → Enable, then in
-**Authorized Client IDs** add the app's bundle id:
+**Client IDs** add the app's bundle id:
 
 ```
 app.tapt.tapt
 ```
 
-That's ALL that native `signInWithIdToken` needs (no Services ID / secret —
-those are only for the web flow). The capability is already on the App ID and
-in `Tapt.entitlements`. The app's Apple button appears automatically once the
-provider is on.
+**"Secret key should be a JWT" error:** leave the Secret Key field EMPTY.
+It's only for the WEB OAuth flow and must be a signed JWT, not a raw .p8 —
+pasting anything else blocks Save. Native `signInWithIdToken` needs no secret
+at all: Client IDs + toggle on is the whole setup. The capability is already
+on the App ID and in `Tapt.entitlements`; the app's Apple button appears
+automatically once the provider is on (runtime detection).
+
+When the landing page later needs web Sign in with Apple: create a
+"Sign in with Apple" key at developer.apple.com (NOT the ASC API key), then
+generate the 6-month JWT with `scripts/apple_oauth_secret.py` and paste that.
 
 ## 3. Enable X (optional)
 Needs an X developer app (developer.x.com) with OAuth 1.0a/2.0 credentials →

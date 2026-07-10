@@ -6,6 +6,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "4599", "--directory", "brand"],
       "port": 4599
+    },
+    {
+      "name": "tapt-landing",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "4601", "--directory", "landing"],
+      "port": 4601
     }
   ]
 }

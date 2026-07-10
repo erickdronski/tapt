@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapt — THE Beer Superapp</title>
+<meta name="description" content="Free, global, scan-first beer passport. Scan any beer on Earth, log the pour, stamp your Passport, vote Beer of the Week, and find what's pouring near you. Free to drinkers forever.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#F2A900; --malt:#1A1206; --foam:#FBF6EC; --hop:#3F8F5B;
+    --copper:#B4531F; --haze:#EFE7D6; --slate:#6B6459;
+    --radius:20px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.wordmark{font-family:'Poppins',system-ui,sans-serif}
+  a{color:inherit}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(251,246,236,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(26,18,6,.08)}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .wordmark{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+  .wordmark span{color:var(--gold)}
+  .nav-links{display:flex;gap:26px;align-items:center;font-size:.92rem;font-weight:600}
+  .nav-links a{text-decoration:none;color:var(--slate);transition:color .2s}
+  .nav-links a:hover{color:var(--malt)}
+  .btn{display:inline-block;padding:11px 22px;border-radius:999px;font-weight:700;font-size:.95rem;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease;border:0;cursor:pointer}
+  .btn-gold{background:var(--gold);color:var(--malt);box-shadow:0 6px 20px rgba(242,169,0,.35)}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(242,169,0,.45)}
+  .btn-dark{background:var(--malt);color:var(--foam)}
+  .btn-dark:hover{transform:translateY(-2px)}
+  .btn-ghost{border:2px solid rgba(26,18,6,.18);color:var(--malt)}
+  .btn-ghost:hover{border-color:var(--malt)}
+  @media(max-width:720px){.nav-links a:not(.btn){display:none}}
+
+  /* hero */
+  header{padding:84px 0 60px;overflow:hidden}
+  .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+  @media(max-width:860px){.hero{grid-template-columns:1fr}}
+  .kicker{display:inline-block;background:var(--malt);color:var(--gold);font-weight:700;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:20px}
+  h1{font-size:clamp(2.6rem,6vw,4.2rem);line-height:1.04;letter-spacing:-.03em;font-weight:800}
+  h1 em{font-style:normal;color:var(--copper)}
+  .hero p.lede{font-size:1.15rem;color:var(--slate);margin:22px 0 30px;max-width:34rem}
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
+  .fineprint{font-size:.8rem;color:var(--slate);margin-top:14px}
+
+  /* pour glass */
+  .glass-stage{display:flex;justify-content:center}
+  .glass{position:relative;width:210px;height:300px;border:6px solid var(--malt);border-radius:18px 18px 26px 26px;background:rgba(255,255,255,.5);overflow:hidden;box-shadow:0 30px 60px rgba(26,18,6,.18)}
+  .beer{position:absolute;bottom:0;left:0;right:0;height:0;background:linear-gradient(180deg,#F6C544,var(--gold) 60%,#D98E12);animation:pour 2.2s .4s cubic-bezier(.22,1,.36,1) forwards}
+  .foam-cap{position:absolute;left:0;right:0;height:26px;background:var(--foam);border-radius:0 0 12px 12px;bottom:0;opacity:0;animation:foamup 2.2s .4s cubic-bezier(.22,1,.36,1) forwards}
+  .bubble{position:absolute;bottom:-12px;border-radius:50%;background:rgba(251,246,236,.5);animation:rise 3.4s linear infinite}
+  @keyframes pour{to{height:78%}}
+  @keyframes foamup{to{bottom:78%;opacity:1}}
+  @keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-240px);opacity:0}}
+  .stamp{position:absolute;top:16px;right:14px;background:var(--copper);color:var(--foam);font-family:'Poppins';font-weight:800;font-size:.72rem;letter-spacing:.1em;padding:8px 12px;border-radius:10px;transform:rotate(8deg);box-shadow:0 6px 14px rgba(26,18,6,.25)}
+
+  /* stats strip — every number is real and verifiable */
+  .stats{background:var(--malt);color:var(--foam);padding:38px 0}
+  .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;text-align:center}
+  @media(max-width:860px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  .stat b{display:block;font-family:'Poppins';font-size:2rem;font-weight:800;color:var(--gold)}
+  .stat span{font-size:.85rem;color:rgba(251,246,236,.72)}
+
+  /* sections */
+  section{padding:84px 0}
+  .sec-kicker{color:var(--copper);font-weight:700;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase}
+  h2{font-size:clamp(1.9rem,4vw,2.7rem);letter-spacing:-.02em;line-height:1.15;margin:10px 0 14px}
+  .sec-lede{color:var(--slate);max-width:44rem;font-size:1.05rem}
+
+  .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  @media(max-width:860px){.bento{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid rgba(26,18,6,.07);border-radius:var(--radius);padding:28px;transition:transform .2s ease,box-shadow .2s ease}
+  .card:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(26,18,6,.1)}
+  .card .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.4rem;margin-bottom:16px}
+  .card h3{font-size:1.15rem;margin-bottom:8px}
+  .card p{font-size:.95rem;color:var(--slate)}
+  .ic-gold{background:rgba(242,169,0,.16)} .ic-hop{background:rgba(63,143,91,.14)} .ic-copper{background:rgba(180,83,31,.13)}
+
+  /* business */
+  .biz{background:linear-gradient(180deg,#fff, var(--haze))}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:44px}
+  @media(max-width:860px){.compare{grid-template-columns:1fr}}
+  .plan{border-radius:var(--radius);padding:30px}
+  .plan.them{background:#fff;border:1px solid rgba(26,18,6,.1)}
+  .plan.us{background:var(--malt);color:var(--foam);box-shadow:0 24px 60px rgba(26,18,6,.28)}
+  .plan h3{font-size:1.25rem;margin-bottom:4px}
+  .plan .price{font-family:'Poppins';font-weight:800;font-size:2rem;margin:8px 0 18px}
+  .plan.us .price{color:var(--gold)}
+  .plan ul{list-style:none;display:grid;gap:11px;font-size:.95rem}
+  .plan li::before{content:"✓ ";font-weight:800;color:var(--hop)}
+  .plan.them li::before{content:"— ";color:var(--slate)}
+  .plan.them{color:var(--slate)}
+  .plan .note{font-size:.78rem;opacity:.7;margin-top:16px}
+
+  /* dispatch */
+  .dispatch-box{background:var(--malt);border-radius:28px;padding:56px 40px;color:var(--foam);display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center}
+  @media(max-width:860px){.dispatch-box{grid-template-columns:1fr}}
+  .dispatch-box h2{color:var(--foam)}
+  .dispatch-box p{color:rgba(251,246,236,.75)}
+  .signup{display:flex;gap:10px;flex-wrap:wrap}
+  .signup input[type=email]{flex:1;min-width:220px;padding:14px 18px;border-radius:14px;border:2px solid rgba(251,246,236,.25);background:rgba(251,246,236,.08);color:var(--foam);font-size:1rem;font-family:inherit}
+  .signup input::placeholder{color:rgba(251,246,236,.5)}
+  .signup input:focus{outline:none;border-color:var(--gold)}
+  .hp{position:absolute;left:-9999px;opacity:0;height:0;width:0}
+  #dispatch-msg{font-size:.9rem;margin-top:12px;font-weight:600}
+
+  /* honesty */
+  .sources{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+  @media(max-width:860px){.sources{grid-template-columns:1fr}}
+  .source{background:#fff;border:1px solid rgba(26,18,6,.07);border-radius:var(--radius);padding:24px}
+  .source h3{font-size:1rem;margin-bottom:6px}
+  .source p{font-size:.88rem;color:var(--slate)}
+  .source a{color:var(--copper);font-weight:600}
+
+  footer{background:var(--malt);color:rgba(251,246,236,.7);padding:52px 0 40px;font-size:.9rem}
+  .foot-grid{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+  footer a{color:rgba(251,246,236,.85);text-decoration:none}
+  footer a:hover{color:var(--gold)}
+  .foot-links{display:grid;gap:8px}
+  .age{margin-top:26px;padding-top:20px;border-top:1px solid rgba(251,246,236,.14);font-size:.8rem}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-inner">
+    <div class="wordmark">Tapt<span>.</span></div>
+    <div class="nav-links">
+      <a href="#app">The App</a>
+      <a href="#business">For breweries &amp; bars</a>
+      <a href="#dispatch">The Dispatch</a>
+      <a href="#honest">Our data promise</a>
+      <a class="btn btn-gold" href="mailto:esdronski@gmail.com?subject=Tapt%20beta%20access">Join the beta</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap hero">
+    <div>
+      <span class="kicker">Free to drinkers. Forever.</span>
+      <h1>THE Beer<br>Superapp<em>.</em></h1>
+      <p class="lede">Scan any beer on Earth. Log the pour, stamp your Passport across 50 states and 47 countries, ride the live beer market, vote Beer of the Week, and find what's actually pouring near you — breweries, pubs, bars, taprooms, and beer gardens.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-gold" href="mailto:esdronski@gmail.com?subject=Tapt%20beta%20access">Join the iPhone beta</a>
+        <a class="btn btn-ghost" href="#business">Partner with Tapt</a>
+      </div>
+      <p class="fineprint">No ads in your feed. No paywalled ratings. No fabricated numbers — ever.</p>
+    </div>
+    <div class="glass-stage" aria-hidden="true">
+      <div class="glass">
+        <div class="beer"></div>
+        <div class="foam-cap"></div>
+        <div class="bubble" style="left:20%;width:8px;height:8px;animation-delay:.8s"></div>
+        <div class="bubble" style="left:45%;width:12px;height:12px;animation-delay:1.6s"></div>
+        <div class="bubble" style="left:70%;width:7px;height:7px;animation-delay:2.4s"></div>
+        <div class="bubble" style="left:58%;width:9px;height:9px;animation-delay:3.1s"></div>
+        <div class="stamp">PASSPORT ✓</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Every number below is live and verifiable in the app's open-data backbone. -->
+<div class="stats">
+  <div class="wrap stats-grid">
+    <div class="stat"><b>8,700+</b><span>real venues mapped, coordinate-verified</span></div>
+    <div class="stat"><b>25</b><span>countries on the brewery radar</span></div>
+    <div class="stat"><b>47</b><span>countries in the beer catalog</span></div>
+    <div class="stat"><b>60</b><span>BJCP-sourced style guides</span></div>
+    <div class="stat"><b>0</b><span>fabricated numbers, ever</span></div>
+  </div>
+</div>
+
+<section id="app">
+  <div class="wrap">
+    <span class="sec-kicker">The app</span>
+    <h2>Everything beer. One passport.</h2>
+    <p class="sec-lede">The fun the incumbents paywalled, plus the layers they never built — free for life, because breweries fund the party, not drinkers.</p>
+    <div class="bento">
+      <div class="card"><div class="ic ic-gold">📷</div><h3>Scan anything</h3><p>Point at any label, barcode, or tap list. If it's not in our catalog yet, Open Food Facts resolves it on the spot and you're the first on Earth to log it.</p></div>
+      <div class="card"><div class="ic ic-hop">🛂</div><h3>The Passport</h3><p>Stamps for 50 states and 47 countries, style badges, and curiosity-first achievements. Breadth over volume — always.</p></div>
+      <div class="card"><div class="ic ic-copper">📈</div><h3>The beer market</h3><p>A live board of movers and momentum built only from real votes and check-ins. Watch your local scene trade like a ticker.</p></div>
+      <div class="card"><div class="ic ic-gold">👑</div><h3>Beer of the Week</h3><p>The community votes all week; a winner locks in every Monday. Global race, local pride, zero bots and zero paid placement.</p></div>
+      <div class="card"><div class="ic ic-hop">🗺️</div><h3>Beer near you</h3><p>Breweries, pubs, bars, taprooms, and beer gardens on a real coordinate-verified world map — plus what's hot within walking distance.</p></div>
+      <div class="card"><div class="ic ic-copper">🎓</div><h3>School &amp; games</h3><p>How beer is made, the lingo, the legends — and trivia, deck games, pong, and flip cup for the table. All free.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="business" class="biz">
+  <div class="wrap">
+    <span class="sec-kicker">For breweries, bars &amp; taprooms</span>
+    <h2>Everything they charge $1,199/yr for.<br>Most of it free here.</h2>
+    <p class="sec-lede">The incumbent charges four figures a year for menus and analytics. Tapt gives working tools away and charges a fraction for the premium layer — because your taproom filling up is what makes the app good.</p>
+    <div class="compare">
+      <div class="plan them">
+        <h3>The old way</h3>
+        <div class="price">$1,199/yr</div>
+        <ul>
+          <li>Menus &amp; publishing behind the subscription</li>
+          <li>Analytics behind the subscription</li>
+          <li>Engagement tools behind the subscription</li>
+          <li>Price doubled without grandfathering</li>
+        </ul>
+        <p class="note">Based on Untappd for Business public pricing.</p>
+      </div>
+      <div class="plan us">
+        <h3>The Tapt way</h3>
+        <div class="price">Free<span style="font-size:1rem;font-weight:600;opacity:.75"> — forever, for working tools</span></div>
+        <ul>
+          <li>Claimed profile, on the map, day one</li>
+          <li>Publish what's pouring to nearby drinkers</li>
+          <li>See your local scene's real activity</li>
+          <li>Featured placement &amp; spotlight — a fraction of four figures, never pay-to-bury</li>
+        </ul>
+        <p class="note">Real partners only. Neutral placement rules. Drinkers never pay.</p>
+      </div>
+    </div>
+    <div style="margin-top:36px;display:flex;gap:14px;flex-wrap:wrap">
+      <a class="btn btn-dark" href="mailto:esdronski@gmail.com?subject=Tapt%20partnership%20inquiry&body=Business%20name%3A%0AKind%20(brewery%2Fbar%2Fpub%2Ftaproom)%3A%0ACity%2C%20region%2C%20country%3A%0AWhat%20you%27d%20love%20from%20Tapt%3A">Talk partnerships</a>
+      <span style="align-self:center;color:var(--slate);font-size:.9rem">or use <b>Partner with Tapt</b> inside the app</span>
+    </div>
+  </div>
+</section>
+
+<section id="dispatch">
+  <div class="wrap">
+    <div class="dispatch-box">
+      <div>
+        <span class="sec-kicker" style="color:var(--gold)">The newsletter</span>
+        <h2>The Tapt Dispatch</h2>
+        <p>Beer trends, new spots on the map, app updates, events, and what the world is pouring — straight from real community data. Free, naturally.</p>
+      </div>
+      <div>
+        <form class="signup" id="dispatch-form">
+          <input type="email" name="email" placeholder="you@example.com" required maxlength="320" autocomplete="email">
+          <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off">
+          <button class="btn btn-gold" type="submit">Sign me up</button>
+        </form>
+        <div id="dispatch-msg"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="honest">
+  <div class="wrap">
+    <span class="sec-kicker">Our data promise</span>
+    <h2>Zero fabricated data. Open sources, cited.</h2>
+    <p class="sec-lede">Every venue has real coordinates and provenance. Every beer is a real product. Every popularity number comes from real votes and check-ins — boards stay honestly empty until the community moves them. Blank beats invented, always.</p>
+    <div class="sources">
+      <div class="source"><h3>Open Brewery DB</h3><p>The global brewery &amp; venue layer — thousands of coordinate-verified locations across 25 countries.</p><a href="https://www.openbrewerydb.org/" rel="noopener">openbrewerydb.org →</a></div>
+      <div class="source"><h3>Open Food Facts</h3><p>Barcode-level product data, label photography, and nutrition facts under open licenses (ODbL / CC-BY-SA).</p><a href="https://world.openfoodfacts.org/" rel="noopener">openfoodfacts.org →</a></div>
+      <div class="source"><h3>BJCP 2021 Guidelines</h3><p>Style science — families, descriptions, and vital-statistics ranges for 60 styles, cited in-app.</p><a href="https://www.bjcp.org/style/2021/" rel="noopener">bjcp.org →</a></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <div class="wordmark" style="color:var(--foam)">Tapt<span>.</span></div>
+        <p style="max-width:26rem;margin-top:10px">THE Beer Superapp. Scan it. Score it. Stamp your Passport.</p>
+      </div>
+      <div class="foot-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="mailto:esdronski@gmail.com?subject=Tapt%20support">Support</a>
+      </div>
+    </div>
+    <p class="age">Tapt is for people of legal drinking age. Enjoy responsibly — never drink and drive. Tapt does not sell alcohol. © Tapt 2026.</p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('dispatch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const msg = document.getElementById('dispatch-msg');
+    const btn = form.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Signing up…';
+    try {
+      const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/dispatch-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email.value, website: form.website.value })
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        msg.textContent = 'Welcome aboard — first issue lands soon. 🍻';
+        msg.style.color = '#7FD49B';
+        form.reset();
+      } else {
+        msg.textContent = data.error === 'try again later'
+          ? 'Too many tries — give it an hour.'
+          : 'That email didn’t look right — double-check it.';
+        msg.style.color = '#F2A900';
+      }
+    } catch {
+      msg.textContent = 'Network hiccup — try again in a moment.';
+      msg.style.color = '#F2A900';
+    }
+    btn.disabled = false; btn.textContent = 'Sign me up';
+  });
+</script>
+</body>
+</html>
