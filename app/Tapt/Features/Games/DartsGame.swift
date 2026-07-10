@@ -181,7 +181,7 @@ struct DartsGame: View {
         }
     }
 
-    private func score(at point: CGPoint) -> (String, Int) {
+    private func score(at point: CGPoint) -> (label: String, points: Int) {
         let center = CGPoint(x: boardSize / 2, y: boardSize / 2)
         let distance = hypot(point.x - center.x, point.y - center.y)
         switch distance {
