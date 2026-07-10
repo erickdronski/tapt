@@ -13,6 +13,7 @@ struct NearYouView: View {
     @State private var radarLoading = false
     @State private var radarFilter: RadarFilter = .all
     @State private var searchText = ""
+    @State private var nearLoaded = false
 
     private var visibleTaptVenues: [BreweryMapVenue] {
         let filtered = taptVenues.filter { venue in
@@ -64,6 +65,10 @@ struct NearYouView: View {
                     }
                 }
                 .mapStyle(.standard(pointsOfInterest: .including([.brewery, .nightlife, .restaurant, .winery])))
+                .mapControls {
+                    MapUserLocationButton()
+                    MapCompass()
+                }
                 .frame(height: 320)
 
                 List {
@@ -139,8 +144,14 @@ struct NearYouView: View {
                 if locationConsent { location.request() }
             }
             .onChange(of: location.location) { _, loc in
-                if let loc, breweries.isEmpty {
-                    search(near: loc.coordinate)
+                guard let loc else { return }
+                if breweries.isEmpty { search(near: loc.coordinate) }
+                if !nearLoaded {
+                    nearLoaded = true
+                    withAnimation {
+                        camera = .region(MKCoordinateRegion(center: loc.coordinate,
+                                                            latitudinalMeters: 24_000, longitudinalMeters: 24_000))
+                    }
                     Task { await loadNearbyRadar(loc.coordinate) }
                 }
             }
