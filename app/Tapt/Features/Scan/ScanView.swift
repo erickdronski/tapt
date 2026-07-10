@@ -262,6 +262,7 @@ struct ScanView: View {
                     )
                     addingOFF = false
                     showResult = false
+                    Haptic.celebrate()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         loggedPour = pour
                     }
@@ -304,6 +305,7 @@ struct ScanView: View {
                 )
                 saving = false
                 showResult = false
+                Haptic.celebrate()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     loggedPour = pour
                 }

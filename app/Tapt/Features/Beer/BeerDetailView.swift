@@ -29,9 +29,10 @@ struct BeerDetailView: View {
                 }
                 .padding()
             } else if loading {
-                ProgressView().tint(Brand.gold)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 120)
+                VStack(spacing: 14) {
+                    TaptSkeletonList(rows: 4, rowHeight: 80)
+                }
+                .padding(.top, 20)
             } else {
                 TaptEmptyState(
                     icon: "questionmark.circle",
@@ -152,6 +153,7 @@ struct BeerDetailView: View {
         let active = myVote == value
         return Button {
             guard let uid = session.user?.id else { return }
+            Haptic.tap()
             let newValue = active ? nil : value
             myVote = newValue
             if let v = newValue {

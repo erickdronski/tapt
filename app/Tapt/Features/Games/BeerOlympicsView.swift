@@ -177,6 +177,7 @@ struct BeerOlympicsView: View {
                     ForEach(teams) { team in
                         let on = selection.wrappedValue == team.id
                         Button {
+                            Haptic.firm()
                             selection.wrappedValue = on ? nil : team.id
                             persist()
                         } label: {

@@ -108,6 +108,7 @@ struct FindFriendsView: View {
 
     private func toggleFollow(_ profile: FoundProfile) {
         guard let index = results.firstIndex(where: { $0.id == profile.id }) else { return }
+        Haptic.tap()
         let wasFollowing = results[index].isFollowing
         results[index].isFollowing.toggle()
         Task {

@@ -25,10 +25,14 @@ struct LeaderboardsView: View {
 
                 boardPicker
 
-                switch board {
-                case .beers: beersBoard
-                case .tasters: tastersBoard
-                case .styles: stylesBoard
+                if loading && beers.isEmpty && tasters.isEmpty && styles.isEmpty {
+                    TaptSkeletonList(rows: 6)
+                } else {
+                    switch board {
+                    case .beers: beersBoard
+                    case .tasters: tastersBoard
+                    case .styles: stylesBoard
+                    }
                 }
             }
             .padding(.vertical)
@@ -38,7 +42,6 @@ struct LeaderboardsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .refreshable { await load() }
-        .overlay { if loading && beers.isEmpty && tasters.isEmpty && styles.isEmpty { ProgressView().tint(Brand.gold) } }
     }
 
     private var boardPicker: some View {

@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// The signature hero panel: layered gradient depth, drifting bubble field,
+/// a real poured glass, and double-layer shadows. Same API as v1.
 struct TaptHeroPanel: View {
     let title: String
     let subtitle: String
@@ -12,24 +14,38 @@ struct TaptHeroPanel: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
+            // Depth: linear base + radial glow + vignette
             LinearGradient(
-                colors: [Brand.malt, Brand.copper.opacity(0.9), tint.opacity(0.85)],
+                colors: [Brand.malt, Brand.copper.opacity(0.92), tint.opacity(0.88)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+            .overlay(
+                RadialGradient(
+                    colors: [tint.opacity(0.35), .clear],
+                    center: .bottomTrailing, startRadius: 10, endRadius: 320
+                )
+            )
+            .overlay(
+                LinearGradient(
+                    colors: [Brand.malt.opacity(0.25), .clear],
+                    startPoint: .top, endPoint: .center
+                )
+            )
             .overlay {
                 GeometryReader { proxy in
-                    ForEach(0..<10, id: \.self) { i in
+                    ForEach(0..<12, id: \.self) { i in
                         let x = proxy.size.width * CGFloat((Double(i) * 0.173).truncatingRemainder(dividingBy: 1))
-                        let r = CGFloat(5 + (i % 4) * 4)
+                        let r = CGFloat(4 + (i % 5) * 4)
                         Circle()
-                            .fill(Brand.foam.opacity(0.11))
+                            .fill(Brand.foam.opacity(i % 3 == 0 ? 0.16 : 0.09))
                             .frame(width: r, height: r)
-                            .position(x: x, y: poured ? -20 : proxy.size.height + 20)
+                            .blur(radius: i % 4 == 0 ? 1.5 : 0)
+                            .position(x: x, y: poured ? -24 : proxy.size.height + 24)
                             .animation(
-                                .linear(duration: Double(7 + (i % 5)))
+                                .linear(duration: Double(6 + (i % 6)))
                                 .repeatForever(autoreverses: false)
-                                .delay(Double(i) * 0.28),
+                                .delay(Double(i) * 0.35),
                                 value: poured
                             )
                     }
@@ -42,67 +58,69 @@ struct TaptHeroPanel: View {
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Brand.malt)
                         .frame(width: 44, height: 44)
-                        .background(tint, in: RoundedRectangle(cornerRadius: 12))
+                        .background(tint, in: RoundedRectangle(cornerRadius: 13))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 13)
+                                .stroke(Brand.foam.opacity(0.35), lineWidth: 1)
+                        )
+                        .shadow(color: Brand.malt.opacity(0.3), radius: 6, y: 3)
                     Spacer()
                     Text(metric)
                         .font(.system(.title2, design: .rounded).weight(.heavy))
                         .foregroundStyle(Brand.foam)
                         .contentTransition(.numericText())
+                        .shadow(color: Brand.malt.opacity(0.4), radius: 4, y: 2)
                 }
 
                 VStack(alignment: .leading, spacing: 5) {
                     Text(title)
                         .font(.system(.title, design: .rounded).weight(.heavy))
                         .foregroundStyle(Brand.foam)
+                        .shadow(color: Brand.malt.opacity(0.35), radius: 3, y: 1)
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(Brand.foam.opacity(0.76))
+                        .foregroundStyle(Brand.foam.opacity(0.82))
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.trailing, 68)
 
                 Text(caption)
                     .font(.system(.caption, design: .rounded).weight(.bold))
                     .foregroundStyle(Brand.malt)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 7)
-                    .background(Brand.gold, in: Capsule())
+                    .background(
+                        Capsule().fill(Brand.gold)
+                            .shadow(color: Brand.malt.opacity(0.25), radius: 4, y: 2)
+                    )
             }
             .padding(18)
 
-            PourMeter(progress: poured ? 0.82 : 0.08)
-                .frame(width: 72, height: 112)
-                .offset(x: 8, y: 18)
-                .opacity(0.9)
+            BeerGlassView(pour: 0.82)
+                .frame(width: 74)
+                .rotationEffect(.degrees(4))
+                .offset(x: 2, y: 12)
+                .opacity(0.96)
         }
         .clipShape(RoundedRectangle(cornerRadius: 22))
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Brand.gold.opacity(0.22), lineWidth: 1))
-        .shadow(color: Brand.malt.opacity(0.24), radius: 18, y: 12)
-        .onAppear {
-            withAnimation(.spring(response: 1.0, dampingFraction: 0.72).delay(0.12)) {
-                poured = true
-            }
-        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(
+                    LinearGradient(
+                        colors: [Brand.foam.opacity(0.35), Brand.gold.opacity(0.15)],
+                        startPoint: .top, endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: Brand.malt.opacity(0.10), radius: 3, y: 2)
+        .shadow(color: Brand.malt.opacity(0.22), radius: 22, y: 14)
+        .onAppear { poured = true }
     }
 }
 
-struct PourMeter: View {
-    let progress: CGFloat
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 16)
-            .fill(Brand.foam.opacity(0.16))
-            .overlay(alignment: .bottom) {
-                VStack(spacing: 0) {
-                    Rectangle().fill(Brand.foam).frame(height: 12)
-                    Rectangle().fill(Brand.gold)
-                }
-                .frame(height: 112 * min(max(progress, 0), 1))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
-            }
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.foam.opacity(0.5), lineWidth: 3))
-    }
-}
-
+/// Branded empty state with a gently floating icon and glow ring.
+/// Honest empty > fake content, so make empty beautiful.
 struct TaptEmptyState: View {
     let icon: String
     let title: String
@@ -110,14 +128,32 @@ struct TaptEmptyState: View {
     let actionTitle: String?
     var action: (() -> Void)?
 
+    @State private var floating = false
+
     var body: some View {
         VStack(spacing: 15) {
             ZStack {
-                Circle().fill(Brand.gold.opacity(0.18)).frame(width: 92, height: 92)
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [Brand.gold.opacity(0.28), Brand.gold.opacity(0.05)],
+                            center: .center, startRadius: 8, endRadius: 60
+                        )
+                    )
+                    .frame(width: 104, height: 104)
+                    .scaleEffect(floating ? 1.06 : 0.97)
+                Circle()
+                    .stroke(Brand.gold.opacity(0.25), lineWidth: 1.2)
+                    .frame(width: 92, height: 92)
                 Image(systemName: icon)
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundStyle(Brand.gold)
+                    .foregroundStyle(
+                        LinearGradient(colors: [Brand.gold, Brand.copper], startPoint: .top, endPoint: .bottom)
+                    )
+                    .offset(y: floating ? -4 : 3)
             }
+            .animation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true), value: floating)
+
             Text(title)
                 .font(.system(.title2, design: .rounded).weight(.heavy))
                 .foregroundStyle(Brand.text)
@@ -128,17 +164,25 @@ struct TaptEmptyState: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 28)
             if let actionTitle, let action {
-                Button(action: action) {
+                Button {
+                    Haptic.tap()
+                    action()
+                } label: {
                     Label(actionTitle, systemImage: "plus.circle.fill")
                         .font(.system(.headline, design: .rounded))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 13)
-                        .background(Brand.gold, in: Capsule())
+                        .background(
+                            Capsule().fill(Brand.gold)
+                                .shadow(color: Brand.gold.opacity(0.4), radius: 10, y: 5)
+                        )
                         .foregroundStyle(Brand.malt)
                 }
+                .buttonStyle(.taptPress)
                 .padding(.top, 4)
             }
         }
         .padding(24)
+        .onAppear { floating = true }
     }
 }

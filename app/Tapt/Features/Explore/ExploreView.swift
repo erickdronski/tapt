@@ -40,8 +40,12 @@ struct ExploreView: View {
                     if let activeGuide { guideCard(activeGuide) }
                     mapLink
                     regionPicker
-                    moversSection
-                    topSection
+                    if loading && beers.isEmpty {
+                        TaptSkeletonList(rows: 5)
+                    } else {
+                        moversSection
+                        topSection
+                    }
                     leaderboardLink
                     FeaturedPartnersRail()
                 }
@@ -55,7 +59,6 @@ struct ExploreView: View {
             }
             .task(id: region) { await load() }
             .task { await loadGuides() }
-            .overlay { if loading && beers.isEmpty { ProgressView().tint(Brand.gold) } }
         }
     }
 
@@ -319,6 +322,7 @@ struct ExploreView: View {
     }
 
     private func vote(_ b: TrendedBeer, _ v: Int) {
+        Haptic.tap()
         let newValue = (myVotes[b.id] == v) ? nil : v
         myVotes[b.id] = newValue
         guard let uid = session.user?.id, let value = newValue else { return }

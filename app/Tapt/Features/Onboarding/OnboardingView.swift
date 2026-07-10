@@ -63,7 +63,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(spacing: 22) {
             Spacer()
-            PourGlass()
+            BeerGlassView(pour: 0.82).frame(width: 132)
             Text("Welcome to Tapt")
                 .font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
             Text("The Beer Superapp in your pocket. Scan it, score it, play a round, and find local beer spots.")
@@ -128,7 +128,7 @@ struct OnboardingView: View {
     private var finishStep: some View {
         VStack(spacing: 18) {
             Spacer()
-            PourGlass()
+            BeerGlassView(pour: 0.82).frame(width: 132)
             Text("You are all set\(firstName)")
                 .font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text).multilineTextAlignment(.center)
             Text("\(styles.count) styles picked, home base \(region). Scan any beer on Earth, log the pour, stamp the Passport.")
@@ -230,33 +230,6 @@ struct OnboardingView: View {
             }
             saving = false
         }
-    }
-}
-
-/// Animated filling pint used on the welcome + finish steps.
-private struct PourGlass: View {
-    @State private var fill: CGFloat = 0
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 18)
-            .fill(Brand.surface)
-            .frame(width: 120, height: 168)
-            .overlay(
-                GeometryReader { geo in
-                    VStack(spacing: 0) {
-                        Rectangle().fill(Brand.foam).frame(height: 12)
-                        Rectangle().fill(Brand.gold)
-                    }
-                    .frame(height: geo.size.height * fill)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 18))
-            )
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.malt, lineWidth: 4))
-            .onAppear {
-                fill = 0
-                withAnimation(.spring(response: 1.1, dampingFraction: 0.72).delay(0.15)) { fill = 0.82 }
-            }
     }
 }
 

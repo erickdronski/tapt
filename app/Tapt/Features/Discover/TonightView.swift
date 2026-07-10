@@ -39,7 +39,13 @@ struct TonightView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadAll() }
         .refreshable { await loadAll() }
-        .overlay { if loading && tonight.isEmpty && pours.isEmpty { ProgressView().tint(Brand.gold) } }
+        .overlay {
+            if loading && tonight.isEmpty && pours.isEmpty {
+                ScrollView { TaptSkeletonList(rows: 5).padding(.top, 140) }
+                    .background(Brand.background)
+                    .allowsHitTesting(false)
+            }
+        }
     }
 
     private var hero: some View {

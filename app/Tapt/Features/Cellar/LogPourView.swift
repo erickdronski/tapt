@@ -310,6 +310,7 @@ struct LogPourView: View {
                 )
                 await MainActor.run {
                     saving = false
+                    Haptic.celebrate()
                     onLogged()
                     sharePour = PourCard(
                         beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",

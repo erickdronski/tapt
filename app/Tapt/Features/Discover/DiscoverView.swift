@@ -111,7 +111,7 @@ private struct QuickPlayTile<Destination: View>: View {
             .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(tint.opacity(0.18)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.taptPress)
     }
 }
 
@@ -144,6 +144,6 @@ private struct DiscoverTile<Destination: View>: View {
             .background(Brand.surface, in: RoundedRectangle(cornerRadius: 20))
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(tint.opacity(0.22), lineWidth: 1))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.taptPress)
     }
 }

@@ -8,39 +8,39 @@ struct GamesView: View {
                 NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5) } label: {
                     GameTile(title: "Daily 5", subtitle: "A quick five-question run from the beer world.", icon: "calendar.badge.clock", tint: Brand.hop, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { TriviaGame() } label: {
                     GameTile(title: "Beer Trivia", subtitle: "How deep does your knowledge pour? Free, endless.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { CardDeckGame() } label: {
                     GameTile(title: "Tapt Deck", subtitle: "A house-built card game for the table. Free.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { BarGamesView(starting: .beerPong) } label: {
                     GameTile(title: "Beer Pong", subtitle: "A quick rack-clearing toss game for the table.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { BarGamesView(starting: .flipCup) } label: {
                     GameTile(title: "Flip Cup", subtitle: "Reaction-time table play with streaks and best times.", icon: "cup.and.saucer.fill", tint: Brand.hop, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { BarGamesView(starting: .quarters) } label: {
                     GameTile(title: "Quarters", subtitle: "Dial in the bounce and chase the clean center.", icon: "circle.hexagongrid.fill", tint: Brand.copper, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { BreweryModeView() } label: {
                     GameTile(title: "Beer Night Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { BeerOlympicsView() } label: {
                     GameTile(title: "Beer Olympics", subtitle: "Teams, events, medal table, champion. The big one.", icon: "trophy.fill", tint: Brand.gold, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
                 NavigationLink { GameNightGuidesView() } label: {
                     GameTile(title: "Game Night Guides", subtitle: "Classic card + no-prop games, explained in a minute. Real deck or no props.", icon: "book.fill", tint: Brand.hop, ready: true)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.taptPress)
 
                 Label(GameGuidesData.safetyLine, systemImage: "hand.raised.fill")
                     .font(.caption)
@@ -147,7 +147,7 @@ struct TriviaGame: View {
                         .background(optionBackground(i), in: RoundedRectangle(cornerRadius: 14))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.12)))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.taptPress)
                     .disabled(selected != nil)
                 }
             }
