@@ -1,0 +1,60 @@
+name: Ingest beers (Open Food Facts)
+
+# Grows the beer catalog from Open Food Facts (ODbL) a chunk at a time, on a
+# schedule. Idempotent (dedup by barcode), resumable (the page cursor is
+# committed back), and free (public repo = unlimited Actions minutes).
+#
+# One owner action to enable: add the repo secret SUPABASE_SERVICE_ROLE_KEY
+# (Supabase dashboard -> Project Settings -> API -> service_role key).
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: "Pages to ingest this run (100 beers/page)"
+        required: false
+        default: "25"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ingest-beers
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Ingest a chunk of the OFF beers catalog
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MAX_PAGES: ${{ github.event.inputs.max_pages || '25' }}
+          PAGE_SIZE: "100"
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is not set. Add it to enable ingestion."
+            exit 1
+          fi
+          python3 scripts/ingest_off_beers.py
+
+      - name: Persist the page cursor
+        run: |
+          if [ -n "$(git status --porcelain scripts/.off_ingest_state.json)" ]; then
+            git config user.name  "tapt-ingest-bot"
+            git config user.email "esdronski@gmail.com"
+            git add scripts/.off_ingest_state.json
+            git commit -m "chore: advance OFF ingest cursor [skip ci]"
+            git push
+          else
+            echo "cursor unchanged"
+          fi

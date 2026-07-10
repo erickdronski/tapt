@@ -40,6 +40,7 @@ struct ExploreView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     hero
+                    catalogBar
                     quickDuo
                     BeerOfWeekCard().padding(.horizontal)
                     if let activeGuide {
@@ -94,6 +95,24 @@ struct ExploreView: View {
         .padding(.horizontal)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 18)
+    }
+
+    /// Entry to the full searchable catalog, styled like a search field.
+    private var catalogBar: some View {
+        NavigationLink { CatalogView() } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass").foregroundStyle(Brand.muted)
+                Text("Search every beer, brewery, style").foregroundStyle(Brand.muted)
+                Spacer(minLength: 0)
+                Image(systemName: "books.vertical.fill").foregroundStyle(Brand.gold)
+            }
+            .font(.subheadline)
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.10)))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
     }
 
     /// First-glance duo: Leaderboards + the map, side by side under the hero.
