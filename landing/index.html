@@ -55,14 +55,15 @@
   .fineprint{font-size:.8rem;color:var(--slate);margin-top:14px}
 
   /* pour glass */
-  .glass-stage{display:flex;justify-content:center}
-  .glass{position:relative;width:210px;height:300px;border:6px solid var(--malt);border-radius:18px 18px 26px 26px;background:rgba(255,255,255,.5);overflow:hidden;box-shadow:0 30px 60px rgba(26,18,6,.18)}
-  .beer{position:absolute;bottom:0;left:0;right:0;height:0;background:linear-gradient(180deg,#F6C544,var(--gold) 60%,#D98E12);animation:pour 2.2s .4s cubic-bezier(.22,1,.36,1) forwards}
-  .foam-cap{position:absolute;left:0;right:0;height:26px;background:var(--foam);border-radius:0 0 12px 12px;bottom:0;opacity:0;animation:foamup 2.2s .4s cubic-bezier(.22,1,.36,1) forwards}
-  .bubble{position:absolute;bottom:-12px;border-radius:50%;background:rgba(251,246,236,.5);animation:rise 3.4s linear infinite}
-  @keyframes pour{to{height:78%}}
-  @keyframes foamup{to{bottom:78%;opacity:1}}
-  @keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-240px);opacity:0}}
+  .glass-stage{display:flex;justify-content:center;position:relative}
+  .hero-glass{position:relative;animation:float 5s ease-in-out infinite;filter:drop-shadow(0 30px 44px rgba(26,18,6,.28))}
+  #hfill{fill:url(#hbeer);animation:hpour 2s .3s cubic-bezier(.22,1,.36,1) both}
+  @keyframes hpour{from{y:500px;height:0}to{y:140px;height:360px}}
+  .hb{animation:hrise 3.2s ease-in infinite;transform-box:fill-box;transform-origin:center}
+  .hb:nth-child(4){animation-delay:.9s}.hb:nth-child(5){animation-delay:1.9s}
+  @keyframes hrise{0%{transform:translateY(0);opacity:0}20%{opacity:.85}100%{transform:translateY(-150px);opacity:0}}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-14px) rotate(1deg)}}
+  @media(prefers-reduced-motion:reduce){.hero-glass,#hfill,.hb{animation:none}#hfill{y:140px;height:360px}}
   .stamp{position:absolute;top:16px;right:14px;background:var(--copper);color:var(--foam);font-family:'Poppins';font-weight:800;font-size:.72rem;letter-spacing:.1em;padding:8px 12px;border-radius:10px;transform:rotate(8deg);box-shadow:0 6px 14px rgba(26,18,6,.25)}
 
   /* stats strip, every number is real and verifiable */
@@ -74,6 +75,10 @@
 
   /* sections */
   section{padding:84px 0}
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
   .sec-kicker{color:var(--copper);font-weight:700;font-size:.82rem;letter-spacing:.14em;text-transform:uppercase}
   h2{font-size:clamp(1.9rem,4vw,2.7rem);letter-spacing:-.02em;line-height:1.15;margin:10px 0 14px}
   .sec-lede{color:var(--slate);max-width:44rem;font-size:1.05rem}
@@ -99,7 +104,7 @@
   .plan.us .price{color:var(--gold)}
   .plan ul{list-style:none;display:grid;gap:11px;font-size:.95rem}
   .plan li::before{content:"✓ ";font-weight:800;color:var(--hop)}
-  .plan.them li::before{content:",  ";color:var(--slate)}
+  .plan.them li::before{content:"✕ ";font-weight:800;color:var(--copper);opacity:.6}
   .plan.them{color:var(--slate)}
   .plan .note{font-size:.78rem;opacity:.7;margin-top:16px}
 
@@ -159,13 +164,31 @@
       <p class="fineprint">Free to download. No ads in your feed. No paywalled ratings. No fabricated numbers, ever.</p>
     </div>
     <div class="glass-stage" aria-hidden="true">
-      <div class="glass">
-        <div class="beer"></div>
-        <div class="foam-cap"></div>
-        <div class="bubble" style="left:20%;width:8px;height:8px;animation-delay:.8s"></div>
-        <div class="bubble" style="left:45%;width:12px;height:12px;animation-delay:1.6s"></div>
-        <div class="bubble" style="left:70%;width:7px;height:7px;animation-delay:2.4s"></div>
-        <div class="bubble" style="left:58%;width:9px;height:9px;animation-delay:3.1s"></div>
+      <div class="hero-glass">
+        <svg viewBox="0 0 400 520" width="260" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hbeer" x1="200" y1="120" x2="200" y2="470" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/>
+            </linearGradient>
+            <linearGradient id="hfoam" x1="200" y1="30" x2="200" y2="150" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3E7CC"/>
+            </linearGradient>
+            <clipPath id="hclip"><path d="M120 120 C128 330 140 445 165 490 Q200 508 235 490 C260 445 272 330 280 120 Z"/></clipPath>
+          </defs>
+          <ellipse cx="200" cy="300" rx="150" ry="180" fill="#F2A900" opacity=".12"/>
+          <path d="M120 120 C128 330 140 445 165 490 Q200 508 235 490 C260 445 272 330 280 120 Z" fill="#FBF6EC" fill-opacity=".14"/>
+          <g clip-path="url(#hclip)">
+            <rect id="hfill" x="110" y="140" width="180" height="360"/>
+            <rect x="150" y="150" width="16" height="300" rx="8" fill="#FFFFFF" opacity=".2"/>
+            <circle class="hb" cx="185" cy="400" r="5" fill="#FFF3D7"/>
+            <circle class="hb" cx="215" cy="360" r="4" fill="#FFF3D7"/>
+            <circle class="hb" cx="195" cy="320" r="4" fill="#FFF3D7"/>
+          </g>
+          <path d="M112 128 C106 66 158 30 205 48 C230 20 275 20 300 48 C348 30 390 66 384 128 C384 152 340 160 246 160 C152 160 112 152 112 128 Z"
+                transform="translate(-40,0)" fill="url(#hfoam)" stroke="#130A02" stroke-width="14" stroke-linejoin="round"/>
+          <circle cx="150" cy="98" r="13" fill="#fff"/><circle cx="200" cy="90" r="16" fill="#fff"/><circle cx="250" cy="98" r="13" fill="#fff"/>
+          <path d="M120 120 C128 330 140 445 165 490 Q200 508 235 490 C260 445 272 330 280 120" fill="none" stroke="#130A02" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/>
+        </svg>
         <div class="stamp">PASSPORT ✓</div>
       </div>
     </div>
@@ -317,6 +340,23 @@
     }
     btn.disabled = false; btn.textContent = 'Sign me up';
   });
+</script>
+<script>
+  // Scroll-reveal motion: fade + rise as sections enter view, staggered in grids.
+  (function(){
+    var sel = '.card, .plan, .source, .stat, section .sec-kicker, section h2, section .sec-lede, .dispatch-box, .compare, .bento .card';
+    document.querySelectorAll(sel).forEach(function(el){ el.classList.add('reveal'); });
+    // stagger children within grids
+    document.querySelectorAll('.bento, .sources, .compare, .stats-grid').forEach(function(grid){
+      Array.prototype.forEach.call(grid.children, function(child, i){
+        if (child.classList.contains('reveal')) child.classList.add('d' + Math.min(i+1,4));
+      });
+    });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  })();
 </script>
 <script type="application/ld+json">
 {

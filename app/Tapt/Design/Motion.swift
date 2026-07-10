@@ -230,24 +230,22 @@ struct BeerGlassView: View {
         return p
     }
 
+    /// Centered foam dome with three bubbles, matching the app icon exactly.
     private func foam(w: CGFloat) -> some View {
-        let blobs: [(x: CGFloat, r: CGFloat, y: CGFloat)] = [
-            (0.16, 0.10, 0.2), (0.30, 0.13, -0.25), (0.46, 0.11, 0.15),
-            (0.60, 0.14, -0.3), (0.76, 0.10, 0.1), (0.88, 0.08, -0.1),
-        ]
+        let bubbles: [(x: CGFloat, r: CGFloat)] = [(-0.24, 0.10), (0, 0.13), (0.24, 0.10)]
         return ZStack {
             Capsule()
                 .fill(Brand.foam)
-                .frame(width: w * 0.86, height: w * 0.15)
-            ForEach(Array(blobs.enumerated()), id: \.offset) { _, blob in
+                .frame(width: w * 0.88, height: w * 0.16)
+            ForEach(Array(bubbles.enumerated()), id: \.offset) { _, b in
                 Circle()
                     .fill(Brand.foam)
-                    .frame(width: w * blob.r * 2)
-                    .offset(x: w * (blob.x - 0.5), y: w * blob.r * blob.y - w * 0.05)
+                    .frame(width: w * b.r * 2)
+                    .offset(x: w * b.x, y: -w * 0.06)
             }
         }
         .compositingGroup()
-        .shadow(color: Brand.malt.opacity(0.08), radius: 3, y: 2)
+        .shadow(color: Brand.malt.opacity(0.10), radius: 3, y: 2)
     }
 }
 
