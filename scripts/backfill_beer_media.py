@@ -21,7 +21,7 @@ SUPA = os.environ.get("SUPABASE_URL", "https://qfwiizvqxrhjlthbjosz.supabase.co"
 KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF")
 OUT = os.environ.get("OUT", "./beer_media_matches.json")
 SLEEP = float(os.environ.get("SLEEP", "6.5"))
-UA = "Tapt/1.0 (beer passport; media backfill; contact esdronski@gmail.com)"
+UA = "Tapt/1.0 (THE Beer Superapp; media backfill; contact esdronski@gmail.com)"
 
 
 def http_get(url, headers=None):

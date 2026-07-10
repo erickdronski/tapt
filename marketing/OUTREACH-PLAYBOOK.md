@@ -19,7 +19,7 @@ Subject: `Your taproom is already on Tapt's map — want the keys?`
 
 > Hi {name},
 >
-> I'm Erick, building Tapt — a free beer passport app for drinkers.
+> I'm Erick, building Tapt — THE Beer Superapp, free for drinkers.
 > {Venue} is already on our map (we plot 8,700+ real beer venues across 25
 > countries), and locals can log pours there today.
 >

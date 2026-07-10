@@ -254,7 +254,7 @@ enum BarcodeCatalogService {
         var request = URLRequest(url: URL(string:
             "https://world.openfoodfacts.org/api/v2/product/\(digits).json?fields=product_name,brands,categories_tags,image_front_url,nutriments"
         )!)
-        request.setValue("Tapt/1.0 (iOS; beer passport)", forHTTPHeaderField: "User-Agent")
+        request.setValue("Tapt/1.0 (iOS; THE Beer Superapp)", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return nil }
 

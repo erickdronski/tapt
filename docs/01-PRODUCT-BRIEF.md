@@ -1,12 +1,12 @@
 # Tapt — Product Brief
 
-**The Beer Superapp. A free, global, scan-first beer passport. Untappd's fun, without the tax.**
+**The Beer Superapp. THE Beer Superapp. Free, global, scan-first. Untappd's fun, without the tax.**
 
 ---
 
 ## 1. Hero Concept
 
-**Tapt is The Beer Superapp: a free, global, scan-first beer passport where you point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, play beer-night games, and see what's actually good near you.** Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, venue menus — Tapt gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries, pubs, bars, taprooms, beer gardens, and events fund the party.
+**Tapt is The Beer Superapp: a free, global, scan-first Beer Superapp where you point your camera at any label, tap list, or barcode and instantly get a personalized, style-fair match score, log the pour to your Cellar, play beer-night games, and see what's actually good near you.** Every capability the incumbents lock behind a paywall — rating precision, discovery, an ad-free feed, venue menus — Tapt gives away for life and earns instead on the supply side, so drinkers pay nothing and breweries, pubs, bars, taprooms, beer gardens, and events fund the party.
 
 One-line pitch: **Vivino's scan-and-go, rebuilt for beer, on data we own — trustworthy where Untappd is distrusted, generous where it gouges, and global and no/low-first where it's defensive.**
 
