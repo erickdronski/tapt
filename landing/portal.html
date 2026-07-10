@@ -151,7 +151,20 @@ window.searchVenues = () => {
 async function claim(venueId, name) {
   const { data: { user } } = await supa.auth.getUser();
   const { error } = await supa.rpc('claim_venue', { p_venue: venueId, p_email: user.email, p_role: 'manager' });
-  $('claimMsg').textContent = error ? error.message : `Claim for ${name} submitted. We verify fast, watch your inbox.`;
+  if (error) { $('claimMsg').textContent = error.message; return; }
+  // If it auto-approved (email domain matched the venue website), email the QR now.
+  const { data: claims } = await supa.rpc('my_venue_claims');
+  const c = (claims || []).find(x => x.venue_id === venueId);
+  if (c && c.status === 'approved') {
+    $('claimMsg').textContent = `${name} approved instantly, you're live! Check your email for your QR.`;
+    const { data: { session } } = await supa.auth.getSession();
+    fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ kind: 'partner_welcome', venue_id: venueId })
+    }).catch(() => {});
+  } else {
+    $('claimMsg').textContent = `Claim for ${name} submitted. We verify fast, watch your inbox.`;
+  }
   refresh();
 }
 

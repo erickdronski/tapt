@@ -23,6 +23,12 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
 .tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}.tag.rejected{background:#F3E0DA;color:var(--copper)}
 .msg{font-weight:600;font-size:.9rem;margin-top:8px}
 .actions{display:flex;gap:8px;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:14px;padding:14px;text-align:center}
+.stat b{display:block;font-family:'Poppins';font-size:1.6rem;color:var(--malt)}
+.stat.hot b{color:var(--copper)}
+.stat span{font-size:.78rem;color:var(--slate)}
+textarea:focus,input:focus{outline:none;border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -40,6 +46,20 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
     <div class="msg" id="authMsg"></div>
   </div>
 
+  <div id="stats" class="stats" hidden></div>
+
+  <div id="dispatchBox" class="claim" hidden style="border-left:4px solid var(--copper)">
+    <h3>Send The Tapt Dispatch</h3>
+    <input id="dsubject" placeholder="Subject line" style="margin-top:8px">
+    <textarea id="dbody" placeholder="Body (HTML ok). Keep it real, trends + one venue story + one Beer School bite." style="width:100%;min-height:90px;padding:12px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit"></textarea>
+    <button class="btn" onclick="sendDispatch()" style="margin-top:8px">Send to all subscribers</button>
+    <div class="msg" id="dmsg"></div>
+  </div>
+
+  <h2 id="inqHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Partner inquiries</h2>
+  <div id="inquiries"></div>
+
+  <h2 id="qHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Venue claims</h2>
   <div id="queue"></div>
 </div>
 
@@ -59,10 +79,36 @@ window.verifyCode = async () => {
   if (!error) load();
 };
 
+const FN = 'https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send';
+async function callFn(payload) {
+  const { data: { session } } = await supa.auth.getSession();
+  const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }, body: JSON.stringify(payload) });
+  return r.json();
+}
+
 async function load() {
   const { data: isAdmin } = await supa.rpc('is_admin');
   if (!isAdmin) { $('queue').innerHTML = '<p style="color:var(--copper)">This account is not an admin.</p>'; return; }
   $('authBox').style.display = 'none';
+  $('stats').hidden = false; $('dispatchBox').hidden = false; $('qHead').hidden = false; $('inqHead').hidden = false;
+
+  // Ops dashboard
+  const { data: s } = await supa.rpc('admin_stats');
+  if (s) $('stats').innerHTML = [
+    ['users','Drinkers',false],['venues_claimed','Venues claimed',false],['claims_pending','Claims pending',true],
+    ['menus_live','Live menus',false],['pours','Pours logged',false],['votes','Votes',false],
+    ['subscribers','Dispatch subs',false],['inquiries_new','New inquiries',true],['beers','Beers',false]
+  ].map(([k,l,hot]) => `<div class="stat ${hot&&s[k]>0?'hot':''}"><b>${s[k]??0}</b><span>${l}</span></div>`).join('');
+
+  // Inquiries
+  const { data: inq } = await supa.rpc('admin_inquiries');
+  $('inquiries').innerHTML = (inq && inq.length) ? inq.map(i => `
+    <div class="claim ${i.status==='new'?'pending':''}">
+      <div style="display:flex;justify-content:space-between"><h3>${esc(i.business_name)}</h3><span class="tag ${i.status==='new'?'pending':'approved'}">${i.status}</span></div>
+      <div class="meta">${esc(i.business_kind)} · ${esc(i.contact_email)} · ${[i.city,i.region,i.country].filter(Boolean).map(esc).join(', ')}</div>
+      ${i.message?`<div style="font-size:.9rem">${esc(i.message)}</div>`:''}
+    </div>`).join('') : '<p style="color:var(--slate)">No inquiries yet.</p>';
+
   const { data: claims } = await supa.rpc('admin_claims');
   const q = $('queue'); q.innerHTML = '';
   if (!claims || !claims.length) { q.innerHTML = '<p style="color:var(--slate)">No claims yet.</p>'; return; }
@@ -76,7 +122,7 @@ async function load() {
     if (c.status === 'pending') {
       const actions = document.createElement('div'); actions.className = 'actions';
       const ap = document.createElement('button'); ap.className = 'btn g'; ap.textContent = 'Approve';
-      ap.onclick = () => setStatus(c.claim_id, 'approved');
+      ap.onclick = () => setStatus(c.claim_id, 'approved', c.venue_id);
       const rj = document.createElement('button'); rj.className = 'btn r'; rj.textContent = 'Reject';
       rj.onclick = () => setStatus(c.claim_id, 'rejected');
       actions.append(ap, rj); div.appendChild(actions);
@@ -85,11 +131,24 @@ async function load() {
   });
 }
 
-async function setStatus(id, status) {
+async function setStatus(id, status, venueId) {
   const { error } = await supa.rpc('set_claim_status', { p_claim: id, p_status: status });
-  if (!error) load();
-  else alert(error.message);
+  if (error) { alert(error.message); return; }
+  if (status === 'approved' && venueId) {
+    // Fire the welcome + QR email (no-ops silently if Resend isn't configured yet).
+    callFn({ kind: 'partner_welcome', venue_id: venueId }).catch(() => {});
+  }
+  load();
 }
+
+window.sendDispatch = async () => {
+  const subject = $('dsubject').value.trim(), html = $('dbody').value.trim();
+  if (!subject || !html) { $('dmsg').textContent = 'Add a subject and body.'; return; }
+  $('dmsg').textContent = 'Sending...';
+  const res = await callFn({ kind: 'dispatch', subject, html });
+  $('dmsg').textContent = res.sent ? `Sent to ${res.delivered}/${res.total} subscribers. 🍻`
+    : (res.reason || res.error || 'Not sent, is RESEND_API_KEY set?');
+};
 
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 supa.auth.getSession().then(({ data }) => { if (data.session) load(); });
