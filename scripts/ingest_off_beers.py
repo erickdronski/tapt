@@ -39,9 +39,10 @@ SKIP_TAGS = {
 }
 
 
-def get_json(url, tries=5):
-    """Fetch + parse JSON. Returns None on persistent failure (OFF 503s under
-    load) so the caller can skip a page and keep going instead of dying."""
+def get_json(url, tries=3):
+    """Fetch + parse JSON. Returns None on persistent failure. OFF throttles the
+    search API aggressively, so we back off LONG (letting the rate window reset)
+    rather than hammering with rapid retries — hammering just deepens the block."""
     last = None
     for i in range(tries):
         try:
@@ -50,8 +51,9 @@ def get_json(url, tries=5):
                 return json.loads(r.read().decode())
         except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as e:
             last = e
-            time.sleep(5 * (i + 1))  # escalating backoff; OFF throttles search
-    print(f"  fetch unavailable ({last}) for: {url.split('&page=')[-1]}")
+            if i < tries - 1:
+                time.sleep(30 + 30 * i)  # 30s, 60s — respect the throttle window
+    print(f"  page unavailable ({last})")
     return None
 
 
@@ -136,8 +138,9 @@ def main():
             # OFF is throttling this request; skip the page, keep going, but
             # bail gracefully if it's clearly down (several misses in a row).
             misses += 1
-            if misses >= 6:
-                print("OFF unavailable for several pages; stopping this run early.")
+            if misses >= 4:
+                print("OFF throttling several pages in a row; stopping this run "
+                      "(cursor saved, a later run resumes here).")
                 break
             page += 1
             save_state({"next_page": page, "last_page": last_page})
