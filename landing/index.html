@@ -3,8 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tapt · THE Beer Superapp</title>
-<meta name="description" content="THE Beer Superapp. Free, global, scan-first. Scan any beer on Earth, log the pour, stamp your Passport, vote Beer of the Week, and find what's pouring near you. Free to drinkers forever.">
+<title>Tapt · THE Beer Superapp · Free to download, free menu hosting for bars</title>
+<meta name="description" content="Tapt, THE Beer Superapp. Free to download. Scan any beer on Earth, stamp your Passport, ride the live beer market. Breweries, bars, pubs, and taprooms get FREE menu hosting, QR codes, and a claimed profile, forever, no subscription.">
+<meta name="keywords" content="beer app, free beer app, beer superapp, free menu hosting, QR code menu, digital beer menu, bar menu app, brewery menu, taproom menu, tap list app, beer scanner, Untappd alternative, free beer menu, beer near me, craft beer app, non-alcoholic beer app">
+<meta property="og:title" content="Tapt · THE Beer Superapp">
+<meta property="og:description" content="Free to download. Free menu hosting + QR codes for breweries, bars, pubs, and taprooms, forever. Scan any beer, stamp your Passport, find what's pouring near you.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -134,8 +139,8 @@
     <div class="nav-links">
       <a href="#app">The App</a>
       <a href="#business">For breweries &amp; bars</a>
+      <a href="/portal">For Business</a>
       <a href="#dispatch">The Dispatch</a>
-      <a href="#honest">Our data promise</a>
       <a class="btn btn-gold" href="mailto:esdronski@gmail.com?subject=Tapt%20beta%20access">Join the beta</a>
     </div>
   </div>
@@ -144,14 +149,14 @@
 <header>
   <div class="wrap hero">
     <div>
-      <span class="kicker">Free to drinkers. Forever.</span>
+      <span class="kicker">Free to download. Free forever.</span>
       <h1>THE Beer<br>Superapp<em>.</em></h1>
-      <p class="lede">Scan any beer on Earth. Log the pour, stamp your Passport across 50 states and 47 countries, ride the live beer market, vote Beer of the Week, and find what's actually pouring near you, breweries, pubs, bars, taprooms, and beer gardens.</p>
+      <p class="lede">Scan any beer on Earth. Log the pour, stamp your Passport across 50 states and 47 countries, ride the live beer market, vote Beer of the Week, and find what's actually pouring near you, breweries, pubs, bars, taprooms, and beer gardens. And if you run one, we host your menu and QR code for free.</p>
       <div class="hero-ctas">
-        <a class="btn btn-gold" href="mailto:esdronski@gmail.com?subject=Tapt%20beta%20access">Join the iPhone beta</a>
-        <a class="btn btn-ghost" href="#business">Partner with Tapt</a>
+        <a class="btn btn-gold" href="mailto:esdronski@gmail.com?subject=Tapt%20beta%20access">Get the free app</a>
+        <a class="btn btn-ghost" href="/portal">Free menu hosting for your bar</a>
       </div>
-      <p class="fineprint">No ads in your feed. No paywalled ratings. No fabricated numbers, ever.</p>
+      <p class="fineprint">Free to download. No ads in your feed. No paywalled ratings. No fabricated numbers, ever.</p>
     </div>
     <div class="glass-stage" aria-hidden="true">
       <div class="glass">
@@ -215,15 +220,17 @@
         <h3>The Tapt way</h3>
         <div class="price">Free<span style="font-size:1rem;font-weight:600;opacity:.75">, forever, for working tools</span></div>
         <ul>
+          <li>Free hosted menu + printable QR code for your tables</li>
           <li>Claimed profile, on the map, day one</li>
           <li>Publish what's pouring to nearby drinkers</li>
-          <li>See your local scene's real activity</li>
+          <li>Upload your logo &amp; branding, see your local scene's real activity</li>
           <li>Featured placement &amp; spotlight, a fraction of four figures, never pay-to-bury</li>
         </ul>
         <p class="note">Real partners only. Neutral placement rules. Drinkers never pay.</p>
       </div>
     </div>
     <div style="margin-top:36px;display:flex;gap:14px;flex-wrap:wrap">
+      <a class="btn btn-gold" href="/portal">Claim your venue, free</a>
       <a class="btn btn-dark" href="mailto:esdronski@gmail.com?subject=Tapt%20partnership%20inquiry&body=Business%20name%3A%0AKind%20(brewery%2Fbar%2Fpub%2Ftaproom)%3A%0ACity%2C%20region%2C%20country%3A%0AWhat%20you%27d%20love%20from%20Tapt%3A">Talk partnerships</a>
       <span style="align-self:center;color:var(--slate);font-size:.9rem">or use <b>Partner with Tapt</b> inside the app</span>
     </div>
@@ -310,6 +317,19 @@
     }
     btn.disabled = false; btn.textContent = 'Sign me up';
   });
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Tapt",
+  "alternateName": "THE Beer Superapp",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "iOS",
+  "description": "THE Beer Superapp. Free to download. Scan any beer on Earth, stamp your Passport, ride the live beer market. Breweries, bars, pubs, and taprooms get free menu hosting, QR codes, and a claimed profile, forever.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": ["Free to download", "Free menu hosting for bars and breweries", "Free QR code menus", "Beer scanner", "Global brewery map", "Beer of the Week voting", "Leaderboards", "Beer Passport"]
+}
 </script>
 </body>
 </html>

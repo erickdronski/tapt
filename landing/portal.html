@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tapt for Business · Free menu hosting</title>
+<meta name="description" content="Free forever for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu. No subscription, ever.">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.55}
+.wrap{max-width:680px;margin:0 auto;padding:36px 20px 90px}
+.brand{font-family:'Poppins';font-weight:800;font-size:1.3rem}.brand span{color:var(--gold)}
+h1{font-family:'Poppins';font-size:1.9rem;letter-spacing:-.02em;margin:16px 0 6px}
+.sub{color:var(--slate);margin-bottom:22px}
+.card{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:18px;padding:20px;margin-bottom:14px}
+h2{font-family:'Poppins';font-size:1.1rem;margin-bottom:10px}
+input,select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit;font-size:.98rem;margin-bottom:8px;background:var(--foam)}
+input:focus{outline:none;border-color:var(--gold)}
+.btn{display:inline-block;background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:11px 22px;border:0;cursor:pointer;font-size:.95rem;font-family:inherit}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:transparent;border:2px solid rgba(26,18,6,.2)}
+.row{display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--foam);margin-bottom:6px;cursor:pointer}
+.row:hover{background:#f3ead4}
+.tag{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px}
+.tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}
+.tapline{display:grid;grid-template-columns:2fr 1.4fr 1fr .8fr auto;gap:6px;margin-bottom:6px}
+.tapline input{margin:0;padding:9px 10px;font-size:.9rem}
+.msg{font-weight:600;font-size:.9rem;margin-top:8px}
+.hint{font-size:.8rem;color:var(--slate);margin-top:8px}
+a{color:var(--copper)}
+@media(max-width:560px){.tapline{grid-template-columns:1fr 1fr;grid-auto-rows:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">for Business</span></div>
+  <h1>Free menu hosting. Forever.</h1>
+  <p class="sub">Claim your venue, publish your tap list, print your QR. The tools the other guys charge $1,199/yr for, free, because busy taprooms make Tapt better.</p>
+
+  <div class="card" id="authCard">
+    <h2>1 · Sign in</h2>
+    <div id="authForm">
+      <input type="email" id="email" placeholder="you@yourbrewery.com" autocomplete="email">
+      <button class="btn" onclick="sendCode()">Email me a sign-in code</button>
+      <div id="codeRow" hidden style="margin-top:8px">
+        <input inputmode="numeric" id="code" placeholder="6-digit code from the email">
+        <button class="btn" onclick="verifyCode()">Verify</button>
+      </div>
+      <div class="msg" id="authMsg"></div>
+    </div>
+    <div id="signedIn" hidden>
+      <span id="whoami"></span> · <a href="#" onclick="signOut();return false">sign out</a>
+    </div>
+  </div>
+
+  <div class="card" id="claimCard" hidden>
+    <h2>2 · Claim your venue</h2>
+    <div id="myClaims"></div>
+    <input id="venueSearch" placeholder="Search your venue by name or city" oninput="searchVenues()">
+    <div id="venueResults"></div>
+    <div class="msg" id="claimMsg"></div>
+    <div class="hint">Claims are verified by a human (usually same day) to keep venue pages hijack-proof.</div>
+  </div>
+
+  <div class="card" id="brandCard" hidden>
+    <h2>3 · Your logo &amp; branding</h2>
+    <div style="display:flex;gap:14px;align-items:center">
+      <img id="logoPreview" style="width:64px;height:64px;border-radius:14px;object-fit:cover;background:var(--foam);border:1px solid rgba(26,18,6,.1)" alt="">
+      <div>
+        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="margin:0;padding:8px">
+        <div class="hint">PNG, JPG, WEBP, or SVG · up to 3MB. Shows on your menu page and (with Featured) in the app.</div>
+      </div>
+    </div>
+    <div class="msg" id="logoMsg"></div>
+  </div>
+
+  <div class="card" id="menuCard" hidden>
+    <h2>4 · Your tap list</h2>
+    <div class="sub" id="menuVenueName"></div>
+    <div id="taps"></div>
+    <button class="btn ghost" onclick="addTap()">+ Add a tap</button>
+    <button class="btn" onclick="publish()">Publish menu</button>
+    <div class="msg" id="pubMsg"></div>
+    <div class="hint" id="menuLinks"></div>
+  </div>
+
+  <div class="card">
+    <h2>Want featured placement?</h2>
+    <p class="sub" style="margin:0">Everything above stays free. To be louder in your metro (featured rail, event pushes), reply to your claim email or write <a href="mailto:esdronski@gmail.com?subject=Tapt%20Featured">esdronski@gmail.com</a>.</p>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const supa = createClient('https://qfwiizvqxrhjlthbjosz.supabase.co', 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF');
+let approvedVenue = null;
+const $ = id => document.getElementById(id);
+
+window.sendCode = async () => {
+  const email = $('email').value.trim();
+  const { error } = await supa.auth.signInWithOtp({ email });
+  $('authMsg').textContent = error ? error.message : 'Check your email. Enter the 6-digit code below (or tap the link).';
+  if (!error) $('codeRow').hidden = false;
+};
+window.verifyCode = async () => {
+  const { error } = await supa.auth.verifyOtp({ email: $('email').value.trim(), token: $('code').value.trim(), type: 'email' });
+  $('authMsg').textContent = error ? 'Code didn\'t work, request a fresh one.' : '';
+  if (!error) refresh();
+};
+window.signOut = async () => { await supa.auth.signOut(); location.reload(); };
+
+async function refresh() {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) return;
+  $('authForm').hidden = true; $('signedIn').hidden = false;
+  $('whoami').textContent = user.email;
+  $('claimCard').hidden = false;
+  const { data: claims } = await supa.rpc('my_venue_claims');
+  const box = $('myClaims'); box.innerHTML = '';
+  (claims || []).forEach(c => {
+    const div = document.createElement('div'); div.className = 'row';
+    div.innerHTML = `<b style="flex:1">${esc(c.venue_name)}</b><span class="tag ${c.status}">${c.status}</span>`;
+    if (c.status === 'approved') {
+      div.onclick = () => openMenu(c.venue_id, c.venue_name);
+      div.innerHTML += `<span style="font-size:.8rem;color:var(--copper);font-weight:700">manage →</span>`;
+    }
+    box.appendChild(div);
+  });
+  const approved = (claims || []).find(c => c.status === 'approved');
+  if (approved) openMenu(approved.venue_id, approved.venue_name);
+}
+
+let searchTimer;
+window.searchVenues = () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(async () => {
+    const q = $('venueSearch').value.trim();
+    if (q.length < 2) { $('venueResults').innerHTML = ''; return; }
+    const { data } = await supa.rpc('search_venues', { p_query: q });
+    $('venueResults').innerHTML = '';
+    (data || []).forEach(v => {
+      const div = document.createElement('div'); div.className = 'row';
+      div.innerHTML = `<div style="flex:1"><b>${esc(v.name)}</b><br><span style="font-size:.8rem;color:var(--slate)">${[v.city, v.region, v.country].filter(Boolean).map(esc).join(', ')}</span></div><span style="color:var(--hop);font-weight:700;font-size:.85rem">claim</span>`;
+      div.onclick = () => claim(v.venue_id, v.name);
+      $('venueResults').appendChild(div);
+    });
+  }, 350);
+};
+
+async function claim(venueId, name) {
+  const { data: { user } } = await supa.auth.getUser();
+  const { error } = await supa.rpc('claim_venue', { p_venue: venueId, p_email: user.email, p_role: 'manager' });
+  $('claimMsg').textContent = error ? error.message : `Claim for ${name} submitted. We verify fast, watch your inbox.`;
+  refresh();
+}
+
+function openMenu(venueId, name) {
+  approvedVenue = venueId;
+  $('brandCard').hidden = false;
+  $('menuCard').hidden = false;
+  $('menuVenueName').textContent = name;
+  if (!$('taps').children.length) addTap();
+  const url = `${location.origin}/menu?v=${venueId}`;
+  $('menuLinks').innerHTML = `Your live menu + printable QR: <a href="${url}" target="_blank">${url}</a>`;
+  supa.rpc('venue_brand', { p_venue: venueId }).then(({ data }) => {
+    if (data && data[0] && data[0].logo_url) $('logoPreview').src = data[0].logo_url;
+  });
+  supa.rpc('venue_menu', { p_venue: venueId }).then(({ data }) => {
+    if (data && data.length) {
+      $('taps').innerHTML = '';
+      data.forEach(r => addTap(r.beer_name, r.brewery_name, r.style, r.price_text));
+    }
+  });
+}
+
+document.addEventListener('change', async (e) => {
+  if (e.target.id !== 'logoFile' || !approvedVenue) return;
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 3145728) { $('logoMsg').textContent = 'Max 3MB.'; return; }
+  $('logoMsg').textContent = 'Uploading...';
+  const path = `${approvedVenue}/logo-${Date.now()}-${file.name.replace(/[^a-z0-9.]/gi,'_')}`;
+  const { error: upErr } = await supa.storage.from('partner-assets').upload(path, file, { upsert: true });
+  if (upErr) { $('logoMsg').textContent = upErr.message; return; }
+  const { data: pub } = supa.storage.from('partner-assets').getPublicUrl(path);
+  const { error } = await supa.rpc('set_venue_logo', { p_venue: approvedVenue, p_url: pub.publicUrl });
+  $('logoMsg').textContent = error ? error.message : 'Logo saved. It shows on your menu page now. 🎨';
+  if (!error) $('logoPreview').src = pub.publicUrl;
+});
+
+window.addTap = (beer = '', brewery = '', style = '', price = '') => {
+  const div = document.createElement('div'); div.className = 'tapline';
+  div.innerHTML = `<input placeholder="Beer name" value="${esc(beer)}"><input placeholder="Brewery" value="${esc(brewery || '')}"><input placeholder="Style" value="${esc(style || '')}"><input placeholder="$" value="${esc(price || '')}"><button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove()">✕</button>`;
+  $('taps').appendChild(div);
+};
+
+window.publish = async () => {
+  const items = [...$('taps').children].map(row => {
+    const [beer, brewery, style, price] = [...row.querySelectorAll('input')].map(i => i.value.trim());
+    return beer ? { beer_name: beer, brewery_name: brewery, style, price } : null;
+  }).filter(Boolean);
+  if (!items.length) { $('pubMsg').textContent = 'Add at least one tap.'; return; }
+  const { data, error } = await supa.rpc('publish_tap_list', { p_venue: approvedVenue, p_items: items });
+  $('pubMsg').textContent = error ? error.message : `Published ${data} taps. Live now, print the QR from your menu page. 🍻`;
+};
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+refresh();
+</script>
+</body>
+</html>
