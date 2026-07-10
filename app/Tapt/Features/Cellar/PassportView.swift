@@ -5,6 +5,12 @@ struct PassportView: View {
     let checkins: [MyCheckin]
     var guides: [RegionBeerGuide] = []
 
+    // Badge-unlock celebration: remember which badges we've already shown so a
+    // newly earned one gets a moment, but pre-existing ones never false-fire.
+    @AppStorage("passport.seenBadges") private var seenBadgesRaw = ""
+    @AppStorage("passport.badgesSeeded") private var badgesSeeded = false
+    @State private var celebration: TaptCelebration?
+
     private var stats: PassportStats {
         PassportStats(
             pours: checkins.count,
@@ -128,6 +134,27 @@ struct PassportView: View {
         .background(Brand.background)
         .navigationTitle("Passport")
         .navigationBarTitleDisplayMode(.inline)
+        .taptCelebration($celebration)
+        .onAppear { checkForNewBadge() }
+        .onChange(of: checkins.count) { checkForNewBadge() }
+    }
+
+    /// Fires a badge-unlock celebration for the most impressive newly earned
+    /// badge. On first ever view it silently records what's already earned.
+    private func checkForNewBadge() {
+        let earned = PassportData.badges.filter { $0.earned(stats) }
+        let earnedIds = Set(earned.map(\.id))
+        let seen = Set(seenBadgesRaw.split(separator: ",").map(String.init))
+        guard badgesSeeded else {
+            seenBadgesRaw = earnedIds.sorted().joined(separator: ",")
+            badgesSeeded = true
+            return
+        }
+        let fresh = earned.filter { !seen.contains($0.id) }
+        if celebration == nil, let newest = fresh.max(by: { $0.threshold < $1.threshold }) {
+            celebration = .badgeUnlocked(title: newest.title, symbol: newest.icon)
+        }
+        seenBadgesRaw = earnedIds.union(seen).sorted().joined(separator: ",")
     }
 
     private var visitedGuideCount: Int {

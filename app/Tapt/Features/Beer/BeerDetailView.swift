@@ -153,21 +153,28 @@ struct BeerDetailView: View {
         let active = myVote == value
         return Button {
             guard let uid = session.user?.id else { return }
-            Haptic.tap()
             let newValue = active ? nil : value
-            myVote = newValue
+            if newValue != nil { Haptic.firm() } else { Haptic.tap() }
+            // Animate so the digit rolls up and the thumb bounces as the vote lands.
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = newValue }
             if let v = newValue {
                 Task { try? await BeerService.vote(beerId: d.id, userId: uid, value: v) }
             }
         } label: {
-            Label("\(count)", systemImage: icon)
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-                .foregroundStyle(active ? Brand.malt : color)
-                .padding(.horizontal, 14).padding(.vertical, 9)
-                .background(active ? color : Brand.background, in: Capsule())
-                .overlay(Capsule().stroke(color.opacity(0.45)))
+            Label {
+                Text("\(count)").contentTransition(.numericText(value: Double(count)))
+            } icon: {
+                Image(systemName: icon).symbolEffect(.bounce, value: myVote)
+            }
+            .font(.system(.subheadline, design: .rounded).weight(.bold))
+            .foregroundStyle(active ? Brand.malt : color)
+            .padding(.horizontal, 14).padding(.vertical, 9)
+            .background(active ? color : Brand.background, in: Capsule())
+            .overlay(Capsule().stroke(color.opacity(0.45)))
         }
         .buttonStyle(.plain)
+        .scaleEffect(active ? 1.06 : 1)
+        .animation(.spring(response: 0.3, dampingFraction: 0.55), value: active)
     }
 
     // MARK: - Awards (verified, cited)

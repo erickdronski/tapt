@@ -39,20 +39,26 @@ all the numbers (ratings, ABV, counts).
   shimmer skeletons, TaptPressStyle, haptics, collapsibles.
 
 ## Multi-wave design plan (forward)
-### Wave 1, Consistency & the glass (mostly done)
+### Wave 1, Consistency & the glass (DONE)
 - [x] Icon, landing hero glass, scroll-reveal.
-- [ ] Make the in-app BeerGlassView foam a centered dome to match the icon
-  exactly (currently irregular blobs).
-- [ ] Favicon + OG image from the new icon.
-- [ ] Portal/admin/menu/pitch pages inherit the reveal motion + glass accents.
+- [x] In-app BeerGlassView foam is a centered dome matching the icon.
+- [x] Favicon set (svg + 32 + apple-touch + PWA 192/512) + 1200x630 OG share
+  card, wired across index/portal/menu/pitch with theme-color + manifest.
+- [x] Portal/admin/pitch inherit reveal motion (pitch = per-slide cinematic;
+  portal/admin = one-shot entrance, reduced-motion safe).
 
 ### Wave 2, Signature moments (the dopamine beats)
-- Pour-to-log animation: logging a beer fills a glass and stamps the passport
-  in one satisfying sequence.
-- Vote feedback: the board tile physically bumps and the number count-ups when
-  a vote lands (partially there; make it a hero moment).
-- BOW crown reveal: a weekly winner animation worth screenshotting.
-- Level-up / badge unlock: confetti-light + haptic on passport milestones.
+Shared engine: `Design/Celebrate.swift` — a `TaptCelebration` overlay
+(`.taptCelebration($binding)`) with gold confetti, driven from `.task` +
+async sleeps (Swift 6 safe, reduced-motion aware, tap-to-skip).
+- [x] Pour-to-log: logging fills the glass, then a passport stamp thuds down
+  with confetti + celebrate haptic, then the share card opens. (LogPourView)
+- [x] Vote feedback: the digit rolls up (numericText), the thumb bounces, the
+  capsule springs, firmer haptic on a landed vote. (BeerDetailView)
+- [x] Badge unlock: medallion shine + confetti when a new Passport badge is
+  earned (seeded silently first run, only genuinely new ones fire). (PassportView)
+- [~] BOW crown reveal: built (`.bowCrowned`), ready to hook to a deliberate
+  weekly-winner reveal (not auto-fired on every open).
 
 ### Wave 3, Depth & texture pass
 - Consistent double-shadow system across all cards.

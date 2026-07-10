@@ -18,6 +18,8 @@ struct LogPourView: View {
     @State private var occasion = "bar"
     @State private var saving = false
     @State private var sharePour: PourCard?
+    @State private var celebration: TaptCelebration?
+    @State private var pendingShare: PourCard?
     @State private var errorMessage: String?
 
     private let tags = ["hoppy", "malty", "crisp", "fruity", "roasty", "sour", "sweet", "dry"]
@@ -70,6 +72,12 @@ struct LogPourView: View {
                 Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "Try again in a moment.")
+            }
+        }
+        .taptCelebration($celebration) {
+            if let pour = pendingShare {
+                pendingShare = nil
+                sharePour = pour
             }
         }
     }
@@ -313,12 +321,18 @@ struct LogPourView: View {
                 )
                 await MainActor.run {
                     saving = false
-                    Haptic.celebrate()
                     onLogged()
-                    sharePour = PourCard(
+                    // Stash the share card, then play the pour-to-passport-stamp
+                    // celebration; the share sheet opens when it finishes.
+                    pendingShare = PourCard(
                         beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
                         score: Int(rating / 5 * 100), user: "you",
                         abv: beer.abv.map { String(format: "%.1f%%", $0) },
+                        place: selectedVenue.map { sharePlace($0) }
+                    )
+                    celebration = .pourLogged(
+                        beer: beer.name,
+                        rating: rating,
                         place: selectedVenue.map { sharePlace($0) }
                     )
                 }
