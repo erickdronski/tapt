@@ -131,7 +131,7 @@ struct BeerGlassView: View {
                     )
 
                 // Beer body with depth + live bubbles, clipped to the glass
-                TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: false)) { timeline in
+                TimelineView(AnimationTimelineSchedule(minimumInterval: 1.0 / 30.0, paused: false)) { timeline in
                     let t = timeline.date.timeIntervalSinceReferenceDate
                     ZStack(alignment: .bottom) {
                         beerBody(h: h)
