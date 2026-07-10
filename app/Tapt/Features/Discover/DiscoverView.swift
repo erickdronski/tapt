@@ -73,6 +73,12 @@ struct DiscoverView: View {
     private var quickPlayRail: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
+                QuickPlayTile(title: "Darts", icon: "scope", tint: Brand.copper) {
+                    DartsGame()
+                }
+                QuickPlayTile(title: "Connect 4", icon: "circle.grid.3x3.fill", tint: Brand.gold) {
+                    ConnectFourGame()
+                }
                 QuickPlayTile(title: "Daily 5", icon: "calendar.badge.clock", tint: Brand.hop) {
                     TriviaGame(title: "Daily 5", questionLimit: 5)
                 }

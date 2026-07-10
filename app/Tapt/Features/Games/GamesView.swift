@@ -5,6 +5,14 @@ struct GamesView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                NavigationLink { DartsGame() } label: {
+                    GameTile(title: "Darts", subtitle: "Flick to throw. Real aim, real scatter, pass-and-play.", icon: "scope", tint: Brand.copper, ready: true)
+                }
+                .buttonStyle(.taptPress)
+                NavigationLink { ConnectFourGame() } label: {
+                    GameTile(title: "Connect 4", subtitle: "Gravity drops, four in a row, table bragging rights.", icon: "circle.grid.3x3.fill", tint: Brand.gold, ready: true)
+                }
+                .buttonStyle(.taptPress)
                 NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5) } label: {
                     GameTile(title: "Daily 5", subtitle: "A quick five-question run from the beer world.", icon: "calendar.badge.clock", tint: Brand.hop, ready: true)
                 }
