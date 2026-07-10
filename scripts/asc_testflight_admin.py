@@ -118,9 +118,13 @@ def main():
             print(f"  -> feedbackEnabled=true PATCH {s2}"
                   + ("" if s2 == 200 else f" {json.dumps(d2)[:300]}"))
 
-    # 3. Latest build: whatsNew
-    s, d = api("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=1")
+    # 3. Recent builds report + whatsNew on the latest
+    s, d = api("GET", f"/v1/builds?filter[app]={app_id}&sort=-uploadedDate&limit=5")
     builds = d.get("data", [])
+    for b in builds:
+        a = b["attributes"]
+        print(f"BUILD {a.get('version')} uploaded={a.get('uploadedDate')} state={a.get('processingState')} expired={a.get('expired')}")
+    builds = builds[:1]
     if builds:
         build_id = builds[0]["id"]
         version = builds[0]["attributes"].get("version")
