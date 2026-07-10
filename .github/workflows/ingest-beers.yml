@@ -48,6 +48,7 @@ jobs:
           python3 scripts/ingest_off_beers.py
 
       - name: Persist the page cursor
+        if: always()
         run: |
           if [ -n "$(git status --porcelain scripts/.off_ingest_state.json)" ]; then
             git config user.name  "tapt-ingest-bot"

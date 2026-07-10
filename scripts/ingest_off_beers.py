@@ -40,16 +40,19 @@ SKIP_TAGS = {
 
 
 def get_json(url, tries=5):
+    """Fetch + parse JSON. Returns None on persistent failure (OFF 503s under
+    load) so the caller can skip a page and keep going instead of dying."""
     last = None
     for i in range(tries):
         try:
             req = urllib.request.Request(url, headers=UA)
             with urllib.request.urlopen(req, context=CTX, timeout=45) as r:
                 return json.loads(r.read().decode())
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as e:
             last = e
-            time.sleep(4 * (i + 1))  # backoff; OFF 503s under load
-    raise SystemExit(f"OFF fetch failed after {tries} tries: {last}")
+            time.sleep(5 * (i + 1))  # escalating backoff; OFF throttles search
+    print(f"  fetch unavailable ({last}) for: {url.split('&page=')[-1]}")
+    return None
 
 
 def style_from(tags):
@@ -115,23 +118,33 @@ def main():
     state = load_state()
     start = int(os.environ.get("START_PAGE", state.get("next_page", 1)))
 
-    # discover total pages once, to wrap the cursor around
+    # discover total pages once, to wrap the cursor around (best-effort)
     meta = get_json(f"{OFF}&page_size=1&page=1")
-    total = int(meta.get("count", 0))
-    last_page = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
-    print(f"OFF beers: {total} products, {last_page} pages of {PAGE_SIZE}. "
+    total = int((meta or {}).get("count", 0))
+    last_page = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE) if total else 200
+    print(f"OFF beers: {total or '?'} products, ~{last_page} pages of {PAGE_SIZE}. "
           f"Starting at page {start}.")
 
     tot_ins = tot_upd = tot_skip = 0
     page = start
+    misses = 0  # consecutive unavailable pages
     for _ in range(MAX_PAGES):
         if page > last_page:
             page = 1  # wrap around to re-scan (catches updates + new products)
         d = get_json(f"{OFF}&page_size={PAGE_SIZE}&page={page}")
-        products = d.get("products", [])
-        if not products:
+        if d is None:
+            # OFF is throttling this request; skip the page, keep going, but
+            # bail gracefully if it's clearly down (several misses in a row).
+            misses += 1
+            if misses >= 6:
+                print("OFF unavailable for several pages; stopping this run early.")
+                break
             page += 1
+            save_state({"next_page": page, "last_page": last_page})
+            time.sleep(12)
             continue
+        misses = 0
+        products = d.get("products", [])
         payload, seen = [], set()
         for p in products:
             row = to_row(p)
@@ -139,15 +152,18 @@ def main():
                 seen.add(row["gtin"])
                 payload.append(row)
         if payload:
-            res = rpc_ingest(payload)
-            tot_ins += res.get("inserted", 0)
-            tot_upd += res.get("updated", 0)
-            tot_skip += res.get("skipped", 0)
-            print(f"page {page}: +{res.get('inserted',0)} new, "
-                  f"{res.get('updated',0)} refreshed, {res.get('skipped',0)} skipped")
+            try:
+                res = rpc_ingest(payload)
+                tot_ins += res.get("inserted", 0)
+                tot_upd += res.get("updated", 0)
+                tot_skip += res.get("skipped", 0)
+                print(f"page {page}: +{res.get('inserted',0)} new, "
+                      f"{res.get('updated',0)} refreshed, {res.get('skipped',0)} skipped")
+            except Exception as e:
+                print(f"page {page}: RPC error, skipping ({e})")
         page += 1
         save_state({"next_page": page, "last_page": last_page})
-        time.sleep(6)  # be a good OFF citizen (search rate limits)
+        time.sleep(9)  # be a good OFF citizen (search rate limits)
 
     print(f"DONE. inserted {tot_ins}, updated {tot_upd}, skipped {tot_skip}. "
           f"next run resumes at page {page}.")
