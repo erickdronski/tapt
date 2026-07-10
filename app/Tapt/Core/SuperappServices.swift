@@ -172,8 +172,14 @@ struct LeaderStyle: Identifiable, Decodable, Sendable {
 enum LeaderboardService {
     private struct Params: Encodable { let p_limit: Int }
 
-    static func beers(limit: Int = 20) async throws -> [LeaderBeer] {
-        try await Supa.client.rpc("leaderboard_beers", params: Params(p_limit: limit)).execute().value
+    static func beers(limit: Int = 20, naOnly: Bool = false) async throws -> [LeaderBeer] {
+        struct BeerParams: Encodable {
+            let p_limit: Int
+            let p_na_only: Bool
+        }
+        return try await Supa.client
+            .rpc("leaderboard_beers", params: BeerParams(p_limit: limit, p_na_only: naOnly))
+            .execute().value
     }
 
     static func tasters(limit: Int = 20) async throws -> [LeaderTaster] {

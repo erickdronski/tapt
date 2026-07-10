@@ -18,6 +18,7 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header(d)
                     communityBar(d)
+                    if !d.awards.isEmpty { awardsCard(d.awards) }
                     if d.styleName != nil { styleScience(d) }
                     factsCard(d)
                     if let n = d.nutrition, hasNutrition(n) { nutritionCard(n) }
@@ -165,6 +166,55 @@ struct BeerDetailView: View {
                 .overlay(Capsule().stroke(color.opacity(0.45)))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Awards (verified, cited)
+
+    private func awardsCard(_ awards: [BeerDetail.Award]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Decorated", systemImage: "medal.fill")
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.text)
+            ForEach(awards) { award in
+                HStack(alignment: .top, spacing: 10) {
+                    Text(award.medalEmoji).font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text([award.medalLabel,
+                              award.awardBody == "Tapt" ? nil : award.awardBody,
+                              award.year.map(String.init)]
+                            .compactMap { $0 }.joined(separator: " · "))
+                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Brand.text)
+                        if let category = award.category {
+                            Text(category).font(.caption).foregroundStyle(Brand.muted)
+                        }
+                        if award.medal == "tapt_favorite" {
+                            Text(award.region.map { "Tapt poured it in \($0) — and loved it." } ?? "We were here. We poured it. We loved it.")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Brand.copper)
+                        } else if let note = award.note {
+                            Text(note).font(.caption).foregroundStyle(Brand.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    if let src = award.sourceUrl, let url = URL(string: src) {
+                        Link(destination: url) {
+                            Image(systemName: "link.circle.fill")
+                                .font(.title3).foregroundStyle(Brand.muted)
+                        }
+                    }
+                }
+                .padding(10)
+                .background(
+                    (award.medal == "tapt_favorite" ? Brand.copper : Brand.gold).opacity(0.1),
+                    in: RoundedRectangle(cornerRadius: 12)
+                )
+            }
+        }
+        .padding(16)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.35)))
     }
 
     // MARK: - Style science (BJCP)

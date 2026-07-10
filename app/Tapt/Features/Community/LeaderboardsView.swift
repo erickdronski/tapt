@@ -8,6 +8,7 @@ struct LeaderboardsView: View {
     @State private var tasters: [LeaderTaster] = []
     @State private var styles: [LeaderStyle] = []
     @State private var loading = false
+    @State private var naOnly = false
 
     var body: some View {
         ScrollView {
@@ -62,11 +63,27 @@ struct LeaderboardsView: View {
 
     private var beersBoard: some View {
         VStack(spacing: 10) {
+            Button {
+                naOnly.toggle()
+                Task { beers = (try? await LeaderboardService.beers(naOnly: naOnly)) ?? [] }
+            } label: {
+                Label(naOnly ? "No / Low only — showing zero-proof podium" : "Show No / Low board",
+                      systemImage: naOnly ? "checkmark.circle.fill" : "sparkle.magnifyingglass")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(naOnly ? Brand.malt : Brand.hop)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(naOnly ? Brand.hop : Brand.hop.opacity(0.12), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             if beers.isEmpty {
                 TaptEmptyState(
                     icon: "trophy.fill",
-                    title: "The podium is open",
-                    message: "Vote beers up or down on Explore and log pours — the first movers write the leaderboard.",
+                    title: naOnly ? "The zero-proof podium is open" : "The podium is open",
+                    message: naOnly
+                        ? "No / Low beers count just as much here. Vote one up to start the board."
+                        : "Vote beers up or down on Explore and log pours — the first movers write the leaderboard.",
                     actionTitle: nil
                 )
             } else {

@@ -35,6 +35,43 @@ struct BeerDetail: Decodable, Sendable {
     let checkinCount: Int
     let avgRating: Double?
     let venuesInCountry: Int
+    let awards: [Award]
+
+    struct Award: Decodable, Sendable, Identifiable {
+        let awardBody: String
+        let year: Int?
+        let category: String?
+        let medal: String
+        let scope: String?
+        let region: String?
+        let sourceUrl: String?
+        let note: String?
+
+        var id: String { [awardBody, year.map(String.init), category].compactMap { $0 }.joined(separator: "-") }
+
+        var medalEmoji: String {
+            switch medal {
+            case "gold": "🥇"
+            case "silver": "🥈"
+            case "bronze": "🥉"
+            case "tapt_favorite": "🍺"
+            default: "🏅"
+            }
+        }
+
+        var medalLabel: String {
+            switch medal {
+            case "tapt_favorite": "Tapt's Favorite"
+            default: medal.capitalized
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case year, category, medal, scope, region, note
+            case awardBody = "award_body"
+            case sourceUrl = "source_url"
+        }
+    }
 
     struct Nutrition: Decodable, Sendable {
         let kcal100ml: Double?
@@ -50,7 +87,7 @@ struct BeerDetail: Decodable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, style, substyle, abv, ibu, gtin, nutrition, ups, downs
+        case id, name, style, substyle, abv, ibu, gtin, nutrition, ups, downs, awards
         case isNaLow = "is_na_low"
         case labelImageUrl = "label_image_url"
         case labelImageLicense = "label_image_license"
