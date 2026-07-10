@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 // Beer page + Beer of the Week. All numbers are first-party or cited to their
-// open-data source (BJCP ranges, Open Food Facts nutrition) — never invented.
+// open-data source (BJCP ranges, Open Food Facts nutrition), never invented.
 
 struct BeerDetail: Decodable, Sendable {
     let id: String

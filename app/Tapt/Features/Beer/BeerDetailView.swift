@@ -3,7 +3,7 @@ import SwiftUI
 /// The beer page. Every fact is sourced: product fields from the catalog
 /// (editorial or Open Food Facts), style science from BJCP 2021, nutrition
 /// from Open Food Facts, community numbers from first-party votes and pours.
-/// Sections with no real data simply don't render — blank beats invented.
+/// Sections with no real data simply don't render, blank beats invented.
 struct BeerDetailView: View {
     @Environment(Session.self) private var session
     let beerId: String
@@ -98,7 +98,7 @@ struct BeerDetailView: View {
     }
 
     /// When there's no real photo, render a glass tinted by the style's SRM
-    /// color range — reference rendering, not a fake product shot.
+    /// color range, reference rendering, not a fake product shot.
     private func srmGlass(_ d: BeerDetail) -> some View {
         VStack(spacing: 0) {
             Rectangle().fill(Brand.foam).frame(height: 14)
@@ -191,7 +191,7 @@ struct BeerDetailView: View {
                             Text(category).font(.caption).foregroundStyle(Brand.muted)
                         }
                         if award.medal == "tapt_favorite" {
-                            Text(award.region.map { "Tapt poured it in \($0) — and loved it." } ?? "We were here. We poured it. We loved it.")
+                            Text(award.region.map { "Tapt poured it in \($0), and loved it." } ?? "We were here. We poured it. We loved it.")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(Brand.copper)
                         } else if let note = award.note {
@@ -288,7 +288,7 @@ struct BeerDetailView: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(tint)
                 Spacer()
-                Text(value.map { trimmed($0) + " \(unit)" } ?? "\(trimmed(lo))–\(trimmed(hi)) \(unit)")
+                Text(value.map { trimmed($0) + " \(unit)" } ?? "\(trimmed(lo))-\(trimmed(hi)) \(unit)")
                     .font(.system(.caption, design: .monospaced).weight(.semibold))
                     .foregroundStyle(Brand.muted)
             }
@@ -422,7 +422,7 @@ struct BeerDetailView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Where you'll find it")
                                 .font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                            Text("Home turf \(country) — \(d.venuesInCountry) beer spots there on the Tapt map")
+                            Text("Home turf \(country), \(d.venuesInCountry) beer spots there on the Tapt map")
                                 .font(.caption).foregroundStyle(Brand.muted)
                         }
                         Spacer()
@@ -445,7 +445,7 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("How beer is made")
                         .font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Malting to packaging — the full journey in Beer School")
+                    Text("Malting to packaging, the full journey in Beer School")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()

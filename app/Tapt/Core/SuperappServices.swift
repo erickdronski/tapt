@@ -3,7 +3,7 @@ import Supabase
 
 // Superapp services: newsletter, partners, leaderboards, friends, and
 // scan-to-catalog. All backed by the 0009/0010 RPC contract; every number
-// shown from these calls is first-party or source-attributed — never invented.
+// shown from these calls is first-party or source-attributed, never invented.
 
 // MARK: - Newsletter (The Tapt Dispatch)
 
@@ -247,7 +247,7 @@ struct OFFBeer: Sendable {
 
 enum BarcodeCatalogService {
     /// Looks up a scanned barcode against Open Food Facts (free, open database).
-    /// Returns nil when the product is unknown — never invents a beer.
+    /// Returns nil when the product is unknown, never invents a beer.
     static func lookup(barcode: String) async throws -> OFFBeer? {
         let digits = barcode.filter(\.isNumber)
         guard (8...14).contains(digits.count) else { return nil }

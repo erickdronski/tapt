@@ -1,6 +1,6 @@
 import SwiftUI
 
-// Partner surfaces: a featured rail (real, curated partners only — when none
+// Partner surfaces: a featured rail (real, curated partners only, when none
 // exist yet it shows an honest "your spot here" card) and an inquiry form so
 // breweries, bars, pubs, and taprooms can raise their hand.
 
@@ -16,7 +16,7 @@ struct FeaturedPartnersRail: View {
                     Text("Featured beer spots")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(Brand.text)
-                    Text(partners.isEmpty ? "Real partners only — no pay-to-bury, ever" : "Partners pouring with Tapt")
+                    Text(partners.isEmpty ? "Real partners only, no pay-to-bury, ever" : "Partners pouring with Tapt")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -140,7 +140,7 @@ struct PartnerInquiryView: View {
                     title: "Partner with Tapt",
                     subtitle: "Free profiles forever. Featured placement puts your taps, events, and releases in front of beer fans near you.",
                     metric: "🤝",
-                    caption: "Breweries fund the party — drinkers never pay",
+                    caption: "Breweries fund the party, drinkers never pay",
                     icon: "storefront.fill",
                     tint: Brand.hop
                 )

@@ -22,7 +22,7 @@ struct DiscoverView: View {
                     quickPlayRail
 
                     DiscoverTile(title: "Leaderboards",
-                                 subtitle: "Top beers, top tasters, top styles — powered by real votes and pours.",
+                                 subtitle: "Top beers, top tasters, top styles, powered by real votes and pours.",
                                  icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
 
                     TaptCollapse(title: "Community",

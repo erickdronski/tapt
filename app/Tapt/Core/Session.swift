@@ -62,7 +62,7 @@ final class Session {
             )
             return true
         } catch {
-            authError = "That code didn't work. Codes expire quickly — request a fresh one."
+            authError = "That code didn't work. Codes expire quickly, request a fresh one."
             return false
         }
     }

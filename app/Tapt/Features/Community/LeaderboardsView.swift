@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Global leaderboards — beers, tasters, styles. Every number is first-party
+/// Global leaderboards, beers, tasters, styles. Every number is first-party
 /// (votes + logged pours). Boards stay honestly empty until the community moves.
 struct LeaderboardsView: View {
     @State private var board = Board.beers
@@ -70,7 +70,7 @@ struct LeaderboardsView: View {
                 naOnly.toggle()
                 Task { beers = (try? await LeaderboardService.beers(naOnly: naOnly)) ?? [] }
             } label: {
-                Label(naOnly ? "No / Low only — showing zero-proof podium" : "Show No / Low board",
+                Label(naOnly ? "No / Low only, showing zero-proof podium" : "Show No / Low board",
                       systemImage: naOnly ? "checkmark.circle.fill" : "sparkle.magnifyingglass")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(naOnly ? Brand.malt : Brand.hop)
@@ -86,7 +86,7 @@ struct LeaderboardsView: View {
                     title: naOnly ? "The zero-proof podium is open" : "The podium is open",
                     message: naOnly
                         ? "No / Low beers count just as much here. Vote one up to start the board."
-                        : "Vote beers up or down on Explore and log pours — the first movers write the leaderboard.",
+                        : "Vote beers up or down on Explore and log pours, the first movers write the leaderboard.",
                     actionTitle: nil
                 )
             } else {

@@ -119,7 +119,7 @@ struct TaptHeroPanel: View {
     }
 }
 
-/// Collapsible section — tap the header to expand/collapse. Saves real estate
+/// Collapsible section, tap the header to expand/collapse. Saves real estate
 /// on dense screens; springy chevron, remembers nothing (fresh per screen).
 struct TaptCollapse<Content: View>: View {
     let title: String

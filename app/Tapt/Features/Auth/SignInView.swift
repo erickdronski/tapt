@@ -5,7 +5,7 @@ import Security
 import Supabase
 
 /// Sign in. Providers are detected at runtime from the Supabase project, so
-/// only buttons that can actually succeed are shown — the moment a provider is
+/// only buttons that can actually succeed are shown, the moment a provider is
 /// enabled in the dashboard it appears here with no app update.
 /// Email supports both the magic link AND typing the 6-digit code from the
 /// same email (survives cross-device and link-scanner problems).
@@ -118,7 +118,7 @@ struct SignInView: View {
 
             if emailLinkSent {
                 VStack(spacing: 8) {
-                    Text("Check your email — tap the link, or type the 6-digit code from the same email here:")
+                    Text("Check your email, tap the link, or type the 6-digit code from the same email here:")
                         .font(.caption)
                         .foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)

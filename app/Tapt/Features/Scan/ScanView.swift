@@ -192,7 +192,7 @@ struct ScanView: View {
     }
 
     /// A card for a barcode that missed our catalog but exists in Open Food
-    /// Facts — one tap adds the real product to Tapt (GTIN-dedup'd) and logs it.
+    /// Facts, one tap adds the real product to Tapt (GTIN-dedup'd) and logs it.
     private func offCard(_ off: OFFBeer) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
@@ -218,7 +218,7 @@ struct ScanView: View {
             }
 
             Text(off.isBeerCategory
-                 ? "Found in Open Food Facts — new to Tapt. Add it and be the first to log it worldwide."
+                 ? "Found in Open Food Facts, new to Tapt. Add it and be the first to log it worldwide."
                  : "Found in Open Food Facts, but it may not be a beer. Add it only if it belongs in the Cellar.")
                 .font(.caption)
                 .foregroundStyle(Brand.muted)

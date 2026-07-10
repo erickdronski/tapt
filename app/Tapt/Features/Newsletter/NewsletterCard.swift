@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The Tapt Dispatch — the beer newsletter. A subscribe card for Discover and a
+/// The Tapt Dispatch, the beer newsletter. A subscribe card for Discover and a
 /// compact manager for the You tab. Subscription state lives on the account.
 struct NewsletterCard: View {
     @Environment(Session.self) private var session
@@ -99,7 +99,7 @@ struct NewsletterCard: View {
                 subscribed = true
                 note = "Welcome aboard. First issue lands soon. 🍻"
             } catch {
-                note = "Could not sign you up yet — double-check the email."
+                note = "Could not sign you up yet, double-check the email."
             }
             working = false
         }

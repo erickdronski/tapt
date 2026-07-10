@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-// Motion & tactility system — the "expensive app" layer.
+// Motion & tactility system, the "expensive app" layer.
 // Haptics on meaningful touches, a shared press style, shimmer skeletons for
 // every loading surface, and the hero beer glass rendered as real glass.
 
@@ -104,8 +104,7 @@ struct TaptSkeletonList: View {
 // MARK: - The beer glass, done properly
 
 /// A real glass of beer: curved pint silhouette, gradient-depth beer, live
-/// rising bubbles, an irregular foam head, and a glass shine. Pure vector —
-/// crisp at any size. The app's signature graphic.
+/// rising bubbles, an irregular foam head, and a glass shine. Pure vector, /// crisp at any size. The app's signature graphic.
 struct BeerGlassView: View {
     var pour: CGFloat = 0.8          // 0...1 fill level
     var animatesPour: Bool = true

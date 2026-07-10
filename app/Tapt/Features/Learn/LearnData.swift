@@ -72,15 +72,15 @@ enum LearnData {
     static let timeline: [Milestone] = [
         .init(year: "c. 3400 BC", title: "The ancient roots", detail: "Some of the oldest chemical evidence of barley beer comes from the ancient Near East. Beer is about as old as farming."),
         .init(year: "c. 1800 BC", title: "The Hymn to Ninkasi", detail: "The Sumerian goddess of beer gets a hymn that doubles as a brewing recipe, one of the oldest we know of."),
-        .init(year: "c. 1754 BC", title: "Beer in the law books", detail: "The Code of Hammurabi regulates beer sellers in Babylon — beer rules are older than most empires."),
+        .init(year: "c. 1754 BC", title: "Beer in the law books", detail: "The Code of Hammurabi regulates beer sellers in Babylon, beer rules are older than most empires."),
         .init(year: "822 AD", title: "Hops on the record", detail: "A Frankish abbot writes one of the first clear mentions of using hops in beer."),
-        .init(year: "Middle Ages", title: "The monastery era", detail: "European monasteries turn brewing into a craft — better records, better methods, and beer safe enough to drink daily. Trappist brewing survives to this day."),
+        .init(year: "Middle Ages", title: "The monastery era", detail: "European monasteries turn brewing into a craft, better records, better methods, and beer safe enough to drink daily. Trappist brewing survives to this day."),
         .init(year: "1516", title: "The Reinheitsgebot", detail: "Bavaria limits beer to water, barley, and hops, the famous purity law. Yeast had not been discovered yet."),
         .init(year: "1722", title: "Porter conquers London", detail: "A dark, hoppy beer brewed for London's working porters becomes arguably the world's first industrial-scale beer style."),
         .init(year: "1759", title: "Guinness signs a 9,000-year lease", detail: "Arthur Guinness leases St. James's Gate in Dublin for 45 pounds a year, and bets on dark porter."),
-        .init(year: "1800s", title: "IPA rides the trade routes", detail: "Strongly hopped pale ales survive the long sea voyage to British India — the style that would someday rule American craft taps."),
+        .init(year: "1800s", title: "IPA rides the trade routes", detail: "Strongly hopped pale ales survive the long sea voyage to British India, the style that would someday rule American craft taps."),
         .init(year: "1842", title: "The first pale lager", detail: "Pilsner Urquell is brewed in Plze. The clear, golden pilsner is born and takes over the world."),
-        .init(year: "1840s", title: "Lager crosses the Atlantic", detail: "German immigrants bring lager yeast and brewing tradition to America — Milwaukee, St. Louis, and Cincinnati become beer towns."),
+        .init(year: "1840s", title: "Lager crosses the Atlantic", detail: "German immigrants bring lager yeast and brewing tradition to America, Milwaukee, St. Louis, and Cincinnati become beer towns."),
         .init(year: "1857", title: "Pasteur explains yeast", detail: "Louis Pasteur shows that living yeast drives fermentation, turning brewing into a science."),
         .init(year: "1883", title: "Pure yeast", detail: "Emil Hansen at the Carlsberg Laboratory isolates a single lager yeast strain for clean, repeatable beer."),
         .init(year: "1920", title: "US Prohibition", detail: "For 13 years, making and selling beer is banned across the United States."),
@@ -88,7 +88,7 @@ enum LearnData {
         .init(year: "1978", title: "Homebrewing legalized in the US", detail: "A new law makes home brewing legal again, and the craft beer movement starts to build."),
         .init(year: "1980", title: "Sierra Nevada opens", detail: "Ken Grossman's Pale Ale makes bold American hops the star and helps define modern craft beer."),
         .init(year: "2010s", title: "The haze craze", detail: "New England's soft, juicy, cloudy IPAs flip the script on bitterness and become craft beer's biggest style story in decades."),
-        .init(year: "2020s", title: "The zero-proof wave", detail: "Non-alcoholic craft beer becomes one of the industry's fastest-growing segments — big flavor, no proof, first-class in Tapt."),
+        .init(year: "2020s", title: "The zero-proof wave", detail: "Non-alcoholic craft beer becomes one of the industry's fastest-growing segments, big flavor, no proof, first-class in Tapt."),
     ]
 
     static let origins: [BreweryOrigin] = [

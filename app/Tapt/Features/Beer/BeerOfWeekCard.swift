@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Beer of the Week — the community race. Standings are live net up-votes
+/// Beer of the Week, the community race. Standings are live net up-votes
 /// this ISO week; a winner locks in every Monday (cron). Honest empty state
 /// until votes exist.
 struct BeerOfWeekCard: View {
@@ -43,7 +43,7 @@ struct BeerOfWeekCard: View {
             }
 
             if standings.isEmpty {
-                Text("No votes yet this week. Thumb a beer up on the board below — the whole world sees the race.")
+                Text("No votes yet this week. Thumb a beer up on the board below, the whole world sees the race.")
                     .font(.subheadline)
                     .foregroundStyle(Brand.muted)
                     .fixedSize(horizontal: false, vertical: true)

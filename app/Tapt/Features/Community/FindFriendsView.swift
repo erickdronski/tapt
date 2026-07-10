@@ -36,7 +36,7 @@ struct FindFriendsView: View {
                     TaptEmptyState(
                         icon: "person.fill.questionmark",
                         title: "No beer fans found",
-                        message: "No profiles match that yet. Invite your crew — the more friends on Tapt, the better the night.",
+                        message: "No profiles match that yet. Invite your crew, the more friends on Tapt, the better the night.",
                         actionTitle: nil
                     )
                 } else {

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Game Night Guides — how to play classic party games with a real deck (or
+/// Game Night Guides, how to play classic party games with a real deck (or
 /// nothing at all), plus ready-to-run party templates. The digital versions
 /// live in Games; these are for when the table wants the real thing.
 struct GameNightGuidesView: View {

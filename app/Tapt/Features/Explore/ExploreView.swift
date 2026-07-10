@@ -280,7 +280,7 @@ struct ExploreView: View {
                     .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Leaderboards").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Top beers, tasters, and styles — all first-party signal").font(.caption).foregroundStyle(Brand.muted)
+                    Text("Top beers, tasters, and styles, all first-party signal").font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
             }
@@ -390,7 +390,7 @@ struct ExploreView: View {
         let newValue = (myVotes[b.id] == v) ? nil : v
         myVotes[b.id] = newValue
         guard let uid = session.user?.id else {
-            feedNote = "Sign-in expired — vote not saved. Sign out and back in."
+            feedNote = "Sign-in expired, vote not saved. Sign out and back in."
             myVotes[b.id] = nil
             return
         }

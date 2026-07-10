@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Beer Olympics — team scoreboard for a multi-event game night. Pure
+/// Beer Olympics, team scoreboard for a multi-event game night. Pure
 /// organizing/scorekeeping (medals, points, champion); drinking is never part
 /// of the mechanics. State persists across app launches for multi-hour nights.
 struct BeerOlympicsView: View {
@@ -268,7 +268,7 @@ struct OlympicTeam: Identifiable, Codable, Equatable {
     var id = UUID()
     var name: String
 
-    /// A stable, name-derived flag from the Passport country set — cosmetic only.
+    /// A stable, name-derived flag from the Passport country set, cosmetic only.
     var flagEmoji: String {
         let flags = PassportData.countries.map(\.flag)
         var hash = 0
