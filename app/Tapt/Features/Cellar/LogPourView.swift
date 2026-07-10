@@ -295,7 +295,10 @@ struct LogPourView: View {
     }
 
     private func save(_ beer: BeerPick) {
-        guard let uid = session.user?.id else { return }
+        guard let uid = session.user?.id else {
+            errorMessage = "Your sign-in expired. Sign out and back in, then log the pour."
+            return
+        }
         saving = true
         Task {
             do {
@@ -322,7 +325,7 @@ struct LogPourView: View {
             } catch {
                 await MainActor.run {
                     saving = false
-                    errorMessage = "Tapt could not save that pour yet. Please try again."
+                    errorMessage = "Could not save the pour: \(error.localizedDescription)"
                 }
             }
         }

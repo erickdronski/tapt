@@ -27,12 +27,17 @@ enum BeerService {
         return rows.map(TrendedBeer.init)
     }
 
-    /// Cast (or update) a +1 / -1 vote for a beer.
+    /// Cast (or update) a +1 / -1 vote for a beer. Explicit conflict target +
+    /// minimal return (no SELECT round-trip, no RLS-read dependency).
     static func vote(beerId: String, userId: UUID, value: Int) async throws {
         struct Vote: Encodable { let user_id: String; let beer_id: String; let value: Int }
         try await Supa.client
             .from("beer_vote")
-            .upsert(Vote(user_id: userId.uuidString, beer_id: beerId, value: value))
+            .upsert(
+                Vote(user_id: userId.uuidString, beer_id: beerId, value: value),
+                onConflict: "user_id,beer_id",
+                returning: .minimal
+            )
             .execute()
     }
 }

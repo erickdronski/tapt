@@ -1,3 +1,4 @@
+import CoreLocation
 import SwiftUI
 
 /// The discovery home: beer spots near you, the beer "stock market", a global lens by
@@ -6,6 +7,9 @@ struct ExploreView: View {
     @Environment(Session.self) private var session
     @AppStorage("homeRegion") private var homeRegion = "New Jersey"
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @AppStorage("locationConsent") private var locationConsent = true
+    @AppStorage("homeRegionGeocoded") private var homeRegionGeocoded = false
+    @State private var location = LocationManager()
     @State private var region = ""
     @State private var beers: [TrendedBeer] = []
     @State private var guides: [RegionBeerGuide] = []
@@ -59,6 +63,7 @@ struct ExploreView: View {
             }
             .task(id: region) { await load() }
             .task { await loadGuides() }
+            .task { await detectHomeState() }
         }
     }
 
@@ -313,6 +318,31 @@ struct ExploreView: View {
         }
     }
 
+    /// One-time: once location permission exists, default the dashboard to the
+    /// user's actual state (US) or country. Never overrides a manual pick again.
+    private func detectHomeState() async {
+        guard locationConsent, !homeRegionGeocoded else { return }
+        location.request()
+        for _ in 0..<12 where location.location == nil {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        guard let loc = location.location,
+              let mark = try? await CLGeocoder().reverseGeocodeLocation(loc).first
+        else { return }
+        var detected: String?
+        if mark.isoCountryCode == "US", let area = mark.administrativeArea {
+            detected = BeerRegions.states.first { $0 == area }
+                ?? guides.first { $0.scope == "state" && $0.stateCode == area }?.name
+        } else if let country = mark.country, BeerRegions.countries.contains(country) {
+            detected = country
+        }
+        if let detected {
+            homeRegionGeocoded = true
+            homeRegion = detected
+            withAnimation { region = detected }
+        }
+    }
+
     private func loadGuides() async {
         do {
             guides = try await WorldBeerService.regionGuides()
@@ -325,8 +355,23 @@ struct ExploreView: View {
         Haptic.tap()
         let newValue = (myVotes[b.id] == v) ? nil : v
         myVotes[b.id] = newValue
-        guard let uid = session.user?.id, let value = newValue else { return }
-        Task { try? await BeerService.vote(beerId: b.id, userId: uid, value: value) }
+        guard let uid = session.user?.id else {
+            feedNote = "Sign-in expired — vote not saved. Sign out and back in."
+            myVotes[b.id] = nil
+            return
+        }
+        guard let value = newValue else { return }
+        Task {
+            do {
+                try await BeerService.vote(beerId: b.id, userId: uid, value: value)
+                await load()   // pull the recomputed market so the vote visibly counts
+            } catch {
+                await MainActor.run {
+                    myVotes[b.id] = nil
+                    feedNote = "Vote didn't save: \(error.localizedDescription)"
+                }
+            }
+        }
     }
 }
 
