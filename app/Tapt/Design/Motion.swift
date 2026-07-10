@@ -205,26 +205,38 @@ struct BeerGlassView: View {
             .frame(height: h * fill)
     }
 
-    /// Classic pint silhouette: wider lip, gentle taper, rounded base.
+    /// Shaker-pint silhouette matching the icon and landing hero: a nearly
+    /// full-width rim, gentle taper, and a FLAT base with small rounded corners
+    /// (a real beer glass, not a tapered vial).
     private func pintPath(w: CGFloat, h: CGFloat) -> Path {
         var p = Path()
-        let lipInset = w * 0.06
-        let baseInset = w * 0.20
+        let lipInset = w * 0.02          // rim ~ full width
+        let baseInset = w * 0.17         // base ~66% of the rim
+        let corner = w * 0.05            // small rounded base corners
+        let belly = w * 0.015            // barely-there outward curve on the sides
         p.move(to: CGPoint(x: lipInset, y: 0))
         p.addLine(to: CGPoint(x: w - lipInset, y: 0))
-        p.addCurve(
-            to: CGPoint(x: w - baseInset, y: h - w * 0.10),
-            control1: CGPoint(x: w - lipInset - w * 0.01, y: h * 0.42),
-            control2: CGPoint(x: w - baseInset - w * 0.02, y: h * 0.78)
-        )
+        // right side down to the base
         p.addQuadCurve(
-            to: CGPoint(x: baseInset, y: h - w * 0.10),
-            control: CGPoint(x: w / 2, y: h + w * 0.04)
+            to: CGPoint(x: w - baseInset, y: h - corner),
+            control: CGPoint(x: w - baseInset + belly, y: h * 0.52)
         )
-        p.addCurve(
+        // rounded bottom-right corner
+        p.addQuadCurve(
+            to: CGPoint(x: w - baseInset - corner, y: h),
+            control: CGPoint(x: w - baseInset, y: h)
+        )
+        // flat base
+        p.addLine(to: CGPoint(x: baseInset + corner, y: h))
+        // rounded bottom-left corner
+        p.addQuadCurve(
+            to: CGPoint(x: baseInset, y: h - corner),
+            control: CGPoint(x: baseInset, y: h)
+        )
+        // left side up to the rim
+        p.addQuadCurve(
             to: CGPoint(x: lipInset, y: 0),
-            control1: CGPoint(x: baseInset + w * 0.02, y: h * 0.78),
-            control2: CGPoint(x: lipInset + w * 0.01, y: h * 0.42)
+            control: CGPoint(x: baseInset - belly, y: h * 0.52)
         )
         p.closeSubpath()
         return p
