@@ -94,7 +94,7 @@ struct CelebrationOverlay: View {
                 .padding(.horizontal, 32)
         }
         .contentShape(Rectangle())
-        .onTapGesture { finish() }
+        .onTapGesture { dismissed = true }   // tap to skip; the sequence notices
         .task { await run() }
     }
 
@@ -175,35 +175,42 @@ struct CelebrationOverlay: View {
     }
 
     // MARK: sequence
-    // Driven from .task (MainActor-isolated) so mutating @State + withAnimation
-    // is safe under Swift 6 strict concurrency, and it auto-cancels on dismiss.
+    // Everything runs inside the single .task (MainActor-isolated), so mutating
+    // @State + withAnimation is safe under Swift 6 strict concurrency. No
+    // DispatchQueue, no nested Task, no withAnimation completion overload.
 
     @MainActor private func run() async {
         if reduceMotion {
             appear = true; reveal = true; confetti = true
             Haptic.success()
-            try? await Task.sleep(for: .seconds(1.6))
-            finish()
-            return
+        } else {
+            Haptic.firm()
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) { appear = true }
+            await pause(0.7)
+            if !dismissed {
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.5)) { reveal = true }
+                withAnimation(.easeOut(duration: 0.1)) { confetti = true }
+                Haptic.celebrate()
+            }
         }
-        Haptic.firm()
-        withAnimation(.spring(response: 0.45, dampingFraction: 0.78)) { appear = true }
-        try? await Task.sleep(for: .seconds(0.7))
-        if dismissed { return }        // user tapped to skip
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.5)) { reveal = true }
-        withAnimation(.easeOut(duration: 0.1)) { confetti = true }
-        Haptic.celebrate()
-        try? await Task.sleep(for: .seconds(1.7))
-        if dismissed { return }
-        finish()
+        await hold(reduceMotion ? 1.5 : 1.7)   // ends early if tapped to skip
+        dismissed = true
+        withAnimation(.easeIn(duration: 0.26)) { appear = false; confetti = false }
+        await pause(0.28)
+        onFinish()
     }
 
-    @MainActor private func finish() {
-        guard !dismissed else { return }
-        dismissed = true
-        withAnimation(.easeIn(duration: 0.26), completion: { onFinish() }) {
-            appear = false
-            confetti = false
+    /// A plain pause.
+    @MainActor private func pause(_ seconds: Double) async {
+        try? await Task.sleep(for: .seconds(seconds))
+    }
+
+    /// A hold that returns early the moment the user taps to skip.
+    @MainActor private func hold(_ seconds: Double) async {
+        var elapsed = 0.0
+        while elapsed < seconds && !dismissed {
+            try? await Task.sleep(for: .seconds(0.06))
+            elapsed += 0.06
         }
     }
 }
@@ -257,7 +264,7 @@ struct Medallion: View {
                 .frame(width: 34)
                 .rotationEffect(.degrees(22))
                 .offset(x: shine ? 90 : -90)
-                .mask(Circle())
+                .mask { Circle() }
                 .animation(.easeInOut(duration: 0.8).delay(0.25), value: shine)
         }
         .shadow(color: Brand.gold.opacity(0.5), radius: 16, y: 6)
