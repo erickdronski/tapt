@@ -34,8 +34,8 @@ struct BreweryModeView: View {
                 NavigationLink { BeerPongGame() } label: {
                     tile("Beer Pong", "Flick to throw, clear the rack", "circle.grid.cross.fill", Brand.gold)
                 }.buttonStyle(.plain)
-                NavigationLink { BarGamesView(starting: .flipCup) } label: {
-                    tile("Flip Cup", "Fast hands, best times, table streaks", "cup.and.saucer.fill", Brand.hop)
+                NavigationLink { FlipCupGame() } label: {
+                    tile("Flip Cup", "Flick to flip, land it on the base, build a streak", "cup.and.saucer.fill", Brand.hop)
                 }.buttonStyle(.plain)
                 NavigationLink { TriviaGame() } label: {
                     tile("Beer Trivia", "Miss one, pass the phone", "brain.head.profile", Brand.copper)

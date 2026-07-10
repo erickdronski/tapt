@@ -92,7 +92,7 @@ struct DiscoverView: View {
                     BeerPongGame()
                 }
                 QuickPlayTile(title: "Flip Cup", icon: "cup.and.saucer.fill", tint: Brand.hop) {
-                    BarGamesView(starting: .flipCup)
+                    FlipCupGame()
                 }
                 QuickPlayTile(title: "Olympics", icon: "trophy.fill", tint: Brand.gold) {
                     BeerOlympicsView()

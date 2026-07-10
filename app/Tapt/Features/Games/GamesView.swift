@@ -29,12 +29,12 @@ struct GamesView: View {
                     GameTile(title: "Beer Pong", subtitle: "Flick to throw. Real arc physics, clear the rack, pass-and-play.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
                 }
                 .buttonStyle(.taptPress)
-                NavigationLink { BarGamesView(starting: .flipCup) } label: {
-                    GameTile(title: "Flip Cup", subtitle: "Reaction-time table play with streaks and best times.", icon: "cup.and.saucer.fill", tint: Brand.hop, ready: true)
+                NavigationLink { FlipCupGame() } label: {
+                    GameTile(title: "Flip Cup", subtitle: "Flick to flip. Nail the spin, land it on the base, chase your streak.", icon: "cup.and.saucer.fill", tint: Brand.hop, ready: true)
                 }
                 .buttonStyle(.taptPress)
-                NavigationLink { BarGamesView(starting: .quarters) } label: {
-                    GameTile(title: "Quarters", subtitle: "Dial in the bounce and chase the clean center.", icon: "circle.hexagongrid.fill", tint: Brand.copper, ready: true)
+                NavigationLink { QuartersGame() } label: {
+                    GameTile(title: "Quarters", subtitle: "Flick to bounce the coin into the cup. Aim and power, cup moves each round.", icon: "circle.hexagongrid.fill", tint: Brand.copper, ready: true)
                 }
                 .buttonStyle(.taptPress)
                 NavigationLink { BreweryModeView() } label: {
