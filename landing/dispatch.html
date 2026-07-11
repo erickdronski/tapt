@@ -90,8 +90,8 @@
   .issue-sec-label{font-family:'Poppins';font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin-bottom:10px}
 
   .botw{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
-  .botw .photo{width:120px;height:150px;flex:none;border-radius:14px;background:var(--haze);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 14px 30px rgba(26,18,6,.16)}
-  .botw .photo img{max-width:100%;max-height:100%;object-fit:contain}
+  .botw .photo{width:130px;height:160px;flex:none;border-radius:14px;background:radial-gradient(58% 58% at 50% 46%, rgba(242,169,0,.16), transparent 72%);display:flex;align-items:center;justify-content:center}
+  .botw .photo img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 12px 16px rgba(26,18,6,.30))}
   .botw .info{flex:1;min-width:200px}
   .botw h3{font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
   .botw .brewery{color:var(--slate);font-size:.95rem;margin-top:2px}
@@ -120,7 +120,7 @@
   .wcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:transform .18s ease,box-shadow .2s ease}
   .wcard:hover{transform:translateY(-4px);box-shadow:0 16px 30px rgba(26,18,6,.14)}
   .wcard .wimg{height:78px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-  .wcard .wimg img{max-height:78px;max-width:100%;object-fit:contain}
+  .wcard .wimg img{max-height:78px;max-width:100%;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(26,18,6,.24))}
   .wcard b{font-size:.86rem;font-family:'Poppins';display:block;line-height:1.2}
   .wcard span{font-size:.72rem;color:var(--slate)}
   @media(max-width:560px){.world{grid-template-columns:1fr 1fr}}
@@ -213,7 +213,7 @@
     <div class="issue-body">
       <div class="issue-sec-label">🏆 Beer of the Week</div>
       <div class="botw">
-        <div class="photo"><img src="https://images.openfoodfacts.org/images/products/541/076/980/0172/front_fr.11.full.jpg" alt="La Chouffe" loading="lazy"></div>
+        <div class="photo"><img src="img/beers/la-chouffe.png" alt="La Chouffe" loading="lazy"></div>
         <div class="info">
           <h3>La Chouffe</h3>
           <div class="brewery">Brasserie d'Achouffe &middot; Belgium</div>
@@ -256,15 +256,15 @@
       <div class="issue-sec-label">🌍 What the world poured</div>
       <div class="world">
         <div class="wcard">
-          <div class="wimg"><img src="https://images.openfoodfacts.org/images/products/541/168/101/4531/front_en.3.full.jpg" alt="Duvel" loading="lazy"></div>
-          <b>Duvel</b><span>Belgium</span>
+          <div class="wimg"><img src="img/beers/pilsner-urquell.png" alt="Pilsner Urquell" loading="lazy"></div>
+          <b>Pilsner Urquell</b><span>Czechia</span>
         </div>
         <div class="wcard">
-          <div class="wimg"><img src="https://images.openfoodfacts.org/images/products/500/021/310/1223/front_fr.60.full.jpg" alt="Guinness Draught" loading="lazy"></div>
+          <div class="wimg"><img src="img/beers/guinness-draught.png" alt="Guinness Draught" loading="lazy"></div>
           <b>Guinness Draught</b><span>Ireland</span>
         </div>
         <div class="wcard">
-          <div class="wimg"><img src="https://images.openfoodfacts.org/images/products/000/005/742/3777/front_fr.4.400.jpg" alt="Chimay Bleue" loading="lazy"></div>
+          <div class="wimg"><img src="img/beers/chimay-bleue.png" alt="Chimay Bleue" loading="lazy"></div>
           <b>Chimay Bleue</b><span>Belgium</span>
         </div>
       </div>
