@@ -84,7 +84,7 @@ struct MarketBeerDetailView: View {
                 .font(.headline).foregroundStyle(beer.isSeasonal ? Brand.copper : Brand.hop)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Why it's moving").font(.caption2.weight(.bold)).foregroundStyle(Brand.muted)
-                Text(beer.isSeasonal ? "\(beer.moveReason) — right in season" : "Riding real community votes")
+                Text(beer.isSeasonal ? "\(beer.moveReason), right in season" : "Riding real community votes")
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.text)
             }
             Spacer(minLength: 0)
