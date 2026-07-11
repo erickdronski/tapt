@@ -8,6 +8,7 @@ import SwiftUI
 struct FeaturedPartnersRail: View {
     @State private var partners: [FeaturedPartner] = []
     @State private var loaded = false
+    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -39,7 +40,12 @@ struct FeaturedPartnersRail: View {
         .task {
             guard !loaded else { return }
             loaded = true
-            partners = (try? await PartnerService.featured()) ?? []
+            let region = homeRegion.isEmpty ? nil : homeRegion
+            partners = (try? await PartnerService.featured(region: region)) ?? []
+            // Log an impression per card shown so a partner can measure their reach.
+            for p in partners {
+                await PartnerService.logFeatured(id: p.id, event: "impression", region: region)
+            }
         }
     }
 
@@ -79,6 +85,10 @@ struct FeaturedPartnersRail: View {
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .background(Brand.gold, in: Capsule())
                 }
+                .simultaneousGesture(TapGesture().onEnded {
+                    let region = homeRegion.isEmpty ? nil : homeRegion
+                    Task { await PartnerService.logFeatured(id: partner.id, event: "tap", region: region) }
+                })
             }
         }
         .padding(14)

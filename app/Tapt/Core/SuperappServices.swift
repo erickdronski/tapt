@@ -69,11 +69,20 @@ struct FeaturedPartner: Identifiable, Decodable, Sendable {
 }
 
 enum PartnerService {
-    static func featured(limit: Int = 10) async throws -> [FeaturedPartner] {
-        struct Params: Encodable { let p_limit: Int }
+    static func featured(limit: Int = 10, region: String? = nil) async throws -> [FeaturedPartner] {
+        struct Params: Encodable { let p_limit: Int; let p_region: String? }
         return try await Supa.client
-            .rpc("featured_partner_feed", params: Params(p_limit: limit))
+            .rpc("featured_partner_feed", params: Params(p_limit: limit, p_region: region))
             .execute().value
+    }
+
+    /// Log a reach event for a featured card so a partner can see what Featured
+    /// bought them: "impression" when the card is shown, "tap" when it is opened.
+    static func logFeatured(id: String, event: String, region: String? = nil) async {
+        struct Params: Encodable { let p_featured: String; let p_event: String; let p_region: String? }
+        _ = try? await Supa.client
+            .rpc("log_featured_event", params: Params(p_featured: id, p_event: event, p_region: region))
+            .execute()
     }
 
     static func submitInquiry(
