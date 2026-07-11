@@ -17,6 +17,8 @@ struct ExploreView: View {
     @State private var myVotes: [String: Int] = [:]
     @State private var appeared = false
     @State private var feedNote: String?
+    @State private var ticker: [MarketBeer] = []
+    @State private var tickerBeer: MarketBeer?
 
     private var visibleBeers: [TrendedBeer] {
         guard noLowDefault else { return beers }
@@ -39,7 +41,9 @@ struct ExploreView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    marketTickerBar
                     hero
+                    scanTile
                     catalogBar
                     quickDuo
                     BeerOfWeekCard().padding(.horizontal)
@@ -79,6 +83,10 @@ struct ExploreView: View {
             .task(id: region) { await load() }
             .task { await loadGuides() }
             .task { await detectHomeState() }
+            .task { ticker = (try? await MarketService.feed(sort: .active, limit: 18)) ?? [] }
+            .sheet(item: $tickerBeer) { b in
+                NavigationStack { BeerDetailView(beerId: b.beerId) }
+            }
         }
     }
 
@@ -95,6 +103,38 @@ struct ExploreView: View {
         .padding(.horizontal)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 18)
+    }
+
+    /// Live beer ticker pinned at the top of the home page — beers trending up or
+    /// down by community votes, like a market tape. Tap one to open the beer.
+    @ViewBuilder private var marketTickerBar: some View {
+        if !ticker.isEmpty {
+            VStack(spacing: 0) {
+                MarketTicker(items: ticker) { b in Haptic.tap(); tickerBeer = b }
+                    .background(Brand.malt)
+                Rectangle().fill(Brand.gold.opacity(0.5)).frame(height: 1.5)
+            }
+        }
+    }
+
+    /// Scan lives on the home page now (it left the tab dock).
+    private var scanTile: some View {
+        NavigationLink { ScanView() } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "viewfinder").font(.headline).foregroundStyle(Brand.malt)
+                    .frame(width: 44, height: 44).background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Scan a beer").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                    Text("Barcode, label, or a bar QR").font(.caption).foregroundStyle(Brand.muted)
+                }
+                Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+            }
+            .padding(13)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 15))
+            .overlay(RoundedRectangle(cornerRadius: 15).stroke(Brand.malt.opacity(0.08)))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal)
     }
 
     /// Entry to the full searchable catalog, styled like a search field.

@@ -24,7 +24,6 @@ struct BeerMarketView: View {
                                     .buttonStyle(.plain)
                                 Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 60)
                             }
-                            extras
                             footer
                         }
                     } header: {
@@ -60,7 +59,7 @@ struct BeerMarketView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("Every beer is a ticker. The world sets the price.")
+                    Text("Ranked by real votes. Movement is the last 24h.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -106,12 +105,14 @@ struct BeerMarketView: View {
                 Text(b.name).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
             }
             Spacer(minLength: 6)
-            Sparkline(values: b.spark, up: b.isUp).frame(width: 58, height: 30)
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(b.priceText).font(.system(.subheadline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+            Sparkline(values: b.spark, up: b.isUp).frame(width: 54, height: 30)
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(b.netText).font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
+                    .contentTransition(.numericText())
+                Text("net votes").font(.system(size: 9)).foregroundStyle(Brand.muted)
                 changePill(b)
             }
-            .frame(width: 82, alignment: .trailing)
+            .frame(width: 78, alignment: .trailing)
         }
         .padding(.horizontal).padding(.vertical, 11)
         .contentShape(Rectangle())
@@ -140,31 +141,8 @@ struct BeerMarketView: View {
             .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
     }
 
-    // Preserve the two most-loved home surfaces alongside the flagship board.
-    private var extras: some View {
-        VStack(spacing: 14) {
-            BeerOfWeekCard()
-            NavigationLink { NearYouView() } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "mappin.and.ellipse").foregroundStyle(Brand.malt)
-                        .frame(width: 40, height: 40).background(Brand.hop, in: RoundedRectangle(cornerRadius: 11))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Beer spots near you").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                        Text("Breweries, bars, and taprooms on the map").font(.caption).foregroundStyle(Brand.muted)
-                    }
-                    Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
-                }
-                .padding(12)
-                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.08)))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal).padding(.top, 16)
-    }
-
     private var footer: some View {
-        Text("Prices are computed from community votes and check-ins, never invented. Demo data shown until launch fills the real board.")
+        Text("Standings and movement are real community votes, never invented. Demo activity shown until launch fills the real board.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)
@@ -230,7 +208,7 @@ struct MarketTicker: View {
     private func cell(_ b: MarketBeer) -> some View {
         HStack(spacing: 5) {
             Text(b.symbol).font(.system(.caption, design: .rounded).weight(.heavy)).foregroundStyle(Brand.foam)
-            Text(b.priceText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.75))
+            Text(b.netText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.75))
             Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
                 .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
             Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
