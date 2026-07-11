@@ -131,6 +131,7 @@ struct LeaderBeer: Identifiable, Decodable, Sendable {
     let downs: Int
     let checkinCount: Int
     let avgRating: Double?
+    let imageUrl: String?
 
     var id: String { beerId }
 
@@ -141,6 +142,7 @@ struct LeaderBeer: Identifiable, Decodable, Sendable {
         case netVotes = "net_votes"
         case checkinCount = "checkin_count"
         case avgRating = "avg_rating"
+        case imageUrl = "image_url"
     }
 }
 

@@ -163,25 +163,7 @@ struct CatalogView: View {
     }
 
     private func thumbnail(_ beer: CatalogEntry) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 11).fill(Brand.surface)
-            if let url = beer.imageUrl, let u = URL(string: url) {
-                AsyncImage(url: u) { phase in
-                    switch phase {
-                    case .success(let img): img.resizable().scaledToFit().padding(4)
-                    default: glassGlyph
-                    }
-                }
-            } else {
-                glassGlyph
-            }
-        }
-        .frame(width: 54, height: 54)
-        .overlay(RoundedRectangle(cornerRadius: 11).stroke(Brand.malt.opacity(0.08)))
-    }
-
-    private var glassGlyph: some View {
-        Image(systemName: "mug.fill").font(.system(size: 20)).foregroundStyle(Brand.gold.opacity(0.7))
+        BeerThumb(imageUrl: beer.imageUrl, size: 54)
     }
 
     private var empty: some View {
@@ -236,4 +218,37 @@ struct CatalogView: View {
 
 #Preview {
     NavigationStack { CatalogView() }
+}
+
+/// A beer's real product photo when we have one (Open Food Facts label imagery,
+/// ~95% of the catalog), with an honest tinted-glass fallback otherwise. Never a
+/// fabricated or generated image. Reused anywhere a beer is named in a row.
+struct BeerThumb: View {
+    let imageUrl: String?
+    var size: CGFloat = 44
+    var corner: CGFloat = 11
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: corner).fill(Brand.surface)
+            if let imageUrl, !imageUrl.isEmpty, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let img): img.resizable().scaledToFit().padding(size * 0.075)
+                    default: Self.fallback(size)
+                    }
+                }
+            } else {
+                Self.fallback(size)
+            }
+        }
+        .frame(width: size, height: size)
+        .overlay(RoundedRectangle(cornerRadius: corner).stroke(Brand.malt.opacity(0.08)))
+    }
+
+    private static func fallback(_ size: CGFloat) -> some View {
+        Image(systemName: "mug.fill")
+            .font(.system(size: size * 0.37))
+            .foregroundStyle(Brand.gold.opacity(0.7))
+    }
 }
