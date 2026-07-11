@@ -177,6 +177,11 @@ struct BeerMarketView: View {
         async let tick = try? await MarketService.feed(sort: .active, limit: 16)
         beers = await board ?? []
         if ticker.isEmpty { ticker = await tick ?? [] }
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.environment["TAPT_MARKET_AUTOOPEN"] == "1", selected == nil {
+            selected = beers.first
+        }
+        #endif
     }
 }
 
