@@ -122,6 +122,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
     <p class="sub" style="margin-bottom:10px">Real activity at your venue, from Tapt drinkers. Free.</p>
     <div id="numbers" class="stats"></div>
     <div id="topBeers"></div>
+    <div id="featuredReach"></div>
   </div>
 
   <div class="card">
@@ -268,6 +269,21 @@ async function loadNumbers(venueId) {
     ? '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">Top poured: ' +
       top.map(b => `${esc(b.name)} (${b.pours})`).join(', ') + '</div>'
     : '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">No pours logged here yet, they show up as drinkers check in.</div>';
+
+  const f = data.featured || {};
+  if ((f.active_campaigns || 0) > 0 || (f.impressions_total || 0) > 0) {
+    $('featuredReach').innerHTML =
+      `<div style="margin-top:16px;font-family:'Poppins';font-weight:800;font-size:.95rem">Your Featured reach</div>
+       <div class="stats" style="margin-top:8px">
+         <div class="stat"><b>${f.impressions_total ?? 0}</b><span>Times shown</span></div>
+         <div class="stat"><b>${f.taps_total ?? 0}</b><span>Taps</span></div>
+         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : '—'}</b><span>Tap rate</span></div>
+         <div class="stat"><b>${f.reached_drinkers ?? 0}</b><span>Drinkers reached</span></div>
+       </div>`;
+  } else {
+    $('featuredReach').innerHTML =
+      `<div style="margin-top:16px;font-size:.85rem;color:var(--slate)">No Featured campaign running. Upgrade below to reach nearby drinkers in your metro, your impressions, taps, and reach will show up here.</div>`;
+  }
 }
 
 async function loadEvents(venueId) {
