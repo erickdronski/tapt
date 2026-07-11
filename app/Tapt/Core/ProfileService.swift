@@ -60,14 +60,14 @@ enum ProfileService {
         await setPrivacyChoice(purpose: purpose, granted: granted, uiText: uiText, userId: userId)
     }
 
+    /// Real, immediate account deletion (App Store 5.1.1(v) + GDPR/CCPA): the
+    /// delete_my_account RPC wipes the caller's entire personal plane (votes,
+    /// check-ins, profile, follows, claims, consent, ...) and their auth identity;
+    /// the k-anon aggregate plane is retained per the two-plane design. Then sign out.
     static func requestAccountDeletion(userId: UUID, reason: String? = nil) async throws {
-        struct Request: Encodable {
-            let user_id: String
-            let reason: String?
-        }
-        try await Supa.client.from("account_deletion_request")
-            .insert(Request(user_id: userId.uuidString, reason: reason))
-            .execute()
+        _ = reason // kept for call-site compatibility; deletion is immediate, not queued
+        try await Supa.client.rpc("delete_my_account").execute()
+        try? await Supa.client.auth.signOut()
     }
 
     /// Whether this user already finished onboarding on the server (region set).
