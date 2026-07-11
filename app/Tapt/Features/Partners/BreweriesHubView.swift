@@ -448,7 +448,7 @@ private struct ClaimConfirmSheet: View {
                 )
                 done = true
             } catch {
-                errorText = "Could not submit that claim. You may have already claimed it — check Your venues."
+                errorText = "Could not submit that claim. You may have already claimed it. Check Your venues."
             }
             submitting = false
         }
@@ -577,7 +577,7 @@ struct VenueDashboardView: View {
         VStack(spacing: 8) {
             Image(systemName: "chart.bar.doc.horizontal").font(.system(size: 34)).foregroundStyle(Brand.muted)
             Text("No pours logged here yet").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-            Text("Print your QR and drop it on the tables. Your top beers, weekly pours, and drinker signal fill in here as people check in — real numbers only, never estimated.")
+            Text("Print your QR and drop it on the tables. Your top beers, weekly pours, and drinker signal fill in here as people check in. Real numbers only, never estimated.")
                 .font(.caption).foregroundStyle(Brand.muted).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(20)
@@ -627,7 +627,7 @@ private struct QRSheet: View {
                 } else {
                     Text("Could not render the QR.").foregroundStyle(Brand.muted)
                 }
-                Text("Drinkers who scan this land on your live Tapt menu — no app required.")
+                Text("Drinkers who scan this land on your live Tapt menu. No app required.")
                     .font(.caption).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal)
                 Spacer()
             }

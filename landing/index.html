@@ -245,6 +245,39 @@
   </div>
 </div>
 
+<!-- app screenshots: real screens, populated -->
+<style>
+  #preview{background:linear-gradient(180deg,#1A1206,#0E0802);color:var(--foam)}
+  #preview .sec-kicker{color:var(--gold)}
+  #preview h2{color:var(--foam)}
+  #preview .sec-lede{color:rgba(251,246,236,.66)}
+  .screens{display:flex;gap:26px;overflow-x:auto;padding:44px 4px 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .screens::-webkit-scrollbar{height:0}
+  .phone{flex:0 0 auto;width:262px;scroll-snap-align:center;border-radius:36px;overflow:hidden;
+    border:1px solid rgba(242,169,0,.22);box-shadow:0 28px 64px rgba(0,0,0,.55);background:#000}
+  .phone img{width:100%;display:block}
+  .phone .cap{padding:15px 20px 18px;background:#0E0802}
+  .phone .cap b{font-family:'Poppins';font-weight:700;font-size:.98rem;color:var(--foam)}
+  .phone .cap span{display:block;font-size:.82rem;color:rgba(251,246,236,.55);margin-top:3px}
+  .screens-hint{font-size:.82rem;color:rgba(251,246,236,.45);margin-top:6px}
+  @media(max-width:640px){.phone{width:220px}}
+</style>
+<section id="preview">
+  <div class="wrap">
+    <span class="sec-kicker">See it in action</span>
+    <h2>The app, already pouring.</h2>
+    <p class="sec-lede">Rate a beer, build a cellar, and watch the Beer Market move on what people actually drink.</p>
+    <div class="screens">
+      <div class="phone"><img src="img/screens/01-market.png" alt="The Beer Market board" loading="lazy"><div class="cap"><b>The Beer Market</b><span>Beers rise and fall on votes</span></div></div>
+      <div class="phone"><img src="img/screens/02-analysis.png" alt="Beer momentum analysis" loading="lazy"><div class="cap"><b>Why it's moving</b><span>Momentum, at a glance</span></div></div>
+      <div class="phone"><img src="img/screens/03-home.png" alt="Tapt home" loading="lazy"><div class="cap"><b>Explore</b><span>Your home for beer</span></div></div>
+      <div class="phone"><img src="img/screens/04-taste.png" alt="Taste and feel breakdown" loading="lazy"><div class="cap"><b>Taste &amp; Feel</b><span>What's in your glass</span></div></div>
+      <div class="phone"><img src="img/screens/05-discover.png" alt="Discover beers" loading="lazy"><div class="cap"><b>Discover</b><span>Browse every beer</span></div></div>
+    </div>
+    <p class="screens-hint">Swipe to look around &rarr;</p>
+  </div>
+</section>
+
 <section id="features">
   <div class="wrap">
     <span class="sec-kicker">One app, the whole beer world</span>

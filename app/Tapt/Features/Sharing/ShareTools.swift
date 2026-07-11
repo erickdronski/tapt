@@ -146,7 +146,7 @@ struct CardShareView: View {
         working = true; note = nil
         switch await ShareTools.postToStories(image: image, facebookAppID: facebookAppID) {
         case .posted: break
-        case .savedOpenInstagram: note = "Saved to Photos and opened Instagram — add it to your story."
+        case .savedOpenInstagram: note = "Saved to Photos and opened Instagram. Add it to your story."
         case .savedNoInstagram: note = "Saved to Photos. Install Instagram to post it to your story."
         }
         working = false
@@ -156,7 +156,7 @@ struct CardShareView: View {
         guard let image = rendered else { return }
         working = true
         savedOK = await ShareTools.saveToPhotos(image: image)
-        note = savedOK ? "Saved to your Photos." : "Couldn't save — allow photo access in Settings."
+        note = savedOK ? "Saved to your Photos." : "Couldn't save. Allow photo access in Settings."
         working = false
     }
 }
