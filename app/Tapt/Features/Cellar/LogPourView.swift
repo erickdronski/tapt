@@ -328,7 +328,8 @@ struct LogPourView: View {
                         beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
                         score: Int(rating / 5 * 100), user: "you",
                         abv: beer.abv.map { String(format: "%.1f%%", $0) },
-                        place: selectedVenue.map { sharePlace($0) }
+                        place: selectedVenue.map { sharePlace($0) },
+                        beerId: beer.id, rating: Int(rating.rounded()), country: beer.country
                     )
                     celebration = .pourLogged(
                         beer: beer.name,

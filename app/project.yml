@@ -44,7 +44,8 @@ targets:
         CFBundleLocalizations: [en, es, de, fr, ja, pt-BR]
         NSCameraUsageDescription: "Tapt uses the camera to scan beer labels, barcodes, and tap lists."
         NSLocationWhenInUseUsageDescription: "Tapt uses your location to show what is good on tap near you."
-        LSApplicationQueriesSchemes: [instagram-stories]
+        NSPhotoLibraryAddUsageDescription: "Tapt saves your pour cards to Photos so you can share them anywhere."
+        LSApplicationQueriesSchemes: [instagram-stories, instagram]
     entitlements:
       path: Tapt/Tapt.entitlements
       properties:
