@@ -12,6 +12,9 @@ struct BeerDetailView: View {
     @State private var loading = true
     @State private var myVote: Int?
     @State private var loadedVote: Int?     // the caller's vote at load, so counts don't double-count
+    @State private var note = ""
+    @State private var savedNote = ""
+    @State private var savingNote = false
 
     var body: some View {
         ScrollView {
@@ -19,6 +22,7 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header(d)
                     communityBar(d)
+                    noteCard(d)
                     if !d.awards.isEmpty { awardsCard(d.awards) }
                     if d.styleName != nil { styleScience(d) }
                     factsCard(d)
@@ -503,7 +507,62 @@ struct BeerDetailView: View {
             let existing = try? await BeerService.currentVote(beerId: beerId, userId: uid)
             loadedVote = existing
             myVote = existing
+            let n = (try? await BeerNoteService.get(beerId)) ?? nil
+            note = n ?? ""
+            savedNote = note
         }
+    }
+
+    // MARK: - My note (private, per-user)
+
+    private func noteCard(_ d: BeerDetail) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("My note", systemImage: "square.and.pencil")
+                    .font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                Spacer()
+                if savingNote {
+                    ProgressView().tint(Brand.gold)
+                } else if note != savedNote {
+                    Button("Save") { Task { await saveNote() } }
+                        .font(.subheadline.weight(.bold)).foregroundStyle(Brand.gold)
+                } else if !savedNote.isEmpty {
+                    Label("Saved", systemImage: "checkmark").font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
+                }
+            }
+            TextField("Only you see this. Tasting notes, where you had it, what to try next…",
+                      text: $note, axis: .vertical)
+                .lineLimit(3...8)
+                .font(.subheadline).foregroundStyle(Brand.text)
+                .padding(12)
+                .background(Brand.background, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Brand.malt.opacity(0.12)))
+        }
+        .padding(14)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.gold.opacity(0.18)))
+    }
+
+    private func saveNote() async {
+        savingNote = true
+        do {
+            try await BeerNoteService.save(beerId, note: note)
+            savedNote = note
+            Haptic.tap()
+        } catch { /* keep the unsaved text so nothing is lost */ }
+        savingNote = false
+    }
+}
+
+/// Private, per-user written notes on a beer.
+enum BeerNoteService {
+    static func get(_ beerId: String) async throws -> String? {
+        struct P: Encodable { let p_beer: String }
+        return try await Supa.client.rpc("get_beer_note", params: P(p_beer: beerId)).execute().value
+    }
+    static func save(_ beerId: String, note: String) async throws {
+        struct P: Encodable { let p_beer: String; let p_note: String }
+        try await Supa.client.rpc("save_beer_note", params: P(p_beer: beerId, p_note: note)).execute()
     }
 }
 

@@ -26,7 +26,11 @@ struct RootView: View {
             #if targetEnvironment(simulator)
             if let t = ProcessInfo.processInfo.environment["TAPT_START_TAB"], let i = Int(t) { selection = i }
             if ProcessInfo.processInfo.environment["TAPT_SHARE_PREVIEW"] == "1" { showSharePreview = true }
+            if ProcessInfo.processInfo.environment["TAPT_BEER_PREVIEW"] == "1" { showBeerPreview = true }
             #endif
+        }
+        .sheet(isPresented: $showBeerPreview) {
+            NavigationStack { BeerDetailView(beerId: "8c25e595-f6fc-425c-ad11-b3b8acf9bb9d") }
         }
         .sheet(isPresented: $showSharePreview) {
             NavigationStack {
@@ -45,6 +49,7 @@ struct RootView: View {
     }
 
     @State private var showSharePreview = false
+    @State private var showBeerPreview = false
 }
 
 #Preview { RootView().tint(Brand.accent) }
