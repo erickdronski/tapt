@@ -53,9 +53,9 @@ struct DiscoverView: View {
                     TaptCollapse(title: "For breweries & bars",
                                  subtitle: "Free tools, featured placement, partnerships",
                                  icon: "storefront.fill", tint: Brand.copper) {
-                        DiscoverTile(title: "Partner with Tapt",
-                                     subtitle: "Get featured to beer fans near you.",
-                                     icon: "storefront.fill", tint: Brand.copper) { PartnerInquiryView() }
+                        DiscoverTile(title: "Breweries & Bars",
+                                     subtitle: "Claim your venue, publish taps, get your QR, see your local demand. Free.",
+                                     icon: "storefront.fill", tint: Brand.copper) { BreweriesHubView() }
                     }
 
                     NewsletterCard()
