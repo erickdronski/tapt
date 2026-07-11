@@ -94,7 +94,7 @@ struct MarketBeerDetailView: View {
 
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Net votes · 7 days").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
+            Text("Momentum · 7 days").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
             Sparkline(values: beer.spark, up: beer.isUp)
                 .frame(height: 120)
                 .padding(.top, 4)

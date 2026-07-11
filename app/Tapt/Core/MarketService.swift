@@ -23,18 +23,23 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let spark: [Double]
     let reason: String?
     let seasonFit: Int
+    /// 0-100 trending intensity relative to the hottest beer on the board right now.
+    /// Drives the ticker/board pulse so a surge in global sentiment is impossible to miss.
+    let heat: Int
 
     var id: String { beerId }
     var isUp: Bool { change >= 0 }
     var netText: String { net > 0 ? "+\(net)" : "\(net)" }
     var changeText: String { "\(change >= 0 ? "+" : "")\(change)" }
+    /// Strongly trending -- worth a visible pulse. Top movers on the board.
+    var isHot: Bool { heat >= 70 }
     /// A short human "why it's moving" line -- a real seasonal reason if it fits the
     /// season, otherwise the style. Never invented.
     var moveReason: String { reason ?? (style ?? "Community pick") }
     var isSeasonal: Bool { reason != nil }
 
     enum CodingKeys: String, CodingKey {
-        case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark, reason
+        case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark, reason, heat
         case beerId = "beer_id"
         case imageUrl = "image_url"
         case seasonFit = "season_fit"
