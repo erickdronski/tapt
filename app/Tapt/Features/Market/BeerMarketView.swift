@@ -181,16 +181,23 @@ struct MarketTicker: View {
     private var rowWidth: CGFloat { cellWidth * CGFloat(max(items.count, 1)) }
 
     var body: some View {
-        // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn history).
-        SwiftUI.TimelineView(.animation) { tl in
-            HStack(spacing: 0) {
-                row
-                row
+        // The marquee row is intrinsically thousands of px wide. Base the container on a
+        // screen-width Color.clear and put the moving row in an OVERLAY so its huge size
+        // never propagates up to the parent layout; then clip the overflow.
+        Color.clear
+            .frame(height: 40)
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .leading) {
+                // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
+                SwiftUI.TimelineView(.animation) { tl in
+                    HStack(spacing: 0) {
+                        row
+                        row
+                    }
+                    .offset(x: tickerOffset(at: tl.date))
+                }
             }
-            .offset(x: tickerOffset(at: tl.date))
-        }
-        .frame(height: 40, alignment: .leading)
-        .clipped()
+            .clipped()
     }
 
     private func tickerOffset(at date: Date) -> CGFloat {

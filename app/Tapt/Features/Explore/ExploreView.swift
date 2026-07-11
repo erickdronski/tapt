@@ -21,13 +21,17 @@ struct ExploreView: View {
     @State private var tickerBeer: MarketBeer?
 
     private var visibleBeers: [TrendedBeer] {
-        guard noLowDefault else { return beers }
-        return beers.filter { beer in
-            beer.style.localizedCaseInsensitiveContains("low")
-            || beer.style.localizedCaseInsensitiveContains("non")
-            || beer.name.localizedCaseInsensitiveContains("low")
-            || beer.name.localizedCaseInsensitiveContains("non")
-        }
+        let base: [TrendedBeer] = noLowDefault
+            ? beers.filter { beer in
+                beer.style.localizedCaseInsensitiveContains("low")
+                || beer.style.localizedCaseInsensitiveContains("non")
+                || beer.name.localizedCaseInsensitiveContains("low")
+                || beer.name.localizedCaseInsensitiveContains("non")
+            }
+            : beers
+        // The catalog has multiple SKUs per beer -- collapse to one row per name.
+        var seen = Set<String>()
+        return base.filter { seen.insert($0.name.lowercased()).inserted }
     }
     private var movers: [TrendedBeer] { visibleBeers.sorted { $0.momentum > $1.momentum } }
     private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
@@ -47,22 +51,8 @@ struct ExploreView: View {
                     catalogBar
                     quickDuo
                     BeerOfWeekCard().padding(.horizontal)
-                    if let activeGuide {
-                        TaptCollapse(
-                            title: "\(activeGuide.name) beer guide",
-                            subtitle: activeGuide.heroStyle,
-                            icon: "book.fill",
-                            tint: Brand.hop
-                        ) {
-                            Text(activeGuide.cellarPrompt)
-                                .font(.subheadline)
-                                .foregroundStyle(Brand.text)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            FlowTags(items: activeGuide.topStyles + Array(activeGuide.flavorNotes.prefix(3)), tint: Brand.gold)
-                        }
-                        .padding(.horizontal)
-                    }
+                    // The thin regional "beer guide" was wasted space; a real local-scene
+                    // module returns with the venue/local-data ingestion.
                     regionPicker
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
@@ -90,16 +80,28 @@ struct ExploreView: View {
         }
     }
 
-    private var hero: some View {
+    private var heroPanel: some View {
         TaptHeroPanel(
             title: heroBeer?.name ?? "Your beer radar",
-            subtitle: heroBeer.map { "\($0.brewery) is moving in \(region.isEmpty ? homeRegion : region)." }
+            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") in \(region.isEmpty ? homeRegion : region)." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
                 ?? "Track what is hot and scan new pours.",
-            metric: heroBeer.map { "+\($0.momentum)" } ?? "LIVE",
-            caption: feedNote ?? (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat"),
+            metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "LIVE",
+            caption: feedNote ?? (heroBeer != nil ? "Tap to open · \(max(totalMomentum, 0)) market heat"
+                                                   : (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat")),
             icon: "chart.line.uptrend.xyaxis"
         )
+    }
+
+    @ViewBuilder private var hero: some View {
+        Group {
+            if let heroBeer {
+                NavigationLink { BeerDetailView(beerId: heroBeer.id) } label: { heroPanel }
+                    .buttonStyle(.plain)
+            } else {
+                heroPanel
+            }
+        }
         .padding(.horizontal)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 18)
@@ -303,7 +305,7 @@ struct ExploreView: View {
                     Text("\(rank)").font(.system(.headline, design: .monospaced)).foregroundStyle(Brand.muted).frame(width: 22)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(b.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
-                        Text("\(b.brewery)  \(flag(b.country))  \(b.style)").font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                        Text(rowSubtitle(b)).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
                     }
                     Spacer(minLength: 6)
                 }
@@ -381,8 +383,20 @@ struct ExploreView: View {
         }
     }
 
+    /// Build a clean subtitle from whatever we actually have (no empty gaps or stray
+    /// beer-emoji flags, e.g. Holsten with no brewery/country).
+    private func rowSubtitle(_ b: TrendedBeer) -> String {
+        let f = flag(b.country)
+        let parts = [b.brewery, b.style].map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let text = parts.joined(separator: " · ")
+        if text.isEmpty && f.isEmpty { return "Community pick" }
+        if text.isEmpty { return f }
+        return f.isEmpty ? text : "\(text)  \(f)"
+    }
+
     private func flag(_ country: String) -> String {
-        [
+        if country.trimmingCharacters(in: .whitespaces).isEmpty { return "" }
+        return [
             "Australia": "🇦🇺", "Austria": "🇦🇹", "Belgium": "🇧🇪", "Brazil": "🇧🇷",
             "Canada": "🇨🇦", "Czechia": "🇨🇿", "Denmark": "🇩🇰", "France": "🇫🇷",
             "Germany": "🇩🇪", "Ireland": "🇮🇪", "Italy": "🇮🇹", "Japan": "🇯🇵",

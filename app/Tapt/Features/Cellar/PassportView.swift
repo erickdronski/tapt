@@ -36,15 +36,9 @@ struct PassportView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 8)], spacing: 8) {
                         ForEach(BeerRegions.states, id: \.self) { state in
                             let visited = visitedStates.contains(state)
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Image(systemName: visited ? "checkmark.seal.fill" : "mappin.circle.fill")
-                                        .foregroundStyle(visited ? Brand.gold : Brand.muted)
-                                    Spacer()
-                                    Text(stateCode(for: state))
-                                        .font(.system(.caption2, design: .rounded).weight(.heavy))
-                                        .foregroundStyle(visited ? Brand.malt : Brand.muted)
-                                }
+                            VStack(alignment: .leading, spacing: 6) {
+                                Image(systemName: visited ? "checkmark.seal.fill" : "mappin.circle.fill")
+                                    .foregroundStyle(visited ? Brand.gold : Brand.muted)
                                 Text(state)
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(visited ? Brand.text : Brand.muted)
