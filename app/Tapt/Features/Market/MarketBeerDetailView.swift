@@ -17,7 +17,7 @@ struct MarketBeerDetailView: View {
                     sentimentCard
                     statsGrid
                     contextCard
-                    Text("Price and movement are computed from real community votes and check-ins — never invented. Demo data shown until launch.")
+                    Text("Standing and movement are real community votes — never invented. Demo activity shown until launch.")
                         .font(.caption2).foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -64,19 +64,20 @@ struct MarketBeerDetailView: View {
     }
 
     private var priceBlock: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(beer.priceText).font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
-            Label(beer.changeText, systemImage: beer.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                .font(.system(.headline, design: .rounded).weight(.heavy))
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(beer.netText).font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
+            Text("net votes").font(.subheadline).foregroundStyle(Brand.muted)
+            Spacer()
+            Label("\(beer.changeText) today", systemImage: beer.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                .font(.system(.subheadline, design: .rounded).weight(.heavy))
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(beer.isUp ? Brand.hop : Brand.copper)
-            Spacer()
         }
     }
 
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("7-day price").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
+            Text("Net votes · 7 days").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
             Sparkline(values: beer.spark, up: beer.isUp)
                 .frame(height: 120)
                 .padding(.top, 4)
@@ -113,9 +114,9 @@ struct MarketBeerDetailView: View {
 
     private var statsGrid: some View {
         HStack(spacing: 10) {
-            stat("Volume 24h", "\(beer.volume)", "bolt.fill", Brand.gold)
-            stat("Market cap", beer.marketCapText, "chart.pie.fill", Brand.hop)
-            stat("Net demand", (beer.net >= 0 ? "+" : "") + "\(beer.net)", "arrow.up.arrow.down", Brand.copper)
+            stat("Votes 24h", "\(beer.volume)", "bolt.fill", Brand.gold)
+            stat("Total votes", "\(beer.votes)", "hand.thumbsup.fill", Brand.hop)
+            stat("Net standing", beer.netText, "arrow.up.arrow.down", Brand.copper)
         }
     }
 

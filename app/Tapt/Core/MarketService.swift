@@ -1,10 +1,11 @@
 import Foundation
 import Supabase
 
-/// The Beer Market: beers as tickers. Price is derived from real community demand
-/// (net votes), movement from vote velocity -- all computed server-side in
-/// `beer_market`, never invented. Pre-launch the app reads the isolated, clearly
-/// labeled demo lane so the ticker is alive; it flips to real votes at launch.
+/// The Beer Market: beers ranked by community demand. The number is VOTES, not
+/// dollars -- `net` is a beer's standing (up minus down), `change` is how its net
+/// moved in the last 24h (trending up/down), `volume` is votes in that window. All
+/// computed server-side in `beer_market`, never invented. Pre-launch it reads the
+/// isolated, labeled demo lane; flip demo:false at launch to run on real votes.
 struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let beerId: String
     let symbol: String
@@ -13,41 +14,36 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let style: String?
     let country: String?
     let imageUrl: String?
-    let price: Double
-    let changePct: Double
-    let volume: Int
     let net: Int
+    let votes: Int
+    let change: Int
+    let volume: Int
     let ups: Int
     let downs: Int
-    let marketCap: Double
     let spark: [Double]
 
     var id: String { beerId }
-    var isUp: Bool { changePct >= 0 }
-    var priceText: String { String(format: "$%.2f", price) }
-    var changeText: String { String(format: "%@%.2f%%", changePct >= 0 ? "+" : "", changePct) }
-    var marketCapText: String {
-        marketCap >= 1000 ? String(format: "$%.1fK", marketCap / 1000) : String(format: "$%.0f", marketCap)
-    }
+    var isUp: Bool { change >= 0 }
+    var netText: String { net > 0 ? "+\(net)" : "\(net)" }
+    var changeText: String { "\(change >= 0 ? "+" : "")\(change)" }
 
     enum CodingKeys: String, CodingKey {
-        case symbol, name, brewery, style, country, price, volume, net, ups, downs, spark
+        case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark
         case beerId = "beer_id"
         case imageUrl = "image_url"
-        case changePct = "change_pct"
-        case marketCap = "market_cap"
     }
 }
 
 enum MarketSort: String, CaseIterable, Identifiable {
-    case movers, gainers, losers, active
+    case movers, gainers, losers, active, top
     var id: String { rawValue }
     var title: String {
         switch self {
         case .movers: return "Top movers"
-        case .gainers: return "Gainers"
-        case .losers: return "Losers"
+        case .gainers: return "Gaining"
+        case .losers: return "Sliding"
         case .active: return "Most active"
+        case .top: return "Top voted"
         }
     }
     var icon: String {
@@ -56,13 +52,12 @@ enum MarketSort: String, CaseIterable, Identifiable {
         case .gainers: return "chart.line.uptrend.xyaxis"
         case .losers: return "chart.line.downtrend.xyaxis"
         case .active: return "bolt.fill"
+        case .top: return "trophy.fill"
         }
     }
 }
 
 enum MarketService {
-    /// Pre-launch the real boards are empty, so we read the demo lane (labeled in the
-    /// UI). Flip to `demo: false` at launch and the exact same view runs on real votes.
     static func feed(sort: MarketSort = .movers, limit: Int = 40, demo: Bool = true) async throws -> [MarketBeer] {
         struct Params: Encodable { let p_sort: String; let p_limit: Int; let p_demo: Bool }
         return try await Supa.client

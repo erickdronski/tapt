@@ -4,10 +4,10 @@ import SwiftUI
 struct RootView: View {
     var body: some View {
         TabView {
+            ExploreView()
+                .tabItem { Label("Home", systemImage: "house.fill") }
             BeerMarketView()
                 .tabItem { Label("Market", systemImage: "chart.line.uptrend.xyaxis") }
-            ScanView()
-                .tabItem { Label("Scan", systemImage: "viewfinder") }
             CellarView()
                 .tabItem { Label("Cellar", systemImage: "square.stack.3d.up") }
             DiscoverView()
