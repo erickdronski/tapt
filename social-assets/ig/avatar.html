@@ -1,0 +1,40 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  html,body{margin:0}
+  .frame{width:1080px;height:1080px;overflow:hidden;position:relative;
+    background:radial-gradient(120% 120% at 50% 42%, #2A1B0A 0%, #1A1206 45%, #0C0702 100%);}
+  .glow{position:absolute;left:50%;top:50%;transform:translate(-50%,-46%);
+    width:760px;height:820px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(242,169,0,.20), rgba(242,169,0,0) 70%);}
+  svg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(1.08);}
+</style></head><body>
+  <div class="frame">
+    <div class="glow"></div>
+    <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="beer" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/>
+        </linearGradient>
+        <linearGradient id="foam" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3E7CC"/>
+        </linearGradient>
+        <clipPath id="glassClip"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath>
+      </defs>
+      <g transform="translate(192,40) scale(1.6)">
+        <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#FBF6EC" fill-opacity=".16"/>
+        <g clip-path="url(#glassClip)">
+          <rect x="80" y="140" width="245" height="345" fill="url(#beer)"/>
+          <rect x="126" y="166" width="24" height="286" rx="12" fill="#FFFFFF" opacity=".18"/>
+          <circle cx="186" cy="404" r="6" fill="#FFF3D7" opacity=".55"/>
+          <circle cx="214" cy="352" r="5" fill="#FFF3D7" opacity=".5"/>
+          <circle cx="196" cy="296" r="6" fill="#FFF3D7" opacity=".5"/>
+          <circle cx="228" cy="250" r="4" fill="#FFF3D7" opacity=".45"/>
+        </g>
+        <path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z"
+              fill="url(#foam)" stroke="#130A02" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="150" cy="102" r="8" fill="#FFFFFF"/><circle cx="205" cy="87" r="10" fill="#FFFFFF"/><circle cx="256" cy="105" r="7" fill="#FFFFFF"/>
+        <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150"
+              fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+    </svg>
+  </div>
+</body></html>
