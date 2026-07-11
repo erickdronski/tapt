@@ -8,6 +8,7 @@ struct BeerMarketView: View {
     @State private var ticker: [MarketBeer] = []
     @State private var sort: MarketSort = .movers
     @State private var loading = false
+    @State private var loadFailed = false
     @State private var selected: MarketBeer?
 
     var body: some View {
@@ -18,6 +19,8 @@ struct BeerMarketView: View {
                         boardHeader
                         if loading && beers.isEmpty {
                             TaptSkeletonList(rows: 8).padding(.top, 6)
+                        } else if beers.isEmpty {
+                            marketEmptyState
                         } else {
                             ForEach(Array(beers.enumerated()), id: \.element.id) { i, b in
                                 Button { Haptic.tap(); selected = b } label: { row(rank: i + 1, b) }
@@ -155,16 +158,42 @@ struct BeerMarketView: View {
 
     private func load() async {
         loading = true
+        loadFailed = false
         defer { loading = false }
-        async let board = try? await MarketService.feed(sort: sort, limit: 40)
-        async let tick = try? await MarketService.feed(sort: .active, limit: 16)
-        beers = await board ?? []
-        if ticker.isEmpty { ticker = await tick ?? [] }
+        // Resilient refresh: a transient failure must NOT blank a board that was
+        // already showing (the "refresh broke it" bug). Only replace on success.
+        if let board = try? await MarketService.feed(sort: sort, limit: 40) {
+            beers = board
+        } else {
+            loadFailed = true
+        }
+        if ticker.isEmpty {
+            ticker = (try? await MarketService.feed(sort: .active, limit: 16)) ?? []
+        }
         #if targetEnvironment(simulator)
         if ProcessInfo.processInfo.environment["TAPT_MARKET_AUTOOPEN"] == "1", selected == nil {
             selected = beers.first
         }
         #endif
+    }
+
+    private var marketEmptyState: some View {
+        VStack(spacing: 12) {
+            Image(systemName: loadFailed ? "wifi.exclamationmark" : "chart.bar.xaxis")
+                .font(.largeTitle).foregroundStyle(Brand.muted)
+            Text(loadFailed ? "Couldn't load the board" : "The board is warming up")
+                .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+            Text(loadFailed ? "Check your connection and pull to refresh." : "Come back in a moment.")
+                .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center)
+            Button { Task { await load() } } label: {
+                Label("Retry", systemImage: "arrow.clockwise")
+                    .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 18).padding(.vertical, 10)
+                    .background(Brand.gold, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity).padding(.top, 70).padding(.horizontal, 40)
     }
 }
 
