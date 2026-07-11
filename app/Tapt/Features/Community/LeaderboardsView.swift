@@ -175,7 +175,7 @@ struct LeaderboardsView: View {
                 TaptEmptyState(
                     icon: "square.grid.2x2.fill",
                     title: "No style trends yet",
-                    message: "As the community logs pours, the world's most-poured styles show up here.",
+                    message: "The most-poured styles show up here as people log pours.",
                     actionTitle: nil
                 )
             } else {

@@ -387,7 +387,7 @@ struct PartnerMenuSheet: View {
                     } else if rows.isEmpty {
                         TaptEmptyState(icon: "list.bullet.rectangle",
                                        title: "No live menu yet",
-                                       message: "This venue hasn't published a current tap list. Tell them it's free, forever.",
+                                       message: "This venue hasn't published a tap list yet.",
                                        actionTitle: nil)
                     } else {
                         Text(rows[0].venueName)

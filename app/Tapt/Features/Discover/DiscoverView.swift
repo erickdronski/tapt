@@ -10,7 +10,7 @@ struct DiscoverView: View {
                 VStack(spacing: 16) {
                     TaptHeroPanel(
                         title: "Beer culture mode",
-                        subtitle: "Run guided flights, learn styles, play table games, and turn every pour into a better beer night.",
+                        subtitle: "Run guided flights, learn styles, and play table games.",
                         metric: "PLAY",
                         caption: "The Beer Superapp",
                         icon: "sparkles",
