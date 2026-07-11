@@ -31,7 +31,23 @@ Voice: plain and direct, showcase the free things, no hype, no em dashes. Every 
 >
 > #guinness #stout #beer #craftbeer #beereducation #beertography
 
-## Queued (next batch)
-- Post 2 — "A stock market for beer, moved by real votes" (Beer Market explainer, real board screen)
-- Post 4 — Beer school: "Why an IPA tastes like that" (hoppiness 5, bitterness 4)
-- Post 5 — Story poll: "IPA or Stout — settle it"
+## Post 2 — The Beer Market (out/post-02-market.png)
+> A stock market for beer.
+> Every beer rises and falls on real community votes. Vote it up, it climbs. Vote it down, it slides. No prices, just what people actually drink.
+> Trade your taste → taptbeer.com 🍺
+>
+> #beer #craftbeer #beerapp #beercommunity #beertography
+
+## Post 4 — Beer School: American IPA (out/post-04-ipa.png)
+> Beer school: the American IPA.
+> Citrus, pine and tropical hops over a lean malt base. Hoppiness 5/5, bitterness 4/5. The beer that kicked off the US craft hop wave.
+> Every style, decoded, in Tapt → taptbeer.com 🍺
+>
+> #ipa #craftbeer #beer #hops #beereducation #beertography
+
+## Post 5 — Story poll: IPA vs Stout (out/post-05-poll-story.png)
+Instagram Story (1080x1920). Add a poll sticker over the middle band (IPA / Stout).
+> Caption text on the story: none needed beyond the graphic. Add the poll sticker options "IPA" and "STOUT".
+
+## Suggested first-week order
+Mon Post 1 (intro) · Tue Post 3 (Guinness taste) · Wed Post 5 story poll · Thu Post 2 (market) · Fri Post 4 (beer school)
