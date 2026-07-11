@@ -11,6 +11,7 @@ struct TonightView: View {
     @State private var message: String?
     @State private var reportedCheckins: Set<String> = []
     @State private var blockedActors: Set<String> = []
+    @State private var openProfile: ProfileRef?
 
     private var topBeer: TonightBeer? { tonight.first }
     private var maxTasteCount: Int { max(tasteProfile.map(\.pourCount).max() ?? 1, 1) }
@@ -39,6 +40,10 @@ struct TonightView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await loadAll() }
         .refreshable { await loadAll() }
+        .sheet(item: $openProfile) { ref in
+            PublicProfileView(userId: ref.id, initialName: ref.name)
+                .presentationDetents([.medium, .large])
+        }
         .overlay {
             if loading && tonight.isEmpty && pours.isEmpty {
                 ScrollView { TaptSkeletonList(rows: 5).padding(.top, 140) }
@@ -203,16 +208,22 @@ struct TonightView: View {
 
     private func socialRow(_ pour: SocialPour) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Text(String(pour.actorName.first ?? "T").uppercased())
-                .font(.system(.headline, design: .rounded).weight(.heavy))
-                .foregroundStyle(Brand.malt)
-                .frame(width: 42, height: 42)
-                .background(Brand.gold, in: Circle())
+            Button { openActor(pour) } label: {
+                Text(String(pour.actorName.first ?? "T").uppercased())
+                    .font(.system(.headline, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 42, height: 42)
+                    .background(Brand.gold, in: Circle())
+            }
+            .buttonStyle(.plain)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(pour.actorName)
-                        .font(.system(.headline, design: .rounded).weight(.bold))
-                        .foregroundStyle(Brand.text)
+                    Button { openActor(pour) } label: {
+                        Text(pour.actorName)
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Brand.text)
+                    }
+                    .buttonStyle(.plain)
                     Spacer()
                     if let rating = pour.rating {
                         Label(String(format: "%.0f", rating), systemImage: "star.fill")
@@ -352,6 +363,12 @@ struct TonightView: View {
             return
         }
         tasteProfile = (try? await LiveBeerService.tasteProfile(userId: userId)) ?? []
+    }
+
+    private func openActor(_ pour: SocialPour) {
+        guard pour.actorId != session.user?.id.uuidString else { return }
+        Haptic.tap()
+        openProfile = ProfileRef(id: pour.actorId, name: pour.actorName)
     }
 
     private func report(_ pour: SocialPour) async {
