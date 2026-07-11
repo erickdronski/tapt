@@ -25,9 +25,26 @@ struct RootView: View {
         .onAppear {
             #if targetEnvironment(simulator)
             if let t = ProcessInfo.processInfo.environment["TAPT_START_TAB"], let i = Int(t) { selection = i }
+            if ProcessInfo.processInfo.environment["TAPT_SHARE_PREVIEW"] == "1" { showSharePreview = true }
             #endif
         }
+        .sheet(isPresented: $showSharePreview) {
+            NavigationStack {
+                ScrollView {
+                    CardShareView(pour: PourCard(
+                        beer: "Guinness Draught", brewery: "Guinness", style: "Irish Stout",
+                        score: 88, user: "you", abv: "4.2%", place: "The Long Hall, Dublin",
+                        rating: 5,
+                        imageUrl: "https://images.openfoodfacts.org/images/products/500/021/310/1223/front_fr.60.full.jpg",
+                        country: "Ireland"))
+                    .padding(.vertical)
+                }
+                .navigationTitle("Share your pour").navigationBarTitleDisplayMode(.inline)
+            }
+        }
     }
+
+    @State private var showSharePreview = false
 }
 
 #Preview { RootView().tint(Brand.accent) }

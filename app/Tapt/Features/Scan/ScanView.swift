@@ -293,7 +293,8 @@ struct ScanView: View {
                         style: pick.style ?? "Beer",
                         score: Int(rating * 20),
                         user: session.user?.email?.split(separator: "@").first.map(String.init) ?? "beerfan",
-                        abv: pick.abv.map { String(format: "%.1f%%", $0) }
+                        abv: pick.abv.map { String(format: "%.1f%%", $0) },
+                        beerId: pick.id, rating: Int(rating.rounded()), country: pick.country
                     )
                     addingOFF = false
                     showResult = false
@@ -352,7 +353,8 @@ struct ScanView: View {
                     style: beer.style ?? "Beer",
                     score: Int(rating * 20),
                     user: session.user?.email?.split(separator: "@").first.map(String.init) ?? "beerfan",
-                    abv: beer.abv.map { String(format: "%.1f%%", $0) }
+                    abv: beer.abv.map { String(format: "%.1f%%", $0) },
+                    beerId: beer.id, rating: Int(rating.rounded()), country: beer.country
                 )
                 saving = false
                 showResult = false
