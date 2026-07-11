@@ -181,23 +181,22 @@ struct MarketTicker: View {
     private var rowWidth: CGFloat { cellWidth * CGFloat(max(items.count, 1)) }
 
     var body: some View {
-        // The marquee row is intrinsically thousands of px wide. Base the container on a
-        // screen-width Color.clear and put the moving row in an OVERLAY so its huge size
-        // never propagates up to the parent layout; then clip the overflow.
-        Color.clear
-            .frame(height: 40)
-            .frame(maxWidth: .infinity)
-            .overlay(alignment: .leading) {
-                // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
-                SwiftUI.TimelineView(.animation) { tl in
-                    HStack(spacing: 0) {
-                        row
-                        row
-                    }
-                    .offset(x: tickerOffset(at: tl.date))
+        // A GeometryReader container is "greedy": it fills the offered space and reports
+        // NO intrinsic preference, so the ~6000px-wide marquee row can never push the
+        // parent layout wide (the bug that blanked Home). We only read the visible width.
+        GeometryReader { geo in
+            // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
+            SwiftUI.TimelineView(.animation) { tl in
+                HStack(spacing: 0) {
+                    row
+                    row
                 }
+                .offset(x: tickerOffset(at: tl.date))
             }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
             .clipped()
+        }
+        .frame(height: 40)
     }
 
     private func tickerOffset(at date: Date) -> CGFloat {
