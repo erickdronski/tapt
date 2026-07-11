@@ -87,7 +87,7 @@ struct ExploreView: View {
             title: heroBeer?.name ?? "Your beer radar",
             subtitle: heroBeer.map { "\($0.brewery) is moving in \(region.isEmpty ? homeRegion : region)." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
-                ?? "Track what is hot, scan new pours, and build The Beer Superapp around your taste.",
+                ?? "Track what is hot and scan new pours.",
             metric: heroBeer.map { "+\($0.momentum)" } ?? "LIVE",
             caption: feedNote ?? (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat"),
             icon: "chart.line.uptrend.xyaxis"

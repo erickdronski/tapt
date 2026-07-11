@@ -101,7 +101,7 @@ struct ProfileView: View {
                 } header: {
                     Text("For breweries & bars")
                 } footer: {
-                    Text("Free profiles forever. Featured placement puts your taps and events in front of nearby beer fans.")
+                    Text("Free profile. Featured placement puts your taps and events in front of nearby drinkers.")
                 }
 
                 Section {

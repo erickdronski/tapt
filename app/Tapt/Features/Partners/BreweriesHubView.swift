@@ -118,7 +118,7 @@ struct BreweriesHubView: View {
             VStack(alignment: .leading, spacing: 18) {
                 TaptHeroPanel(
                     title: "For breweries & bars",
-                    subtitle: "The menu, QR, map presence, and local demand tools the incumbent charges $1,199/yr for. On Tapt they're free. You only ever pay to be louder.",
+                    subtitle: "Free menu, QR, map profile, and local analytics. Pay only to reach more drinkers nearby.",
                     metric: "FREE",
                     caption: "Breweries fund the party, drinkers never pay",
                     icon: "storefront.fill",

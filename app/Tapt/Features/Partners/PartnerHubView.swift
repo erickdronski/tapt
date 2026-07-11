@@ -17,7 +17,7 @@ struct FeaturedPartnersRail: View {
                     Text("Featured beer spots")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(Brand.text)
-                    Text(partners.isEmpty ? "Real partners only, no pay-to-bury, ever" : "Partners pouring with Tapt")
+                    Text(partners.isEmpty ? "Beer spots that partner with Tapt" : "Partners pouring with Tapt")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -148,7 +148,7 @@ struct PartnerInquiryView: View {
             VStack(alignment: .leading, spacing: 16) {
                 TaptHeroPanel(
                     title: "Partner with Tapt",
-                    subtitle: "Free profiles forever. Featured placement puts your taps, events, and releases in front of beer fans near you.",
+                    subtitle: "Free profile. Featured placement puts your taps and events in front of nearby drinkers.",
                     metric: "🤝",
                     caption: "Breweries fund the party, drinkers never pay",
                     icon: "storefront.fill",
