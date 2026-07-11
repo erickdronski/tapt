@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var languageChanged = false
     @State private var deletionRequested = false
     @State private var deletionError: String?
+    @State private var myActivity: [MyBeerActivity] = []
 
     private var displayName: String {
         if let name = session.user?.userMetadata["full_name"]?.stringValue, !name.isEmpty { return name }
@@ -41,6 +42,36 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.vertical, 6)
+                }
+
+                if !myActivity.isEmpty {
+                    Section {
+                        ForEach(myActivity) { a in
+                            NavigationLink { BeerDetailView(beerId: a.beerId) } label: {
+                                HStack(spacing: 12) {
+                                    BeerThumb(imageUrl: a.imageUrl, size: 42)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(a.name).font(.system(.subheadline, design: .rounded).weight(.bold))
+                                            .foregroundStyle(Brand.text).lineLimit(1)
+                                        if let note = a.note, !note.isEmpty {
+                                            Label(note, systemImage: "square.and.pencil")
+                                                .font(.caption).foregroundStyle(Brand.muted)
+                                                .labelStyle(.titleAndIcon).lineLimit(1)
+                                        } else if let v = a.vote {
+                                            Label(v > 0 ? "You liked this" : "You passed on this",
+                                                  systemImage: v > 0 ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(v > 0 ? Brand.hop : Brand.copper)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } header: {
+                        Text("Your beers")
+                    } footer: {
+                        Text("Your votes count on the Beer Market. Your notes are private to you.")
+                    }
                 }
 
                 Section("Appearance") {
@@ -144,6 +175,7 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("You")
+            .task { await loadActivity() }
             .onChange(of: appLanguage) { _, newValue in
                 (AppLanguage(rawValue: newValue) ?? .system).apply()
                 languageChanged = true
@@ -190,5 +222,36 @@ struct ProfileView: View {
                 deletionError = error.localizedDescription
             }
         }
+    }
+
+    /// The beers you've voted on or noted -- your votes feed the Beer Market, your
+    /// notes stay private to you. Loaded from first-party data, never invented.
+    private func loadActivity() async {
+        guard session.user != nil else { return }
+        myActivity = (try? await MyActivityService.fetch()) ?? []
+    }
+}
+
+/// One beer you've engaged with: your private note and/or your market vote.
+struct MyBeerActivity: Identifiable, Decodable, Sendable {
+    let beerId: String
+    let name: String
+    let imageUrl: String?
+    let style: String?
+    let note: String?
+    let vote: Int?
+
+    var id: String { beerId }
+
+    enum CodingKeys: String, CodingKey {
+        case name, style, note, vote
+        case beerId = "beer_id"
+        case imageUrl = "image_url"
+    }
+}
+
+enum MyActivityService {
+    static func fetch() async throws -> [MyBeerActivity] {
+        try await Supa.client.rpc("my_beer_activity").execute().value
     }
 }

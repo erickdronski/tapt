@@ -59,7 +59,7 @@ struct BeerMarketView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("Ranked by real votes. Movement is the last 24h.")
+                    Text("Ranked by real votes. Movement blends recent votes, pours & buzz.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -173,23 +173,23 @@ struct BeerMarketView: View {
 struct MarketTicker: View {
     let items: [MarketBeer]
     var onTap: (MarketBeer) -> Void
-    private let speed: Double = 40
-    private let cellWidth: CGFloat = 168
+    private let speed: Double = 34
+    // Cells are sized to their content (no dead space) but capped so the marquee
+    // math stays deterministic. Tight, continuous, real-ticker feel.
+    private let cellWidth: CGFloat = 118
 
-    // Fixed-width cells -> the row width is known without measuring, which keeps the
-    // marquee math deterministic and the text from being distorted by a GeometryReader.
     private var rowWidth: CGFloat { cellWidth * CGFloat(max(items.count, 1)) }
 
     var body: some View {
         // A GeometryReader container is "greedy": it fills the offered space and reports
-        // NO intrinsic preference, so the ~6000px-wide marquee row can never push the
-        // parent layout wide (the bug that blanked Home). We only read the visible width.
+        // NO intrinsic preference, so the wide marquee row can never push the parent
+        // layout wide (the bug that blanked Home). We only read the visible width.
         GeometryReader { geo in
             // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
             SwiftUI.TimelineView(.animation) { tl in
                 HStack(spacing: 0) {
-                    row
-                    row
+                    row(at: tl.date)
+                    row(at: tl.date)
                 }
                 .offset(x: tickerOffset(at: tl.date))
             }
@@ -205,26 +205,38 @@ struct MarketTicker: View {
         return -CGFloat(travelled.truncatingRemainder(dividingBy: Double(rowWidth)))
     }
 
-    private var row: some View {
+    private func row(at date: Date) -> some View {
         HStack(spacing: 0) {
             ForEach(items) { b in
                 Button { onTap(b) } label: {
-                    cell(b).frame(width: cellWidth, alignment: .leading)
+                    cell(b, at: date).frame(width: cellWidth, alignment: .leading)
                 }
                 .buttonStyle(.plain)
             }
         }
     }
 
-    private func cell(_ b: MarketBeer) -> some View {
-        HStack(spacing: 5) {
-            Text(b.symbol).font(.system(.caption, design: .rounded).weight(.heavy)).foregroundStyle(Brand.foam)
-            Text(b.netText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.75))
+    private func cell(_ b: MarketBeer, at date: Date) -> some View {
+        // Hot beers pulse in sync with the timeline so a real surge in global
+        // sentiment is impossible to miss as the ticker slides by.
+        let t = date.timeIntervalSinceReferenceDate
+        let pulse = b.isHot ? (0.55 + 0.45 * abs(sin(t * 2.3))) : 1.0
+        return HStack(spacing: 4) {
+            if b.isHot {
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 8)).foregroundStyle(Brand.gold).opacity(pulse)
+            }
+            Text(b.symbol).font(.system(.caption, design: .rounded).weight(.heavy))
+                .foregroundStyle(b.isHot ? Brand.gold : Brand.foam)
+                .shadow(color: Brand.gold.opacity(b.isHot ? pulse * 0.6 : 0), radius: 5)
+            Text(b.netText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.7))
             Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
                 .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
             Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
                 .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+            Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.22)).padding(.leading, 2)
         }
+        .scaleEffect(b.isHot ? 0.97 + 0.05 * pulse : 1)
     }
 }
 

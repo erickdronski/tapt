@@ -7,7 +7,12 @@ struct NearYouView: View {
     @AppStorage("locationConsent") private var locationConsent = true
     @AppStorage("homeRegion") private var homeRegion = "New Jersey"
     @State private var location = LocationManager()
-    @State private var camera: MapCameraPosition = .automatic
+    // Start on a real region (continental US) -- never `.automatic`, which fit all
+    // ~800 global pins and dumped the map in the middle of the Pacific. This renders
+    // a real map instantly; geocode + GPS then zoom it in to home / near you.
+    @State private var camera: MapCameraPosition = .region(
+        MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 39.83, longitude: -98.58),
+                           span: MKCoordinateSpan(latitudeDelta: 40, longitudeDelta: 46)))
     @State private var breweries: [MKMapItem] = []
     @State private var taptVenues: [BreweryMapVenue] = []
     @State private var loading = false

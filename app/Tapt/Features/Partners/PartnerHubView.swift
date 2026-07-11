@@ -17,24 +17,32 @@ struct FeaturedPartnersRail: View {
                     Text("Featured beer spots")
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(Brand.text)
-                    Text(partners.isEmpty ? "Beer spots that partner with Tapt" : "Partners pouring with Tapt")
+                    Text(partners.isEmpty ? "Breweries & bars pour with Tapt" : "Partners pouring with Tapt")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
             }
             .padding(.horizontal)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(partners) { partner in
-                        partnerCard(partner)
-                    }
-                    NavigationLink { PartnerInquiryView() } label: {
-                        inviteCard
-                    }
+            if partners.isEmpty {
+                // No partners yet (pre-launch) -- show one intentional, full-width
+                // invite instead of a lone placeholder card floating in a scroll.
+                NavigationLink { PartnerInquiryView() } label: { emptyInvite }
                     .buttonStyle(.plain)
+                    .padding(.horizontal)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(partners) { partner in
+                            partnerCard(partner)
+                        }
+                        NavigationLink { PartnerInquiryView() } label: {
+                            inviteCard
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
         }
         .task {
@@ -120,6 +128,32 @@ struct FeaturedPartnersRail: View {
         .frame(width: 220, height: 168, alignment: .topLeading)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.hop.opacity(0.35), style: StrokeStyle(lineWidth: 1.4, dash: [6, 4])))
+    }
+
+    /// Full-width, designed invite shown when no venue has been featured yet, so the
+    /// section reads as intentional rather than an empty placeholder rail.
+    private var emptyInvite: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "storefront.fill")
+                .font(.title2).foregroundStyle(Brand.malt)
+                .frame(width: 52, height: 52)
+                .background(Brand.hop, in: RoundedRectangle(cornerRadius: 14))
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Feature your beer spot")
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text)
+                Text("Brewery, bar, pub, or taproom? Get in front of nearby beer fans. Free to start.")
+                    .font(.caption).foregroundStyle(Brand.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").font(.footnote.weight(.bold)).foregroundStyle(Brand.hop)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18)
+            .stroke(Brand.hop.opacity(0.4), style: StrokeStyle(lineWidth: 1.4, dash: [7, 5])))
     }
 }
 
