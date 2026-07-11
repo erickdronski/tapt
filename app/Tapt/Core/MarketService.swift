@@ -72,7 +72,20 @@ enum MarketSort: String, CaseIterable, Identifiable {
 }
 
 enum MarketService {
-    static func feed(sort: MarketSort = .movers, limit: Int = 40, demo: Bool = true) async throws -> [MarketBeer] {
+    /// Demo (the pre-seeded "as-if-live" board) is MARKETING-ONLY. The shipped app
+    /// always runs on REAL votes and shows an honest empty state until the community
+    /// fills it. Demo only turns on in the Simulator with TAPT_MARKET_DEMO=1, so we
+    /// can capture populated screenshots for the landing page and social — it can
+    /// never reach a real user on a real device.
+    static var demoEnabled: Bool {
+        #if targetEnvironment(simulator)
+        return ProcessInfo.processInfo.environment["TAPT_MARKET_DEMO"] == "1"
+        #else
+        return false
+        #endif
+    }
+
+    static func feed(sort: MarketSort = .movers, limit: Int = 40, demo: Bool = MarketService.demoEnabled) async throws -> [MarketBeer] {
         struct Params: Encodable { let p_sort: String; let p_limit: Int; let p_demo: Bool }
         return try await Supa.client
             .rpc("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: demo))

@@ -47,11 +47,14 @@ struct BeerMarketView: View {
 
     // MARK: ticker (pinned, auto-scrolling)
 
-    private var tickerBar: some View {
-        VStack(spacing: 0) {
-            MarketTicker(items: ticker.isEmpty ? beers : ticker) { b in Haptic.tap(); selected = b }
-                .background(Brand.malt)
-            Rectangle().fill(Brand.gold.opacity(0.5)).frame(height: 1.5)
+    @ViewBuilder private var tickerBar: some View {
+        let items = ticker.isEmpty ? beers : ticker
+        if !items.isEmpty {   // hide the ticker band entirely on a fresh/empty board
+            VStack(spacing: 0) {
+                MarketTicker(items: items) { b in Haptic.tap(); selected = b }
+                    .background(Brand.malt)
+                Rectangle().fill(Brand.gold.opacity(0.5)).frame(height: 1.5)
+            }
         }
     }
 
@@ -66,10 +69,12 @@ struct BeerMarketView: View {
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
-                Text("DEMO").font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(Brand.copper.opacity(0.16), in: Capsule())
-                    .foregroundStyle(Brand.copper)
+                if MarketService.demoEnabled {
+                    Text("DEMO").font(.system(.caption2, design: .rounded).weight(.heavy))
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Brand.copper.opacity(0.16), in: Capsule())
+                        .foregroundStyle(Brand.copper)
+                }
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -150,7 +155,9 @@ struct BeerMarketView: View {
     }
 
     private var footer: some View {
-        Text("Standings and movement are real community votes, never invented. Demo activity shown until launch fills the real board.")
+        Text(MarketService.demoEnabled
+             ? "Standings and movement are real community votes, never invented. Demo activity shown until launch fills the real board."
+             : "Standings and movement are real community votes. Nothing invented.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)

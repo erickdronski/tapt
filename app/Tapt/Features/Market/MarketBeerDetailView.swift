@@ -18,7 +18,9 @@ struct MarketBeerDetailView: View {
                     sentimentCard
                     statsGrid
                     contextCard
-                    Text("Standing and movement are real community votes — never invented. Demo activity shown until launch.")
+                    Text(MarketService.demoEnabled
+                         ? "Standing and movement are real community votes, never invented. Demo activity shown until launch."
+                         : "Standing and movement are real community votes. Nothing invented.")
                         .font(.caption2).foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
