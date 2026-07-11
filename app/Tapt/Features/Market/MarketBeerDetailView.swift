@@ -13,6 +13,7 @@ struct MarketBeerDetailView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     header
                     priceBlock
+                    reasonCard
                     chartCard
                     sentimentCard
                     statsGrid
@@ -51,7 +52,7 @@ struct MarketBeerDetailView: View {
                     Text(String(beer.symbol.prefix(2))).font(.headline.weight(.heavy)).foregroundStyle(Brand.gold)
                 }
             }
-            .frame(width: 62, height: 62)
+            .frame(width: 68, height: 84)
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.10)))
             VStack(alignment: .leading, spacing: 2) {
                 Text(beer.name).font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text).lineLimit(2)
@@ -73,6 +74,22 @@ struct MarketBeerDetailView: View {
                 .labelStyle(.titleAndIcon)
                 .foregroundStyle(beer.isUp ? Brand.hop : Brand.copper)
         }
+    }
+
+    private var reasonCard: some View {
+        HStack(spacing: 10) {
+            Image(systemName: beer.isSeasonal ? "sun.max.fill" : "person.3.fill")
+                .font(.headline).foregroundStyle(beer.isSeasonal ? Brand.copper : Brand.hop)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Why it's moving").font(.caption2.weight(.bold)).foregroundStyle(Brand.muted)
+                Text(beer.isSeasonal ? "\(beer.moveReason) — right in season" : "Riding real community votes")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.text)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background((beer.isSeasonal ? Brand.copper : Brand.hop).opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var chartCard: some View {
