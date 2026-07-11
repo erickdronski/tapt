@@ -226,10 +226,10 @@
 <div class="stats">
   <div class="wrap">
     <div class="stats-grid">
-      <div class="stat reveal"><b>11,000+</b><span>beers in the catalog</span></div>
-      <div class="stat reveal d1"><b>11,900+</b><span>breweries mapped</span></div>
-      <div class="stat reveal d2"><b>8,700+</b><span>venues, 25 countries</span></div>
-      <div class="stat reveal d3"><b>60</b><span>BJCP styles, cited</span></div>
+      <div class="stat reveal"><b id="stat-beers">11,000+</b><span>beers in the catalog</span></div>
+      <div class="stat reveal d1"><b id="stat-breweries">11,900+</b><span>breweries, <span id="stat-countries">108</span> countries</span></div>
+      <div class="stat reveal d2"><b id="stat-venues">8,700+</b><span>venues mapped</span></div>
+      <div class="stat reveal d3"><b id="stat-styles">60</b><span>BJCP styles, cited</span></div>
     </div>
   </div>
 </div>
@@ -434,6 +434,27 @@
       entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  })();
+</script>
+<script>
+  // Live headline counts, single source of truth (platform_stats), so the site never
+  // drifts from the real database. Clean floored display; the page keeps its static
+  // numbers if the fetch fails.
+  (function(){
+    var floor = function(n){ return (Math.floor(n/100)*100).toLocaleString() + '+'; };
+    var set = function(id, v){ var el = document.getElementById(id); if (el && v != null) el.textContent = v; };
+    fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/rest/v1/rpc/platform_stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF' },
+      body: '{}'
+    }).then(function(r){ return r.json(); }).then(function(s){
+      if (!s) return;
+      set('stat-beers', floor(s.beers));
+      set('stat-breweries', floor(s.breweries));
+      set('stat-venues', floor(s.venues));
+      set('stat-styles', s.styles);
+      set('stat-countries', s.countries);
+    }).catch(function(){});
   })();
 </script>
 <script type="application/ld+json">
