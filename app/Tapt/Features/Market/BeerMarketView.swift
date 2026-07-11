@@ -103,6 +103,11 @@ struct BeerMarketView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(b.symbol).font(.system(.subheadline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
                 Text(b.name).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                if b.isSeasonal {
+                    Label(b.moveReason, systemImage: "sun.max.fill")
+                        .font(.system(size: 9.5, weight: .bold)).labelStyle(.titleAndIcon)
+                        .foregroundStyle(Brand.copper).lineLimit(1)
+                }
             }
             Spacer(minLength: 6)
             Sparkline(values: b.spark, up: b.isUp).frame(width: 54, height: 30)

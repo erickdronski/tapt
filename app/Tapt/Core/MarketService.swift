@@ -21,25 +21,33 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let ups: Int
     let downs: Int
     let spark: [Double]
+    let reason: String?
+    let seasonFit: Int
 
     var id: String { beerId }
     var isUp: Bool { change >= 0 }
     var netText: String { net > 0 ? "+\(net)" : "\(net)" }
     var changeText: String { "\(change >= 0 ? "+" : "")\(change)" }
+    /// A short human "why it's moving" line -- a real seasonal reason if it fits the
+    /// season, otherwise the style. Never invented.
+    var moveReason: String { reason ?? (style ?? "Community pick") }
+    var isSeasonal: Bool { reason != nil }
 
     enum CodingKeys: String, CodingKey {
-        case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark
+        case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark, reason
         case beerId = "beer_id"
         case imageUrl = "image_url"
+        case seasonFit = "season_fit"
     }
 }
 
 enum MarketSort: String, CaseIterable, Identifiable {
-    case movers, gainers, losers, active, top
+    case movers, season, gainers, losers, active, top
     var id: String { rawValue }
     var title: String {
         switch self {
         case .movers: return "Top movers"
+        case .season: return "In season"
         case .gainers: return "Gaining"
         case .losers: return "Sliding"
         case .active: return "Most active"
@@ -49,6 +57,7 @@ enum MarketSort: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .movers: return "arrow.up.arrow.down"
+        case .season: return "sun.max.fill"
         case .gainers: return "chart.line.uptrend.xyaxis"
         case .losers: return "chart.line.downtrend.xyaxis"
         case .active: return "bolt.fill"
