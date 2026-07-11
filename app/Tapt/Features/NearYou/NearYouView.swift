@@ -5,6 +5,7 @@ import MapKit
 /// Includes breweries, pubs, bars, taprooms, beer gardens, and restaurants with beer energy.
 struct NearYouView: View {
     @AppStorage("locationConsent") private var locationConsent = true
+    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
     @State private var location = LocationManager()
     @State private var camera: MapCameraPosition = .automatic
     @State private var breweries: [MKMapItem] = []
@@ -14,6 +15,7 @@ struct NearYouView: View {
     @State private var radarFilter: RadarFilter = .all
     @State private var searchText = ""
     @State private var nearLoaded = false
+    @State private var selectedVenue: BreweryMapVenue?
 
     private var visibleTaptVenues: [BreweryMapVenue] {
         let filtered = taptVenues.filter { venue in
@@ -55,8 +57,18 @@ struct NearYouView: View {
                 Map(position: $camera) {
                     UserAnnotation()
                     ForEach(taptVenues) { venue in
-                        Marker(venue.name, systemImage: "mappin.and.ellipse", coordinate: venue.coordinate)
-                            .tint(Brand.hop)
+                        Annotation(venue.name, coordinate: venue.coordinate) {
+                            Button { selectedVenue = venue } label: {
+                                Image(systemName: "mappin.circle.fill")
+                                    .font(.title3)
+                                    .foregroundStyle(Brand.hop)
+                                    .padding(3)
+                                    .background(Circle().fill(.white))
+                                    .shadow(radius: 1.5)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .annotationTitles(.hidden)
                     }
                     ForEach(breweries, id: \.self) { item in
                         Marker(item.name ?? "Beer spot", systemImage: "mug.fill",
@@ -154,6 +166,10 @@ struct NearYouView: View {
                     }
                     Task { await loadNearbyRadar(loc.coordinate) }
                 }
+            }
+            .sheet(item: $selectedVenue) { venue in
+                VenueDetailSheet(venue: venue)
+                    .presentationDetents([.medium, .large])
             }
         }
     }
@@ -255,13 +271,33 @@ struct NearYouView: View {
         do {
             let venues = try await WorldBeerService.breweryMap(limit: 800)
             taptVenues = venues
-            if location.location == nil, let first = venues.first {
-                camera = .region(MKCoordinateRegion(center: first.coordinate,
-                                                    latitudinalMeters: 4_500_000,
-                                                    longitudinalMeters: 4_500_000))
+            // GPS not ready yet: center on the user's home region, never a random
+            // global venue (which was dropping the map into Europe).
+            if location.location == nil {
+                await centerOnHomeRegion(fallback: venues)
             }
         } catch {
             taptVenues = []
+        }
+    }
+
+    /// Center the map on the stored home region when GPS isn't available yet.
+    private func centerOnHomeRegion(fallback venues: [BreweryMapVenue]) async {
+        let region = homeRegion.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !region.isEmpty,
+           let placemarks = try? await CLGeocoder().geocodeAddressString(region),
+           let coord = placemarks.first?.location?.coordinate {
+            camera = .region(MKCoordinateRegion(center: coord,
+                                                latitudinalMeters: 60_000, longitudinalMeters: 60_000))
+            await loadNearbyRadar(coord)
+            return
+        }
+        // Geocode failed: prefer a venue in the home region, then any US venue,
+        // rather than the first (often foreign) global venue.
+        if let home = venues.first(where: { $0.region == homeRegion })
+            ?? venues.first(where: { $0.country == "United States" }) {
+            camera = .region(MKCoordinateRegion(center: home.coordinate,
+                                                latitudinalMeters: 200_000, longitudinalMeters: 200_000))
         }
     }
 
@@ -298,4 +334,89 @@ private enum RadarFilter: String, CaseIterable, Identifiable {
     case world = "World"
 
     var id: String { rawValue }
+}
+
+/// Tapping a map pin opens this: the real details we have on a beer spot, plus its
+/// live tap list when the venue is a claimed partner on Tapt.
+private struct VenueDetailSheet: View {
+    let venue: BreweryMapVenue
+    @Environment(\.dismiss) private var dismiss
+    @State private var menu: [VenueMenuRow] = []
+    @State private var loaded = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "mug.fill")
+                            .font(.title2).foregroundStyle(Brand.malt)
+                            .frame(width: 54, height: 54)
+                            .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(venue.name)
+                                .font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                            Text(venue.typeLabel.capitalized)
+                                .font(.caption.weight(.semibold)).foregroundStyle(Brand.copper)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    if !venue.subtitle.isEmpty {
+                        Label(venue.subtitle, systemImage: "mappin.and.ellipse")
+                            .font(.subheadline).foregroundStyle(Brand.muted)
+                    }
+                    HStack(spacing: 10) {
+                        Button { openInMaps() } label: {
+                            Label("Directions", systemImage: "location.fill")
+                                .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
+                                .padding(.horizontal, 14).padding(.vertical, 9)
+                                .background(Brand.gold, in: Capsule())
+                        }.buttonStyle(.plain)
+                        if let site = venue.websiteURL, !site.isEmpty,
+                           let url = URL(string: site.hasPrefix("http") ? site : "https://" + site) {
+                            Link(destination: url) {
+                                Label("Website", systemImage: "safari")
+                                    .font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                                    .padding(.horizontal, 14).padding(.vertical, 9)
+                                    .overlay(Capsule().stroke(Brand.malt.opacity(0.2)))
+                            }
+                        }
+                    }
+                    if !menu.isEmpty {
+                        Text("On tap now").font(.headline).foregroundStyle(Brand.text).padding(.top, 4)
+                        ForEach(menu) { row in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(row.beerName).font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                                    Text([row.breweryName, row.style].compactMap { $0 }.joined(separator: " · "))
+                                        .font(.caption).foregroundStyle(Brand.muted)
+                                }
+                                Spacer(minLength: 0)
+                                if let p = row.priceText { Text(p).font(.subheadline.weight(.heavy)).foregroundStyle(Brand.copper) }
+                            }
+                            .padding(11).background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
+                        }
+                    } else if loaded {
+                        Text("No live tap list yet. If you run this spot, claim it free on Tapt to publish your menu here.")
+                            .font(.caption).foregroundStyle(Brand.muted).padding(.top, 4)
+                    }
+                }
+                .padding()
+            }
+            .background(Brand.background)
+            .navigationTitle("Beer spot").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+        }
+        .task {
+            guard !loaded else { return }
+            menu = (try? await VenueMenuService.menu(venueId: venue.venueId)) ?? []
+            loaded = true
+        }
+    }
+
+    private func openInMaps() {
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: venue.coordinate))
+        item.name = venue.name
+        item.openInMaps()
+    }
 }
