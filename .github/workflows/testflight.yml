@@ -87,10 +87,26 @@ jobs:
           </dict>
           </plist>
           PLIST
-          xcodebuild -exportArchive \
+          set -o pipefail
+          if xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Tapt.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -exportPath "$RUNNER_TEMP/export" \
             -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
-            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }}
+            -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} 2>&1 | tee "$RUNNER_TEMP/upload.log"; then
+            echo "Uploaded to TestFlight."
+          else
+            # Apple caps uploads per app per day. Hitting that cap is expected after
+            # several uploads in a day and is NOT a build failure, so end neutrally
+            # (green, no failure email) instead of spamming a red run. Real export/
+            # signing/validation failures still fall through and fail loudly.
+            if grep -q "Upload limit reached" "$RUNNER_TEMP/upload.log"; then
+              echo "::warning title=TestFlight upload skipped::Apple's daily upload limit was reached. This is expected after several uploads in one day — try again tomorrow. Not a build failure."
+              echo "### ⏭️ TestFlight upload skipped" >> "$GITHUB_STEP_SUMMARY"
+              echo "Apple's daily upload cap was reached. Try again tomorrow. This is **not** a build failure." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "::error title=TestFlight upload failed::Export/upload failed for a real reason — see the log above."
+            exit 1
+          fi

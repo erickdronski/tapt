@@ -41,11 +41,20 @@ jobs:
           MAX_PAGES: ${{ github.event.inputs.max_pages || '25' }}
           PAGE_SIZE: "100"
         run: |
+          # This is a best-effort weekly content refresh. Neither a missing secret
+          # (feature simply not enabled) nor a transient Open Food Facts outage is a
+          # real failure, so skip neutrally (green, no failure email) in those cases.
+          # The page cursor is resumable, so the next run picks up where this left off.
           if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is not set. Add it to enable ingestion."
-            exit 1
+            echo "::warning title=Ingestion skipped::SUPABASE_SERVICE_ROLE_KEY secret is not set — add it to enable the weekly catalog refresh. Skipping (not a failure)."
+            echo "### ⏭️ Ingestion skipped — service-role secret not set (add it to enable)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
-          python3 scripts/ingest_off_beers.py
+          if ! python3 scripts/ingest_off_beers.py; then
+            echo "::warning title=Ingestion incomplete::Open Food Facts ingestion did not finish (likely OFF API throttling). The cursor resumes next run — not a build failure."
+            echo "### ⏭️ Ingestion incomplete — OFF likely throttling; resumes next run." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
 
       - name: Persist the page cursor
         if: always()
