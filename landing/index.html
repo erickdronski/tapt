@@ -54,7 +54,9 @@
   /* hero */
   .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding-top:72px;padding-bottom:40px}
   .kicker{display:inline-block;background:var(--malt);color:var(--gold);font-weight:700;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:22px}
-  .hero h1{font-size:clamp(2.8rem,6.4vw,4.6rem);font-weight:800;letter-spacing:-.03em}
+  .hero h1{font-size:clamp(2.3rem,4vw,3.05rem);font-weight:800;letter-spacing:-.035em}
+  /* Each statement gets its own line and never breaks mid-phrase, so no orphan tail words. */
+  .hero h1 span{display:block;white-space:nowrap}
   .hero h1 em{font-style:normal;color:var(--gold)}
   .hero p.lede{font-size:1.18rem;color:var(--slate);margin:22px 0 30px;max-width:33rem}
   .hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
@@ -74,6 +76,14 @@
   .row .mv{font-family:'Poppins';font-weight:800;font-size:.9rem;display:flex;align-items:center;gap:5px}
   .up{color:#7FD49B}.down{color:#E88C6A}
   .market .foot{font-size:.72rem;color:rgba(251,246,236,.5);margin-top:12px;text-align:center}
+  /* On narrow screens drop the two-column hero to one column so the headline gets
+     full width -- otherwise the big type is jammed into half the screen and wraps badly.
+     One-column type scales with the viewport so "Ride the beer market." always fits on
+     one line, from a 320px phone up to a tablet, without ever orphaning a tail word. */
+  @media(max-width:960px){
+    .hero{grid-template-columns:1fr;gap:34px;padding-top:56px}
+    .hero h1{font-size:clamp(1.5rem,7.6vw,3.3rem)}
+  }
 
   /* stats */
   .stats{background:var(--malt);color:var(--foam)}
@@ -203,7 +213,7 @@
   <div class="hero">
     <div>
       <span class="kicker">THE Beer Superapp</span>
-      <h1>Scan it. Score it.<br>Ride the beer <em>market</em>.</h1>
+      <h1><span>Scan it.</span><span>Score it.</span><span>Ride the beer <em>market</em>.</span></h1>
       <p class="lede">Scan any beer on Earth, vote it up or down on a live global market, and stamp your Passport. Free.</p>
       <div class="hero-ctas" id="get">
         <a class="btn btn-dark" href="#get">Download for iOS</a>
