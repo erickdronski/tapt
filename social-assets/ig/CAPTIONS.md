@@ -1,7 +1,7 @@
 # Tapt Instagram — @taptbeerapp
 
 Rendered PNGs in `out/`. Source HTML alongside; re-render with `render.sh` (headless Chrome).
-Voice: plain and direct, showcase the free things, no hype, no em dashes. Every number is real.
+Voice: plain, direct, confident. No hype, no em dashes. Don't flex "real data" (assumed) or numbers/stats.
 
 ## Profile
 - **Handle:** @taptbeerapp (fallbacks @tapt.beer, @drinktapt)
@@ -9,16 +9,13 @@ Voice: plain and direct, showcase the free things, no hype, no em dashes. Every 
 - **Bio:**
   ```
   🍺 The beer superapp
-  Rate it. Cellar it. Watch it move on the Beer Market.
-  11,000+ beers · real data · free
-  ↓ get the app
-  taptbeer.com
+  Rate it. Cellar it. Watch it climb the Beer Market.
   ```
+- **Name:** Tapt   ·   **Website:** https://taptbeer.com
 
 ## Post 1 — Meet Tapt (out/post-01-meet.png)
 > Meet Tapt. The beer superapp.
-> Rate any beer, build your cellar, and watch it climb the Beer Market on real community votes.
-> 11,000+ beers. Real data. Free.
+> Rate any beer, build your cellar, and watch it climb the Beer Market as people vote.
 > Get it → taptbeer.com 🍺
 >
 > #beer #craftbeer #beerapp #beerlover #beertography #cerveza

@@ -1,0 +1,149 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--deep:#0C0702;--muted:#B89A73;--haze:#EFE7D6}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#0C0702}
+  .doc{width:1600px;background:radial-gradient(130% 60% at 50% 0%, #2A1B0A 0%, #1A1206 42%, #0C0702 100%);color:var(--foam);font-family:'Inter',sans-serif;padding:0 0 90px}
+  .band{padding:90px 110px;border-bottom:1px solid rgba(251,246,236,.07)}
+  .eyebrow{font-family:'Poppins';font-weight:700;letter-spacing:.24em;font-size:22px;color:var(--gold);text-transform:uppercase}
+  h2{font-family:'Poppins';font-weight:800;font-size:56px;margin:14px 0 0;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:26px;margin-top:14px;max-width:1000px;line-height:1.5}
+
+  /* Header */
+  .hero{display:flex;align-items:center;gap:48px;padding:120px 110px 96px}
+  .hero .mark{width:190px;height:190px;flex:none}
+  .hero h1{font-family:'Poppins';font-weight:900;font-size:150px;line-height:.9;margin:0;letter-spacing:-.03em}
+  .hero .tag{font-family:'Poppins';font-weight:600;font-size:40px;color:var(--gold);margin-top:16px}
+  .hero .pill{display:inline-block;margin-top:22px;font-family:'Poppins';font-weight:700;font-size:24px;color:var(--malt);background:var(--gold);padding:12px 26px;border-radius:999px}
+
+  /* Logo band */
+  .logos{display:flex;gap:36px;margin-top:44px}
+  .logobox{flex:1;border-radius:26px;height:340px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .logobox.dark{background:radial-gradient(120% 120% at 50% 40%,#241608,#0C0702);border:1px solid rgba(242,169,0,.16)}
+  .logobox.light{background:var(--foam)}
+  .logobox .m{width:200px;height:200px}
+  .logobox .cap{position:absolute;bottom:20px;left:24px;font-family:'Poppins';font-weight:600;font-size:20px}
+  .logobox.dark .cap{color:var(--muted)}.logobox.light .cap{color:#8A6A3C}
+  .clear{flex:1;border-radius:26px;height:340px;background:repeating-linear-gradient(45deg,rgba(251,246,236,.03),rgba(251,246,236,.03) 14px,transparent 14px,transparent 28px);border:1px solid rgba(251,246,236,.1);display:flex;align-items:center;justify-content:center;position:relative}
+  .clear .box{width:230px;height:230px;border:2px dashed rgba(242,169,0,.5);border-radius:16px;display:flex;align-items:center;justify-content:center}
+  .clear .m{width:150px;height:150px}
+
+  /* Palette */
+  .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:44px}
+  .sw{border-radius:22px;height:230px;padding:26px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(251,246,236,.08)}
+  .sw .nm{font-family:'Poppins';font-weight:700;font-size:30px}
+  .sw .hex{font-family:'Inter';font-weight:600;font-size:24px;opacity:.85;margin-top:4px}
+  .sw .use{font-size:19px;opacity:.7;margin-top:8px}
+
+  /* Type */
+  .typerow{display:flex;gap:60px;margin-top:44px;align-items:flex-start}
+  .typecol{flex:1}
+  .tk{font-family:'Poppins';font-weight:700;font-size:26px;color:var(--gold)}
+  .poppins-samp{font-family:'Poppins';font-weight:800;font-size:96px;line-height:1;margin:14px 0 0;letter-spacing:-.02em}
+  .inter-samp{font-family:'Inter';font-weight:500;font-size:34px;line-height:1.5;margin:14px 0 0;color:var(--haze)}
+  .scale{margin-top:20px;color:var(--muted);font-size:22px;line-height:1.9}
+
+  /* Voice */
+  .voice{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:44px}
+  .vcard{border-radius:22px;padding:34px;border:1px solid rgba(251,246,236,.09)}
+  .vcard.do{background:rgba(63,143,91,.12);border-color:rgba(63,143,91,.35)}
+  .vcard.dont{background:rgba(180,83,31,.1);border-color:rgba(180,83,31,.3)}
+  .vcard h3{font-family:'Poppins';font-weight:700;font-size:34px;margin:0 0 18px;display:flex;align-items:center;gap:14px}
+  .vcard.do h3{color:#8FE0A8}.vcard.dont h3{color:#E9925C}
+  .vcard li{font-size:26px;line-height:1.6;margin-bottom:14px;color:var(--haze);list-style:none;padding-left:34px;position:relative}
+  .vcard li:before{position:absolute;left:0;top:-2px;font-size:28px}
+  .vcard.do li:before{content:"✓";color:#8FE0A8}.vcard.dont li:before{content:"✕";color:#E9925C}
+
+  .foot{padding:70px 110px 0;display:flex;align-items:center;color:var(--muted);font-size:26px}
+  .foot .wm{font-family:'Poppins';font-weight:800;color:var(--foam);letter-spacing:.04em}
+  .foot .r{margin-left:auto;font-family:'Poppins';font-weight:600;color:var(--gold)}
+</style></head><body>
+<div class="doc">
+
+  <!-- HERO -->
+  <div class="hero">
+    <svg class="mark" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+      <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+      <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath></defs>
+      <g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/><rect x="126" y="166" width="24" height="286" rx="12" fill="#fff" opacity=".18"/></g>
+      <path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/>
+      <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <div class="eyebrow">Brand Master</div>
+      <h1>TAPT</h1>
+      <div class="tag">The beer superapp.</div>
+      <span class="pill">taptbeer.com · @taptbeerapp</span>
+    </div>
+  </div>
+
+  <!-- LOGO -->
+  <div class="band">
+    <div class="eyebrow">The Mark</div>
+    <h2>One pint. Full of foam.</h2>
+    <div class="sub">The shaker pint is the whole identity. Keep it centered, keep the foam, never recolor or outline it. Use the app icon on the App Store; the floating pint for avatars and stamps.</div>
+    <div class="logos">
+      <div class="logobox dark"><svg class="m" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><use href="#b"/><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="cap">On malt (primary)</span></div>
+      <div class="logobox light"><svg class="m" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="cap">On foam (light)</span></div>
+      <div class="clear"><div class="box"><svg class="m" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></div></div>
+    </div>
+  </div>
+
+  <!-- COLOR -->
+  <div class="band">
+    <div class="eyebrow">Color</div>
+    <h2>Warm, dark, golden.</h2>
+    <div class="sub">Beer at night. A deep malt base lets the gold glow. Hop-green and copper are the only accents: green for up, copper for down.</div>
+    <div class="swatches">
+      <div class="sw" style="background:#F2A900;color:#1A1206"><div class="nm">Gold</div><div class="hex">#F2A900</div><div class="use">Primary. The beer.</div></div>
+      <div class="sw" style="background:#1A1206;color:#FBF6EC"><div class="nm">Malt</div><div class="hex">#1A1206</div><div class="use">Base / backgrounds.</div></div>
+      <div class="sw" style="background:#FBF6EC;color:#1A1206"><div class="nm">Foam</div><div class="hex">#FBF6EC</div><div class="use">Text / light surface.</div></div>
+      <div class="sw" style="background:#3F8F5B;color:#fff"><div class="nm">Hop</div><div class="hex">#3F8F5B</div><div class="use">Up. Positive.</div></div>
+      <div class="sw" style="background:#B4531F;color:#fff"><div class="nm">Copper</div><div class="hex">#B4531F</div><div class="use">Down. Roast / bitter.</div></div>
+      <div class="sw" style="background:#0C0702;color:#B89A73"><div class="nm">Deep</div><div class="hex">#0C0702</div><div class="use">Deepest shadow.</div></div>
+    </div>
+  </div>
+
+  <!-- TYPE -->
+  <div class="band">
+    <div class="eyebrow">Typography</div>
+    <h2>Poppins leads. Inter reads.</h2>
+    <div class="typerow">
+      <div class="typecol">
+        <div class="tk">POPPINS · display</div>
+        <div class="poppins-samp">The beer<br>superapp.</div>
+        <div class="scale">Weights 600 / 700 / 800 / 900<br>Headlines, numbers, the wordmark. Tight tracking.</div>
+      </div>
+      <div class="typecol">
+        <div class="tk">INTER · text</div>
+        <div class="inter-samp">Rate every beer you drink. Build a cellar. Watch it move on the Beer Market.</div>
+        <div class="scale">Weights 400 / 500 / 600<br>Body, captions, labels. Clean and legible.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE -->
+  <div class="band">
+    <div class="eyebrow">Voice</div>
+    <h2>Plain. Confident. Never salesy.</h2>
+    <div class="voice">
+      <div class="vcard do"><h3>Do</h3><ul>
+        <li>Lead with what it is: "The beer superapp."</li>
+        <li>Short verbs, concrete nouns. Then stop.</li>
+        <li>Showcase the free things, plainly.</li>
+        <li>Let the product speak. Confidence over pitch.</li>
+      </ul></div>
+      <div class="vcard dont"><h3>Don't</h3><ul>
+        <li>Flex "real data." It's assumed.</li>
+        <li>Flex numbers or stat counts.</li>
+        <li>Hype verbs (elevate, seamless, unleash).</li>
+        <li>Em dashes or "it's not X, it's Y."</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <div class="foot"><span class="wm">TAPT</span>&nbsp;&nbsp;· Brand Master v1<span class="r">taptbeer.com</span></div>
+</div>
+</body></html>
