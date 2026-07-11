@@ -25,9 +25,12 @@ struct BeerDetailView: View {
                     noteCard(d)
                     if !d.awards.isEmpty { awardsCard(d.awards) }
                     if d.styleName != nil { styleScience(d) }
+                    if !d.sensory.isEmpty || d.styleFlavorNotes != nil { tasteCard(d) }
+                    if let ing = d.styleIngredients, !ing.isEmpty { ingredientsCard(ing) }
                     factsCard(d)
                     if let n = d.nutrition, hasNutrition(n) { nutritionCard(n) }
                     if let origin = matchedOrigin(d) { funFact(origin) }
+                    if let hist = d.styleHistory, !hist.isEmpty { styleStoryCard(hist) }
                     whereToFind(d)
                     howItsMadeLink
                     sourcesFooter(d)
@@ -327,6 +330,83 @@ struct BeerDetailView: View {
 
     private func trimmed(_ v: Double) -> String {
         v.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", v) : String(format: "%.1f", v)
+    }
+
+    // MARK: - Taste & feel (sensory profile), ingredients, style story
+
+    /// What it tastes like + a 0-5 sensory profile (hoppiness, bitterness, sourness,
+    /// body, roast, sweetness, fruitiness) typical of the beer's style. BJCP-grounded.
+    private func tasteCard(_ d: BeerDetail) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Taste & feel", systemImage: "waveform.path.ecg")
+                .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+            if let notes = d.styleFlavorNotes, !notes.isEmpty {
+                Text(notes).font(.subheadline).foregroundStyle(Brand.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            VStack(spacing: 9) {
+                ForEach(d.sensory, id: \.0) { label, value in
+                    sensoryBar(label, value)
+                }
+            }
+            Text("Typical for the style · BJCP 2021")
+                .font(.caption2).foregroundStyle(Brand.muted)
+        }
+        .padding(16)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.2)))
+    }
+
+    private func sensoryBar(_ label: String, _ value: Int) -> some View {
+        HStack(spacing: 10) {
+            Text(label).font(.caption.weight(.semibold)).foregroundStyle(Brand.muted)
+                .frame(width: 108, alignment: .leading)
+            HStack(spacing: 4) {
+                ForEach(0..<5, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(i < value ? sensoryTint(label) : Brand.haze.opacity(0.55))
+                        .frame(height: 9)
+                }
+            }
+        }
+    }
+
+    private func sensoryTint(_ label: String) -> Color {
+        switch label {
+        case "Hoppiness": return Brand.hop
+        case "Bitterness": return Brand.copper
+        case "Roast": return Brand.malt
+        case "Sourness": return Brand.gold
+        case "Fruitiness": return Brand.copper
+        default: return Brand.gold
+        }
+    }
+
+    private func ingredientsCard(_ ingredients: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("What's in it", systemImage: "leaf.circle.fill")
+                .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+            Text(ingredients).font(.subheadline).foregroundStyle(Brand.text)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("Typical ingredients for the style.")
+                .font(.caption2).foregroundStyle(Brand.muted)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func styleStoryCard(_ history: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Where it comes from", systemImage: "book.closed.fill")
+                .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+            Text(history).font(.subheadline).foregroundStyle(Brand.text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.copper.opacity(0.22)))
     }
 
     // MARK: - Facts / nutrition / fun fact / find it

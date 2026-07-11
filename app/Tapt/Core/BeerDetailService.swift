@@ -36,6 +36,24 @@ struct BeerDetail: Decodable, Sendable {
     let avgRating: Double?
     let venuesInCountry: Int
     let awards: [Award]
+    // Style sensory profile + taste + ingredients + history (BJCP-grounded, style-typical).
+    let styleHoppiness: Int?
+    let styleBitterness: Int?
+    let styleSweetness: Int?
+    let styleBody: Int?
+    let styleRoast: Int?
+    let styleSourness: Int?
+    let styleFruitiness: Int?
+    let styleFlavorNotes: String?
+    let styleIngredients: String?
+    let styleHistory: String?
+
+    /// The sensory bars to draw (label, 0-5 value), only the ones that actually apply.
+    var sensory: [(String, Int)] {
+        [("Hoppiness", styleHoppiness), ("Bitterness", styleBitterness), ("Malty sweetness", styleSweetness),
+         ("Body", styleBody), ("Roast", styleRoast), ("Sourness", styleSourness), ("Fruitiness", styleFruitiness)]
+            .compactMap { label, v in (v ?? 0) > 0 ? (label, v!) : nil }
+    }
 
     struct Award: Decodable, Sendable, Identifiable {
         let awardBody: String
@@ -108,6 +126,16 @@ struct BeerDetail: Decodable, Sendable {
         case checkinCount = "checkin_count"
         case avgRating = "avg_rating"
         case venuesInCountry = "venues_in_country"
+        case styleHoppiness = "style_hoppiness"
+        case styleBitterness = "style_bitterness"
+        case styleSweetness = "style_sweetness"
+        case styleBody = "style_body"
+        case styleRoast = "style_roast"
+        case styleSourness = "style_sourness"
+        case styleFruitiness = "style_fruitiness"
+        case styleFlavorNotes = "style_flavor_notes"
+        case styleIngredients = "style_ingredients"
+        case styleHistory = "style_history"
     }
 }
 
