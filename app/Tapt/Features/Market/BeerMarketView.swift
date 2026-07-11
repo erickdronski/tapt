@@ -203,11 +203,10 @@ struct MarketTicker: View {
     let items: [MarketBeer]
     var onTap: (MarketBeer) -> Void
     private let speed: Double = 34
-    // Cells are sized to their content (no dead space) but capped so the marquee
-    // math stays deterministic. Tight, continuous, real-ticker feel.
-    private let cellWidth: CGFloat = 118
-
-    private var rowWidth: CGFloat { cellWidth * CGFloat(max(items.count, 1)) }
+    // The row's true laid-out width, measured once. Feeds the seamless-loop math so
+    // cells can size to their OWN content (no wrapping, even gaps) instead of a fixed
+    // width that clipped and wrapped 4-letter symbols like STON -> "STO"/"N".
+    @State private var rowWidth: CGFloat = 0
 
     var body: some View {
         // A GeometryReader container is "greedy": it fills the offered space and reports
@@ -237,11 +236,15 @@ struct MarketTicker: View {
     private func row(at date: Date) -> some View {
         HStack(spacing: 0) {
             ForEach(items) { b in
-                Button { onTap(b) } label: {
-                    cell(b, at: date).frame(width: cellWidth, alignment: .leading)
-                }
-                .buttonStyle(.plain)
+                Button { onTap(b) } label: { cell(b, at: date) }
+                    .buttonStyle(.plain)
             }
+        }
+        .background(GeometryReader { g in
+            Color.clear.preference(key: TickerRowWidthKey.self, value: g.size.width)
+        })
+        .onPreferenceChange(TickerRowWidthKey.self) { w in
+            if w > 0, abs(w - rowWidth) > 0.5 { rowWidth = w }
         }
     }
 
@@ -250,7 +253,7 @@ struct MarketTicker: View {
         // sentiment is impossible to miss as the ticker slides by.
         let t = date.timeIntervalSinceReferenceDate
         let pulse = b.isHot ? (0.55 + 0.45 * abs(sin(t * 2.3))) : 1.0
-        return HStack(spacing: 4) {
+        return HStack(spacing: 5) {
             if b.isHot {
                 Image(systemName: "flame.fill")
                     .font(.system(size: 8)).foregroundStyle(Brand.gold).opacity(pulse)
@@ -263,9 +266,21 @@ struct MarketTicker: View {
                 .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
             Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
                 .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
-            Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.22)).padding(.leading, 2)
+            Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.25)).padding(.horizontal, 7)
         }
+        .lineLimit(1)                      // symbols never wrap to a second line
+        .fixedSize()                       // cell hugs its content, even gaps
+        .padding(.leading, 4)
         .scaleEffect(b.isHot ? 0.97 + 0.05 * pulse : 1)
+    }
+}
+
+/// Measures the true laid-out width of one ticker row so the marquee can loop
+/// seamlessly with content-sized (non-wrapping) cells.
+private struct TickerRowWidthKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
