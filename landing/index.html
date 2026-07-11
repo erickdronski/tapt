@@ -67,7 +67,11 @@
   .market h4{font-family:'Poppins';font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
   .market .sub{font-size:.78rem;color:rgba(251,246,236,.6);margin-bottom:16px}
   .row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;background:rgba(251,246,236,.05);margin-bottom:9px}
-  .row .rank{font-family:'Poppins';font-weight:800;color:var(--gold);width:20px;font-size:.9rem}
+  .row .rank{font-family:'Poppins';font-weight:800;color:var(--gold);width:16px;font-size:.9rem}
+  /* Honest style marker: a beer glass tinted to the beer's real color, not a fabricated
+     product photo or a brand logo. Conveys the style at a glance without inventing anything. */
+  .row .mark{width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(251,246,236,.05);border-radius:9px}
+  .row .mark svg{width:19px;height:26px;display:block}
   .row .nm{flex:1;min-width:0}
   .row .nm b{display:block;font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row .nm span{font-size:.74rem;color:rgba(251,246,236,.55)}
@@ -121,11 +125,8 @@
   .plan li{padding:8px 0;font-size:.98rem;display:flex;gap:10px}
   .plan.us li::before{content:"✓";font-weight:800;color:var(--hop)}
   .plan.them li::before{content:"✕";font-weight:800;color:var(--copper);opacity:.55}
-  .biz-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
-  .biz-tool{background:rgba(251,246,236,.06);border:1px solid rgba(251,246,236,.12);border-radius:14px;padding:16px}
-  .biz-tool b{font-family:'Poppins';font-size:.98rem}
-  .biz-tool span{display:block;font-size:.82rem;color:rgba(251,246,236,.68);margin-top:4px}
-  @media(max-width:820px){.compare{grid-template-columns:1fr}.biz-tools{grid-template-columns:1fr}}
+  .biz-note{font-size:.86rem;color:rgba(251,246,236,.55);margin-top:22px}
+  @media(max-width:820px){.compare{grid-template-columns:1fr}}
 
   /* QR mock */
   .qr-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;align-items:center;gap:16px;margin-top:22px}
@@ -214,10 +215,10 @@
     <div class="market" id="market-card">
       <h4>The Beer Market</h4>
       <p class="sub">Real beers. Real votes. The world decides.</p>
-      <div class="row"><span class="rank">1</span><div class="nm"><b>Allagash White</b><span>Belgian Witbier · USA</span></div><span class="mv up">▲</span></div>
-      <div class="row"><span class="rank">2</span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><span class="mv up">▲</span></div>
-      <div class="row"><span class="rank">3</span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><span class="mv down">▼</span></div>
-      <div class="row"><span class="rank">4</span><div class="nm"><b>Sierra Nevada Pale Ale</b><span>American Pale Ale · USA</span></div><span class="mv up">▲</span></div>
+      <div class="row"><span class="rank">1</span><span class="mark"><svg viewBox="0 0 20 27" aria-hidden="true"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#EAD07A"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Allagash White</b><span>Belgian Witbier · USA</span></div><span class="mv up">▲</span></div>
+      <div class="row"><span class="rank">2</span><span class="mark"><svg viewBox="0 0 20 27" aria-hidden="true"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#E3A72B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><span class="mv up">▲</span></div>
+      <div class="row"><span class="rank">3</span><span class="mark"><svg viewBox="0 0 20 27" aria-hidden="true"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#3A2414"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#EFE6D2"/></svg></span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><span class="mv down">▼</span></div>
+      <div class="row"><span class="rank">4</span><span class="mark"><svg viewBox="0 0 20 27" aria-hidden="true"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#C9812B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Sierra Nevada Pale Ale</b><span>American Pale Ale · USA</span></div><span class="mv up">▲</span></div>
       <p class="foot">Boards stay honestly empty until the community votes. This is the shape of the feature, not invented activity.</p>
     </div>
   </div>
@@ -319,12 +320,8 @@
           <li>Logo &amp; brand customization</li>
           <li>Events, happy hours &amp; releases</li>
         </ul>
-        <div class="biz-tools">
-          <div class="biz-tool"><b>Featured</b><span>$29/mo · placement + pushes to nearby drinkers</span></div>
-          <div class="biz-tool"><b>Spotlight</b><span>$79/mo · top slot + a Dispatch feature</span></div>
-          <div class="biz-tool"><b>Pro insights</b><span>your demand, over time, vs local benchmark</span></div>
-        </div>
-        <a class="btn btn-gold" style="margin-top:22px" href="portal.html">Claim your venue, free</a>
+        <p class="biz-note">Optional paid boosts for more reach live inside your portal.</p>
+        <a class="btn btn-gold" style="margin-top:18px" href="portal.html">Claim your venue, free</a>
       </div>
     </div>
   </div>
