@@ -1,10 +1,10 @@
-# Tapt Instagram — @taptbeer
+# Tapt Instagram — @taptbeerapp
 
 Rendered PNGs in `out/`. Source HTML alongside; re-render with `render.sh` (headless Chrome).
 Voice: plain and direct, showcase the free things, no hype, no em dashes. Every number is real.
 
 ## Profile
-- **Handle:** @taptbeer (fallbacks @tapt.beer, @drinktapt)
+- **Handle:** @taptbeerapp (fallbacks @tapt.beer, @drinktapt)
 - **Avatar:** out/avatar.png (circle-safe pint on malt)
 - **Bio:**
   ```
