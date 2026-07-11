@@ -1,5 +1,8 @@
 # Tapt — Instagram Launch Calendar (first 30 days)
 
+> Note: `LAUNCH-KIT.md` in this folder is the current, ready-to-post source (updated real numbers, honest TestFlight-phase CTA, the Beer Market + Dispatch, copy-paste captions). This file remains as the 30-day skeleton.
+
+
 Handle to claim: **@taptbeer** (fallback @tapt.app). Bio: "THE Beer Superapp
 🍺 Scan any beer on Earth · Stamp your Passport · Free forever" + landing link.
 
