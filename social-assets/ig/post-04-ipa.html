@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0}
+  .frame{width:1080px;height:1350px;position:relative;overflow:hidden;box-sizing:border-box;padding:90px;color:#FBF6EC;font-family:'Inter',sans-serif;
+    background:radial-gradient(130% 90% at 50% 8%, #2A1B0A 0%, #1A1206 46%, #0C0702 100%);}
+  .brandrow{display:flex;align-items:center;gap:18px}
+  .brandrow .mark{width:48px;height:48px}
+  .brandrow .wm{font-family:'Poppins';font-weight:800;font-size:31px;letter-spacing:.04em}
+  .brandrow .h{margin-left:auto;font-weight:600;font-size:25px;color:#C89A5A}
+  .eyebrow{margin-top:64px;font-family:'Poppins';font-weight:700;font-size:30px;letter-spacing:.22em;color:#F2A900}
+  h1{font-family:'Poppins';font-weight:800;font-size:104px;line-height:1;margin:20px 0 0;letter-spacing:-.02em}
+  .tags{display:flex;align-items:center;gap:16px;margin-top:30px;flex-wrap:wrap}
+  .tag{font-family:'Poppins';font-weight:700;font-size:29px;color:#1A1206;background:#F2A900;padding:12px 26px;border-radius:999px}
+  .tag.ghost{background:transparent;color:#E7D6B8;border:2px solid rgba(231,214,184,.28)}
+  .flavor{margin-top:44px;font-size:44px;line-height:1.32;color:#F1E4CB;font-weight:500;max-width:900px}
+  .bars{margin-top:56px;display:flex;flex-direction:column;gap:28px}
+  .row{display:flex;align-items:center;gap:28px}
+  .row .lab{width:330px;font-family:'Poppins';font-weight:600;font-size:38px;color:#E7D6B8}
+  .seg{display:flex;gap:12px;flex:1}
+  .seg i{flex:1;height:34px;border-radius:9px;background:rgba(251,246,236,.10)}
+  .foot{position:absolute;left:90px;right:90px;bottom:76px;display:flex;align-items:center}
+  .src{font-size:28px;color:#B89A73;font-weight:500}
+  .site{margin-left:auto;font-family:'Poppins';font-weight:600;font-size:29px;color:#C89A5A}
+</style></head><body>
+  <div class="frame">
+    <div class="brandrow">
+      <svg class="mark" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+        <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+        <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath></defs>
+        <g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g>
+        <path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/>
+        <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/>
+      </svg>
+      <span class="wm">TAPT</span><span class="h">@taptbeer</span>
+    </div>
+    <div class="eyebrow">BEER SCHOOL</div>
+    <h1>American IPA</h1>
+    <div class="tags"><span class="tag">IPA family</span><span class="tag ghost">5.5&ndash;7.5% ABV</span><span class="tag ghost">40&ndash;70 IBU</span></div>
+    <div class="flavor">Citrus, pine and tropical hops over a lean malt base. The beer that launched the US craft hop revolution.</div>
+    <div class="bars">
+      <div class="row"><div class="lab">Hoppiness</div><div class="seg" data-v="5" data-c="#3F8F5B"></div></div>
+      <div class="row"><div class="lab">Bitterness</div><div class="seg" data-v="4" data-c="#B4531F"></div></div>
+      <div class="row"><div class="lab">Fruitiness</div><div class="seg" data-v="2" data-c="#C56B10"></div></div>
+      <div class="row"><div class="lab">Body</div><div class="seg" data-v="2" data-c="#F2A900"></div></div>
+      <div class="row"><div class="lab">Sweetness</div><div class="seg" data-v="2" data-c="#F2A900"></div></div>
+    </div>
+    <div class="foot"><span class="src">Beer school, one style at a time · BJCP 2021</span><span class="site">taptbeer.com</span></div>
+  </div>
+  <script>document.querySelectorAll('.seg').forEach(s=>{const v=+s.dataset.v,c=s.dataset.c;for(let i=0;i<5;i++){const b=document.createElement('i');if(i<v){b.style.background=c;b.style.boxShadow='0 0 20px '+c+'66';}s.appendChild(b);}});</script>
+</body></html>
