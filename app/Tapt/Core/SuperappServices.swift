@@ -241,6 +241,63 @@ enum SocialGraphService {
         struct Params: Encodable { let p_followee: String }
         try await Supa.client.rpc("unfollow_user", params: Params(p_followee: userId)).execute()
     }
+
+    /// The public passport card shown when you tap a person you follow (or found
+    /// in search / the Tonight feed). Coarse aggregates only -- the server never
+    /// returns venues, timestamps, or geo. Honors blocks + the social_visible switch.
+    static func profile(_ userId: String) async throws -> ProfileCard {
+        struct Params: Encodable { let p_user: String }
+        return try await Supa.client
+            .rpc("public_profile", params: Params(p_user: userId))
+            .execute().value
+    }
+}
+
+/// A small, honest snapshot of another drinker: passport totals, a favorite pour,
+/// and top styles. Mirrors public_profile()'s jsonb shape 1:1.
+struct ProfileCard: Decodable, Sendable {
+    let userId: String
+    let displayName: String
+    let handle: String?
+    let avatarUrl: String?
+    let region: String?
+    let memberSince: String?
+    let isSelf: Bool
+    var isFollowing: Bool
+    let visible: Bool
+    let blocked: Bool
+    let followers: Int
+    let following: Int
+    let pours: Int?
+    let stylesCount: Int?
+    let countries: Int?
+    let states: Int?
+    let topStyles: [StyleCount]?
+    let favoriteBeer: FavoriteBeer?
+
+    struct StyleCount: Decodable, Sendable, Identifiable {
+        let style: String
+        let pours: Int
+        var id: String { style }
+    }
+    struct FavoriteBeer: Decodable, Sendable {
+        let name: String
+        let brewery: String?
+        let pours: Int
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case handle, region, visible, blocked, followers, following, pours, countries, states
+        case userId = "user_id"
+        case displayName = "display_name"
+        case avatarUrl = "avatar_url"
+        case memberSince = "member_since"
+        case isSelf = "is_self"
+        case isFollowing = "is_following"
+        case stylesCount = "styles_count"
+        case topStyles = "top_styles"
+        case favoriteBeer = "favorite_beer"
+    }
 }
 
 // MARK: - Scan-to-catalog (Open Food Facts barcode fallback)

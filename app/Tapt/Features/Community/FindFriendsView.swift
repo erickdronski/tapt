@@ -7,6 +7,7 @@ struct FindFriendsView: View {
     @State private var results: [FoundProfile] = []
     @State private var searching = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var openProfile: ProfileRef?
 
     var body: some View {
         ScrollView {
@@ -53,6 +54,14 @@ struct FindFriendsView: View {
         .background(Brand.background)
         .navigationTitle("Find friends")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $openProfile) { ref in
+            PublicProfileView(userId: ref.id, initialName: ref.name) { following in
+                if let i = results.firstIndex(where: { $0.userId == ref.id }) {
+                    results[i].isFollowing = following
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
         .onChange(of: query) { _, newValue in
             searchTask?.cancel()
             let term = newValue.trimmingCharacters(in: .whitespaces)
@@ -75,19 +84,28 @@ struct FindFriendsView: View {
 
     private func row(_ profile: FoundProfile) -> some View {
         HStack(spacing: 12) {
-            Text(String(profile.displayName.first ?? "T").uppercased())
-                .font(.system(.headline, design: .rounded).weight(.heavy))
-                .foregroundStyle(Brand.malt)
-                .frame(width: 44, height: 44)
-                .background(Brand.gold, in: Circle())
-            VStack(alignment: .leading, spacing: 2) {
-                Text(profile.displayName)
-                    .font(.system(.headline, design: .rounded).weight(.bold))
-                    .foregroundStyle(Brand.text).lineLimit(1)
-                Text(profile.handle.map { "@\($0)" } ?? "\(profile.pours) pours logged")
-                    .font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+            Button {
+                Haptic.tap()
+                openProfile = ProfileRef(id: profile.userId, name: profile.displayName)
+            } label: {
+                HStack(spacing: 12) {
+                    Text(String(profile.displayName.first ?? "T").uppercased())
+                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.malt)
+                        .frame(width: 44, height: 44)
+                        .background(Brand.gold, in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(profile.displayName)
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Brand.text).lineLimit(1)
+                        Text(profile.handle.map { "@\($0)" } ?? "\(profile.pours) pours logged")
+                            .font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                }
+                .contentShape(Rectangle())
             }
-            Spacer(minLength: 8)
+            .buttonStyle(.plain)
             followButton(profile)
         }
         .padding(12)
