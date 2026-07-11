@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tapt Dispatch — one free email a week</title>
+<meta name="description" content="The Tapt Dispatch: one free email a week, personalized to your palate. The Beer of the Week, style science, a story worth pouring, and what the world is drinking. Opt in or out anytime.">
+<meta property="og:title" content="The Tapt Dispatch">
+<meta property="og:description" content="One free email a week, personalized to your palate. Beer of the Week, style science, and what the world is pouring.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://tapt-landing-three.vercel.app/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#F2A900; --malt:#1A1206; --foam:#FBF6EC; --hop:#3F8F5B;
+    --copper:#B4531F; --haze:#EFE7D6; --slate:#6B6459; --line:rgba(26,18,6,.09);
+    --radius:20px; --maxw:1080px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  h1,h2,h3,.wordmark{font-family:'Poppins',system-ui,sans-serif;line-height:1.05}
+  a{color:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(251,246,236,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .wordmark{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .wordmark span{color:var(--gold)}
+  .nav-links{display:flex;align-items:center;gap:26px}
+  .nav-links a{text-decoration:none;color:var(--slate);font-weight:600;font-size:.94rem;transition:color .2s}
+  .nav-links a:hover{color:var(--malt)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Poppins';font-weight:700;font-size:.95rem;padding:12px 22px;border-radius:999px;text-decoration:none;border:0;cursor:pointer;transition:transform .15s ease,box-shadow .2s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn-gold{background:var(--gold);color:var(--malt);box-shadow:0 8px 22px rgba(242,169,0,.34)}
+  .btn-gold:hover{box-shadow:0 10px 30px rgba(242,169,0,.44)}
+  @media(max-width:760px){.nav-links a:not(.btn){display:none}}
+
+  /* hero */
+  .hero{padding:70px 0 34px;text-align:center}
+  .kicker{display:inline-block;color:var(--copper);font-weight:700;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase}
+  .hero h1{font-size:clamp(2.4rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;margin:14px 0}
+  .hero h1 em{font-style:normal;color:var(--gold)}
+  .hero p{font-size:1.15rem;color:var(--slate);max-width:38rem;margin:0 auto}
+  .live{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-size:.82rem;font-weight:600;color:var(--slate)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--hop);box-shadow:0 0 0 0 rgba(63,143,91,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(63,143,91,.5)}70%{box-shadow:0 0 0 9px rgba(63,143,91,0)}100%{box-shadow:0 0 0 0 rgba(63,143,91,0)}}
+
+  /* signup */
+  .signup-card{background:var(--malt);color:var(--foam);border-radius:24px;padding:34px;max-width:640px;margin:28px auto 0;box-shadow:0 30px 70px rgba(26,18,6,.28);text-align:left}
+  .signup-card h3{font-size:1.25rem;font-weight:700}
+  .signup-card p.sub{color:rgba(251,246,236,.66);font-size:.95rem;margin-top:6px}
+  form.signup{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  form.signup input[type=email]{flex:1;min-width:220px;padding:14px 16px;border-radius:12px;border:1px solid rgba(251,246,236,.18);background:rgba(251,246,236,.06);color:var(--foam);font-size:1rem;font-family:inherit}
+  form.signup input::placeholder{color:rgba(251,246,236,.4)}
+  .hp{position:absolute;left:-9999px}
+  .msg{font-size:.88rem;margin-top:12px;min-height:1.1em}
+  .optout{font-size:.82rem;color:rgba(251,246,236,.5);margin-top:14px}
+  .optout a{color:var(--gold);text-decoration:none;font-weight:600}
+
+  section{padding:60px 0}
+  .sec-kicker{display:inline-block;color:var(--copper);font-weight:700;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase}
+  h2{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:800;letter-spacing:-.02em;margin:10px 0}
+  .sec-lede{color:var(--slate);max-width:40rem;font-size:1.05rem}
+
+  /* pillars */
+  .pillars{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:30px}
+  .pillar{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;display:flex;gap:14px;align-items:flex-start}
+  .pillar .e{font-size:1.6rem;line-height:1}
+  .pillar b{font-family:'Poppins';font-size:1.05rem}
+  .pillar span{display:block;color:var(--slate);font-size:.92rem;margin-top:3px}
+  @media(max-width:640px){.pillars{grid-template-columns:1fr}}
+
+  /* ===== the sample issue (the centerpiece) ===== */
+  .issue-band{background:linear-gradient(180deg,var(--haze),#fff)}
+  .issue{max-width:720px;margin:26px auto 0;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 40px 90px rgba(26,18,6,.20);border:1px solid var(--line)}
+  .masthead{background:var(--malt);color:var(--foam);padding:20px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .masthead .m-title{font-family:'Poppins';font-weight:800;letter-spacing:.14em;font-size:.82rem;color:var(--gold);text-transform:uppercase}
+  .masthead .m-meta{font-size:.76rem;color:rgba(251,246,236,.6)}
+  .sample-tag{display:inline-block;background:var(--copper);color:var(--foam);font-family:'Poppins';font-weight:800;font-size:.62rem;letter-spacing:.12em;padding:4px 10px;border-radius:999px;text-transform:uppercase}
+  .issue-body{padding:26px}
+  .issue-sec-label{font-family:'Poppins';font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin-bottom:10px}
+
+  .botw{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .botw .photo{width:130px;height:160px;flex:none;border-radius:14px;background:radial-gradient(58% 58% at 50% 46%, rgba(242,169,0,.16), transparent 72%);display:flex;align-items:center;justify-content:center}
+  .botw .photo img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 12px 16px rgba(26,18,6,.30))}
+  .botw .info{flex:1;min-width:200px}
+  .botw h3{font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
+  .botw .brewery{color:var(--slate);font-size:.95rem;margin-top:2px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+  .chip{font-size:.74rem;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--haze);color:var(--malt)}
+  .chip.up{background:rgba(63,143,91,.14);color:#2b7347}
+  .botw p{font-size:.95rem;color:#3d362c;margin-top:4px}
+
+  .palate{margin-top:24px;background:linear-gradient(135deg,#FFF5DA,#FDE8B8);border-radius:16px;padding:18px 20px}
+  .palate .lead{font-family:'Poppins';font-weight:700;font-size:1rem;display:flex;align-items:center;gap:8px}
+  .bars{margin-top:12px;display:grid;gap:9px}
+  .bar-row{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:10px}
+  .bar-row .lab{font-size:.78rem;font-weight:600;color:#5a4a1e}
+  .bar-track{height:9px;border-radius:99px;background:rgba(26,18,6,.10);overflow:hidden}
+  .bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--copper),var(--gold));width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+  .palate .note{font-size:.8rem;color:#6a5a2a;margin-top:12px}
+
+  .divider{height:1px;background:var(--line);margin:24px 0}
+  .fact{background:var(--malt);color:var(--foam);border-radius:16px;padding:20px 22px}
+  .fact .issue-sec-label{color:var(--gold)}
+  .fact p{font-size:.98rem;color:rgba(251,246,236,.85)}
+  .story p{font-size:.98rem;color:#3d362c}
+  .story .h{font-size:1.15rem;font-family:'Poppins';font-weight:700;margin-bottom:6px}
+
+  .world{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+  .wcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center;transition:transform .18s ease,box-shadow .2s ease}
+  .wcard:hover{transform:translateY(-4px);box-shadow:0 16px 30px rgba(26,18,6,.14)}
+  .wcard .wimg{height:78px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+  .wcard .wimg img{max-height:78px;max-width:100%;object-fit:contain;filter:drop-shadow(0 8px 10px rgba(26,18,6,.24))}
+  .wcard b{font-size:.86rem;font-family:'Poppins';display:block;line-height:1.2}
+  .wcard span{font-size:.72rem;color:var(--slate)}
+  @media(max-width:560px){.world{grid-template-columns:1fr 1fr}}
+
+  .issue-foot{background:var(--haze);padding:18px 26px;text-align:center;font-size:.84rem;color:var(--slate)}
+
+  /* archive */
+  .archive{text-align:center}
+  .arch-empty{max-width:520px;margin:22px auto 0;background:#fff;border:1px dashed rgba(26,18,6,.18);border-radius:18px;padding:30px}
+  .arch-empty .e{font-size:2rem}
+  .arch-empty b{font-family:'Poppins';display:block;margin-top:8px;font-size:1.1rem}
+  .arch-empty span{color:var(--slate);font-size:.94rem;display:block;margin-top:4px}
+  .arch-list{display:grid;gap:10px;max-width:640px;margin:22px auto 0;text-align:left}
+  .arch-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;text-decoration:none;transition:transform .16s ease,box-shadow .2s ease}
+  .arch-item:hover{transform:translateY(-2px);box-shadow:0 14px 28px rgba(26,18,6,.12)}
+  .arch-item .num{font-family:'Poppins';font-weight:800;color:var(--gold)}
+
+  /* footer */
+  footer{background:var(--malt);color:rgba(251,246,236,.7);padding:44px 0;margin-top:20px}
+  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;align-items:center}
+  .foot-links{display:flex;gap:20px;flex-wrap:wrap}
+  .foot-links a{color:rgba(251,246,236,.7);text-decoration:none;font-size:.9rem}
+  .foot-links a:hover{color:var(--foam)}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.dot{animation:none}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a href="index.html" class="wordmark" style="text-decoration:none">Tapt<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#business">For business</a>
+      <a href="#sample">Read a sample</a>
+      <a class="btn btn-gold" href="#subscribe">Get the Dispatch</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <span class="kicker">The Newsletter</span>
+  <h1>The Tapt <em>Dispatch</em></h1>
+  <p>One free email a week, tuned to your palate. The Beer of the Week the world crowned, the science behind what you are drinking, and where the map is heating up.</p>
+  <div class="live"><span class="dot"></span> Personalized from real check-ins and real votes. Never filler.</div>
+
+  <div class="signup-card" id="subscribe">
+    <h3>Get it in your inbox</h3>
+    <p class="sub">Free, weekly, unsubscribe in one tap. No spam, no bought placement.</p>
+    <form class="signup" id="dispatch-form">
+      <input type="email" name="email" placeholder="you@example.com" required maxlength="320" autocomplete="email">
+      <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off">
+      <button class="btn btn-gold" type="submit">Sign me up</button>
+    </form>
+    <div class="msg" id="dispatch-msg"></div>
+    <p class="optout">Already in? You can opt out anytime, one-click in every issue or from the app under Settings. In the app, toggle it under <b>Profile &rarr; The Tapt Dispatch</b>.</p>
+  </div>
+</header>
+
+<section class="wrap">
+  <span class="sec-kicker">What lands in your inbox</span>
+  <h2>Four things, every week</h2>
+  <div class="pillars">
+    <div class="pillar reveal"><span class="e">🏆</span><div><b>Beer of the Week</b><span>The beer the market crowned by real community votes, and why it climbed.</span></div></div>
+    <div class="pillar reveal"><span class="e">🧪</span><div><b>Style science</b><span>One thing you did not know about the style in your glass, explained simply.</span></div></div>
+    <div class="pillar reveal"><span class="e">📖</span><div><b>A story worth pouring</b><span>The history behind a brewery, a bar, or a beer, told well.</span></div></div>
+    <div class="pillar reveal"><span class="e">🌍</span><div><b>What the world is pouring</b><span>Trends and new spots on the map, straight from real check-ins.</span></div></div>
+  </div>
+</section>
+
+<section class="issue-band" id="sample">
+  <div class="wrap archive" style="padding-bottom:0">
+    <span class="sec-kicker">See it first</span>
+    <h2>A sample issue</h2>
+    <p class="sec-lede" style="margin:0 auto">This is the format, not a sent issue. The real Dispatch is personalized to your palate and driven by the week's actual votes. Every beer below is real.</p>
+  </div>
+
+  <div class="issue reveal">
+    <div class="masthead">
+      <div>
+        <div class="m-title">The Tapt Dispatch</div>
+        <div class="m-meta">Issue 001 &middot; Sample &middot; what the world poured this week</div>
+      </div>
+      <span class="sample-tag">Preview</span>
+    </div>
+
+    <div class="issue-body">
+      <div class="issue-sec-label">🏆 Beer of the Week</div>
+      <div class="botw">
+        <div class="photo"><img src="img/beers/la-chouffe.png" alt="La Chouffe" loading="lazy"></div>
+        <div class="info">
+          <h3>La Chouffe</h3>
+          <div class="brewery">Brasserie d'Achouffe &middot; Belgium</div>
+          <div class="chips">
+            <span class="chip">Belgian Blonde</span>
+            <span class="chip">8.0% ABV</span>
+            <span class="chip up">▲ climbing</span>
+          </div>
+          <p>A gnome on the label and a whole lot going on in the glass, spicy, fruity, and dangerously smooth for its strength. In a real issue, this slot is whatever your fellow drinkers voted up the most this week.</p>
+        </div>
+      </div>
+
+      <div class="palate">
+        <div class="lead">🎯 Tuned to your palate</div>
+        <div class="bars">
+          <div class="bar-row"><span class="lab">Belgian</span><div class="bar-track"><div class="bar-fill" data-w="86%"></div></div></div>
+          <div class="bar-row"><span class="lab">Fruity</span><div class="bar-track"><div class="bar-fill" data-w="72%"></div></div></div>
+          <div class="bar-row"><span class="lab">Hoppy</span><div class="bar-track"><div class="bar-fill" data-w="41%"></div></div></div>
+        </div>
+        <p class="note">Your real Dispatch reads your check-ins and leads with beers your palate actually leans toward. This is a sample palate.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="fact">
+        <div class="issue-sec-label">🧪 Style science</div>
+        <p>Belgian blondes get their pepper-and-clove lift from the <b>yeast</b>, not the hops. Belgian strains throw off spicy, fruity compounds when fermented warm, which is why a simple grain bill can taste this complex.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="story">
+        <div class="issue-sec-label">📖 A story worth pouring</div>
+        <div class="h">The gnome in the Ardennes</div>
+        <p>Achouffe started in 1982 as two brothers-in-law brewing in a tiny Wallonian village. The fairy-tale gnome on every bottle came from local Ardennes folklore, and the brewery leaned all the way in, hosting a yearly gnome festival long before it was acquired and shipped worldwide.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="issue-sec-label">🌍 What the world poured</div>
+      <div class="world">
+        <div class="wcard">
+          <div class="wimg"><img src="img/beers/pilsner-urquell.png" alt="Pilsner Urquell" loading="lazy"></div>
+          <b>Pilsner Urquell</b><span>Czechia</span>
+        </div>
+        <div class="wcard">
+          <div class="wimg"><img src="img/beers/guinness-draught.png" alt="Guinness Draught" loading="lazy"></div>
+          <b>Guinness Draught</b><span>Ireland</span>
+        </div>
+        <div class="wcard">
+          <div class="wimg"><img src="img/beers/chimay-bleue.png" alt="Chimay Bleue" loading="lazy"></div>
+          <b>Chimay Bleue</b><span>Belgium</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="issue-foot">You are reading a sample. Real issues are personalized to your palate and the week's real community votes. 🍻</div>
+  </div>
+
+  <div class="wrap" style="text-align:center;padding-top:30px">
+    <a class="btn btn-gold" href="#subscribe">Get this every week, free</a>
+  </div>
+</section>
+
+<section class="wrap archive">
+  <span class="sec-kicker">The archive</span>
+  <h2>Past issues</h2>
+  <p class="sec-lede" style="margin:0 auto">Every issue is hosted here to read anytime, no inbox required.</p>
+  <div id="archive-mount">
+    <div class="arch-empty">
+      <div class="e">📬</div>
+      <b>Issue 001 is on the way</b>
+      <span>The archive fills as issues ship. Subscribe above and you will not miss the first one.</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <a href="index.html" class="wordmark" style="text-decoration:none;font-size:1.3rem">Tapt<span>.</span></a>
+    <div class="foot-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#features">Features</a>
+      <a href="portal.html">For business</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:esdronski@gmail.com?subject=Tapt%20Dispatch">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Subscribe (reuses the same edge function as the landing).
+  document.getElementById('dispatch-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target, msg = document.getElementById('dispatch-msg'), btn = form.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Signing up…';
+    try {
+      const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/dispatch-signup', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email.value, website: form.website.value })
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        msg.textContent = 'Welcome aboard, first issue lands soon. 🍻'; msg.style.color = '#7FD49B'; form.reset();
+      } else {
+        msg.textContent = data.error === 'try again later' ? 'Too many tries, give it an hour.' : 'That email did not look right, double-check it.';
+        msg.style.color = '#F2A900';
+      }
+    } catch { msg.textContent = 'Network hiccup, try again in a moment.'; msg.style.color = '#F2A900'; }
+    btn.disabled = false; btn.textContent = 'Sign me up';
+  });
+
+  // Reveal-on-scroll.
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+  // Animate the palate bars when the sample issue scrolls into view.
+  const barObs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.querySelectorAll('.bar-fill').forEach((b) => { b.style.width = b.dataset.w; }); barObs.unobserve(e.target); }
+    });
+  }, { threshold: 0.4 });
+  document.querySelectorAll('.palate').forEach((el) => barObs.observe(el));
+</script>
+</body>
+</html>
