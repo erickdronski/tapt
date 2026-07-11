@@ -86,12 +86,8 @@ struct BeerDetailView: View {
 
     private func labelImage(_ d: BeerDetail) -> some View {
         Group {
-            if let urlString = d.labelImageUrl, let url = URL(string: urlString) {
-                AsyncImage(url: url) { image in
-                    image.resizable().scaledToFit()
-                } placeholder: {
-                    srmGlass(d)
-                }
+            if let urlString = d.labelImageUrl, !urlString.isEmpty {
+                BeerImageView(url: urlString).padding(6)
             } else {
                 srmGlass(d)
             }
