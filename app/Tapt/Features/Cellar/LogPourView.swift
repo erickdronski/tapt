@@ -27,6 +27,7 @@ struct LogPourView: View {
     private let occasionOptions = ["home", "bar", "restaurant", "event", "sports", "other"]
 
     @State private var serverResults: [CatalogBeer] = []
+    @State private var loadingCatalog = true
 
     private var filtered: [CatalogBeer] {
         if search.isEmpty { return beers }
@@ -61,14 +62,15 @@ struct LogPourView: View {
                 }
             }
             .task {
-                // Ranked, junk-gated default list: catalog_search applies
-                // tapt_name_ok + relevance. The raw alphabetical catalog put
-                // barcode-junk names ("0.0", "10413...") at the top of the picker.
+                // Ranked, junk-gated, deduped default list: catalog_search applies
+                // display-name normalization + tapt_name_ok. The raw alphabetical
+                // catalog put barcode-junk names at the top of the picker.
                 let rows = (try? await CatalogService.search(query: "", limit: 60)) ?? []
                 beers = rows.map {
                     CatalogBeer(id: $0.id, name: $0.name, style: $0.style, abv: $0.abv,
                                 brewery: .init(name: $0.breweryName, country: $0.country))
                 }
+                loadingCatalog = false
                 venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []
             }
             .task(id: search) {
@@ -128,9 +130,14 @@ struct LogPourView: View {
         }
         .searchable(text: $search, prompt: "Search beers")
         .overlay {
-            // A search with no hits must never be a silent white void.
+            // A search with no hits must never be a silent white void, but the
+            // initial load must not flash "No Results" before beers arrive.
             if filtered.isEmpty {
-                ContentUnavailableView.search(text: search)
+                if loadingCatalog && search.isEmpty {
+                    ProgressView().tint(Brand.gold)
+                } else {
+                    ContentUnavailableView.search(text: search)
+                }
             }
         }
     }
