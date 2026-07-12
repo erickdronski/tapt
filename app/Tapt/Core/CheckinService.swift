@@ -49,7 +49,10 @@ struct MyCheckin: Identifiable, Decodable {
     let rating: Double?
     let style: String?
     let eventTs: String
-    let beer: BeerJoin
+    // Optional on purpose: checkin_event.beer_id is nullable, so one pour with
+    // a missing catalog join must not fail the WHOLE Cellar decode (a user with
+    // real history would see the empty state). Display falls back below.
+    let beer: BeerJoin?
     let venue: VenueJoin?
 
     enum CodingKeys: String, CodingKey {
@@ -85,9 +88,9 @@ struct MyCheckin: Identifiable, Decodable {
         }
     }
 
-    var beerName: String { beer.name }
-    var breweryName: String { beer.brewery?.name ?? "" }
-    var country: String { beer.brewery?.country ?? "" }
+    var beerName: String { beer?.name ?? "Logged pour" }
+    var breweryName: String { beer?.brewery?.name ?? "" }
+    var country: String { beer?.brewery?.country ?? "" }
     var venueName: String { venue?.name ?? "" }
     var venueCity: String { venue?.externalIds?.city ?? "" }
     var venueRegion: String { venue?.externalIds?.region ?? "" }

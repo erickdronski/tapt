@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tapt HQ</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--haze:#EFE7D6;--slate:#6B6459;--line:rgba(26,18,6,.09)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px 20px 60px}
+  .wrap{max-width:980px;margin:0 auto}
+  h1{font-family:'Poppins';font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+  h1 span{color:var(--gold)}
+  .sub{color:var(--slate);font-size:.92rem;margin:4px 0 26px}
+  h2{font-family:'Poppins';font-size:.82rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin:26px 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  a.tile{display:block;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;text-decoration:none;color:inherit;transition:transform .12s ease, box-shadow .2s ease}
+  a.tile:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(26,18,6,.10)}
+  .tile b{font-family:'Poppins';font-size:1.02rem;display:flex;align-items:center;gap:8px}
+  .tile span{display:block;font-size:.82rem;color:var(--slate);margin-top:3px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#C9C2B4;flex:none}
+  .dot.ok{background:var(--hop)}
+  .dot.bad{background:#C0392B}
+  .foot{margin-top:34px;font-size:.78rem;color:var(--slate)}
+  .foot a{color:var(--copper)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tapt <span>HQ</span></h1>
+  <p class="sub">Every surface in one place. Status dots ping the live pages when you open this.</p>
+
+  <h2>Public surfaces</h2>
+  <div class="grid">
+    <a class="tile" href="https://taptbeer.com/" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/"></i>Landing page</b><span>taptbeer.com, what the world sees first</span></a>
+    <a class="tile" href="https://taptbeer.com/portal" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/portal"></i>Partner portal</b><span>Sign in with your email code. Claim, menus, events, numbers</span></a>
+    <a class="tile" href="https://taptbeer.com/dispatch" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/dispatch"></i>The Tapt Dispatch</b><span>Newsletter page + archive</span></a>
+    <a class="tile" href="https://taptbeer.com/pitch" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/pitch"></i>Partner pitch</b><span>The business one-pager for bars and breweries</span></a>
+  </div>
+
+  <h2>Owner tools</h2>
+  <div class="grid">
+    <a class="tile" href="https://taptbeer.com/admin" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/admin"></i>Admin</b><span>Approve claims, review inquiries, stats. Sign in as esdronski@gmail.com</span></a>
+    <a class="tile" href="https://supabase.com/dashboard/project/qfwiizvqxrhjlthbjosz" target="_blank"><b><i class="dot"></i>Supabase</b><span>Database, auth users, edge functions, logs</span></a>
+    <a class="tile" href="https://appstoreconnect.apple.com/apps/6788529176" target="_blank"><b><i class="dot"></i>App Store Connect</b><span>TestFlight builds, review, release</span></a>
+    <a class="tile" href="https://github.com/erickdronski/tapt" target="_blank"><b><i class="dot"></i>GitHub</b><span>Code, PRs, Actions (TestFlight CI)</span></a>
+    <a class="tile" href="https://vercel.com/erickdronskis-projects/tapt-landing" target="_blank"><b><i class="dot"></i>Vercel</b><span>Web deploys for everything above</span></a>
+    <a class="tile" href="https://instagram.com/taptbeerapp" target="_blank"><b><i class="dot"></i>Instagram</b><span>@taptbeerapp. Content library lives in the repo under social-assets/</span></a>
+  </div>
+
+  <h2>Check the experience</h2>
+  <div class="grid">
+    <a class="tile" href="https://taptbeer.com/app-preview" target="_blank"><b><i class="dot" data-ping="https://taptbeer.com/app-preview"></i>App preview</b><span>Phone frames with the real current screens</span></a>
+    <a class="tile" href="https://taptbeer.com/menu?v=demo" target="_blank"><b><i class="dot"></i>Menu page shell</b><span>What a partner QR opens. Real menus appear once a claim publishes</span></a>
+  </div>
+
+  <p class="foot">This page is link-only and unlisted (noindex). Nothing here grants access by itself, every tool has its own sign-in. Agent coordination lives in <a href="https://github.com/erickdronski/tapt/blob/main/AGENTS.md" target="_blank">AGENTS.md</a>.</p>
+</div>
+<script>
+  // Honest status dots: green only when the page actually answers.
+  document.querySelectorAll('.dot[data-ping]').forEach(async d => {
+    try {
+      const r = await fetch(d.dataset.ping, { method: 'GET', cache: 'no-store' });
+      d.className = 'dot ' + (r.ok ? 'ok' : 'bad');
+    } catch { d.className = 'dot bad'; }
+  });
+</script>
+</body>
+</html>

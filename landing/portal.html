@@ -102,8 +102,8 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
     <h2>4 · Your tap list</h2>
     <div class="sub" id="menuVenueName"></div>
     <div id="taps"></div>
-    <button class="btn ghost" onclick="addTap()">+ Add a tap</button>
-    <button class="btn" onclick="publish()">Publish menu</button>
+    <button class="btn ghost" onclick="addTap();markDirty()">+ Add a tap</button>
+    <button class="btn" id="pubBtn" onclick="publish()">Publish menu</button>
     <div class="msg" id="pubMsg"></div>
     <div class="hint" id="menuLinks"></div>
   </div>
@@ -190,7 +190,27 @@ window.searchVenues = () => {
       div.onclick = () => claim(v.venue_id, v.name);
       $('venueResults').appendChild(div);
     });
+    // A venue we don't have yet must still be able to join. One tap files the
+    // request with the name they typed; we add the venue and approve fast.
+    const add = document.createElement('div'); add.className = 'row';
+    add.innerHTML = `<div style="flex:1"><b>${data && data.length ? 'Not yours?' : 'No match found.'}</b><br><span style="font-size:.8rem;color:var(--slate)">Add "${esc(q)}" as a new venue, we set it up and email you.</span></div><span style="color:var(--copper);font-weight:700;font-size:.85rem">request</span>`;
+    add.onclick = () => requestVenue(q);
+    $('venueResults').appendChild(add);
   }, 350);
+};
+
+window.requestVenue = async (name) => {
+  const { data: { user } } = await supa.auth.getUser();
+  if (!user) return;
+  const city = prompt('City and state/region for "' + name + '"? (e.g. Asbury Park, NJ)') || '';
+  const { error } = await supa.rpc('submit_partner_inquiry', {
+    p_business_name: name, p_business_kind: 'venue_add_request',
+    p_contact_email: user.email, p_city: city || null, p_region: null, p_country: null,
+    p_message: 'Portal request: add this venue so I can claim it and publish a menu.'
+  });
+  $('claimMsg').textContent = error
+    ? (error.message.includes('too many') ? 'You have a few requests in already, we are on it.' : error.message)
+    : `Got it. We'll add ${name} and email ${user.email} when it's ready to claim, usually same day.`;
 };
 
 async function claim(venueId, name) {
@@ -228,12 +248,16 @@ function openMenu(venueId, name) {
   supa.rpc('venue_brand', { p_venue: venueId }).then(({ data }) => {
     if (data && data[0] && data[0].logo_url) $('logoPreview').src = data[0].logo_url;
   });
-  supa.rpc('venue_menu', { p_venue: venueId }).then(({ data }) => {
-    if (data && data.length) {
-      $('taps').innerHTML = '';
-      data.forEach(r => addTap(r.beer_name, r.brewery_name, r.style, r.price_text));
-    }
-  });
+  // Unpublished edits from a previous visit beat the published list (newer work).
+  if (!restoreDraft(venueId)) {
+    supa.rpc('venue_menu', { p_venue: venueId }).then(({ data }) => {
+      if (data && data.length) {
+        $('taps').innerHTML = '';
+        data.forEach(r => addTap(r.beer_name, r.brewery_name, r.style, r.price_text));
+        dirty = false; const b = $('pubBtn'); if (b) b.textContent = 'Publish menu';
+      }
+    });
+  }
 }
 
 document.addEventListener('change', async (e) => {
@@ -253,9 +277,44 @@ document.addEventListener('change', async (e) => {
 
 window.addTap = (beer = '', brewery = '', style = '', price = '') => {
   const div = document.createElement('div'); div.className = 'tapline';
-  div.innerHTML = `<input placeholder="Beer name" value="${esc(beer)}"><input placeholder="Brewery" value="${esc(brewery || '')}"><input placeholder="Style" value="${esc(style || '')}"><input placeholder="$" value="${esc(price || '')}"><button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove()">✕</button>`;
+  div.innerHTML = `<input placeholder="Beer name" value="${esc(beer)}"><input placeholder="Brewery" value="${esc(brewery || '')}"><input placeholder="Style" value="${esc(style || '')}"><input placeholder="$" value="${esc(price || '')}"><button class="btn ghost" style="padding:6px 10px" title="Move up" onclick="moveTapUp(this)">↑</button><button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove();markDirty()">✕</button>`;
   $('taps').appendChild(div);
 };
+window.moveTapUp = (btn) => {
+  const row = btn.parentElement, prev = row.previousElementSibling;
+  if (prev) { row.parentElement.insertBefore(row, prev); markDirty(); }
+};
+
+// ---- Draft safety: a bar's half-typed menu must survive a closed tab. ----
+let dirty = false;
+const draftKey = v => `tapt-menu-draft-${v}`;
+window.markDirty = () => {
+  dirty = true;
+  const b = $('pubBtn'); if (b) b.textContent = 'Publish menu · unsaved edits';
+  if (approvedVenue) {
+    const items = [...$('taps').children].map(row => [...row.querySelectorAll('input')].map(i => i.value));
+    try { localStorage.setItem(draftKey(approvedVenue), JSON.stringify({ t: Date.now(), items })); } catch {}
+  }
+};
+document.addEventListener('input', (e) => {
+  if (e.target.closest && e.target.closest('#taps')) markDirty();
+});
+window.addEventListener('beforeunload', (e) => {
+  if (dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+function restoreDraft(venueId) {
+  try {
+    const raw = localStorage.getItem(draftKey(venueId));
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d.items || !d.items.length) return false;
+    $('taps').innerHTML = '';
+    d.items.forEach(([b, br, st, pr]) => addTap(b, br, st, pr));
+    $('pubMsg').textContent = 'Restored your unpublished edits from last time. Publish when ready.';
+    dirty = true; const btn = $('pubBtn'); if (btn) btn.textContent = 'Publish menu · unsaved edits';
+    return true;
+  } catch { return false; }
+}
 
 async function loadNumbers(venueId) {
   const { data, error } = await supa.rpc('venue_analytics', { p_venue: venueId });
@@ -317,8 +376,18 @@ window.publish = async () => {
     return beer ? { beer_name: beer, brewery_name: brewery, style, price } : null;
   }).filter(Boolean);
   if (!items.length) { $('pubMsg').textContent = 'Add at least one tap.'; return; }
+  const btn = $('pubBtn');
+  btn.disabled = true; btn.textContent = 'Publishing…';
   const { data, error } = await supa.rpc('publish_tap_list', { p_venue: approvedVenue, p_items: items });
-  $('pubMsg').textContent = error ? error.message : `Published ${data} taps. Live now, print the QR from your menu page. 🍻`;
+  btn.disabled = false;
+  if (error) {
+    btn.textContent = 'Publish menu · unsaved edits';
+    $('pubMsg').textContent = `Couldn't publish: ${error.message}. Your edits are safe on this page, try again.`;
+    return;
+  }
+  dirty = false; btn.textContent = 'Publish menu';
+  try { localStorage.removeItem(draftKey(approvedVenue)); } catch {}
+  $('pubMsg').textContent = `Published ${data} taps. Live now, print the QR from your menu page. 🍻`;
 };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }

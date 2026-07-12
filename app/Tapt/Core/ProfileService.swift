@@ -120,12 +120,19 @@ enum ProfileService {
 
     /// Whether this user already finished onboarding on the server (region set).
     /// Lets a reinstall / new device skip onboarding instead of repeating it.
-    static func isOnboarded(userId: UUID) async -> Bool {
+    /// Returns nil when the answer is UNKNOWN (network/server failure): a flaky
+    /// first launch must never be read as "not onboarded", because completing
+    /// onboarding again overwrites the user's saved region/styles/consents.
+    static func isOnboarded(userId: UUID) async -> Bool? {
         struct Row: Decodable { let region_code: String? }
-        let rows: [Row]? = try? await Supa.client.from("user_profile")
-            .select("region_code").eq("id", value: userId.uuidString).limit(1)
-            .execute().value
-        return (rows?.first?.region_code?.isEmpty == false)
+        do {
+            let rows: [Row] = try await Supa.client.from("user_profile")
+                .select("region_code").eq("id", value: userId.uuidString).limit(1)
+                .execute().value
+            return (rows.first?.region_code?.isEmpty == false)
+        } catch {
+            return nil
+        }
     }
 
     static func completeOnboarding(

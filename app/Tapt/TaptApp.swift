@@ -43,12 +43,31 @@ struct TaptApp: App {
 
     private func checkServerOnboarded(_ id: String) async {
         guard let uid = session.user?.id else { return }
-        let ok = await ProfileService.isOnboarded(userId: uid)
-        if ok {
-            var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
-            ids.insert(id)
-            onboardedUserIDs = ids.sorted().joined(separator: ",")
+        var answer = await ProfileService.isOnboarded(userId: uid)
+        if answer == nil {
+            // Unknown (network blip on a fresh install/cold start). Give it one
+            // more shot before deciding anything.
+            try? await Task.sleep(for: .seconds(2))
+            answer = await ProfileService.isOnboarded(userId: uid)
         }
-        serverOnboarded[id] = ok
+        switch answer {
+        case true?:
+            markLocallyOnboarded(id)
+        case false?:
+            serverOnboarded[id] = false
+        case nil:
+            // Still unknown: NEVER force re-onboarding on a network failure --
+            // completing it again would overwrite the user's saved region,
+            // styles, and consents. Let them into the app; preferences remain
+            // editable from Profile, and the next launch re-checks.
+            markLocallyOnboarded(id)
+        }
+    }
+
+    private func markLocallyOnboarded(_ id: String) {
+        var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
+        ids.insert(id)
+        onboardedUserIDs = ids.sorted().joined(separator: ",")
+        serverOnboarded[id] = true
     }
 }

@@ -90,8 +90,8 @@ enum MarketService {
 
     static func feed(sort: MarketSort = .movers, limit: Int = 40, demo: Bool = MarketService.demoEnabled) async throws -> [MarketBeer] {
         struct Params: Encodable { let p_sort: String; let p_limit: Int; let p_demo: Bool }
-        return try await Supa.client
-            .rpc("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: demo))
-            .execute().value
+        // authedRPC: beer_market is authenticated-only; never let the SDK's
+        // silent anon fallback turn an auth blip into an "empty board".
+        return try await Supa.authedRPC("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: demo))
     }
 }

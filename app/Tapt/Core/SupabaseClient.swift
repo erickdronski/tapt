@@ -9,6 +9,26 @@ enum Supa {
     static let publishableKey = "sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF"
     static let authRedirectURL = URL(string: "tapt://auth-callback")!
 
+    /// RPC for authenticated-only functions that must never silently fall back
+    /// to anon. The SDK attaches auth per request and, if resolving the access
+    /// token throws (expired token whose refresh fails on a flaky cold start),
+    /// it quietly signs the request with the anon key -- which 401s on our
+    /// authenticated-only RPCs and reads like "the board is broken". Resolve
+    /// the session FIRST so auth trouble surfaces as a thrown error, and give
+    /// one recovery shot via an explicit refresh before failing loudly.
+    static func authedRPC<T: Decodable>(
+        _ fn: String,
+        params: some Encodable & Sendable
+    ) async throws -> T {
+        _ = try await client.auth.session
+        do {
+            return try await client.rpc(fn, params: params).execute().value
+        } catch {
+            _ = try await client.auth.refreshSession()
+            return try await client.rpc(fn, params: params).execute().value
+        }
+    }
+
     static let client: SupabaseClient = {
         #if targetEnvironment(simulator)
         // Locally-built Simulator apps have no code-signing team, so they get no

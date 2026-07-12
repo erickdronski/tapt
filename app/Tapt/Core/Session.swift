@@ -12,7 +12,22 @@ final class Session {
 
     /// Hydrate the current session, then follow auth changes for the app's lifetime.
     func start() async {
-        user = try? await Supa.client.auth.session.user
+        do {
+            user = try await Supa.client.auth.session.user
+        } catch let error as AuthError {
+            // Only a definitively-missing session means signed out. Anything else
+            // (expired token whose refresh failed on a flaky cold start, GoTrue
+            // hiccup under launch load) must NOT bounce a signed-in user to the
+            // sign-in screen: keep the stored session's user and let the SDK's
+            // auto-refresh heal the token once the network is back.
+            if case .sessionMissing = error {
+                user = nil
+            } else {
+                user = Supa.client.auth.currentSession?.user
+            }
+        } catch {
+            user = Supa.client.auth.currentSession?.user
+        }
         isLoading = false
         for await change in Supa.client.auth.authStateChanges {
             user = change.session?.user

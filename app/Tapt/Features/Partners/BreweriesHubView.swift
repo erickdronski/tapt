@@ -565,7 +565,7 @@ struct VenueDashboardView: View {
             stat("\(a.poursTotal)", "pours all-time")
             stat("\(a.pours7d)", "this week")
             stat("\(a.uniqueDrinkers)", "drinkers")
-            stat(a.avgRating.map { String(format: "%.1f", $0) } ?? "—", "avg rating")
+            stat(a.avgRating.map { String(format: "%.1f", $0) } ?? "·", "avg rating")
         }
         .padding(.horizontal)
     }
