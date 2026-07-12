@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--muted:#B89A73;--haze:#E7D6B8}
+  *{box-sizing:border-box} html,body{margin:0;background:#0C0702}
+  .slide{width:1080px;height:1350px;position:relative;overflow:hidden;color:var(--foam);font-family:'Inter',sans-serif;
+    padding:90px;background:radial-gradient(130% 90% at 50% 6%, #2A1B0A 0%, #1A1206 46%, #0C0702 100%)}
+  .brow{display:flex;align-items:center;gap:16px}
+  .brow .m{width:46px;height:46px}.brow .wm{font-family:'Poppins';font-weight:800;font-size:30px;letter-spacing:.04em}
+  .brow .h{margin-left:auto;font-weight:600;font-size:24px;color:#C89A5A}
+  .num{font-family:'Poppins';font-weight:700;font-size:26px;letter-spacing:.18em;color:var(--gold);margin-top:52px}
+  .badge{width:220px;height:220px;border-radius:44px;margin-top:104px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 120% at 50% 30%,#2A1A08,#120A02);border:1.5px solid rgba(242,169,0,.35);box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .badge svg{width:118px;height:118px;color:var(--gold)}
+  .big{font-family:'Poppins';font-weight:800;font-size:96px;line-height:1.0;letter-spacing:-.02em;margin:56px 0 0}
+  .big .g{color:var(--gold)}
+  .sub{font-size:44px;line-height:1.36;color:var(--haze);font-weight:500;margin-top:28px;max-width:900px}
+  .foot{position:absolute;left:90px;right:90px;bottom:80px;display:flex;align-items:center}
+  .foot .s{margin-left:auto;font-family:'Poppins';font-weight:600;font-size:28px;color:#C89A5A}
+  .swipe{font-family:'Poppins';font-weight:600;font-size:30px;color:var(--gold)}
+  .ticker{margin-top:40px;display:flex;flex-direction:column;gap:16px}
+  .tk{display:flex;align-items:center;gap:20px;background:rgba(251,246,236,.05);border:1px solid rgba(251,246,236,.08);border-radius:18px;padding:20px 24px}
+  .tk .gm{width:42px;height:42px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(251,246,236,.05);border-radius:11px}
+  .tk .gm svg{width:25px;height:33px;display:block}
+  .tk b{flex:1;font-family:'Poppins';font-weight:600;font-size:36px}
+  .tk .ar{font-family:'Poppins';font-weight:800;font-size:38px}.tk .u{color:#7FD49B}.tk .d{color:#E88C6A}
+  .chips{margin-top:38px;display:flex;flex-wrap:wrap;gap:18px}
+  .chip{font-family:'Poppins';font-weight:600;font-size:34px;padding:18px 30px;border-radius:999px;background:rgba(251,246,236,.06);border:1px solid rgba(251,246,236,.12)}
+  .chip.on{background:var(--gold);color:var(--malt);border-color:var(--gold)}
+  .stamps{margin-top:44px;display:flex;gap:20px}
+  .st{width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:50px;
+    border:2px dashed rgba(242,169,0,.4);color:var(--muted)}
+  .st.on{border-style:solid;border-color:var(--gold);background:rgba(242,169,0,.12)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" xmlns="http://www.w3.org/2000/svg"><defs>
+  <linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+  <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+  <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath>
+</defs></svg>
+
+<!-- F1 catalog -->
+<div class="slide">
+  <div class="brow"><svg class="m" viewBox="0 0 400 520"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="wm">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">01 · CATALOG</div>
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3"/><path d="M8.5 8h6M8.5 11h4"/></svg></div>
+  <div class="big">A living<br><span class="g">catalog</span>.</div>
+  <div class="sub">Real beers with style science, ABV, taste, and where to find them.</div>
+  <div class="foot"><span class="swipe">swipe →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F2 the beer market -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">02 · THE BEER MARKET</div>
+  <div class="big" style="margin-top:34px">A market<br>for <span class="g">beer</span>.</div>
+  <div class="sub" style="margin-top:22px">Every beer is a ticker. It climbs when people vote it up.</div>
+  <div class="ticker">
+    <div class="tk"><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#EAD07A"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><b>Allagash White</b><span class="ar u">&#9650;</span></div>
+    <div class="tk"><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#E3A72B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><b>Pilsner Urquell</b><span class="ar u">&#9650;</span></div>
+    <div class="tk"><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#3A2414"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#EFE6D2"/></svg></span><b>Guinness Draught</b><span class="ar d">&#9660;</span></div>
+  </div>
+  <div class="foot"><span class="swipe">swipe →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F3 trending & seasonal -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">03 · TRENDING & SEASONAL</div>
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-5.8 6.5-10.5A6.5 6.5 0 0 0 5.5 10.5C5.5 15.2 12 21 12 21z"/><circle cx="12" cy="10" r="2.4"/></svg></div>
+  <div class="big">By state.<br>By <span class="g">country</span>.</div>
+  <div class="sub">What is climbing and what is in season, right where you are.</div>
+  <div class="chips"><span class="chip on">Trending now</span><span class="chip">In season</span><span class="chip">Near you</span></div>
+  <div class="foot"><span class="swipe">swipe →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F4 mini games -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">04 · GAME NIGHT</div>
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="8.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.4" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.4" fill="currentColor"/></svg></div>
+  <div class="big">Mini games,<br>built <span class="g">in</span>.</div>
+  <div class="sub">Trivia, the Tapt Deck, Darts and more, for the table.</div>
+  <div class="foot"><span class="swipe">swipe →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F5 passport -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">05 · PASSPORT</div>
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><circle cx="12" cy="10.5" r="3.2"/><path d="M9 16.5h6"/></svg></div>
+  <div class="big">Your<br><span class="g">Passport</span>.</div>
+  <div class="sub">Every pour you log gets stamped and builds your taste graph.</div>
+  <div class="stamps"><span class="st on">🍺</span><span class="st on">🌾</span><span class="st on">🏆</span><span class="st">＋</span></div>
+  <div class="foot"><span class="s" style="margin-left:0;color:var(--muted)">All free · @taptbeerapp</span><span class="s">taptbeer.com</span></div>
+</div>
+</body></html>

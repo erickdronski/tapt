@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--muted:#B89A73;--haze:#EFE3CC}
+  *{box-sizing:border-box} html,body{margin:0;background:#0C0702}
+  .slide{width:1080px;height:1350px;position:relative;overflow:hidden;color:var(--foam);font-family:'Inter',sans-serif;
+    padding:80px 80px 90px;background:radial-gradient(130% 90% at 50% 6%, #2A1B0A 0%, #1A1206 46%, #0C0702 100%)}
+  .brow{display:flex;align-items:center;gap:16px}
+  .brow .m{width:46px;height:46px}.brow .wm{font-family:'Poppins';font-weight:800;font-size:30px;letter-spacing:.04em}
+  .brow .h{margin-left:auto;font-weight:600;font-size:24px;color:#C89A5A}
+  .eyebrow{margin-top:40px;font-family:'Poppins';font-weight:700;font-size:27px;letter-spacing:.18em;color:var(--gold)}
+  h1{font-family:'Poppins';font-weight:800;font-size:82px;line-height:1.0;margin:14px 0 0;letter-spacing:-.02em}
+  h1 .g{color:var(--gold)}
+  .card{margin-top:36px;background:var(--malt);border-radius:28px;padding:30px 30px 26px;box-shadow:0 30px 70px rgba(0,0,0,.45);border:1px solid rgba(242,169,0,.14)}
+  .idx{display:flex;align-items:flex-end;gap:20px;margin-bottom:8px}
+  .idx .lab{font-family:'Poppins';font-weight:700;font-size:24px;letter-spacing:.1em;color:var(--gold);text-transform:uppercase}
+  .idx .up{margin-left:auto;font-family:'Poppins';font-weight:800;font-size:26px;color:#7FD49B;display:flex;align-items:center;gap:8px}
+  .spark{width:100%;height:130px;display:block;margin:6px 0 18px}
+  .row{display:flex;align-items:center;gap:18px;padding:16px 16px;border-radius:15px;background:rgba(251,246,236,.05);margin-bottom:11px}
+  .row .rank{font-family:'Poppins';font-weight:800;color:var(--gold);width:20px;font-size:28px}
+  .row .gm{width:46px;height:46px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(251,246,236,.05);border-radius:12px}
+  .row .gm svg{width:27px;height:35px;display:block}
+  .row .nm{flex:1;min-width:0}
+  .row .nm b{display:block;font-family:'Poppins';font-weight:600;font-size:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .nm span{font-size:21px;color:rgba(251,246,236,.55)}
+  .row .mini{width:120px;height:38px;flex:none}
+  .row .mv{font-family:'Poppins';font-weight:800;font-size:32px;width:34px;text-align:right}
+  .up2{color:#7FD49B}.down2{color:#E88C6A}
+  .foot{position:absolute;left:80px;right:80px;bottom:64px;display:flex;align-items:center}
+  .foot .src{font-size:25px;color:var(--muted);max-width:720px;line-height:1.4}
+  .foot .s{margin-left:auto;font-family:'Poppins';font-weight:600;font-size:28px;color:#C89A5A}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" xmlns="http://www.w3.org/2000/svg"><defs>
+  <linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+  <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+  <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath>
+  <linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2A900" stop-opacity=".34"/><stop offset="1" stop-color="#F2A900" stop-opacity="0"/></linearGradient>
+</defs></svg>
+<div class="slide">
+  <div class="brow"><svg class="m" viewBox="0 0 400 520"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="wm">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="eyebrow">THE BEER MARKET</div>
+  <h1>A stock market<br>for <span class="g">beer</span>.</h1>
+  <div class="card">
+    <div class="idx"><span class="lab">Tapt Beer Index</span><span class="up">&#9650; climbing</span></div>
+    <svg class="spark" viewBox="0 0 960 130" preserveAspectRatio="none">
+      <path d="M0 104 L120 96 L240 100 L360 66 L480 74 L600 44 L720 50 L840 22 L960 12 L960 130 L0 130 Z" fill="url(#area)"/>
+      <path d="M0 104 L120 96 L240 100 L360 66 L480 74 L600 44 L720 50 L840 22 L960 12" fill="none" stroke="#F2A900" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="960" cy="12" r="9" fill="#F2A900"/>
+    </svg>
+    <div class="row"><span class="rank">1</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#EAD07A"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Allagash White</b><span>Belgian Witbier · USA</span></div><svg class="mini" viewBox="0 0 120 38"><path d="M0 28 L24 24 L48 26 L72 16 L96 12 L120 5" fill="none" stroke="#7FD49B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mv up2">&#9650;</span></div>
+    <div class="row"><span class="rank">2</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#E3A72B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><svg class="mini" viewBox="0 0 120 38"><path d="M0 26 L24 28 L48 20 L72 22 L96 12 L120 8" fill="none" stroke="#7FD49B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mv up2">&#9650;</span></div>
+    <div class="row"><span class="rank">3</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#C9812B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Sierra Nevada Pale Ale</b><span>American Pale Ale · USA</span></div><svg class="mini" viewBox="0 0 120 38"><path d="M0 24 L24 20 L48 24 L72 18 L96 14 L120 10" fill="none" stroke="#7FD49B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mv up2">&#9650;</span></div>
+    <div class="row"><span class="rank">4</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#3A2414"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#EFE6D2"/></svg></span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><svg class="mini" viewBox="0 0 120 38"><path d="M0 10 L24 14 L48 12 L72 20 L96 22 L120 28" fill="none" stroke="#E88C6A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mv down2">&#9660;</span></div>
+    <div class="row"><span class="rank">5</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#E6BE4E"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Weihenstephaner Hefe</b><span>German Hefeweizen · Germany</span></div><svg class="mini" viewBox="0 0 120 38"><path d="M0 26 L24 22 L48 24 L72 16 L96 18 L120 11" fill="none" stroke="#7FD49B" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="mv up2">&#9650;</span></div>
+  </div>
+  <div class="foot"><span class="src">Vote it up, it climbs. Vote it down, it slides. This is the shape of the feature, filled in by real votes.</span><span class="s">taptbeer.com</span></div>
+</div>
+</body></html>

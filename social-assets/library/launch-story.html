@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--muted:#B89A73;--haze:#EFE3CC}
+  *{box-sizing:border-box} html,body{margin:0;background:#0C0702}
+  .frame{width:1080px;height:1920px;position:relative;overflow:hidden;color:var(--foam);font-family:'Inter',sans-serif;
+    padding:120px 90px;background:radial-gradient(120% 60% at 50% 14%, #2E1D0A 0%, #1A1206 46%, #0C0702 100%)}
+  .brow{display:flex;align-items:center;justify-content:center;gap:16px}
+  .brow .m{width:48px;height:48px}.brow .wm{font-family:'Poppins';font-weight:800;font-size:33px;letter-spacing:.05em}
+  .brow .h{font-weight:600;font-size:29px;color:#C89A5A}
+  .mark{width:250px;height:250px;margin:140px auto 0;display:block;filter:drop-shadow(0 30px 70px rgba(242,169,0,.3))}
+  .kick{text-align:center;font-family:'Poppins';font-weight:700;font-size:32px;letter-spacing:.28em;color:var(--gold);margin-top:70px}
+  h1{text-align:center;font-family:'Poppins';font-weight:900;font-size:150px;line-height:.92;letter-spacing:-.03em;margin:28px 0 0}
+  h1 .g{color:var(--gold)}
+  .tag{text-align:center;font-family:'Poppins';font-weight:600;font-size:52px;color:var(--haze);margin-top:40px}
+  .board{margin:96px auto 0;width:760px;background:var(--malt);border-radius:28px;padding:26px 26px 20px;box-shadow:0 30px 80px rgba(0,0,0,.5);border:1px solid rgba(242,169,0,.14)}
+  .board h4{font-family:'Poppins';font-weight:700;font-size:26px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:2px 0 18px}
+  .row{display:flex;align-items:center;gap:18px;padding:14px 16px;border-radius:14px;background:rgba(251,246,236,.05);margin-bottom:12px}
+  .row .rank{font-family:'Poppins';font-weight:800;color:var(--gold);width:22px;font-size:30px}
+  .row .gm{width:44px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(251,246,236,.05);border-radius:12px}
+  .row .gm svg{width:26px;height:34px;display:block}
+  .row .nm{flex:1;min-width:0}
+  .row .nm b{display:block;font-family:'Poppins';font-weight:600;font-size:30px}
+  .row .nm span{font-size:22px;color:rgba(251,246,236,.55)}
+  .row .mv{font-family:'Poppins';font-weight:800;font-size:34px}
+  .up{color:#7FD49B}.down{color:#E88C6A}
+  .foot{position:absolute;left:0;right:0;bottom:120px;text-align:center}
+  .foot .pill{display:inline-block;font-family:'Poppins';font-weight:700;font-size:40px;color:var(--malt);background:var(--gold);padding:24px 60px;border-radius:999px}
+  .foot .s{display:block;margin-top:26px;font-size:28px;color:var(--muted)}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" xmlns="http://www.w3.org/2000/svg"><defs>
+  <linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+  <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+  <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath>
+</defs></svg>
+<div class="frame">
+  <div class="brow"><svg class="m" viewBox="0 0 400 520"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="wm">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <svg class="mark" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/><rect x="126" y="166" width="24" height="286" rx="12" fill="#fff" opacity=".18"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg>
+  <div class="kick">NOW LIVE</div>
+  <h1>IT'S<br>HERE.</h1>
+  <div class="tag">THE Beer Superapp.</div>
+  <div class="board">
+    <h4>The Beer Market</h4>
+    <div class="row"><span class="rank">1</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#EAD07A"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Allagash White</b><span>Belgian Witbier · USA</span></div><span class="mv up">&#9650;</span></div>
+    <div class="row"><span class="rank">2</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#E3A72B"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#FBF6EC"/></svg></span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><span class="mv up">&#9650;</span></div>
+    <div class="row"><span class="rank">3</span><span class="gm"><svg viewBox="0 0 20 27"><path d="M4 7 L16 7 L14.7 22.6 Q14.5 24.2 13 24.2 L7 24.2 Q5.5 24.2 5.3 22.6 Z" fill="#3A2414"/><ellipse cx="10" cy="6.6" rx="6.6" ry="2.5" fill="#EFE6D2"/></svg></span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><span class="mv down">&#9660;</span></div>
+  </div>
+  <div class="foot"><span class="pill">taptbeer.com</span><span class="s">Boards fill in from real votes. Tap to start.</span></div>
+</div>
+</body></html>

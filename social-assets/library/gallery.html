@@ -1,0 +1,100 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tapt · Instagram library</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--muted:#B89A73;--haze:#EFE3CC;--line:rgba(251,246,236,.1)}
+  *{box-sizing:border-box} body{margin:0;font-family:'Inter',sans-serif;color:var(--foam);
+    background:radial-gradient(120% 60% at 50% 0%, #2A1B0A 0%, #1A1206 42%, #0C0702 100%);min-height:100vh}
+  header{padding:64px 48px 24px;max-width:1280px;margin:0 auto}
+  .brow{display:flex;align-items:center;gap:16px}
+  .brow .m{width:48px;height:48px}.brow .wm{font-family:'Poppins';font-weight:800;font-size:30px;letter-spacing:.04em}
+  .brow .h{margin-left:auto;font-weight:600;font-size:20px;color:#C89A5A}
+  h1{font-family:'Poppins';font-weight:900;font-size:64px;letter-spacing:-.02em;margin:28px 0 6px}
+  .lede{color:var(--haze);font-size:20px;max-width:720px;line-height:1.5}
+  .count{margin-top:14px;font-family:'Poppins';font-weight:700;color:var(--gold);font-size:17px;letter-spacing:.06em}
+  main{max-width:1280px;margin:0 auto;padding:24px 48px 100px}
+  .grp{margin-top:56px}
+  .ghead h2{font-family:'Poppins';font-weight:800;font-size:30px;margin:0;letter-spacing:-.01em}
+  .ghead p{color:var(--muted);font-size:16px;margin:6px 0 22px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:22px}
+  figure{margin:0;background:#120C04;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.4)}
+  figure img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;background:#0C0702}
+  figure.story img{aspect-ratio:9/16}
+  figcaption{font-family:'Inter';font-weight:500;font-size:13px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--line)}
+  footer{max-width:1280px;margin:0 auto;padding:0 48px 80px;color:var(--muted);font-size:15px}
+  footer b{color:var(--gold);font-family:'Poppins';font-weight:700}
+  @media(max-width:640px){header,main,footer{padding-left:22px;padding-right:22px} h1{font-size:44px}}
+</style></head><body>
+<header>
+  <div class="brow">
+    <svg class="m" viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+      <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+      <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath></defs>
+      <g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g>
+      <path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/>
+      <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/>
+    </svg>
+    <span class="wm">TAPT</span><span class="h">@taptbeerapp · taptbeer.com</span>
+  </div>
+  <h1>Instagram library</h1>
+  <p class="lede">A cohesive launch set for THE Beer Superapp. Every asset carried by a visual, every beer and fact real. Captions and fact sources live in <b>README.md</b>.</p>
+  <div class="count">31 rendered frames</div>
+</header>
+<main>
+  <div class="grp"><div class="ghead"><h2>Launch</h2><p>THE Beer Superapp is here.</p></div><div class="grid">
+    <figure class=""><img src="out/launch-post.png" loading="lazy" alt="launch-post.png"><figcaption>launch-post.png</figcaption></figure>
+    <figure class="story"><img src="out/launch-story.png" loading="lazy" alt="launch-story.png"><figcaption>launch-story.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Who we are</h2><p>The superapp claim and the honesty ethos.</p></div><div class="grid">
+    <figure class=""><img src="out/whoweare-1.png" loading="lazy" alt="whoweare-1.png"><figcaption>whoweare-1.png</figcaption></figure>
+    <figure class=""><img src="out/whoweare-2.png" loading="lazy" alt="whoweare-2.png"><figcaption>whoweare-2.png</figcaption></figure>
+    <figure class=""><img src="out/whoweare-3.png" loading="lazy" alt="whoweare-3.png"><figcaption>whoweare-3.png</figcaption></figure>
+    <figure class=""><img src="out/whoweare-4.png" loading="lazy" alt="whoweare-4.png"><figcaption>whoweare-4.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>What we do</h2><p>One feature per frame.</p></div><div class="grid">
+    <figure class=""><img src="out/whatwedo-1.png" loading="lazy" alt="whatwedo-1.png"><figcaption>whatwedo-1.png</figcaption></figure>
+    <figure class=""><img src="out/whatwedo-2.png" loading="lazy" alt="whatwedo-2.png"><figcaption>whatwedo-2.png</figcaption></figure>
+    <figure class=""><img src="out/whatwedo-3.png" loading="lazy" alt="whatwedo-3.png"><figcaption>whatwedo-3.png</figcaption></figure>
+    <figure class=""><img src="out/whatwedo-4.png" loading="lazy" alt="whatwedo-4.png"><figcaption>whatwedo-4.png</figcaption></figure>
+    <figure class=""><img src="out/whatwedo-5.png" loading="lazy" alt="whatwedo-5.png"><figcaption>whatwedo-5.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Who it's for</h2><p>Drinkers, bars and breweries, everyone in between.</p></div><div class="grid">
+    <figure class=""><img src="out/whoitsfor-1.png" loading="lazy" alt="whoitsfor-1.png"><figcaption>whoitsfor-1.png</figcaption></figure>
+    <figure class=""><img src="out/whoitsfor-2.png" loading="lazy" alt="whoitsfor-2.png"><figcaption>whoitsfor-2.png</figcaption></figure>
+    <figure class=""><img src="out/whoitsfor-3.png" loading="lazy" alt="whoitsfor-3.png"><figcaption>whoitsfor-3.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Menus for partners</h2><p>How a venue gets a free hosted menu and QR.</p></div><div class="grid">
+    <figure class=""><img src="out/partners-1.png" loading="lazy" alt="partners-1.png"><figcaption>partners-1.png</figcaption></figure>
+    <figure class=""><img src="out/partners-2.png" loading="lazy" alt="partners-2.png"><figcaption>partners-2.png</figcaption></figure>
+    <figure class=""><img src="out/partners-3.png" loading="lazy" alt="partners-3.png"><figcaption>partners-3.png</figcaption></figure>
+    <figure class=""><img src="out/partners-4.png" loading="lazy" alt="partners-4.png"><figcaption>partners-4.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Mini games</h2><p>Game night, built in.</p></div><div class="grid">
+    <figure class=""><img src="out/games-1.png" loading="lazy" alt="games-1.png"><figcaption>games-1.png</figcaption></figure>
+    <figure class=""><img src="out/games-2.png" loading="lazy" alt="games-2.png"><figcaption>games-2.png</figcaption></figure>
+    <figure class=""><img src="out/games-3.png" loading="lazy" alt="games-3.png"><figcaption>games-3.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>The Beer Market</h2><p>The full ranked ticker board.</p></div><div class="grid">
+    <figure class=""><img src="out/market-hero.png" loading="lazy" alt="market-hero.png"><figcaption>market-hero.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Trending beer (weekly template)</h2><p>Two example instances, real beers.</p></div><div class="grid">
+    <figure class=""><img src="out/trending-1.png" loading="lazy" alt="trending-1.png"><figcaption>trending-1.png</figcaption></figure>
+    <figure class=""><img src="out/trending-2.png" loading="lazy" alt="trending-2.png"><figcaption>trending-2.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>Beer history (template)</h2><p>Two verified facts, IPA and Pilsner 1842.</p></div><div class="grid">
+    <figure class=""><img src="out/history-1.png" loading="lazy" alt="history-1.png"><figcaption>history-1.png</figcaption></figure>
+    <figure class=""><img src="out/history-2.png" loading="lazy" alt="history-2.png"><figcaption>history-2.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>One-offs</h2><p>Brand quote, for the bars, seasonal, Beer of the Week.</p></div><div class="grid">
+    <figure class=""><img src="out/quote-card.png" loading="lazy" alt="quote-card.png"><figcaption>quote-card.png</figcaption></figure>
+    <figure class=""><img src="out/for-bars-card.png" loading="lazy" alt="for-bars-card.png"><figcaption>for-bars-card.png</figcaption></figure>
+    <figure class=""><img src="out/seasonal-card.png" loading="lazy" alt="seasonal-card.png"><figcaption>seasonal-card.png</figcaption></figure>
+    <figure class=""><img src="out/beer-of-week.png" loading="lazy" alt="beer-of-week.png"><figcaption>beer-of-week.png</figcaption></figure>
+  </div></div>
+  <div class="grp"><div class="ghead"><h2>App preview</h2><p>Real app screenshots in phone frames.</p></div><div class="grid">
+    <figure class=""><img src="out/app-preview.png" loading="lazy" alt="app-preview.png"><figcaption>app-preview.png</figcaption></figure>
+  </div></div>
+</main>
+<footer>Built to match <b>brand/master.html</b>. Style-tinted beer-glass marks stand in for product photos: honest, and true to each beer's real style color. Boards show the shape of the feature, filled in by real votes.</footer>
+</body></html>

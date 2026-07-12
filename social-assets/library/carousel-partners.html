@@ -1,0 +1,102 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--muted:#B89A73;--haze:#E7D6B8}
+  *{box-sizing:border-box} html,body{margin:0;background:#0C0702}
+  .slide{width:1080px;height:1350px;position:relative;overflow:hidden;color:var(--foam);font-family:'Inter',sans-serif;
+    padding:90px;background:radial-gradient(130% 90% at 50% 6%, #2A1B0A 0%, #1A1206 46%, #0C0702 100%)}
+  .brow{display:flex;align-items:center;gap:16px}
+  .brow .m{width:46px;height:46px}.brow .wm{font-family:'Poppins';font-weight:800;font-size:30px;letter-spacing:.04em}
+  .brow .h{margin-left:auto;font-weight:600;font-size:24px;color:#C89A5A}
+  .num{font-family:'Poppins';font-weight:700;font-size:26px;letter-spacing:.18em;color:var(--gold);margin-top:52px}
+  .big{font-family:'Poppins';font-weight:800;font-size:92px;line-height:1.02;letter-spacing:-.02em;margin:22px 0 0}
+  .big .g{color:var(--gold)}
+  .sub{font-size:42px;line-height:1.38;color:var(--haze);font-weight:500;margin-top:28px;max-width:900px}
+  .foot{position:absolute;left:90px;right:90px;bottom:80px;display:flex;align-items:center}
+  .foot .s{margin-left:auto;font-family:'Poppins';font-weight:600;font-size:28px;color:#C89A5A}
+  .swipe{font-family:'Poppins';font-weight:600;font-size:30px;color:var(--gold)}
+  .qrbig{width:360px;height:360px;margin:96px auto 0;display:block;background:var(--foam);border-radius:36px;padding:34px;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+  .step{width:120px;height:120px;border-radius:32px;margin-top:96px;display:flex;align-items:center;justify-content:center;
+    font-family:'Poppins';font-weight:800;font-size:64px;color:var(--malt);background:var(--gold)}
+  .badge{width:210px;height:210px;border-radius:44px;margin-top:88px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 120% at 50% 30%,#2A1A08,#120A02);border:1.5px solid rgba(242,169,0,.35)}
+  .badge svg{width:112px;height:112px;color:var(--gold)}
+  .qrcard{margin-top:52px;background:var(--foam);border-radius:28px;padding:34px;display:flex;align-items:center;gap:34px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+  .qrcard .q{width:180px;height:180px;flex:none}
+  .qrcard .t b{display:block;font-family:'Poppins';font-weight:800;font-size:44px;color:var(--malt)}
+  .qrcard .t span{display:block;font-size:32px;color:#7A5B34;margin-top:10px;line-height:1.35}
+  .compare{margin-top:52px;display:flex;flex-direction:column;gap:20px}
+  .cmp{display:flex;align-items:center;gap:22px;font-family:'Poppins';font-weight:600;font-size:40px}
+  .cmp .dot{width:44px;height:44px;flex:none;border-radius:12px;background:rgba(63,143,91,.16);border:1px solid rgba(63,143,91,.4);display:flex;align-items:center;justify-content:center;color:#8FE0A8;font-size:28px}
+  .pill{display:inline-block;margin-top:44px;font-family:'Poppins';font-weight:700;font-size:42px;color:var(--malt);background:var(--gold);padding:24px 52px;border-radius:999px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute" xmlns="http://www.w3.org/2000/svg"><defs>
+  <linearGradient id="b" x1="200" y1="150" x2="200" y2="475" gradientUnits="userSpaceOnUse"><stop stop-color="#FFD24D"/><stop offset=".45" stop-color="#F2A900"/><stop offset="1" stop-color="#C56B10"/></linearGradient>
+  <linearGradient id="f" x1="200" y1="62" x2="200" y2="155" gradientUnits="userSpaceOnUse"><stop stop-color="#fff"/><stop offset="1" stop-color="#F3E7CC"/></linearGradient>
+  <clipPath id="c"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z"/></clipPath>
+  <symbol id="qr" viewBox="0 0 100 100">
+    <g fill="#1A1206">
+      <!-- finders -->
+      <path d="M8 8h28v28H8z M12 12v20h20V12z" fill-rule="evenodd"/><rect x="16" y="16" width="12" height="12"/>
+      <path d="M64 8h28v28H64z M68 12v20h20V12z" fill-rule="evenodd"/><rect x="72" y="16" width="12" height="12"/>
+      <path d="M8 64h28v28H8z M12 68v20h20V68z" fill-rule="evenodd"/><rect x="16" y="72" width="12" height="12"/>
+      <!-- data modules -->
+      <rect x="44" y="8" width="4" height="4"/><rect x="52" y="8" width="4" height="4"/><rect x="44" y="16" width="4" height="4"/><rect x="56" y="16" width="4" height="4"/>
+      <rect x="44" y="24" width="4" height="4"/><rect x="52" y="28" width="4" height="4"/><rect x="8" y="44" width="4" height="4"/><rect x="16" y="44" width="4" height="4"/>
+      <rect x="28" y="44" width="4" height="4"/><rect x="44" y="44" width="4" height="4"/><rect x="52" y="44" width="4" height="4"/><rect x="60" y="44" width="4" height="4"/>
+      <rect x="72" y="44" width="4" height="4"/><rect x="84" y="44" width="4" height="4"/><rect x="44" y="52" width="4" height="4"/><rect x="56" y="52" width="4" height="4"/>
+      <rect x="68" y="52" width="4" height="4"/><rect x="80" y="52" width="4" height="4"/><rect x="88" y="52" width="4" height="4"/><rect x="44" y="60" width="4" height="4"/>
+      <rect x="52" y="60" width="4" height="4"/><rect x="64" y="60" width="4" height="4"/><rect x="76" y="60" width="4" height="4"/><rect x="44" y="72" width="4" height="4"/>
+      <rect x="56" y="72" width="4" height="4"/><rect x="68" y="72" width="4" height="4"/><rect x="84" y="72" width="4" height="4"/><rect x="48" y="80" width="4" height="4"/>
+      <rect x="60" y="80" width="4" height="4"/><rect x="72" y="84" width="4" height="4"/><rect x="88" y="84" width="4" height="4"/><rect x="44" y="88" width="4" height="4"/>
+    </g>
+  </symbol>
+</defs></svg>
+
+<!-- F1 hook -->
+<div class="slide">
+  <div class="brow"><svg class="m" viewBox="0 0 400 520"><g clip-path="url(#c)"><rect x="80" y="140" width="245" height="345" fill="url(#b)"/></g><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="url(#f)" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg><span class="wm">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="num">FOR BARS, PUBS & BREWERIES</div>
+  <div class="big">Free menu<br>hosting.<br><span class="g">Forever.</span></div>
+  <svg class="qrbig" viewBox="0 0 100 100"><use href="#qr"/></svg>
+  <div class="foot"><span class="swipe">how it works →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F2 step 1 claim -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="step">1</div>
+  <div class="big" style="margin-top:52px">Claim<br>your <span class="g">venue</span>.</div>
+  <div class="sub">Find your spot on the map and claim it. We verify fast.</div>
+  <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s6.5-5.8 6.5-10.5A6.5 6.5 0 0 0 5.5 10.5C5.5 15.2 12 21 12 21z"/><circle cx="12" cy="10" r="2.4"/></svg></div>
+  <div class="foot"><span class="swipe">next →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F3 step 2 publish + QR -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="step">2</div>
+  <div class="big" style="margin-top:52px">Publish &<br><span class="g">print</span>.</div>
+  <div class="sub">Post your tap list, then print the QR for your tables.</div>
+  <div class="qrcard">
+    <svg class="q" viewBox="0 0 100 100"><use href="#qr"/></svg>
+    <div class="t"><b>Scan to menu</b><span>Drinkers land on your live Tapt menu. No app required, updated in seconds.</span></div>
+  </div>
+  <div class="foot"><span class="swipe">next →</span><span class="s">taptbeer.com</span></div>
+</div>
+
+<!-- F4 step 3 activity + cta -->
+<div class="slide">
+  <div class="brow"><span class="wm" style="margin-left:0">TAPT</span><span class="h">@taptbeerapp</span></div>
+  <div class="step">3</div>
+  <div class="big" style="margin-top:52px">See your<br><span class="g">activity</span>.</div>
+  <div class="sub">Your claimed profile, on the map, with your real local drinker signal.</div>
+  <div class="compare">
+    <div class="cmp"><span class="dot">✓</span>Live hosted menu + QR</div>
+    <div class="cmp"><span class="dot">✓</span>Claimed profile on the map</div>
+    <div class="cmp"><span class="dot">✓</span>Pours, top beers, local signal</div>
+  </div>
+  <span class="pill">Claim it free · taptbeer.com</span>
+  <div class="foot"><span class="s" style="margin-left:0;color:var(--muted)">You only ever pay to be louder.</span><span class="s">@taptbeerapp</span></div>
+</div>
+</body></html>
