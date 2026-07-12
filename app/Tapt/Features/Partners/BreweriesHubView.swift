@@ -7,7 +7,7 @@ import CoreImage.CIFilterBuiltins
 // two-sided value into the app; full tap-list editing still lives in the web portal.
 
 private enum PartnerLinks {
-    static let base = "https://tapt-landing-three.vercel.app"
+    static let base = AppLinks.webBase
     static func menuURL(_ venueId: String) -> String { "\(base)/menu?v=\(venueId)" }
     static let portal = "\(base)/portal"
 }

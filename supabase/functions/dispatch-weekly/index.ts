@@ -16,7 +16,7 @@ const KEY = Deno.env.get("RESEND_API_KEY");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
 const SUPA_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LANDING = "https://tapt-landing-three.vercel.app";
+const LANDING = "https://taptbeer.com";
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
@@ -62,7 +62,7 @@ function issueHtml(c: any): string {
 
   <div style="font-size:12px;color:#6B6459;padding:8px 4px">Real data only: beers from Open Food Facts, styles from the BJCP 2021 guidelines, venues from Open Brewery DB. Blank beats invented.</div>
   <hr style="border:none;border-top:1px solid rgba(26,18,6,.1);margin:16px 4px">
-  <div style="font-size:12px;color:#6B6459;padding:0 4px">Tapt, THE Beer Superapp. Enjoy responsibly, 21+/legal drinking age. <a href="${LANDING}" style="color:#B4531F">tapt-landing-three.vercel.app</a></div>
+  <div style="font-size:12px;color:#6B6459;padding:0 4px">Tapt, THE Beer Superapp. Enjoy responsibly, 21+/legal drinking age. <a href="${LANDING}" style="color:#B4531F">taptbeer.com</a></div>
 </div>`;
 }
 
