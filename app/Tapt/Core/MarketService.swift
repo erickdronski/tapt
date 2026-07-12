@@ -1,11 +1,14 @@
 import Foundation
 import Supabase
 
-/// The Beer Market: beers ranked by community demand. The number is VOTES, not
-/// dollars -- `net` is a beer's standing (up minus down), `change` is how its net
-/// moved in the last 24h (trending up/down), `volume` is votes in that window. All
-/// computed server-side in `beer_market`, never invented. Private notes never
-/// contribute, and check-ins contribute only when the account opted into trends.
+/// The Beer Market: beers ranked by a real STANDING computed server-side in
+/// `beer_market` -- a composite of what's genuinely in season now (time-varying),
+/// real cited awards, catalog notability, and real community votes (which
+/// dominate as they accumulate). `net` is that standing; `votes`/`ups`/`downs`
+/// are real vote counts; `change` is the 24h standing move from stored daily
+/// snapshots; `volume` is real vote/pour activity in the last 24h. Nothing is
+/// invented -- the board is always populated from real signals and becomes fully
+/// community-driven as people vote.
 struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let beerId: String
     let symbol: String

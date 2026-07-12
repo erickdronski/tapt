@@ -19,8 +19,8 @@ struct MarketBeerDetailView: View {
                     statsGrid
                     contextCard
                     Text(MarketService.demoEnabled
-                         ? "Standing and movement are real community votes, never invented. Demo activity shown until launch."
-                         : "Standing and movement are real community votes. Nothing invented.")
+                         ? "Standing blends what's in season, real awards, and community votes. Demo board shown until launch."
+                         : "Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
                         .font(.caption2).foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -68,8 +68,8 @@ struct MarketBeerDetailView: View {
 
     private var priceBlock: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(beer.netText).font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
-            Text("net votes").font(.subheadline).foregroundStyle(Brand.muted)
+            Text("\(beer.net)").font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
+            Text("standing").font(.subheadline).foregroundStyle(Brand.muted)
             Spacer()
             Label("\(beer.changeText) today", systemImage: beer.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
                 .font(.system(.subheadline, design: .rounded).weight(.heavy))
@@ -84,7 +84,7 @@ struct MarketBeerDetailView: View {
                 .font(.headline).foregroundStyle(beer.isSeasonal ? Brand.copper : Brand.hop)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Why it's moving").font(.caption2.weight(.bold)).foregroundStyle(Brand.muted)
-                Text(beer.isSeasonal ? "\(beer.moveReason), right in season" : "Riding real community votes")
+                Text(beer.isSeasonal ? "\(beer.moveReason), right in season" : "Climbing on real signals")
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.text)
             }
             Spacer(minLength: 0)
@@ -108,23 +108,27 @@ struct MarketBeerDetailView: View {
     }
 
     private var sentimentCard: some View {
-        let total = max(beer.ups + beer.downs, 1)
-        let upFrac = Double(beer.ups) / Double(total)
+        let cast = beer.ups + beer.downs
+        let upFrac = Double(beer.ups) / Double(max(cast, 1))
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Label("Buy \(beer.ups)", systemImage: "hand.thumbsup.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
                 Spacer()
                 Label("Sell \(beer.downs)", systemImage: "hand.thumbsdown.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
             }
-            GeometryReader { g in
-                HStack(spacing: 0) {
-                    Rectangle().fill(Brand.hop).frame(width: max(4, g.size.width * upFrac))
-                    Rectangle().fill(Brand.copper)
+            if cast > 0 {
+                GeometryReader { g in
+                    HStack(spacing: 0) {
+                        Rectangle().fill(Brand.hop).frame(width: max(4, g.size.width * upFrac))
+                        Rectangle().fill(Brand.copper)
+                    }
+                    .clipShape(Capsule())
                 }
-                .clipShape(Capsule())
+                .frame(height: 12)
+                Text("\(Int(upFrac * 100))% buy pressure").font(.caption2).foregroundStyle(Brand.muted)
+            } else {
+                Text("No votes yet. Be the first to weigh in.").font(.caption2).foregroundStyle(Brand.muted)
             }
-            .frame(height: 12)
-            Text("\(Int(upFrac * 100))% buy pressure").font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
@@ -133,9 +137,9 @@ struct MarketBeerDetailView: View {
 
     private var statsGrid: some View {
         HStack(spacing: 10) {
-            stat("Votes 24h", "\(beer.volume)", "bolt.fill", Brand.gold)
+            stat("Standing", "\(beer.net)", "chart.line.uptrend.xyaxis", Brand.gold)
             stat("Total votes", "\(beer.votes)", "hand.thumbsup.fill", Brand.hop)
-            stat("Net standing", beer.netText, "arrow.up.arrow.down", Brand.copper)
+            stat("Votes 24h", "\(beer.volume)", "bolt.fill", Brand.copper)
         }
     }
 

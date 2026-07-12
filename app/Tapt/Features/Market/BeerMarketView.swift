@@ -65,7 +65,7 @@ struct BeerMarketView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("Ranked by real votes. Movement blends recent votes and consented pours.")
+                    Text("Ranked by what's in season, real awards, and community votes.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -120,9 +120,9 @@ struct BeerMarketView: View {
             Spacer(minLength: 6)
             Sparkline(values: b.spark, up: b.isUp).frame(width: 54, height: 30)
             VStack(alignment: .trailing, spacing: 1) {
-                Text(b.netText).font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
+                Text("\(b.net)").font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
                     .contentTransition(.numericText())
-                Text("net votes").font(.system(size: 9)).foregroundStyle(Brand.muted)
+                Text("standing").font(.system(size: 9)).foregroundStyle(Brand.muted)
                 changePill(b)
             }
             .frame(width: 78, alignment: .trailing)
@@ -157,7 +157,7 @@ struct BeerMarketView: View {
     private var footer: some View {
         Text(MarketService.demoEnabled
              ? "Marketing preview: isolated demo activity, never shown in TestFlight or App Store builds."
-             : "Standings use real community votes. Private notes never affect the board, and pours count only when trend sharing is on.")
+             : "Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)
@@ -188,9 +188,9 @@ struct BeerMarketView: View {
         VStack(spacing: 12) {
             Image(systemName: loadFailed ? "wifi.exclamationmark" : "chart.bar.xaxis")
                 .font(.largeTitle).foregroundStyle(Brand.muted)
-            Text(loadFailed ? "Couldn't load the board" : "No community votes yet")
+            Text(loadFailed ? "Couldn't load the board" : "The board is warming up")
                 .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-            Text(loadFailed ? "Check your connection and pull to refresh." : "Vote on a beer to make the first move. The board stays empty until the community moves it.")
+            Text(loadFailed ? "Check your connection and pull to refresh." : "Give it a second, then pull to refresh.")
                 .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center)
             Button { Task { await load() } } label: {
                 Label(loadFailed ? "Retry" : "Refresh board", systemImage: "arrow.clockwise")
