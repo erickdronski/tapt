@@ -61,7 +61,14 @@ struct LogPourView: View {
                 }
             }
             .task {
-                beers = (try? await CheckinService.catalog()) ?? []
+                // Ranked, junk-gated default list: catalog_search applies
+                // tapt_name_ok + relevance. The raw alphabetical catalog put
+                // barcode-junk names ("0.0", "10413...") at the top of the picker.
+                let rows = (try? await CatalogService.search(query: "", limit: 60)) ?? []
+                beers = rows.map {
+                    CatalogBeer(id: $0.id, name: $0.name, style: $0.style, abv: $0.abv,
+                                brewery: .init(name: $0.breweryName, country: $0.country))
+                }
                 venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []
             }
             .task(id: search) {
@@ -120,6 +127,12 @@ struct LogPourView: View {
             }
         }
         .searchable(text: $search, prompt: "Search beers")
+        .overlay {
+            // A search with no hits must never be a silent white void.
+            if filtered.isEmpty {
+                ContentUnavailableView.search(text: search)
+            }
+        }
     }
 
     private func rate(_ beer: BeerPick) -> some View {
