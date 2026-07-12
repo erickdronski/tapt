@@ -69,12 +69,6 @@ struct BeerMarketView: View {
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
-                if MarketService.demoEnabled {
-                    Text("DEMO").font(.system(.caption2, design: .rounded).weight(.heavy))
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Brand.copper.opacity(0.16), in: Capsule())
-                        .foregroundStyle(Brand.copper)
-                }
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -147,17 +141,23 @@ struct BeerMarketView: View {
         .overlay(RoundedRectangle(cornerRadius: 9).stroke(Brand.malt.opacity(0.08)))
     }
 
+    @ViewBuilder
     private func changePill(_ b: MarketBeer) -> some View {
-        Label(b.changeText, systemImage: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-            .font(.system(.caption2, design: .rounded).weight(.heavy))
-            .labelStyle(.titleAndIcon)
-            .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+        if b.isFlat {
+            // Zero movement is a neutral fact, never a green "+0" gain signal.
+            Text("steady")
+                .font(.system(.caption2, design: .rounded).weight(.semibold))
+                .foregroundStyle(Brand.muted)
+        } else {
+            Label(b.changeText, systemImage: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+        }
     }
 
     private var footer: some View {
-        Text(MarketService.demoEnabled
-             ? "Marketing preview: isolated demo activity, never shown in TestFlight or App Store builds."
-             : "Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
+        Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)
@@ -269,10 +269,13 @@ struct MarketTicker: View {
                 .foregroundStyle(b.isHot ? Brand.gold : Brand.foam)
                 .shadow(color: Brand.gold.opacity(b.isHot ? pulse * 0.6 : 0), radius: 5)
             Text(b.netText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.7))
-            Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
-            Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
-                .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+            if !b.isFlat {
+                // Arrows and deltas appear only for REAL movement.
+                Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                    .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+                Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
+                    .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+            }
             Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.25)).padding(.horizontal, 7)
         }
         .lineLimit(1)                      // symbols never wrap to a second line
@@ -301,6 +304,14 @@ struct Sparkline: View {
         GeometryReader { geo in
             let pts = points(in: geo.size)
             ZStack {
+                if values.count == 1 {
+                    // Day one: one real data point, drawn as exactly that --
+                    // a centered dot, not a fabricated line.
+                    Circle()
+                        .fill(Brand.muted.opacity(0.55))
+                        .frame(width: 5, height: 5)
+                        .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                }
                 if pts.count > 1 {
                     // fill under the line
                     Path { p in
@@ -322,7 +333,13 @@ struct Sparkline: View {
     private func points(in size: CGSize) -> [CGPoint] {
         guard values.count > 1 else { return [] }
         let lo = values.min() ?? 0, hi = values.max() ?? 1
-        let span = max(hi - lo, 0.0001)
+        // A steady standing must read as steady: center flat lines instead of
+        // pinning them to the bottom (which reads as "cratered").
+        guard hi - lo >= 1 else {
+            let stepX = size.width / CGFloat(values.count - 1)
+            return values.indices.map { CGPoint(x: CGFloat($0) * stepX, y: size.height / 2) }
+        }
+        let span = hi - lo
         let stepX = size.width / CGFloat(values.count - 1)
         return values.enumerated().map { i, v in
             CGPoint(x: CGFloat(i) * stepX,

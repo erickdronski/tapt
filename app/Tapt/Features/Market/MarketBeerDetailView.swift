@@ -18,9 +18,7 @@ struct MarketBeerDetailView: View {
                     sentimentCard
                     statsGrid
                     contextCard
-                    Text(MarketService.demoEnabled
-                         ? "Standing blends what's in season, real awards, and community votes. Demo board shown until launch."
-                         : "Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
+                    Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
                         .font(.caption2).foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)
@@ -71,10 +69,16 @@ struct MarketBeerDetailView: View {
             Text("\(beer.net)").font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
             Text("standing").font(.subheadline).foregroundStyle(Brand.muted)
             Spacer()
-            Label("\(beer.changeText) today", systemImage: beer.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                .font(.system(.subheadline, design: .rounded).weight(.heavy))
-                .labelStyle(.titleAndIcon)
-                .foregroundStyle(beer.isUp ? Brand.hop : Brand.copper)
+            if beer.isFlat {
+                Text("steady today")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Brand.muted)
+            } else {
+                Label("\(beer.changeText) today", systemImage: beer.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                    .labelStyle(.titleAndIcon)
+                    .foregroundStyle(beer.isUp ? Brand.hop : Brand.copper)
+            }
         }
     }
 
@@ -84,7 +88,9 @@ struct MarketBeerDetailView: View {
                 .font(.headline).foregroundStyle(beer.isSeasonal ? Brand.copper : Brand.hop)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Why it's moving").font(.caption2.weight(.bold)).foregroundStyle(Brand.muted)
-                Text(beer.isSeasonal ? "\(beer.moveReason), right in season" : "Climbing on real signals")
+                Text(beer.isSeasonal ? beer.moveReason
+                     : (beer.isFlat ? "Steady. Standing comes from season fit, real awards, and notability."
+                                    : "Moving on real votes and activity"))
                     .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.text)
             }
             Spacer(minLength: 0)
@@ -96,7 +102,9 @@ struct MarketBeerDetailView: View {
 
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Momentum · 7 days").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
+            // Label the REAL span: no "7 days" claim over one day of history.
+            Text(beer.spark.count <= 1 ? "Standing · day one" : "Standing · last \(beer.spark.count) days")
+                .font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
             Sparkline(values: beer.spark, up: beer.isUp)
                 .frame(height: 120)
                 .padding(.top, 4)

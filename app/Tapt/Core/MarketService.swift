@@ -31,11 +31,16 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let heat: Int
 
     var id: String { beerId }
-    var isUp: Bool { change >= 0 }
-    var netText: String { net > 0 ? "+\(net)" : "\(net)" }
-    var changeText: String { "\(change >= 0 ? "+" : "")\(change)" }
-    /// Strongly trending -- worth a visible pulse. Top movers on the board.
-    var isHot: Bool { heat >= 70 }
+    var isUp: Bool { change > 0 }
+    /// No movement yet. Rendered as a neutral state, never a green "+0" --
+    /// the board must not signal gains that do not exist.
+    var isFlat: Bool { change == 0 }
+    /// Standing is a level, not a gain: no "+" prefix.
+    var netText: String { "\(net)" }
+    var changeText: String { "\(change > 0 ? "+" : "")\(change)" }
+    /// Worth a visible pulse ONLY when something is actually happening
+    /// (real 24h activity or real movement), not from standing alone.
+    var isHot: Bool { heat >= 70 && (volume > 0 || change != 0) }
     /// A short human "why it's moving" line -- a real seasonal reason if it fits the
     /// season, otherwise the style. Never invented.
     var moveReason: String { reason ?? (style ?? "Community pick") }
@@ -75,23 +80,14 @@ enum MarketSort: String, CaseIterable, Identifiable {
 }
 
 enum MarketService {
-    /// Demo (the pre-seeded "as-if-live" board) is MARKETING-ONLY. The shipped app
-    /// always runs on REAL votes and shows an honest empty state until the community
-    /// fills it. Demo only turns on in the Simulator with TAPT_MARKET_DEMO=1, so we
-    /// can capture populated screenshots for the landing page and social — it can
-    /// never reach a real user on a real device.
-    static var demoEnabled: Bool {
-        #if targetEnvironment(simulator)
-        return ProcessInfo.processInfo.environment["TAPT_MARKET_DEMO"] == "1"
-        #else
-        return false
-        #endif
-    }
-
-    static func feed(sort: MarketSort = .movers, limit: Int = 40, demo: Bool = MarketService.demoEnabled) async throws -> [MarketBeer] {
+    // The old marketing "demo lane" is gone: since the real standing engine
+    // (0058+) the board is always populated with REAL data, so there is
+    // nothing to fake and nothing to label. p_demo remains in the RPC
+    // signature for wire compatibility only; the server ignores it.
+    static func feed(sort: MarketSort = .movers, limit: Int = 40) async throws -> [MarketBeer] {
         struct Params: Encodable { let p_sort: String; let p_limit: Int; let p_demo: Bool }
         // authedRPC: beer_market is authenticated-only; never let the SDK's
         // silent anon fallback turn an auth blip into an "empty board".
-        return try await Supa.authedRPC("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: demo))
+        return try await Supa.authedRPC("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: false))
     }
 }

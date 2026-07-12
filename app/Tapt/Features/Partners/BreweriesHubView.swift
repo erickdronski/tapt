@@ -138,7 +138,7 @@ struct BreweriesHubView: View {
                         icon: "checkmark.seal.fill",
                         tint: Brand.hop,
                         title: "Claim your venue",
-                        body: "Find your brewery, bar, pub, or taproom in our map of 8,700+ and claim it. Publish a live tap list, get a printable QR, and see your local drinker activity."
+                        body: "Find your brewery, bar, pub, or taproom on the map and claim it. Publish a live tap list, get a printable QR, and see your local drinker activity."
                     )
                 }
                 .buttonStyle(.plain)

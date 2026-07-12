@@ -12,7 +12,9 @@ struct LogPourView: View {
     @State private var venueSearch = ""
     @State private var selected: BeerPick?
     @State private var selectedVenue: BreweryMapVenue?
-    @State private var rating: Double = 4
+    // Starts unrated on purpose: a default 4 stars records an opinion the
+    // user never expressed, and aggregates would skew up from day one.
+    @State private var rating: Double = 0
     @State private var flavorTags: Set<String> = []
     @State private var glassware = "Pint"
     @State private var occasion = "bar"
@@ -116,7 +118,7 @@ struct LogPourView: View {
         List(filtered) { beer in
             Button {
                 selected = beer.pick
-                rating = 4
+                rating = 0
                 flavorTags = []
                 selectedVenue = nil
                 venueSearch = beer.breweryName
@@ -167,12 +169,13 @@ struct LogPourView: View {
             section("Brewery or taproom") {
                 venuePicker(for: beer)
             }
-            Button(saving ? "Saving..." : "Log it") { save(beer) }
+            Button(saving ? "Saving..." : (rating > 0 ? "Log it" : "Tap a star to rate it")) { save(beer) }
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity).padding(.vertical, 15)
-                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
-                .foregroundStyle(Brand.malt)
-                .disabled(saving)
+                .background(rating > 0 ? Brand.gold : Brand.haze, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(rating > 0 ? Brand.malt : Brand.muted)
+                // A rating is the one thing a pour means; never invent one.
+                .disabled(saving || rating == 0)
             }
             .padding()
         }
@@ -362,6 +365,10 @@ struct LogPourView: View {
                 )
                 await MainActor.run {
                     saving = false
+                    // Leave the rate form immediately: a stale form behind the
+                    // share sheet re-armed "Log it" and a second tap wrote a
+                    // duplicate check-in (invented activity in the user's record).
+                    selected = nil
                     onLogged()
                     // Stash the share card, then play the pour-to-passport-stamp
                     // celebration; the share sheet opens when it finishes.

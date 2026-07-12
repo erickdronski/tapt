@@ -234,6 +234,13 @@ async function claim(venueId, name) {
 }
 
 function openMenu(venueId, name) {
+  // Hard reset the editor on every venue switch: carrying Venue A's taps into
+  // Venue B's editor could publish A's menu to B. Each venue starts from its
+  // own draft or published list, never another venue's rows.
+  $('taps').innerHTML = '';
+  $('pubMsg').textContent = '';
+  dirty = false;
+  const pb = $('pubBtn'); if (pb) pb.textContent = 'Publish menu';
   approvedVenue = venueId;
   $('brandCard').hidden = false;
   $('menuCard').hidden = false;
