@@ -85,7 +85,18 @@ promptly (small commits, don't sit on local state another agent can't see).
   users signed in on refresh blips; isOnboarded returns Bool? so network
   failures can't force destructive re-onboarding; MyCheckin.beer optional so
   one bad join can't blank the Cellar).
-- **Swift P1 backlog (unclaimed — either agent may take, mark here first):**
+- **Games lane (Claude, in progress):** Beer Pong rebuilt as a real SpriteKit
+  physics game (slingshot + trajectory preview, rim rattle physics, particles,
+  streaks, persistent best; play-tested on sim — sink/miss/score verified).
+  NEXT candidates for the same treatment: Darts (drag-throw physics), Flip Cup
+  (timing flick), Quarters (bounce physics), Trivia juice (timer + streak +
+  celebration). Pattern to copy: `Features/Games/BeerPongGame.swift`
+  (`@preconcurrency SKPhysicsContactDelegate` for Swift 6 MainActor default).
+- **Portal/menus: E2E VERIFIED on prod** (claim → approve → publish → public
+  /menu live), QA rows fully cleaned after. Note: extension synthetic clicks
+  don't fire inline onclick= handlers — drive `window.fn()` via console when
+  QA-ing, it's a harness artifact not a product bug.
+- **Swift P1 backlog (remaining — either agent may take, mark here first):**
   1. Adopt `Supa.authedRPC` in the remaining authenticated services
      (SuperappServices/tonight, leaderboards, beer detail, map, profile feed).
   2. Keep-content-on-failure + honest error/retry at the 7 clobber sites:
@@ -93,11 +104,10 @@ promptly (small commits, don't sit on local state another agent can't see).
      NearYouView:284, ProfileView:294, BeerOfWeekCard:96 (copy the
      BeerMarketView pattern).
   3. BeerDetailView:577 "Beer not found" shown for network errors — add retry.
-  4. Silent write failures: ScanView:365/:308 save paths, BeerDetailView:164
-     vote revert (Explore's vote path already reverts — copy it).
-  5. LogPourView searches only first 200 catalog rows — switch to
-     catalog_search RPC pagination (CatalogView already does it right).
-  6. Image downsampling for list thumbs; ticker TimelineView → 30fps periodic;
+  4. DONE (Claude): ScanView silent saves now alert; BeerDetailView vote
+     reverts on failure; LogPourView searches the full catalog via
+     catalog_search (debounced, local-instant + server-replace).
+  5. Image downsampling for list thumbs; ticker TimelineView → 30fps periodic;
      LocationManager never calls stopUpdatingLocation.
 - Codex: last seen commits `3ca3ab0` (auth privacy/consent hardening, removed
   dev identity) and `892767d` (branded web domain in app). If that lane is

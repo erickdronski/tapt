@@ -18,6 +18,7 @@ struct ScanView: View {
     @State private var visibleLines: [String] = []
     @State private var menuMatching = false
     @State private var partnerVenueId: String?
+    @State private var saveError: String?
 
     private var scannerAvailable: Bool {
         DataScannerViewController.isSupported && DataScannerViewController.isAvailable
@@ -72,6 +73,14 @@ struct ScanView: View {
             }
             .sheet(item: $partnerVenueId) { venueId in
                 PartnerMenuSheet(venueId: venueId)
+            }
+            .alert("Couldn't log that pour", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(saveError ?? "")
             }
             .sheet(isPresented: $showResult, onDismiss: { scanned = nil }) { resultSheet }
             .sheet(item: $loggedPour) { pour in
@@ -306,7 +315,9 @@ struct ScanView: View {
                     addingOFF = false
                 }
             } catch {
+                // Never fail silently: the user believes the pour logged.
                 addingOFF = false
+                saveError = "Check your connection and try again. Your rating was not saved."
             }
         }
     }
@@ -363,7 +374,9 @@ struct ScanView: View {
                     loggedPour = pour
                 }
             } catch {
+                // Never fail silently: the user believes the pour logged.
                 saving = false
+                saveError = "Check your connection and try again. Your pour was not saved."
             }
         }
     }

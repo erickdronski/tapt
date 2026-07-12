@@ -26,10 +26,17 @@ struct LogPourView: View {
     private let glasswareOptions = ["Pint", "Can", "Bottle", "Tulip", "Snifter", "Flight"]
     private let occasionOptions = ["home", "bar", "restaurant", "event", "sports", "other"]
 
+    @State private var serverResults: [CatalogBeer] = []
+
     private var filtered: [CatalogBeer] {
-        search.isEmpty ? beers : beers.filter {
+        if search.isEmpty { return beers }
+        // Local slice gives instant hits; the server search covers the WHOLE
+        // catalog (the preloaded list is only the first 200 beers) and replaces
+        // the local matches as soon as it lands.
+        let local = beers.filter {
             $0.name.localizedCaseInsensitiveContains(search) || $0.breweryName.localizedCaseInsensitiveContains(search)
         }
+        return serverResults.isEmpty ? local : serverResults
     }
 
     var body: some View {
@@ -56,6 +63,20 @@ struct LogPourView: View {
             .task {
                 beers = (try? await CheckinService.catalog()) ?? []
                 venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []
+            }
+            .task(id: search) {
+                // Full-catalog search (debounced). Without this, a pour could
+                // only be logged against the first 200 beers alphabetically.
+                let q = search.trimmingCharacters(in: .whitespaces)
+                guard q.count >= 2 else { serverResults = []; return }
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                let rows = (try? await CatalogService.search(query: q, limit: 30)) ?? []
+                guard !Task.isCancelled else { return }
+                serverResults = rows.map {
+                    CatalogBeer(id: $0.id, name: $0.name, style: $0.style, abv: $0.abv,
+                                brewery: .init(name: $0.breweryName, country: $0.country))
+                }
             }
             .sheet(item: $sharePour) { pour in
                 NavigationStack {

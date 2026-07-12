@@ -157,15 +157,22 @@ struct BeerDetailView: View {
         let active = myVote == value
         return Button {
             guard let uid = session.user?.id else { return }
+            let previous = myVote
             let newValue = active ? nil : value
             if newValue != nil { Haptic.firm() } else { Haptic.tap() }
             // Animate so the digit rolls up and the thumb bounces as the vote lands.
             withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = newValue }
             Task {
-                if let v = newValue {
-                    try? await BeerService.vote(beerId: d.id, userId: uid, value: v)
-                } else {
-                    try? await BeerService.unvote(beerId: d.id, userId: uid)
+                do {
+                    if let v = newValue {
+                        try await BeerService.vote(beerId: d.id, userId: uid, value: v)
+                    } else {
+                        try await BeerService.unvote(beerId: d.id, userId: uid)
+                    }
+                } catch {
+                    // The optimistic thumb must not lie: revert on failure.
+                    withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = previous }
+                    Haptic.tap()
                 }
             }
         } label: {
