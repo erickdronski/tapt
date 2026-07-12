@@ -95,7 +95,7 @@
   .stats{background:var(--malt);color:var(--foam)}
   .stats .wrap{padding:44px 24px}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
-  .stat b{display:block;font-family:'Poppins';font-size:2.3rem;font-weight:800;color:var(--gold);letter-spacing:-.02em}
+  .stat b{display:block;font-family:'Poppins';font-size:1.9rem;line-height:1.12;font-weight:800;color:var(--gold);letter-spacing:-.02em}
   .stat span{font-size:.86rem;color:rgba(251,246,236,.72)}
   @media(max-width:720px){.stats-grid{grid-template-columns:repeat(2,1fr);gap:28px}}
 
@@ -239,10 +239,10 @@
 <div class="stats">
   <div class="wrap">
     <div class="stats-grid">
-      <div class="stat reveal"><b id="stat-beers">11,000+</b><span>beers in the catalog</span></div>
-      <div class="stat reveal d1"><b id="stat-breweries">11,900+</b><span>breweries, <span id="stat-countries">108</span> countries</span></div>
-      <div class="stat reveal d2"><b id="stat-venues">8,700+</b><span>venues mapped</span></div>
-      <div class="stat reveal d3"><b id="stat-styles">60</b><span>BJCP styles, cited</span></div>
+      <div class="stat reveal"><b>Every beer</b><span>scan it, score it</span></div>
+      <div class="stat reveal d1"><b>Worldwide</b><span>breweries and beers</span></div>
+      <div class="stat reveal d2"><b>On the map</b><span>taprooms and bars</span></div>
+      <div class="stat reveal d3"><b>Cited</b><span>real BJCP style science</span></div>
     </div>
   </div>
 </div>
@@ -301,7 +301,7 @@
       <div class="tile small reveal">
         <div class="ic" style="background:var(--haze)">🍺</div>
         <h3>World catalog</h3>
-        <p>11,000+ real beers with style science, ABV, nutrition, awards, and where to find them.</p>
+        <p>Real beers with style science, ABV, nutrition, awards, and where to find them.</p>
       </div>
       <div class="tile big reveal d1">
         <div class="ic" style="background:var(--copper);color:#fff">🎮</div>
@@ -477,27 +477,6 @@
       entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
     }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
     document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
-  })();
-</script>
-<script>
-  // Live headline counts, single source of truth (platform_stats), so the site never
-  // drifts from the real database. Clean floored display; the page keeps its static
-  // numbers if the fetch fails.
-  (function(){
-    var floor = function(n){ return (Math.floor(n/100)*100).toLocaleString() + '+'; };
-    var set = function(id, v){ var el = document.getElementById(id); if (el && v != null) el.textContent = v; };
-    fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/rest/v1/rpc/platform_stats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF' },
-      body: '{}'
-    }).then(function(r){ return r.json(); }).then(function(s){
-      if (!s) return;
-      set('stat-beers', floor(s.beers));
-      set('stat-breweries', floor(s.breweries));
-      set('stat-venues', floor(s.venues));
-      set('stat-styles', s.styles);
-      set('stat-countries', s.countries);
-    }).catch(function(){});
   })();
 </script>
 <script type="application/ld+json">
