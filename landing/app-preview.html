@@ -161,10 +161,10 @@
         <div class="hero">
           <div class="glow"></div>
           <div class="hglass" id="heroGlass"></div>
-          <div class="k">Your beer radar · LIVE</div>
-          <h3>Track what's pouring</h3>
-          <p>Ride the live beer market, scan new pours, and build The Beer Superapp around your taste.</p>
-          <div class="metric">+heat</div>
+          <div class="k">Your beer radar · EXPLORE</div>
+          <h3>Find your next pour</h3>
+          <p>Browse the real catalog, scan new pours, and cast the votes that move The Beer Superapp.</p>
+          <div class="metric">CATALOG</div>
         </div>
         <div class="catbar" onclick="go('catalog')">
           <span>🔍</span><span>Search every beer, brewery, style</span><span class="books">📚</span>
@@ -175,11 +175,11 @@
         </div>
         <div class="bow">
           <div class="crown">👑</div>
-          <div class="k kicker">Beer of the Week</div>
+          <div class="k kicker">Catalog spotlight</div>
           <b id="bowName">—</b>
-          <span id="bowSub">Vote standings reset Monday</span>
+          <span id="bowSub">A real beer from the catalog</span>
         </div>
-        <div class="sec"><h2>On the come up</h2><span class="kicker" style="color:var(--muted)">this week</span></div>
+        <div class="sec"><h2>Explore real beers</h2><span class="kicker" style="color:var(--muted)">from the catalog</span></div>
         <div class="rail" id="moversRail"></div>
         <div class="sec"><h2>Fresh in the catalog</h2></div>
         <div class="rail" id="freshRail"></div>
@@ -221,7 +221,7 @@
       <!-- YOU -->
       <section class="pane" id="p-you">
         <div class="title">You</div>
-        <div class="px" style="color:var(--muted);font-size:.9rem">Profile, sign-in (Apple / Google / email), badges, and settings live here.</div>
+        <div class="px" style="color:var(--muted);font-size:.9rem">Profile, email and enabled social sign-in, badges, and settings live here.</div>
       </section>
 
     </div><!-- /screen -->
@@ -271,7 +271,7 @@
 
 <script>
 const SUPA='https://qfwiizvqxrhjlthbjosz.supabase.co';
-const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmd2lpenZxeHJoamx0aGJqb3N6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NDUwNDQsImV4cCI6MjA5OTAyMTA0NH0.eFEsqnWBP8NA6unyq8-Jyl3gIJIJ4GMPNlYcz4d6Zhg';
+const PUBLISHABLE='sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF';
 
 // Baked real fallback (clean OFF beers) if live fetch is blocked.
 const SEED=[
@@ -312,7 +312,7 @@ function go(t){
 
 async function fetchCatalog(q, style, na, limit=30, offset=0){
   const r=await fetch(SUPA+'/rest/v1/rpc/catalog_search',{method:'POST',
-    headers:{'Content-Type':'application/json','apikey':ANON,'Authorization':'Bearer '+ANON},
+    headers:{'Content-Type':'application/json','apikey':PUBLISHABLE},
     body:JSON.stringify({p_query:q||null,p_style:style||null,p_na_only:!!na,p_limit:limit,p_offset:offset})});
   if(!r.ok) throw new Error('http '+r.status);
   return r.json();
@@ -371,7 +371,7 @@ function openDetail(b){
 function closeDetail(){document.getElementById('detail').classList.remove('on');}
 function bump(el,dir){const n=el.querySelector('.n');n.textContent=(+n.textContent)+1;el.style.transform='scale(1.08)';setTimeout(()=>el.style.transform='',180);}
 
-// Beer of the Week + rails from live data (or seed)
+// Catalog spotlight + rails from live data (or a real-product fallback)
 async function fillExplore(){
   let beers=SEED;
   try{ beers=await fetchCatalog('', null, false, 12, 0); }catch(e){}
@@ -379,7 +379,7 @@ async function fillExplore(){
   const b0=beers.find(b=>b.image_url)||beers[0];
   document.getElementById('bowName').textContent=b0.name;
   document.getElementById('bowSub').textContent=(b0.brewery_name||'')+(b0.country?' · '+b0.country:'');
-  const card=b=>`<div class="mv" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'><div class="up">▲ trending</div><b>${esc(b.name)}</b><span>${esc(b.brewery_name||b.style||'')}</span></div>`;
+  const card=b=>`<div class="mv" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'><div class="up">REAL CATALOG</div><b>${esc(b.name)}</b><span>${esc(b.brewery_name||b.style||'')}</span></div>`;
   document.getElementById('moversRail').innerHTML=beers.slice(0,6).map(card).join('');
   document.getElementById('freshRail').innerHTML=beers.slice(6,12).map(card).join('');
 }

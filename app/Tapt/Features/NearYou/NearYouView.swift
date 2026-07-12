@@ -4,8 +4,8 @@ import MapKit
 /// A local map of nearby beer spots from Tapt, Apple, and live local search.
 /// Includes breweries, pubs, bars, taprooms, beer gardens, and restaurants with beer energy.
 struct NearYouView: View {
-    @AppStorage("locationConsent") private var locationConsent = true
-    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
+    @AppStorage("locationConsent") private var locationConsent = false
+    @AppStorage("homeRegion") private var homeRegion = "Global"
     @State private var location = LocationManager()
     // Start on a real region (continental US) -- never `.automatic`, which fit all
     // ~800 global pins and dumped the map in the middle of the Pacific. This renders

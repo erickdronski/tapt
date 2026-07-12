@@ -64,3 +64,9 @@ enum AppInfo {
         return "\(v) (\(b))"
     }
 }
+
+enum AppLinks {
+    static let webBase = "https://tapt-landing-three.vercel.app"
+    static let privacy = webBase + "/privacy"
+    static let terms = webBase + "/terms"
+}

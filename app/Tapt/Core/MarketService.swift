@@ -4,8 +4,8 @@ import Supabase
 /// The Beer Market: beers ranked by community demand. The number is VOTES, not
 /// dollars -- `net` is a beer's standing (up minus down), `change` is how its net
 /// moved in the last 24h (trending up/down), `volume` is votes in that window. All
-/// computed server-side in `beer_market`, never invented. Pre-launch it reads the
-/// isolated, labeled demo lane; flip demo:false at launch to run on real votes.
+/// computed server-side in `beer_market`, never invented. Private notes never
+/// contribute, and check-ins contribute only when the account opted into trends.
 struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let beerId: String
     let symbol: String

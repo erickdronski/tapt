@@ -50,7 +50,7 @@ final class Session {
     }
 
     func sendEmailSignInLink(to email: String) async -> Bool {
-        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !normalizedEmail.isEmpty else {
             authError = "Enter your email address."
             return false
@@ -64,7 +64,12 @@ final class Session {
             )
             return true
         } catch {
-            authError = error.localizedDescription
+            let detail = error.localizedDescription
+            if detail.localizedCaseInsensitiveContains("rate limit") || detail.contains("429") {
+                authError = "Too many sign-in emails were requested. Wait a few minutes, then try again."
+            } else {
+                authError = detail
+            }
             return false
         }
     }

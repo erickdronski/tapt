@@ -58,14 +58,14 @@ struct BeerMarketView: View {
         }
     }
 
-    // MARK: board header (sort + demo label)
+    // MARK: board header
 
     private var boardHeader: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("Ranked by real votes. Movement blends recent votes, pours & buzz.")
+                    Text("Ranked by real votes. Movement blends recent votes and consented pours.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -156,8 +156,8 @@ struct BeerMarketView: View {
 
     private var footer: some View {
         Text(MarketService.demoEnabled
-             ? "Standings and movement are real community votes, never invented. Demo activity shown until launch fills the real board."
-             : "Standings and movement are real community votes. Nothing invented.")
+             ? "Marketing preview: isolated demo activity, never shown in TestFlight or App Store builds."
+             : "Standings use real community votes. Private notes never affect the board, and pours count only when trend sharing is on.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)
@@ -188,12 +188,12 @@ struct BeerMarketView: View {
         VStack(spacing: 12) {
             Image(systemName: loadFailed ? "wifi.exclamationmark" : "chart.bar.xaxis")
                 .font(.largeTitle).foregroundStyle(Brand.muted)
-            Text(loadFailed ? "Couldn't load the board" : "The board is warming up")
+            Text(loadFailed ? "Couldn't load the board" : "No community votes yet")
                 .font(.system(.headline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-            Text(loadFailed ? "Check your connection and pull to refresh." : "Come back in a moment.")
+            Text(loadFailed ? "Check your connection and pull to refresh." : "Vote on a beer to make the first move. The board stays empty until the community moves it.")
                 .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center)
             Button { Task { await load() } } label: {
-                Label("Retry", systemImage: "arrow.clockwise")
+                Label(loadFailed ? "Retry" : "Refresh board", systemImage: "arrow.clockwise")
                     .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
                     .padding(.horizontal, 18).padding(.vertical, 10)
                     .background(Brand.gold, in: Capsule())

@@ -362,7 +362,6 @@ private struct ClaimConfirmSheet: View {
     var onDone: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    @State private var email = ""
     @State private var role = "owner"
     @State private var submitting = false
     @State private var done = false
@@ -400,12 +399,21 @@ private struct ClaimConfirmSheet: View {
                                 }.buttonStyle(.plain)
                             }
                         }
-                        Text("Work email").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                        TextField("you@yourvenue.com", text: $email)
-                            .keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                            .padding(12).background(Brand.surface, in: RoundedRectangle(cornerRadius: 13))
-                            .overlay(RoundedRectangle(cornerRadius: 13).stroke(Brand.malt.opacity(0.12)))
-                        Text("A matching email domain speeds up approval.").font(.caption).foregroundStyle(Brand.muted)
+                        Text("Account email").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                        HStack(spacing: 10) {
+                            Image(systemName: "envelope.fill").foregroundStyle(Brand.gold)
+                            Text(defaultEmail.isEmpty ? "No email on this account" : defaultEmail)
+                                .font(.subheadline)
+                                .foregroundStyle(defaultEmail.isEmpty ? Brand.copper : Brand.text)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 13))
+                        .overlay(RoundedRectangle(cornerRadius: 13).stroke(Brand.malt.opacity(0.12)))
+                        Text("Claims use your verified sign-in email and are reviewed before partner tools unlock.")
+                            .font(.caption).foregroundStyle(Brand.muted)
 
                         if let errorText {
                             Text(errorText).font(.footnote).foregroundStyle(.red)
@@ -418,8 +426,8 @@ private struct ClaimConfirmSheet: View {
                                 .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14)).foregroundStyle(Brand.malt)
                         }
                         .buttonStyle(.plain)
-                        .disabled(!email.contains("@") || submitting)
-                        .opacity(email.contains("@") && !submitting ? 1 : 0.5)
+                        .disabled(!defaultEmail.contains("@") || submitting)
+                        .opacity(defaultEmail.contains("@") && !submitting ? 1 : 0.5)
                     }
                 }
                 .padding()
@@ -432,7 +440,6 @@ private struct ClaimConfirmSheet: View {
                     Button(done ? "Done" : "Cancel") { if done { onDone() }; dismiss() }
                 }
             }
-            .onAppear { if email.isEmpty { email = defaultEmail } }
         }
     }
 
@@ -443,7 +450,7 @@ private struct ClaimConfirmSheet: View {
             do {
                 try await PartnerService.claimVenue(
                     venueId: venue.venueId,
-                    email: email.trimmingCharacters(in: .whitespaces),
+                    email: defaultEmail,
                     role: role
                 )
                 done = true

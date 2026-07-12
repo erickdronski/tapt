@@ -65,19 +65,21 @@ struct SignInView: View {
                     }
 
                     #if targetEnvironment(simulator)
-                    Button {
-                        Task { await devSignIn() }
-                    } label: {
-                        Label("Dev sign in (sim only)", systemImage: "hammer.fill")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Brand.malt, in: RoundedRectangle(cornerRadius: 12))
-                            .foregroundStyle(Brand.gold)
+                    if Self.devCredentialsAvailable {
+                        Button {
+                            Task { await devSignIn() }
+                        } label: {
+                            Label("Dev sign in (sim only)", systemImage: "hammer.fill")
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Brand.malt, in: RoundedRectangle(cornerRadius: 12))
+                                .foregroundStyle(Brand.gold)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 36)
+                        .padding(.top, 8)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 36)
-                    .padding(.top, 8)
                     #endif
 
                     Text("By continuing you confirm you are of legal drinking age.")
@@ -93,7 +95,8 @@ struct SignInView: View {
             providersLoaded = true
             providers = await AuthProvidersService.flags()
             #if targetEnvironment(simulator)
-            if ProcessInfo.processInfo.environment["TAPT_DEV_AUTOLOGIN"] == "1" {
+            if Self.devCredentialsAvailable,
+               ProcessInfo.processInfo.environment["TAPT_DEV_AUTOLOGIN"] == "1" {
                 await devSignIn()
             }
             #endif
@@ -212,20 +215,28 @@ struct SignInView: View {
     }
 
     #if targetEnvironment(simulator)
-    /// Simulator-only shortcut into the seeded dev/test account so the app can be
-    /// exercised end-to-end without the OAuth/email round-trip. Never compiled into
-    /// device, TestFlight, or App Store builds.
+    private static var devCredentialsAvailable: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["TAPT_DEV_EMAIL"]?.isEmpty == false && env["TAPT_DEV_PASSWORD"]?.isEmpty == false
+    }
+
+    /// Simulator-only shortcut configured through the local Xcode scheme. No test
+    /// identity or credential is compiled into device, TestFlight, or App Store builds.
     private func devSignIn() async {
         errorText = nil
-        // Mark the dev account onboarded locally so fresh sim installs land in the app.
-        // Must match SwiftUI's uppercase UUID.uuidString exactly (TaptApp.localOnboarded).
-        let devId = "F2949DF9-CBED-42E2-91B3-34FFBE48AE4B"
-        var ids = Set((UserDefaults.standard.string(forKey: "onboardedUserIDs") ?? "")
-            .split(separator: ",").map(String.init))
-        ids.insert(devId)
-        UserDefaults.standard.set(ids.sorted().joined(separator: ","), forKey: "onboardedUserIDs")
+        let env = ProcessInfo.processInfo.environment
+        guard let email = env["TAPT_DEV_EMAIL"], !email.isEmpty,
+              let password = env["TAPT_DEV_PASSWORD"], !password.isEmpty else {
+            errorText = "Add TAPT_DEV_EMAIL and TAPT_DEV_PASSWORD to the local Xcode scheme."
+            return
+        }
         do {
-            try await Supa.client.auth.signIn(email: "dev@tapt.app", password: "TaptDev-sim-9f3kQ2")
+            try await Supa.client.auth.signIn(email: email, password: password)
+            let userId = try await Supa.client.auth.session.user.id.uuidString
+            var ids = Set((UserDefaults.standard.string(forKey: "onboardedUserIDs") ?? "")
+                .split(separator: ",").map(String.init))
+            ids.insert(userId)
+            UserDefaults.standard.set(ids.sorted().joined(separator: ","), forKey: "onboardedUserIDs")
         } catch {
             errorText = "Dev sign in failed: \(error.localizedDescription)"
         }

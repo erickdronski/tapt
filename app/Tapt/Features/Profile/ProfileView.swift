@@ -7,12 +7,16 @@ struct ProfileView: View {
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("beerGeekMode") private var beerGeekMode = false
     @AppStorage("noLowDefault") private var noLowDefault = false
-    @AppStorage("locationConsent") private var locationConsent = true
-    @AppStorage("aggregateConsent") private var aggregateConsent = true
+    @AppStorage("locationConsent") private var locationConsent = false
+    @AppStorage("aggregateConsent") private var aggregateConsent = false
     @AppStorage("dataSaleConsent") private var dataSaleConsent = false
+    @AppStorage("socialVisible") private var socialVisible = false
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
     @State private var languageChanged = false
-    @State private var deletionRequested = false
+    @State private var isHydratingPrivacy = true
+    @State private var privacyError: String?
+    @State private var showDeleteConfirmation = false
+    @State private var deleting = false
     @State private var deletionError: String?
     @State private var myActivity: [MyBeerActivity] = []
 
@@ -111,10 +115,16 @@ struct ProfileView: View {
                     Toggle("Nearby beer spots", isOn: $locationConsent)
                     Toggle("Anonymous trend reports", isOn: $aggregateConsent)
                     Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
+                    Toggle("Public social passport", isOn: $socialVisible)
+                    if let privacyError {
+                        Label(privacyError, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                    }
                 } header: {
                     Text("Privacy Choices")
                 } footer: {
-                    Text("These choices are saved to your account and can be changed any time.")
+                    Text("Optional sharing starts off. These choices are saved to your account and can be changed any time.")
                 }
 
                 Section {
@@ -149,25 +159,24 @@ struct ProfileView: View {
 
                 Section("About") {
                     LabeledContent("Version", value: AppInfo.version)
-                    Link("Privacy Policy", destination: URL(string: "https://tapt.app/privacy")!)
-                    Link("Terms of Service", destination: URL(string: "https://tapt.app/terms")!)
+                    Link("Privacy Policy", destination: URL(string: AppLinks.privacy)!)
+                    Link("Terms of Service", destination: URL(string: AppLinks.terms)!)
                 }
 
                 Section {
                     Button("Sign out", role: .destructive) {
                         Task { await session.signOut() }
                     }
-                    Button("Request account deletion", role: .destructive) {
-                        requestDeletion()
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label(deleting ? "Deleting account..." : "Delete account", systemImage: "trash.fill")
                     }
+                    .disabled(deleting)
                 }
 
-                if deletionRequested || deletionError != nil {
+                if deletionError != nil {
                     Section {
-                        if deletionRequested {
-                            Label("Deletion request received.", systemImage: "checkmark.seal.fill")
-                                .foregroundStyle(Brand.hop)
-                        }
                         if let deletionError {
                             Text(deletionError).foregroundStyle(.red)
                         }
@@ -175,7 +184,10 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("You")
-            .task { await loadActivity() }
+            .task {
+                await loadActivity()
+                await loadPrivacyChoices()
+            }
             .onChange(of: appLanguage) { _, newValue in
                 (AppLanguage(rawValue: newValue) ?? .system).apply()
                 languageChanged = true
@@ -190,6 +202,15 @@ struct ProfileView: View {
             .onChange(of: dataSaleConsent) { _, newValue in
                 syncPrivacy("data_sale", granted: newValue, text: "Partner insight aggregates")
             }
+            .onChange(of: socialVisible) { _, newValue in
+                syncSocialVisibility(newValue)
+            }
+            .alert("Delete your Tapt account?", isPresented: $showDeleteConfirmation) {
+                Button("Delete account", role: .destructive) { deleteAccount() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This permanently removes your profile, private notes, votes, pours, follows, venue claims, and sign-in identity. This cannot be undone.")
+            }
         }
     }
 
@@ -200,27 +221,69 @@ struct ProfileView: View {
     }
 
     private func syncPrivacy(_ purpose: String, granted: Bool, text: String) {
-        guard let id = session.user?.id else { return }
+        guard !isHydratingPrivacy, let id = session.user?.id else { return }
         Task {
-            await ProfileService.setPrivacyChoice(
-                purpose: purpose,
-                granted: granted,
-                uiText: text,
-                userId: id
-            )
+            do {
+                try await ProfileService.setPrivacyChoice(
+                    purpose: purpose,
+                    granted: granted,
+                    uiText: text,
+                    userId: id
+                )
+                privacyError = nil
+            } catch {
+                privacyError = "That privacy choice was not saved. Your server settings were restored."
+                await loadPrivacyChoices(reportErrors: false)
+            }
         }
     }
 
-    private func requestDeletion() {
+    private func syncSocialVisibility(_ visible: Bool) {
+        guard !isHydratingPrivacy else { return }
+        Task {
+            do {
+                try await ProfileService.setSocialVisibility(visible)
+                privacyError = nil
+            } catch {
+                privacyError = "Social visibility was not saved. Your server setting was restored."
+                await loadPrivacyChoices(reportErrors: false)
+            }
+        }
+    }
+
+    private func loadPrivacyChoices(reportErrors: Bool = true) async {
+        guard let id = session.user?.id else {
+            isHydratingPrivacy = false
+            return
+        }
+        do {
+            let choices = try await ProfileService.privacyChoices(userId: id)
+            isHydratingPrivacy = true
+            locationConsent = choices.location
+            aggregateConsent = choices.aggregateAnalytics
+            dataSaleConsent = choices.dataSale
+            socialVisible = choices.socialVisible
+            await Task.yield()
+            isHydratingPrivacy = false
+        } catch {
+            isHydratingPrivacy = false
+            if reportErrors {
+                privacyError = "Your account privacy settings could not be loaded. Optional sharing remains off on this device."
+            }
+        }
+    }
+
+    private func deleteAccount() {
         guard let id = session.user?.id else { return }
         deletionError = nil
+        deleting = true
         Task {
             do {
                 try await ProfileService.requestAccountDeletion(userId: id)
-                deletionRequested = true
             } catch {
                 deletionError = error.localizedDescription
             }
+            deleting = false
         }
     }
 

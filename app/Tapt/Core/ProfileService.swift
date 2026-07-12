@@ -1,8 +1,14 @@
 import Foundation
 import Supabase
 
-/// Fire-and-forget profile writes. Keeping the non-Sendable `PostgrestResponse` inside a
-/// nonisolated function (never returning it to the MainActor) satisfies Swift 6 concurrency.
+struct AccountPrivacyChoices: Sendable {
+    let location: Bool
+    let aggregateAnalytics: Bool
+    let dataSale: Bool
+    let socialVisible: Bool
+}
+
+/// Account preferences, consent choices, and deletion through narrow server APIs.
 enum ProfileService {
     static func setRegion(_ region: String, userId: UUID) async {
         struct Params: Encodable {
@@ -37,13 +43,14 @@ enum ProfileService {
             .upsert(TV(user_id: userId.uuidString, top_styles: styles)).execute()
     }
 
-    static func setPrivacyChoice(purpose: String, granted: Bool, uiText: String, userId: UUID) async {
+    static func setPrivacyChoice(purpose: String, granted: Bool, uiText: String, userId: UUID) async throws {
         struct Params: Encodable {
             let p_purpose: String
             let p_granted: Bool
             let p_ui_text: String
         }
-        _ = try? await Supa.client.rpc(
+        _ = userId
+        try await Supa.client.rpc(
             "record_privacy_choice",
             params: Params(p_purpose: purpose, p_granted: granted, p_ui_text: uiText)
         ).execute()
@@ -56,8 +63,49 @@ enum ProfileService {
         uiText: String,
         source: String,
         userId: UUID
-    ) async {
-        await setPrivacyChoice(purpose: purpose, granted: granted, uiText: uiText, userId: userId)
+    ) async throws {
+        try await setPrivacyChoice(purpose: purpose, granted: granted, uiText: uiText, userId: userId)
+    }
+
+    static func privacyChoices(userId: UUID) async throws -> AccountPrivacyChoices {
+        struct ConsentRow: Decodable {
+            let purpose: String
+            let granted: Bool
+        }
+        struct ProfileRow: Decodable {
+            let socialVisible: Bool
+            enum CodingKeys: String, CodingKey { case socialVisible = "social_visible" }
+        }
+
+        let rows: [ConsentRow] = try await Supa.client.from("consent_ledger")
+            .select("purpose,granted")
+            .eq("user_id", value: userId.uuidString)
+            .order("created_at", ascending: false)
+            .execute().value
+        let profile: [ProfileRow] = try await Supa.client.from("user_profile")
+            .select("social_visible")
+            .eq("id", value: userId.uuidString)
+            .limit(1)
+            .execute().value
+
+        var latest: [String: Bool] = [:]
+        for row in rows where latest[row.purpose] == nil {
+            latest[row.purpose] = row.granted
+        }
+        return AccountPrivacyChoices(
+            location: latest["location"] ?? false,
+            aggregateAnalytics: latest["aggregate_analytics"] ?? false,
+            dataSale: latest["data_sale"] ?? false,
+            socialVisible: profile.first?.socialVisible ?? false
+        )
+    }
+
+    static func setSocialVisibility(_ visible: Bool) async throws {
+        struct Params: Encodable { let p_visible: Bool }
+        try await Supa.client.rpc(
+            "set_social_visibility",
+            params: Params(p_visible: visible)
+        ).execute()
     }
 
     /// Real, immediate account deletion (App Store 5.1.1(v) + GDPR/CCPA): the

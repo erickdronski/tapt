@@ -8,7 +8,7 @@ import SwiftUI
 struct FeaturedPartnersRail: View {
     @State private var partners: [FeaturedPartner] = []
     @State private var loaded = false
-    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
+    @AppStorage("homeRegion") private var homeRegion = "Global"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {

@@ -5,9 +5,9 @@ import SwiftUI
 /// country, and live up/down voting. The screen a beer fan opens first.
 struct ExploreView: View {
     @Environment(Session.self) private var session
-    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
+    @AppStorage("homeRegion") private var homeRegion = "Global"
     @AppStorage("noLowDefault") private var noLowDefault = false
-    @AppStorage("locationConsent") private var locationConsent = true
+    @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("homeRegionGeocoded") private var homeRegionGeocoded = false
     @State private var location = LocationManager()
     @State private var region = ""
@@ -35,7 +35,10 @@ struct ExploreView: View {
     }
     private var movers: [TrendedBeer] { visibleBeers.sorted { $0.momentum > $1.momentum } }
     private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
-    private var heroBeer: TrendedBeer? { movers.first ?? top.first }
+    private var hasMarketActivity: Bool {
+        visibleBeers.contains { $0.popularity != 0 || $0.momentum != 0 }
+    }
+    private var heroBeer: TrendedBeer? { hasMarketActivity ? (movers.first ?? top.first) : nil }
     private var totalMomentum: Int { movers.prefix(8).map(\.momentum).reduce(0, +) }
     private var activeGuide: RegionBeerGuide? {
         guides.first { $0.name == region }
@@ -57,7 +60,7 @@ struct ExploreView: View {
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
                     } else {
-                        moversSection
+                        if hasMarketActivity { moversSection }
                         topSection
                     }
                     FeaturedPartnersRail()
@@ -85,10 +88,10 @@ struct ExploreView: View {
             title: heroBeer?.name ?? "Your beer radar",
             subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") in \(region.isEmpty ? homeRegion : region)." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
-                ?? "Track what is hot and scan new pours.",
-            metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "LIVE",
+                ?? "Browse real beers and cast the vote that starts the board.",
+            metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "EXPLORE",
             caption: feedNote ?? (heroBeer != nil ? "Tap to open · \(max(totalMomentum, 0)) market heat"
-                                                   : (noLowDefault ? "No / Low lens on" : "\(max(totalMomentum, 0)) market heat")),
+                                                   : (noLowDefault ? "No / Low lens on" : "Catalog ready · market awaiting votes")),
             icon: "chart.line.uptrend.xyaxis"
         )
     }
@@ -283,9 +286,14 @@ struct ExploreView: View {
 
     private var topSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header(region == "Global" ? "Trending worldwide" : "Top in \(region)", "Tap to vote it up or down")
+            header(
+                hasMarketActivity
+                    ? (region == "Global" ? "Trending worldwide" : "Top in \(region)")
+                    : (region == "Global" ? "Explore worldwide beers" : "Explore beers from \(region)"),
+                hasMarketActivity ? "Tap to vote it up or down" : "Real catalog beers. Your vote can start the board."
+            )
             if top.isEmpty && noLowDefault {
-                Text("No No / Low picks are trending here yet. Turn off the lens in You to see the full board.")
+                Text("No No / Low catalog picks are available here yet. Turn off the lens in You to see the full catalog.")
                     .font(.subheadline)
                     .foregroundStyle(Brand.muted)
                     .padding(.horizontal)

@@ -10,7 +10,9 @@ struct AuthProviderFlags: Sendable {
     var twitter = false
     var email = true
 
-    static let fallback = AuthProviderFlags(apple: false, google: true, facebook: true, twitter: false, email: true)
+    // A settings outage must not expose providers that may be misconfigured.
+    // Email is the only provider we can safely keep available without discovery.
+    static let fallback = AuthProviderFlags(apple: false, google: false, facebook: false, twitter: false, email: true)
 }
 
 enum AuthProvidersService {

@@ -9,18 +9,18 @@ struct OnboardingView: View {
     @AppStorage("passport.seenBadges") private var seenBadgesRaw = ""
     @AppStorage("passport.badgesSeeded") private var badgesSeeded = false
     @AppStorage("favoriteStyles") private var favoriteStyles = ""
-    @AppStorage("homeRegion") private var homeRegion = "New Jersey"
+    @AppStorage("homeRegion") private var homeRegion = "Global"
     @AppStorage("noLowDefault") private var noLowDefault = false
-    @AppStorage("locationConsent") private var savedLocationConsent = true
-    @AppStorage("aggregateConsent") private var savedAggregateConsent = true
+    @AppStorage("locationConsent") private var savedLocationConsent = false
+    @AppStorage("aggregateConsent") private var savedAggregateConsent = false
     @AppStorage("dataSaleConsent") private var savedDataSaleConsent = false
 
     @State private var step = 0
     @State private var styles: Set<String> = []
-    @State private var region = "New Jersey"
+    @State private var region = "Global"
     @State private var legalAgeConfirmed = false
-    @State private var locationConsent = true
-    @State private var aggregateConsent = true
+    @State private var locationConsent = false
+    @State private var aggregateConsent = false
     @State private var dataSaleConsent = false
     @State private var newsletterOptIn = false
     @State private var saving = false
@@ -108,7 +108,7 @@ struct OnboardingView: View {
             stepTitle("Where is home base?", "So we can show what is hot in your area.")
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(BeerRegions.all.filter { $0 != "Global" }, id: \.self) { r in
+                    ForEach(["Global"] + BeerRegions.countries + BeerRegions.states, id: \.self) { r in
                         Button { region = r } label: {
                             HStack {
                                 Text(r).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)

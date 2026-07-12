@@ -22,45 +22,22 @@ for all
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
 
-create or replace view beer_trend as
-with checkin_stats as (
-  select
-    beer_id,
-    count(*)::int as checkin_count,
-    avg(rating)::numeric(3,2) as avg_rating
-  from checkin_event
-  where beer_id is not null
-  group by beer_id
-),
-vote_stats as (
-  select
-    beer_id,
-    coalesce(sum(value), 0)::int as vote_score,
-    count(*)::int as vote_count
-  from beer_vote
-  group by beer_id
-)
-select
-  b.id as beer_id,
-  b.name,
-  b.style,
-  b.abv,
-  brewery.name as brewery_name,
-  brewery.country,
-  coalesce(nullif(brewery.country, ''), 'Global') as region,
-  greatest(
-    coalesce(cs.checkin_count, 0) * 3 + coalesce(vs.vote_score, 0),
-    0
-  )::int as popularity,
-  (
-    coalesce(vs.vote_score, 0)
-    + coalesce(cs.checkin_count, 0)
-  )::int as momentum,
-  cs.avg_rating,
-  b.created_at as updated_at
-from beer_catalog b
-left join brewery on brewery.id = b.brewery_id
-left join checkin_stats cs on cs.beer_id = b.id
-left join vote_stats vs on vs.beer_id = b.id;
+-- Mutable aggregate storage. Later migrations rebuild it exclusively from real
+-- first-party activity; keeping the table contract here makes a fresh replay match
+-- the live schema used by 0005+ (which requires id and checkins_7d).
+create table if not exists beer_trend (
+  id uuid primary key default gen_random_uuid(),
+  beer_id uuid not null references beer_catalog(id) on delete cascade,
+  region text not null default 'Global',
+  popularity int not null default 0,
+  momentum int not null default 0,
+  checkins_7d int not null default 0,
+  avg_rating numeric(3,2),
+  updated_at timestamptz not null default now(),
+  unique (beer_id, region)
+);
+
+alter table beer_trend enable row level security;
+create policy read_trend on beer_trend for select using (true);
 
 grant select on beer_trend to anon, authenticated;
