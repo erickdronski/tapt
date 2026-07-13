@@ -58,10 +58,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   localStorage draft autosave, beforeunload guard, reorder, publish lifecycle,
   and an "add my venue" fallback (`submit_partner_inquiry`).
 - **Tapt-owned anon RPC surface is locked to:** `catalog_search`, `venue_brand`,
-  `venue_events`, `venue_menu` (public web) plus `region_guide_feed` and
-  `match_beers` (guest browsing in-app), plus the pure formatter
-  `tapt_trusted_country` (used inside security_invoker views). Everything else
-  is `authenticated`-only.
+  `venue_events`, `venue_menu` (public web) plus `region_guide_feed`,
+  `match_beers`, `beer_detail`, `beer_of_week_standings`,
+  `beer_of_week_latest_winner`, `brewery_map_feed`, `brewery_map_feed_near`
+  (guest browsing in-app, per 0081_public_guest_read_contract), plus the pure
+  formatter `tapt_trusted_country` (used inside security_invoker views).
+  Everything else is `authenticated`-only.
   **GOTCHA (0081):** Postgres grants EXECUTE to PUBLIC on every `create
   function`, so `revoke ... from anon` alone is a NO-OP. 0081 revoked
   PUBLIC+anon across all non-extension public functions, restored
