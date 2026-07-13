@@ -27,6 +27,18 @@ enum BeerService {
         return rows.map(TrendedBeer.init)
     }
 
+    /// Regions that actually have a board, biggest first. The picker uses this so
+    /// it only ever offers real destinations (boards are country-level), instead
+    /// of 50 US-state chips that can never populate.
+    static func boardRegions() async throws -> [String] {
+        struct Row: Decodable { let region: String }
+        let rows: [Row] = try await Supa.client
+            .rpc("beer_board_regions")
+            .execute()
+            .value
+        return rows.map(\.region)
+    }
+
     /// Cast (or update) a +1 / -1 vote for a beer. Explicit conflict target +
     /// minimal return (no SELECT round-trip, no RLS-read dependency).
     static func vote(beerId: String, userId: UUID, value: Int) async throws {

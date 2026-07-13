@@ -16,6 +16,9 @@ struct ExploreView: View {
     // has no data yet we fall back to the Global feed, and every label must
     // say Global, never relabel worldwide rows as "Top in <state>".
     @State private var dataRegion = "Global"
+    // Only regions that actually have a board (loaded from beer_board_regions),
+    // so the picker never offers a dead-end. Global always leads.
+    @State private var regions: [String] = ["Global"]
     @State private var beers: [TrendedBeer] = []
     @State private var guides: [RegionBeerGuide] = []
     @State private var loading = false
@@ -79,6 +82,7 @@ struct ExploreView: View {
                     // The thin regional "beer guide" was wasted space; a real local-scene
                     // module returns with the venue/local-data ingestion.
                     regionPicker.reveal(appeared, 7)
+                    if showRegionBoardBanner { regionBoardBanner.reveal(appeared, 8) }
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
                     } else {
@@ -98,6 +102,7 @@ struct ExploreView: View {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
             .task(id: region) { await load() }
+            .task { await loadBoardRegions() }
             .task { await loadGuides() }
             .task { await hydrateTastePreferences() }
             .task { await detectHomeState() }
@@ -284,7 +289,7 @@ struct ExploreView: View {
     private var regionPicker: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(BeerRegions.all, id: \.self) { r in
+                ForEach(regions, id: \.self) { r in
                     Button { region = r } label: {
                         Text(r).font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -299,9 +304,43 @@ struct ExploreView: View {
         }
     }
 
+    /// True when the user picked a specific state or country that has no board of
+    /// its own yet, so the rows on screen are the worldwide fallback.
+    private var showRegionBoardBanner: Bool {
+        region != "Global" && dataRegion == "Global" && dataRegion != region
+    }
+
+    /// The honest cold-start explainer for an empty regional board. It is the one
+    /// place that carries the "no board yet" message (previously split across the
+    /// hero caption, the movers header, and the trending subtitle), and it frames
+    /// the emptiness as a be-first invitation: boards are built from real local
+    /// pours and votes, which is exactly the behavior we want to prompt.
+    private var regionBoardBanner: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "flag.checkered")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Brand.gold)
+                .frame(width: 30)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("\(region) doesn't have its own board yet")
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text)
+                Text("Its board grows as we add more of \(region)'s beer and the community votes. Meanwhile, here is what is moving worldwide.")
+                    .font(.caption)
+                    .foregroundStyle(Brand.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.gold.opacity(0.10), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.gold.opacity(0.28)))
+        .padding(.horizontal)
+    }
+
     private var moversSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header("On the come-up", "Biggest movers in \(dataRegion)")
+            header("On the come-up", dataRegion == "Global" ? "Biggest movers worldwide" : "Biggest movers in \(dataRegion)")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(movers.prefix(10))) { ticker($0) }
@@ -377,9 +416,9 @@ struct ExploreView: View {
                     // Catalog-shelf rows are grouped by where the beer was
                     // recorded on shelves, so the honest verb is "found in".
                     : (dataRegion == "Global" ? "Explore worldwide beers" : "Beers found in \(dataRegion)"),
-                dataRegion != region
-                    ? "No \(region) board yet. Log pours and vote there to start it."
-                    : (hasMarketActivity ? "Tap to vote it up or down" : "Real catalog beers. Your vote can start the board.")
+                // The "no board yet" message now lives in the banner above, so this
+                // subtitle just describes the rows the user is actually looking at.
+                hasMarketActivity ? "Tap to vote it up or down" : "Real catalog beers. Your vote can start the board."
             )
             if top.isEmpty && noLowDefault {
                 Text("No No / Low catalog picks are available here yet. Turn off the lens in You to see the full catalog.")
@@ -513,7 +552,9 @@ struct ExploreView: View {
             if regional.isEmpty && region != "Global" {
                 beers = try await BeerService.trends(region: "Global")
                 dataRegion = "Global"
-                feedNote = "No \(region) board yet. Showing Global."
+                // The regionBoardBanner now carries this message prominently, so we
+                // leave the hero caption alone instead of duplicating it up top.
+                feedNote = nil
             } else {
                 beers = regional
                 dataRegion = region
@@ -522,6 +563,13 @@ struct ExploreView: View {
         } catch {
             feedNote = "Could not refresh. Pull to try again."
         }
+    }
+
+    /// Load the regions that have a live board so the picker only offers real
+    /// destinations. Global always leads.
+    private func loadBoardRegions() async {
+        guard let fetched = try? await BeerService.boardRegions() else { return }
+        regions = ["Global"] + fetched
     }
 
     /// One taste-matched beer the user hasn't had. Silent until there is real
@@ -561,11 +609,17 @@ struct ExploreView: View {
         guard let loc = location.location,
               let mark = try? await CLGeocoder().reverseGeocodeLocation(loc).first
         else { return }
+        // Boards are country-level, so home defaults to the detected country and
+        // only if that country actually has a board. US users get "United States",
+        // never a state (states have no board of their own yet).
         var detected: String?
-        if mark.isoCountryCode == "US", let area = mark.administrativeArea {
-            detected = BeerRegions.canonicalUSRegion(area)
-        } else if let country = mark.country {
-            detected = BeerRegions.canonicalCountry(country)
+        if let country = mark.country {
+            if regions.contains(country) {
+                detected = country
+            } else if let canonical = BeerRegions.canonicalCountry(country),
+                      regions.contains(canonical) {
+                detected = canonical
+            }
         }
         if let detected {
             if let userId = session.user?.id {
