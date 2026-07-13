@@ -1,0 +1,41 @@
+name: ASC Release Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Exact build number expected on the editable App Store version
+        required: true
+        type: string
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write ASC API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Install dependencies
+        run: pip install pyjwt cryptography
+
+      - name: Audit public release readiness
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          EXPECTED_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -o pipefail
+          python scripts/asc_release_audit.py | tee "$RUNNER_TEMP/asc-release-audit.txt"
+
+      - name: Publish audit summary
+        if: always()
+        run: |
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/asc-release-audit.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

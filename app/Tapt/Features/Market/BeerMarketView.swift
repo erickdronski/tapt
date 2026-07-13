@@ -4,6 +4,7 @@ import SwiftUI
 /// across the top, the board ranks beers as tickers you can sort, and tapping one
 /// opens a full analysis. Price + movement are real math on community demand.
 struct BeerMarketView: View {
+    @AppStorage("noLowDefault") private var naOnly = false
     @State private var beers: [MarketBeer] = []
     @State private var ticker: [MarketBeer] = []
     @State private var sort: MarketSort = .movers
@@ -37,7 +38,7 @@ struct BeerMarketView: View {
             .background(Brand.background)
             .navigationTitle("Beer Market")
             .navigationBarTitleDisplayMode(.inline)
-            .task { await load() }
+            .task(id: naOnly) { await load() }
             .refreshable { await load() }
             .sheet(item: $selected) { b in
                 MarketBeerDetailView(beer: b).presentationDetents([.large])
@@ -72,6 +73,18 @@ struct BeerMarketView: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
+                    Button {
+                        Haptic.tap()
+                        naOnly.toggle()
+                    } label: {
+                        Label("No / Low", systemImage: naOnly ? "checkmark.circle.fill" : "leaf.fill")
+                            .font(.caption.weight(.bold))
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(naOnly ? Brand.hop : Brand.surface, in: Capsule())
+                            .foregroundStyle(naOnly ? Brand.malt : Brand.text)
+                            .overlay(Capsule().stroke(Brand.hop.opacity(0.25)))
+                    }
+                    .buttonStyle(.plain)
                     ForEach(MarketSort.allCases) { s in
                         Button {
                             Haptic.tap()
@@ -112,7 +125,7 @@ struct BeerMarketView: View {
                 }
             }
             Spacer(minLength: 6)
-            Sparkline(values: b.spark, up: b.isUp).frame(width: 54, height: 30)
+            Sparkline(values: b.spark, trend: b.change).frame(width: 54, height: 30)
             VStack(alignment: .trailing, spacing: 1) {
                 Text("\(b.net)").font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
                     .contentTransition(.numericText())
@@ -169,13 +182,17 @@ struct BeerMarketView: View {
         defer { loading = false }
         // Resilient refresh: a transient failure must NOT blank a board that was
         // already showing (the "refresh broke it" bug). Only replace on success.
-        if let board = try? await MarketService.feed(sort: sort, limit: 40) {
+        if let board = try? await MarketService.feed(sort: sort, limit: 40, naOnly: naOnly) {
             beers = board
         } else {
             loadFailed = true
         }
-        if ticker.isEmpty {
-            ticker = (try? await MarketService.feed(sort: .active, limit: 16)) ?? []
+        if let updatedTicker = try? await MarketService.feed(
+            sort: .active,
+            limit: 16,
+            naOnly: naOnly
+        ) {
+            ticker = updatedTicker
         }
         #if targetEnvironment(simulator)
         if ProcessInfo.processInfo.environment["TAPT_MARKET_AUTOOPEN"] == "1", selected == nil {
@@ -298,7 +315,11 @@ private struct TickerRowWidthKey: PreferenceKey {
 
 struct Sparkline: View {
     let values: [Double]
-    let up: Bool
+    let trend: Int
+
+    private var color: Color {
+        trend > 0 ? Brand.hop : (trend < 0 ? Brand.copper : Brand.muted)
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -320,11 +341,11 @@ struct Sparkline: View {
                         p.addLine(to: CGPoint(x: pts.last!.x, y: geo.size.height))
                         p.closeSubpath()
                     }
-                    .fill(LinearGradient(colors: [(up ? Brand.hop : Brand.copper).opacity(0.22), .clear],
+                    .fill(LinearGradient(colors: [color.opacity(0.22), .clear],
                                          startPoint: .top, endPoint: .bottom))
                     // the line
                     Path { p in p.move(to: pts[0]); pts.dropFirst().forEach { p.addLine(to: $0) } }
-                        .stroke(up ? Brand.hop : Brand.copper, style: .init(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+                        .stroke(color, style: .init(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
                 }
             }
         }

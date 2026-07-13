@@ -1,112 +1,103 @@
-# Tapt, Status & Future-State Roadmap (living doc, 2026-07-10)
+# Tapt Status and Release Roadmap
 
-The single source of truth for where Tapt is and what to work through next.
-Supersedes the forward-looking parts of docs/11 and docs/12 (which predate most
-of what has shipped). Standing rules unchanged: zero fabricated data, free to
-drinkers forever, curiosity over capacity, license-clean only.
+Living release record, updated 2026-07-12. `AGENTS.md` is the coordination
+source of truth. This document describes product state and release gates.
 
----
-## Where we are today (shipped & live)
-**App (iOS, on TestFlight, auto-assigns to testers):**
-- Scan loop: barcode + QR + live text/menu mode + partner-QR routing
-- Catalog: 187 real beers / 47 countries, 8,700+ venues / 25 countries, 60
-  BJCP styles, 68 real label photos, verified awards layer
-- Beer pages: style science, nutrition, awards, brewery stories, where-to-find
-- Social engine: honest beer market, Beer of the Week (weekly vote + Monday
-  lock), leaderboards (+ No/Low lens), friends/feed, voting (persists), moderation
-- Games: Trivia, Tapt Deck, Darts (swipe physics), Connect 4, Beer Olympics,
-  Game Night Guides. (Pong/Flip Cup/Quarters still elementary, rework pending)
-- Location-aware map + dashboard, 6 languages, elevated design + haptics
+## Current State
 
-**Web (all live on Vercel):**
-- Landing (SEO'd: free-to-download + free menu hosting), pitch deck at /pitch
-- Partner portal /portal, admin queue /admin, hosted menus /menu
+### iOS
 
-**Partner system (end to end):**
-- Claim -> auto-approve on domain match OR 1-click /admin queue -> publish tap
-  list -> upload logo -> free hosted menu + printable QR
+- Native Swift 6 and SwiftUI app generated with XcodeGen.
+- Working email magic-link and six-digit-code authentication.
+- Guest access covers Catalog, Near You, Discover, Learn, and Games without
+  calling authenticated Tapt data surfaces.
+- Catalog search, beer detail, Cellar, Passport, Beer Market, Beer of the Week,
+  Tonight, community, partner tools, and account controls are wired to live
+  Supabase data.
+- Beer Pong uses SpriteKit physics. Flip Cup, Quarters, and Darts remain polish
+  candidates.
+- The current release candidate is not yet on TestFlight. It must pass GitHub's
+  macOS build and test workflow before upload.
 
-**GTM assets:** masterplan, outreach playbook, IG calendar, brand manifest,
-partner workflow map, newsletter collecting subscribers.
+### Authentication Truth
 
----
-## THE CRITICAL PATH (do these first, they gate everything)
-Nothing below matters until the app is downloadable and login works. These are
-almost all **owner actions**, not build work:
+- Email magic link and email code are enabled and have completed real sessions.
+- Google and Facebook are enabled in Supabase, but neither is release-verified.
+  Google reaches authorization but has not completed the signed-app callback.
+- Apple is implemented in the client but disabled in Supabase pending Apple
+  provider credentials.
+- X and phone are disabled.
+- Release builds show only external providers that have completed a signed
+  TestFlight callback. Email remains the primary sign-in path.
 
-1. **Apple auth** (docs/09): enable Apple provider in Supabase (leave Secret
-   Key EMPTY), add `tapt://auth-callback` to redirect URLs, add `{{ .Token }}`
-   to the email template. This is the login pain, one 10-minute pass.
-2. **App Store submission**: screenshots + metadata + review. The app is
-   social/logging only with all four UGC-moderation pieces already shipped, so
-   it clears the alcohol-app rejection lanes.
-3. **Custom SMTP** (Supabase Auth): default sender is rate-limited/spammy.
-   Resend free tier ($0, 3k/mo) fixes sign-in email reliability at launch.
-4. **Stripe account link**: for B2B partner invoicing (needed at Wave 3, not
-   day one, but set it up early).
-5. **Claim social handles**: @taptbeer (IG/TikTok/X), before marketing starts.
-6. **Legal counsel pass** on privacy/terms + a partner ToS before first invoice.
+### Backend
 
----
-## Phase A, Launch-ready (now -> App Store live)
-- [owner] The critical-path list above.
-- [build] **Partner approval/inquiry emails** (Resend): auto-email the owner
-  their QR link on approval, and us on new inquiry. Makes the partner loop
-  fully hands-off. ~Highest-leverage build left.
-- [build] **In-app "claim your venue"** entry (currently web-only) so a bar
-  owner who found us in the app can start there too.
-- [build] Final polish sweep: pong/flip-cup/quarters physics to Darts-grade.
+- Production Supabase migrations and repository migration history are aligned
+  through `0078_advisor_cleanup.sql`.
+- Catalog, map, market, Tonight, Cellar, partner menu, media-processing, and
+  No/Low read models are live.
+- Public RPC access is limited to the four web surfaces documented in
+  `AGENTS.md`; account and community data require an authenticated session.
+- Partner logo replacement has the Storage permissions required for upsert.
+- The media cutout pipeline is implemented but has not processed a production
+  batch yet.
 
-## Phase B, Home-metro density (launch month, NJ/NYC)
-- 500 users + 25 claimed venues in ONE metro (density > DAU).
-- Founder outreach (playbook: 10 venues/wk, Founding Partner offer).
-- **Push notifications** (APNs .p8 direct, already architected): "friends out
-  now", BOW results, a claimed venue's new release. The retention lever.
-- Content engine on: IG calendar + weekly Dispatch (needs sending pipeline).
-- [build] **Newsletter SENDING** (Resend): subscribers are collecting now;
-  turn on the actual weekly send. Cost-gated, tiny.
+### Web and Partner Portal
 
-## Phase C, Revenue on (2-5k metro users)
-- Featured/Spotlight live ($29/$79, Stripe invoicing, no app-store tax).
-- [build] **Tapt's Favorite admin surface** (currently a SQL insert) so you
-  can grant/announce picks without the database.
-- [build] **Partner analytics**: give claimed venues their real local activity
-  (check-ins, top beers, trend) as the paid-tier hook.
-- First Founding Partners convert; first ~$500 MRR proof.
+- `taptbeer.com` serves the landing page, partner portal, public menus, support,
+  admin, dispatch, pitch, and app-preview surfaces through Vercel.
+- The landing headline is `THE Beer Superapp. All of beer, one app.`
+- Partner claim, approval, menu publishing, logo upload, hosted menu, and QR
+  workflow are implemented.
+- TestFlight feedback guidance is published on the support page. Screenshot
+  feedback also requires assignment to a beta group with feedback enabled.
 
-## Phase D, Scale loops (10k+ users, 2nd metro)
-- [build] **Crew / Live Session**: real-time shared group check-in (tailgate,
-  party, scramble) with live leaderboard + photo wall. The flagship social
-  differentiator nobody else has. Big build, high payoff.
-- Tapt Voices creator program (permissioned lists).
-- Distributor pilot (Manhattan Beer-type fleet-claim).
-- [build] **Partner asset uploads at scale** = the licensed path to real 4K
-  official imagery (the image-quality ceiling honestly solved).
-- Metro expansion kit: repeat Phases B-C per metro.
+## Release Gates
 
-## Phase E, Data authority (density exists)
-- Territory intelligence (k>=10, consent-gated, already in the schema) sold to
-  breweries/distributors; named indices published quarterly (press + product).
-- [build] **Android** (native Kotlin) on the identical backend, if demand pulls.
-- This is the valuation story: density x exclusivity x contracted B2B revenue.
+Complete these in order:
 
----
-## Product backlog (not phase-critical, pick up opportunistically)
-- Catalog depth: +150 curated US state-flagship beers to fatten state boards.
-- More label images (slow OFF re-runs; partner uploads long-term).
-- Untappd-history import (data portability hook, not scraping).
-- Homebrew logging, bottle-share events, Brewery Bingo (post-PMF).
-- Where-to-buy / delivery affiliate (geo-restricted, garnish only).
+1. Commit and push the release candidate branch with an `Agent: codex` trailer.
+2. Pass the GitHub macOS build and test workflow. Local syntax parsing is not a
+   substitute for an Xcode build.
+3. Merge only after CI succeeds and verify the Vercel production deployment.
+4. Upload the merged iOS commit through the dispatch-only TestFlight workflow.
+5. Confirm TestFlight group assignment, feedback email, feedback enablement,
+   beta description, and build metadata.
+6. Test email link and email code on a signed TestFlight device.
+7. Finish Google consent/callback configuration and Apple provider credentials.
+   Enable each button in `AuthProvidersService.deviceVerified` only after that
+   provider creates a real session on the signed build.
+8. Complete App Store Connect screenshots, metadata, privacy answers, age
+   rating, review notes, and support links, then run a final submission audit.
 
-## Known honest gaps (stated plainly)
-- Image quality ceiling: OFF is user-shot label photos, not studio 4K. Real
-  premium imagery comes from partner uploads (Phase D) or generated style art.
-- US state boards stay sparse until check-ins carry venue location (by design).
-- Pong/Flip Cup/Quarters are still the old elementary versions.
-- Newsletter has subscribers but no send pipeline yet.
-- Everything depends on Phase-B density; revenue is deliberately back-loaded.
+## Product Work After the Release Candidate
 
-## The one-line answer
-**Ship it (Apple clicks + App Store), then win one metro (outreach + push +
-content), then turn on revenue (Featured + analytics). Everything else is depth
-on that spine.**
+- Run the attributed product-image cutout workflow and review every batch before
+  exposing its output broadly.
+- Improve Flip Cup, Quarters, and Darts one at a time, using Beer Pong's play and
+  persistence quality as the reference.
+- Add in-app venue claiming that hands off cleanly to the partner portal.
+- Add partner approval and inquiry emails only after unsubscribe, sender,
+  address, and secret configuration are verified.
+- Add push notifications for useful local and social events after APNs
+  credentials and notification controls are complete.
+- Deepen local density with licensed venue data, partner-maintained menus, and
+  first-party check-ins. Do not manufacture activity to fill empty states.
+- Expand the Cellar and Passport with factual origin, style, and location context
+  derived from each user's real history.
+
+## Known Gaps
+
+- Google, Facebook, and Apple sign-in are not release-verified.
+- The current branch still needs a real Xcode CI build and signed-device test.
+- Production product imagery remains incomplete; the new pipeline is ready but
+  its first reviewed batch has not run.
+- Local market and community surfaces will be quiet until real activity exists.
+- Newsletter collection and send code exist, but production delivery remains inactive until its sender and cron secrets are verified.
+- Legal and App Store metadata require an owner review before submission.
+
+## Release Principle
+
+Ship only what has passed the real path: production data, GitHub Xcode build,
+signed TestFlight device, and App Store Connect audit. Empty and unavailable
+states must remain honest until the underlying capability works.

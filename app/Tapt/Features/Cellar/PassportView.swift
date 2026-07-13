@@ -14,6 +14,7 @@ struct PassportView: View {
     private var stats: PassportStats {
         PassportStats(
             pours: checkins.count,
+            beers: uniqueBeerCount,
             styles: visitedStyles.count,
             states: visitedStates.count,
             countries: visitedCountries.count
@@ -27,6 +28,9 @@ struct PassportView: View {
     }
     private var visitedStyles: [String] {
         Array(Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil })).sorted()
+    }
+    private var uniqueBeerCount: Int {
+        PassportProgress.uniqueBeerCount(in: checkins)
     }
 
     var body: some View {

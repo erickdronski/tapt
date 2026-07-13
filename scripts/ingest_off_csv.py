@@ -22,8 +22,6 @@ BATCH = int(os.environ.get("BATCH", "300"))
 CSV_URL = os.environ.get("CSV_URL", "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz")
 UA = {"User-Agent": "TaptBeerApp/1.0 (esdronski@gmail.com) beer-catalog-bulk"}
 CTX = ssl.create_default_context()
-CTX.check_hostname = False
-CTX.verify_mode = ssl.CERT_NONE
 
 SKIP_TAGS = {"en:beverages-and-beverages-preparations", "en:beverages",
              "en:alcoholic-beverages", "en:beers", "en:beers-and-ciders"}
@@ -70,7 +68,7 @@ def main():
     header = gz.readline().decode("utf-8", "replace").rstrip("\n").split("\t")
     col = {name: header.index(name) for name in
            ("code", "product_name", "brands", "categories_tags",
-            "countries_tags", "image_url", "alcohol_100g") if name in header}
+            "countries_tags", "image_front_url", "image_url", "alcohol_100g") if name in header}
 
     def field(parts, name):
         i = col.get(name)
@@ -99,7 +97,7 @@ def main():
             "brand": (field(parts, "brands").split(",")[0].strip() or None),
             "country": country_from([c for c in field(parts, "countries_tags").split(",") if c]),
             "style": style_from(cats),
-            "image_url": field(parts, "image_url") or None,
+            "image_url": field(parts, "image_front_url") or field(parts, "image_url") or None,
         }
         alc = field(parts, "alcohol_100g")
         if alc:

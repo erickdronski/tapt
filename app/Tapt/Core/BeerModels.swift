@@ -8,12 +8,14 @@ struct TrendRow: Decodable {
     let abv: Double?
     let breweryName: String?
     let country: String?
+    let isNaLow: Bool
     let popularity: Int
     let momentum: Int
     let avgRating: Double?
 
     enum CodingKeys: String, CodingKey {
         case name, style, abv, country, popularity, momentum
+        case isNaLow = "is_na_low"
         case beerId = "beer_id"
         case breweryName = "brewery_name"
         case avgRating = "avg_rating"
@@ -32,6 +34,7 @@ struct TrendedBeer: Identifiable {
     var popularity: Int
     var momentum: Int
     let avgRating: Double?
+    let isNaLow: Bool
 
     init(_ r: TrendRow) {
         id = r.beerId
@@ -43,6 +46,7 @@ struct TrendedBeer: Identifiable {
         popularity = r.popularity
         momentum = r.momentum
         avgRating = r.avgRating
+        isNaLow = r.isNaLow
     }
 }
 

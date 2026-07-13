@@ -7,6 +7,16 @@ struct MarketBeerDetailView: View {
     let beer: MarketBeer
     @Environment(\.dismiss) private var dismiss
 
+    private var movementColor: Color {
+        beer.isFlat ? Brand.muted : (beer.isUp ? Brand.hop : Brand.copper)
+    }
+
+    private var reasonText: String {
+        if beer.isSeasonal { return "\(beer.moveReason), right in season" }
+        if beer.isFlat { return "Holding on current signals" }
+        return beer.isUp ? "Climbing on real signals" : "Sliding on current signals"
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -105,14 +115,14 @@ struct MarketBeerDetailView: View {
             // Label the REAL span: no "7 days" claim over one day of history.
             Text(beer.spark.count <= 1 ? "Standing · day one" : "Standing · last \(beer.spark.count) days")
                 .font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
-            Sparkline(values: beer.spark, up: beer.isUp)
+            Sparkline(values: beer.spark, trend: beer.change)
                 .frame(height: 120)
                 .padding(.top, 4)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke((beer.isUp ? Brand.hop : Brand.copper).opacity(0.18)))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(movementColor.opacity(0.18)))
     }
 
     private var sentimentCard: some View {

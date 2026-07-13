@@ -1,14 +1,26 @@
 name: ASC Admin
 
-# TestFlight metadata admin (beta description, feedback flags, whatsNew).
-# Runs where the ASC API key lives (repo secrets). Manual dispatch only.
+# TestFlight metadata admin for one exact build number.
 on:
+  workflow_call:
+    inputs:
+      build_number:
+        description: Exact CFBundleVersion uploaded by the caller
+        required: true
+        type: string
+    secrets:
+      ASC_KEY_P8:
+        required: true
+      ASC_KEY_ID:
+        required: true
+      ASC_ISSUER_ID:
+        required: true
   workflow_dispatch:
-  # Auto-run after every TestFlight upload: waits out ASC processing, then
-  # answers export compliance + assigns the new build to all tester groups.
-  workflow_run:
-    workflows: ["TestFlight"]
-    types: [completed]
+    inputs:
+      build_number:
+        description: Exact processed TestFlight build number to administer
+        required: true
+        type: string
 
 jobs:
   asc-admin:
@@ -18,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Wait for ASC processing (only after uploads)
-        if: github.event_name == 'workflow_run'
+        if: github.event_name == 'workflow_call'
         run: sleep 600
 
       - name: Write ASC API key
@@ -34,4 +46,5 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          TARGET_BUILD_NUMBER: ${{ inputs.build_number }}
         run: python scripts/asc_testflight_admin.py

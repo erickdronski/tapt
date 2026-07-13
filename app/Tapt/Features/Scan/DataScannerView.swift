@@ -6,6 +6,7 @@ import VisionKit
 struct DataScannerView: UIViewControllerRepresentable {
     @Binding var scanned: String?
     @Binding var visibleLines: [String]
+    @Binding var startError: String?
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let vc = DataScannerViewController(
@@ -19,19 +20,40 @@ struct DataScannerView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ vc: DataScannerViewController, context: Context) {
-        try? vc.startScanning()
+        guard !vc.isScanning else { return }
+        do {
+            try vc.startScanning()
+            context.coordinator.reportStartError(nil)
+        } catch {
+            context.coordinator.reportStartError(
+                "The camera scanner could not start. Close other camera apps and try again."
+            )
+        }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator(scanned: $scanned, visibleLines: $visibleLines) }
+    func makeCoordinator() -> Coordinator {
+        Coordinator(scanned: $scanned, visibleLines: $visibleLines, startError: $startError)
+    }
 
     final class Coordinator: NSObject, DataScannerViewControllerDelegate {
         @Binding var scanned: String?
         @Binding var visibleLines: [String]
+        @Binding var startError: String?
         private var lines: [UUID: String] = [:]
 
-        init(scanned: Binding<String?>, visibleLines: Binding<[String]>) {
+        init(
+            scanned: Binding<String?>,
+            visibleLines: Binding<[String]>,
+            startError: Binding<String?>
+        ) {
             _scanned = scanned
             _visibleLines = visibleLines
+            _startError = startError
+        }
+
+        func reportStartError(_ message: String?) {
+            guard startError != message else { return }
+            DispatchQueue.main.async { self.startError = message }
         }
 
         private func sync(_ allItems: [RecognizedItem]) {

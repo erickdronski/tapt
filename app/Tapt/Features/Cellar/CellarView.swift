@@ -8,11 +8,16 @@ struct CellarView: View {
     @State private var guides: [RegionBeerGuide] = []
     @State private var showLog = false
     @State private var appeared = false
+    @State private var loading = false
+    @State private var loadError: String?
 
     private var logVerb: String { beerGeekMode ? "Tick a pour" : "Log a pour" }
 
     private var styleCount: Int {
         Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil }).count
+    }
+    private var uniqueBeerCount: Int {
+        PassportProgress.uniqueBeerCount(in: checkins)
     }
     private var visitedCountries: Set<String> {
         Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
@@ -31,13 +36,19 @@ struct CellarView: View {
         NavigationStack {
             ZStack {
                 Brand.background.ignoresSafeArea()
-                if checkins.isEmpty { empty } else { content }
+                if session.user == nil { guestEmpty }
+                else if loading && checkins.isEmpty { TaptSkeletonList(rows: 5).padding() }
+                else if let loadError, checkins.isEmpty { errorState(loadError) }
+                else if checkins.isEmpty { empty }
+                else { content }
             }
             .navigationTitle("Cellar")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { showLog = true } label: {
-                        Image(systemName: "plus.circle.fill").foregroundStyle(Brand.gold)
+                    if session.user != nil {
+                        Button { showLog = true } label: {
+                            Image(systemName: "plus.circle.fill").foregroundStyle(Brand.gold)
+                        }
                     }
                 }
             }
@@ -49,6 +60,18 @@ struct CellarView: View {
                 LogPourView(onLogged: { Task { await load() } })
             }
         }
+    }
+
+    private var guestEmpty: some View {
+        TaptEmptyState(
+            icon: "square.stack.3d.up.fill",
+            title: "Make this Cellar yours",
+            message: "Sign in to log pours, collect Passport stamps, save private notes, and carry your taste profile across devices.",
+            actionTitle: "Sign in to start",
+            action: { session.endGuestSession() }
+        )
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 14)
     }
 
     private var empty: some View {
@@ -63,13 +86,23 @@ struct CellarView: View {
         .offset(y: appeared ? 0 : 14)
     }
 
+    private func errorState(_ message: String) -> some View {
+        TaptEmptyState(
+            icon: "wifi.exclamationmark",
+            title: "Cellar unavailable",
+            message: message,
+            actionTitle: "Try again",
+            action: { Task { await load() } }
+        )
+    }
+
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 TaptHeroPanel(
                     title: "Passport progress",
-                    subtitle: "\(checkins.count) pours logged across \(styleCount) styles, \(stateCount) states, and \(countryCount) countries.",
-                    metric: "\(checkins.count)",
+                    subtitle: "\(uniqueBeerCount) distinct beers across \(styleCount) styles, \(stateCount) states, and \(countryCount) countries.",
+                    metric: "\(uniqueBeerCount)",
                     caption: nextMilestone,
                     icon: "seal.fill",
                     tint: Brand.hop
@@ -217,7 +250,7 @@ struct CellarView: View {
     }
 
     private var nextMilestone: String {
-        if checkins.count < 5 { return "\(5 - checkins.count) pours to first flight" }
+        if uniqueBeerCount < 5 { return "\(5 - uniqueBeerCount) beers to first flight" }
         if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
         if stateCount < 5 { return "\(5 - stateCount) states to tap trail" }
         if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
@@ -226,7 +259,14 @@ struct CellarView: View {
 
     private func load() async {
         guard let uid = session.user?.id else { return }
-        checkins = (try? await CheckinService.mine(userId: uid)) ?? []
+        loading = true
+        defer { loading = false }
+        do {
+            checkins = try await CheckinService.mine(userId: uid)
+            loadError = nil
+        } catch {
+            loadError = "Your pours could not be loaded. Check your connection and try again."
+        }
         guides = (try? await WorldBeerService.regionGuides()) ?? []
     }
 

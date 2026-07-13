@@ -23,10 +23,11 @@ struct ProfileView: View {
     @State private var deleting = false
     @State private var deletionError: String?
     @State private var myActivity: [MyBeerActivity] = []
+    @State private var activityError: String?
 
     private var displayName: String {
         if let name = session.user?.userMetadata["full_name"]?.stringValue, !name.isEmpty { return name }
-        return session.user?.email ?? "Beer fan"
+        return session.user?.email ?? "Guest explorer"
     }
     private var email: String { session.user?.email ?? "" }
     private var initial: String { String(displayName.first ?? "T").uppercased() }
@@ -50,6 +51,20 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.vertical, 6)
+                }
+
+                if session.user == nil {
+                    Section {
+                        Button {
+                            session.endGuestSession()
+                        } label: {
+                            Label("Sign in or create an account", systemImage: "person.crop.circle.badge.plus")
+                                .font(.headline)
+                                .foregroundStyle(Brand.malt)
+                        }
+                    } footer: {
+                        Text("Sign in to log pours, vote, follow friends, save privacy choices, and build your Passport.")
+                    }
                 }
 
                 if !myActivity.isEmpty {
@@ -79,6 +94,17 @@ struct ProfileView: View {
                         Text("Your beers")
                     } footer: {
                         Text("Your votes count on the Beer Market. Your notes are private to you.")
+                    }
+                }
+
+                if let activityError {
+                    Section {
+                        Button {
+                            Task { await loadActivity() }
+                        } label: {
+                            Label(activityError, systemImage: "arrow.clockwise")
+                                .foregroundStyle(Brand.copper)
+                        }
                     }
                 }
 
@@ -115,20 +141,37 @@ struct ProfileView: View {
                     Text("Beer-geek mode swaps in the lexicon: Cellar, Tick a Pour, Whales, Haul.")
                 }
 
-                Section {
-                    Toggle("Nearby beer spots", isOn: $locationConsent)
-                    Toggle("Anonymous trend reports", isOn: $aggregateConsent)
-                    Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
-                    Toggle("Public social passport", isOn: $socialVisible)
-                    if let privacyError {
-                        Label(privacyError, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
+                if session.user != nil {
+                    Section {
+                        Toggle("Nearby beer spots", isOn: $locationConsent)
+                        Toggle("Anonymous trend reports", isOn: $aggregateConsent)
+                        Toggle("Share anonymized aggregates with partners", isOn: $dataSaleConsent)
+                        Toggle("Public social passport", isOn: $socialVisible)
+                        if socialVisible, let userId = session.user?.id.uuidString {
+                            NavigationLink {
+                                PublicProfileView(userId: userId, initialName: displayName)
+                            } label: {
+                                Label("See your public profile", systemImage: "person.crop.circle")
+                            }
+                        }
+                        if let privacyError {
+                            Label(privacyError, systemImage: "exclamationmark.triangle.fill")
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                        }
+                    } header: {
+                        Text("Privacy Choices")
+                    } footer: {
+                        Text("Optional sharing starts off. These choices are saved to your account and can be changed any time.")
                     }
-                } header: {
-                    Text("Privacy Choices")
-                } footer: {
-                    Text("Optional sharing starts off. These choices are saved to your account and can be changed any time.")
+                } else {
+                    Section {
+                        Toggle("Nearby beer spots", isOn: $locationConsent)
+                    } header: {
+                        Text("Location")
+                    } footer: {
+                        Text("Location stays optional and is used to find real beer spots near you.")
+                    }
                 }
 
                 Section {
@@ -163,20 +206,24 @@ struct ProfileView: View {
 
                 Section("About") {
                     LabeledContent("Version", value: AppInfo.version)
+                    Link("Support", destination: URL(string: AppLinks.support)!)
+                    Link("Contact & support", destination: URL(string: "mailto:hello@taptbeer.com")!)
                     Link("Privacy Policy", destination: URL(string: AppLinks.privacy)!)
                     Link("Terms of Service", destination: URL(string: AppLinks.terms)!)
                 }
 
-                Section {
-                    Button("Sign out", role: .destructive) {
-                        Task { await session.signOut() }
+                if session.user != nil {
+                    Section {
+                        Button("Sign out", role: .destructive) {
+                            Task { await session.signOut() }
+                        }
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label(deleting ? "Deleting account..." : "Delete account", systemImage: "trash.fill")
+                        }
+                        .disabled(deleting)
                     }
-                    Button(role: .destructive) {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label(deleting ? "Deleting account..." : "Delete account", systemImage: "trash.fill")
-                    }
-                    .disabled(deleting)
                 }
 
                 if deletionError != nil {
@@ -190,7 +237,7 @@ struct ProfileView: View {
             .navigationTitle("You")
             .task {
                 await loadActivity()
-                await loadPrivacyChoices()
+                _ = await loadPrivacyChoices()
             }
             .onChange(of: appLanguage) { _, newValue in
                 (AppLanguage(rawValue: newValue) ?? .system).apply()
@@ -204,7 +251,7 @@ struct ProfileView: View {
                 syncPrivacy("aggregate_analytics", granted: newValue, text: "Anonymous trend reports")
             }
             .onChange(of: dataSaleConsent) { _, newValue in
-                syncPrivacy("data_sale", granted: newValue, text: "Partner insight aggregates")
+                syncPrivacy("data_sale", granted: newValue, text: "Share anonymized aggregates with partners")
             }
             .onChange(of: socialVisible) { _, newValue in
                 syncSocialVisibility(newValue)
@@ -220,12 +267,24 @@ struct ProfileView: View {
 
     /// Persist beer-geek mode to the profile so it follows the account across devices.
     private func syncBeerGeek(_ value: Bool) {
-        guard let id = session.user?.id else { return }
-        Task { await ProfileService.setBeerGeek(value, userId: id) }
+        guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
+        guard serverConsents["beer_geek_mode"] != value else { return }
+        serverConsents["beer_geek_mode"] = value
+        Task {
+            do {
+                try await ProfileService.setBeerGeek(value, userId: id)
+                privacyError = nil
+            } catch {
+                let restored = await loadPrivacyChoices(reportErrors: false)
+                privacyError = restored
+                    ? "Beer-geek mode was not saved. Your server setting was restored."
+                    : "Beer-geek mode was not saved. Reconnect and try again."
+            }
+        }
     }
 
     private func syncPrivacy(_ purpose: String, granted: Bool, text: String) {
-        guard !isHydratingPrivacy, let id = session.user?.id else { return }
+        guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
         // No-op echoes of the server's own value are not consent events.
         guard serverConsents[purpose] != granted else { return }
         serverConsents[purpose] = granted  // optimistic; the failure path reloads
@@ -239,14 +298,16 @@ struct ProfileView: View {
                 )
                 privacyError = nil
             } catch {
-                privacyError = "That privacy choice was not saved. Your server settings were restored."
-                await loadPrivacyChoices(reportErrors: false)
+                let restored = await loadPrivacyChoices(reportErrors: false)
+                privacyError = restored
+                    ? "That privacy choice was not saved. Your server setting was restored."
+                    : "That privacy choice was not saved. Reconnect and try again."
             }
         }
     }
 
     private func syncSocialVisibility(_ visible: Bool) {
-        guard !isHydratingPrivacy else { return }
+        guard !isHydratingPrivacy, !deleting else { return }
         guard serverConsents["social_visible"] != visible else { return }
         serverConsents["social_visible"] = visible
         Task {
@@ -254,16 +315,19 @@ struct ProfileView: View {
                 try await ProfileService.setSocialVisibility(visible)
                 privacyError = nil
             } catch {
-                privacyError = "Social visibility was not saved. Your server setting was restored."
-                await loadPrivacyChoices(reportErrors: false)
+                let restored = await loadPrivacyChoices(reportErrors: false)
+                privacyError = restored
+                    ? "Social visibility was not saved. Your server setting was restored."
+                    : "Social visibility was not saved. Reconnect and try again."
             }
         }
     }
 
-    private func loadPrivacyChoices(reportErrors: Bool = true) async {
+    @discardableResult
+    private func loadPrivacyChoices(reportErrors: Bool = true) async -> Bool {
         guard let id = session.user?.id else {
             isHydratingPrivacy = false
-            return
+            return false
         }
         do {
             let choices = try await ProfileService.privacyChoices(userId: id)
@@ -274,19 +338,24 @@ struct ProfileView: View {
                 "location": choices.location,
                 "aggregate_analytics": choices.aggregateAnalytics,
                 "data_sale": choices.dataSale,
-                "social_visible": choices.socialVisible
+                "social_visible": choices.socialVisible,
+                "beer_geek_mode": choices.beerGeekMode
             ]
             locationConsent = choices.location
             aggregateConsent = choices.aggregateAnalytics
             dataSaleConsent = choices.dataSale
             socialVisible = choices.socialVisible
+            beerGeekMode = choices.beerGeekMode
             await Task.yield()
             isHydratingPrivacy = false
+            if reportErrors { privacyError = nil }
+            return true
         } catch {
             isHydratingPrivacy = false
             if reportErrors {
                 privacyError = "Your account privacy settings could not be loaded. Optional sharing remains off on this device."
             }
+            return false
         }
     }
 
@@ -297,8 +366,16 @@ struct ProfileView: View {
         Task {
             do {
                 try await ProfileService.requestAccountDeletion(userId: id)
+                locationConsent = false
+                aggregateConsent = false
+                dataSaleConsent = false
+                socialVisible = false
+                beerGeekMode = false
+                myActivity = []
+                activityError = nil
+                await session.signOut()
             } catch {
-                deletionError = error.localizedDescription
+                deletionError = "Account deletion did not complete. Check your connection and try again, or contact support."
             }
             deleting = false
         }
@@ -308,7 +385,12 @@ struct ProfileView: View {
     /// notes stay private to you. Loaded from first-party data, never invented.
     private func loadActivity() async {
         guard session.user != nil else { return }
-        myActivity = (try? await MyActivityService.fetch()) ?? []
+        do {
+            myActivity = try await MyActivityService.fetch()
+            activityError = nil
+        } catch {
+            activityError = "Your beer activity could not refresh. Tap to try again."
+        }
     }
 }
 
@@ -332,6 +414,7 @@ struct MyBeerActivity: Identifiable, Decodable, Sendable {
 
 enum MyActivityService {
     static func fetch() async throws -> [MyBeerActivity] {
-        try await Supa.client.rpc("my_beer_activity").execute().value
+        struct Empty: Encodable {}
+        return try await Supa.authedRPC("my_beer_activity", params: Empty())
     }
 }

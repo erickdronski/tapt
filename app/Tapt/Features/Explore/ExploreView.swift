@@ -22,15 +22,9 @@ struct ExploreView: View {
     @State private var tickerBeer: MarketBeer?
 
     private var visibleBeers: [TrendedBeer] {
-        // No/Low must mean no/low: explicit phrasing only, never bare substrings
-        // ("Cannonball" matched "non"; "Flower Lager" matched "low").
+        // No/Low uses the canonical server field, never substring matching.
         let base: [TrendedBeer] = noLowDefault
-            ? beers.filter { beer in
-                "\(beer.style) \(beer.name)".range(
-                    of: #"(?i)non[- ]?alcoholic|alcohol[- ]?free|0[.,]0\s*%|low[- ]alcohol|alkoholfrei|sans alcool|sin alcohol"#,
-                    options: .regularExpression
-                ) != nil
-            }
+            ? beers.filter(\.isNaLow)
             : beers
         // The catalog has multiple SKUs per beer -- collapse to one row per name.
         var seen = Set<String>()
@@ -80,7 +74,11 @@ struct ExploreView: View {
             .task(id: region) { await load() }
             .task { await loadGuides() }
             .task { await detectHomeState() }
-            .task { ticker = (try? await MarketService.feed(sort: .active, limit: 18)) ?? [] }
+            .task(id: noLowDefault) { await loadTicker() }
+            .refreshable {
+                await load()
+                await loadTicker()
+            }
             .sheet(item: $tickerBeer) { b in
                 NavigationStack { BeerDetailView(beerId: b.beerId) }
             }
@@ -176,7 +174,7 @@ struct ExploreView: View {
         NavigationLink { CatalogView() } label: {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Brand.muted)
-                Text("Search every beer, brewery, style").foregroundStyle(Brand.muted)
+                Text("Search beers, breweries, and styles").foregroundStyle(Brand.muted)
                 Spacer(minLength: 0)
                 Image(systemName: "books.vertical.fill").foregroundStyle(Brand.gold)
             }
@@ -457,8 +455,19 @@ struct ExploreView: View {
                 feedNote = nil
             }
         } catch {
-            beers = []
-            feedNote = "Guide mode"
+            feedNote = "Could not refresh. Pull to try again."
+        }
+    }
+
+    private func loadTicker() async {
+        do {
+            ticker = try await MarketService.feed(
+                sort: .active,
+                limit: 18,
+                naOnly: noLowDefault
+            )
+        } catch {
+            // Keep the last good tape visible through a transient refresh failure.
         }
     }
 

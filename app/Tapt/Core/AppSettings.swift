@@ -67,6 +67,7 @@ enum AppInfo {
 
 enum AppLinks {
     static let webBase = "https://taptbeer.com"
+    static let support = webBase + "/support"
     static let privacy = webBase + "/privacy"
     static let terms = webBase + "/terms"
 }

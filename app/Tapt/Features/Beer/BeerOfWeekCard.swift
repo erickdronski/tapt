@@ -7,6 +7,7 @@ struct BeerOfWeekCard: View {
     @State private var standings: [BeerOfWeekEntry] = []
     @State private var winner: BeerOfWeekEntry?
     @State private var loaded = false
+    @State private var loadError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -42,7 +43,18 @@ struct BeerOfWeekCard: View {
                 .buttonStyle(.plain)
             }
 
-            if standings.isEmpty {
+            if let loadError {
+                Button {
+                    Task { await load() }
+                } label: {
+                    Label(loadError, systemImage: "arrow.clockwise")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Brand.copper)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if standings.isEmpty && loadError == nil {
                 Text("No votes yet this week. Thumb a beer up on the board below, the whole world sees the race.")
                     .font(.subheadline)
                     .foregroundStyle(Brand.muted)
@@ -93,10 +105,7 @@ struct BeerOfWeekCard: View {
         .task {
             guard !loaded else { return }
             loaded = true
-            async let s: [BeerOfWeekEntry] = (try? BeerOfWeekService.standings(limit: 3)) ?? []
-            async let w: BeerOfWeekEntry? = try? BeerOfWeekService.latestWinner()
-            standings = await s
-            winner = await w
+            await load()
         }
     }
 
@@ -113,6 +122,18 @@ struct BeerOfWeekCard: View {
         case 2: "🥈"
         case 3: "🥉"
         default: "•"
+        }
+    }
+
+    private func load() async {
+        do {
+            async let standingsRequest = BeerOfWeekService.standings(limit: 3)
+            async let winnerRequest = BeerOfWeekService.latestWinner()
+            standings = try await standingsRequest
+            winner = try await winnerRequest
+            loadError = nil
+        } catch {
+            loadError = "This week's race could not refresh. Tap to try again."
         }
     }
 }

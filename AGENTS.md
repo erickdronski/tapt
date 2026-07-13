@@ -57,15 +57,20 @@ promptly (small commits, don't sit on local state another agent can't see).
   `venue_menu` serves latest → `menu?v=` renders + printable QR. Portal has
   localStorage draft autosave, beforeunload guard, reorder, publish lifecycle,
   and an "add my venue" fallback (`submit_partner_inquiry`).
-- **Anon RPC surface is locked to:** `catalog_search`, `venue_brand`,
+- **Tapt-owned anon RPC surface is locked to:** `catalog_search`, `venue_brand`,
   `venue_events`, `venue_menu` (the public web needs exactly these). Everything
-  else is `authenticated`-only. If you add a public page that needs an RPC,
-  grant it deliberately and note it here.
+  else is `authenticated`-only. The PostGIS extension separately grants three
+  `st_estimatedextent` overloads through its extension owner; Tapt does not call
+  them and the project migration role cannot revoke those extension-owned ACLs.
+  If you add a public page that needs an RPC, grant it deliberately and note it
+  here.
 - **Content** `social-assets/` — brand master, IG launch kit, 30-day library
   (`social-assets/library/`, gallery.html to review). Real beers/facts only.
 - **CI** `.github/workflows/` — `build.yml` (push), `testflight.yml`
-  (dispatch-only; uploads may hit Apple's daily cap → run exits green with a
-  skip warning), `asc-admin.yml`, ingest workflows.
+  (dispatch-only; uploads may hit Apple's daily cap -> run exits green with a
+  skip warning), `asc-admin.yml`, ingest workflows. TestFlight administration
+  and App Store preparation require the exact build number; upload skips cannot
+  administer an older build, and release audits fail on API-visible blockers.
 
 ## Access + personas (for auditing the experience)
 - Owner is in `app_admin` → `admin` page works for esdronski@gmail.com
@@ -85,7 +90,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   users signed in on refresh blips; isOnboarded returns Bool? so network
   failures can't force destructive re-onboarding; MyCheckin.beer optional so
   one bad join can't blank the Cellar).
-- **Games lane (Claude, in progress):** Beer Pong rebuilt as a real SpriteKit
+- **Games lane (Claude):** Beer Pong rebuilt as a real SpriteKit
   physics game (slingshot + trajectory preview, rim rattle physics, particles,
   streaks, persistent best; play-tested on sim — sink/miss/score verified).
   NEXT candidates for the same treatment: Darts (drag-throw physics), Flip Cup
@@ -97,25 +102,41 @@ promptly (small commits, don't sit on local state another agent can't see).
   don't fire inline onclick= handlers — drive `window.fn()` via console when
   QA-ing, it's a harness artifact not a product bug.
 - **Swift P1 backlog (remaining — either agent may take, mark here first):**
-  1. Adopt `Supa.authedRPC` in the remaining authenticated services
-     (SuperappServices/tonight, leaderboards, beer detail, map, profile feed).
-  2. Keep-content-on-failure + honest error/retry at the 7 clobber sites:
-     CellarView:229, ExploreView:430, TonightView:348, LeaderboardsView:220,
-     NearYouView:284, ProfileView:294, BeerOfWeekCard:96 (copy the
-     BeerMarketView pattern).
-  3. BeerDetailView:577 "Beer not found" shown for network errors — add retry.
+  1. DONE (Codex): authenticated services now pre-resolve the session through
+     `Supa.authedRPC`; mutating RPCs execute exactly once rather than retrying
+     arbitrary failures.
+  2. DONE (Codex): Cellar, Explore, Tonight, Leaderboards, Near You, Profile,
+     Beer of the Week, and Log a Pour keep good content through refresh errors
+     and expose honest retry feedback.
+  3. DONE (Codex): Beer Detail distinguishes network failure from not found and
+     provides retry.
   4. DONE (Claude): ScanView silent saves now alert; BeerDetailView vote
      reverts on failure; LogPourView searches the full catalog via
      catalog_search (debounced, local-instant + server-replace).
-  5. Image downsampling for list thumbs; ticker TimelineView → 30fps periodic;
-     LocationManager never calls stopUpdatingLocation.
-- Codex: last seen commits `3ca3ab0` (auth privacy/consent hardening, removed
-  dev identity) and `892767d` (branded web domain in app). If that lane is
-  still yours, own auth/privacy; flag here before touching the market engine
-  or portal so we don't collide.
+  5. Image downsampling for list thumbs; ticker TimelineView -> 30fps periodic.
+     DONE (Codex): LocationManager stops updates when location is disabled.
+- **Codex release lane:** Claude's latest `64c2e92` is merged under the
+  release-readiness work. Production migrations `0069` through `0078` are
+  applied and mirrored; they cover venue import, partner assets, age/social
+  boundaries, canonical menu check-ins, Cellar pagination, media processing,
+  Tonight, No / Low, and advisor cleanup. Native/web resilience, responsible
+  game framing, account deletion, consent hydration, guest navigation, landing,
+  portal, and TestFlight feedback automation are integrated on
+  `agent/release-readiness` pending CI-backed merge.
+- **Auth truth (2026-07-12):** email magic link + six-digit code are enabled and
+  working. Supabase reports Google/Facebook enabled, but Google has not completed
+  a signed-device callback and remains a release gate. Apple is implemented in
+  the app but disabled in Supabase pending Apple credentials. X and phone are
+  disabled. Unverified external providers are hidden in release builds. Do not
+  claim these gates are complete until TestFlight proves them.
+- **Legal truth:** `/privacy` and `/terms` are counsel-review drafts with open
+  company, address, liability, governing-law, and dispute placeholders. They
+  are not App Store-final until those placeholders and the review are complete.
 - Owner queue: delete `simtest@tapt.app` when QA settles; Supabase dashboard
-  toggles (leaked-password protection ON; auth pool → percentage); dispatch
-  TestFlight build 46 when ready; RESEND_API_KEY/Stripe/FB App ID when wanted.
+  toggles (leaked-password protection ON; auth pool -> percentage); complete
+  Google consent and Apple provider credentials; verify email/Google/Apple on a
+  signed TestFlight device; dispatch the next TestFlight build after CI passes;
+  RESEND_API_KEY/Stripe/FB App ID when wanted.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

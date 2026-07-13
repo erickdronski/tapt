@@ -15,17 +15,17 @@ desperate — we're handing them free tools and local drinkers.
 6. **No response after 3 touches → 60-day parking lot.** Never more than 3.
 
 ## Template A — first-touch email
-Subject: `Your taproom is already on Tapt's map — want the keys?`
+Subject: `Your taproom is already on Tapt's map. Want the keys?`
 
 > Hi {name},
 >
-> I'm Erick, building Tapt — THE Beer Superapp, free for drinkers.
-> {Venue} is already on our map (we plot 8,700+ real beer venues across 25
-> countries), and locals can log pours there today.
+> I'm Erick, building Tapt, THE Beer Superapp, free for drinkers.
+> {Venue} is already on our provenance-backed beer map, and locals can log
+> pours there today.
 >
 > Claiming your profile is free, forever: publish what's pouring, see real
 > local activity, and show up when nearby beer fans open the map. No
-> $1,199/yr subscription — working tools are free because busy taprooms are
+> expensive subscription. Working tools are free because active taprooms are
 > what make the app good.
 >
 > Want me to send the claim link? Two minutes, no catch.

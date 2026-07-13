@@ -1,0 +1,101 @@
+name: App Store Screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  capture:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select newest Xcode
+        run: |
+          LATEST=$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)
+          if [ -n "$LATEST" ]; then sudo xcode-select -s "$LATEST/Contents/Developer"; fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        working-directory: app
+        run: xcodegen generate
+
+      - name: Create 6.9-inch iPhone simulator
+        run: |
+          DEVICE_TYPE=$(xcrun simctl list devicetypes -j | python3 -c '
+          import json, sys
+          items=json.load(sys.stdin)["devicetypes"]
+          preferred=("iPhone 17 Pro Max", "iPhone 16 Pro Max", "iPhone 15 Pro Max")
+          match=next((d for name in preferred for d in items if d["name"] == name), None)
+          if not match: raise SystemExit("No supported Pro Max simulator device type")
+          print(match["identifier"])
+          ')
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c '
+          import json, sys
+          items=[r for r in json.load(sys.stdin)["runtimes"] if r.get("isAvailable") and r["identifier"].startswith("com.apple.CoreSimulator.SimRuntime.iOS-")]
+          if not items: raise SystemExit("No available iOS simulator runtime")
+          items.sort(key=lambda r: tuple(int(x) for x in r["version"].split(".")), reverse=True)
+          print(items[0]["identifier"])
+          ')
+          UDID=$(xcrun simctl create "Tapt App Store" "$DEVICE_TYPE" "$RUNTIME")
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Build simulator app
+        run: |
+          xcodebuild build \
+            -project app/Tapt.xcodeproj \
+            -scheme Tapt \
+            -configuration Release \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/TaptDerived" \
+            CODE_SIGNING_ALLOWED=NO \
+            -skipMacroValidation
+          APP_PATH="$RUNNER_TEMP/TaptDerived/Build/Products/Release-iphonesimulator/Tapt.app"
+          test -d "$APP_PATH"
+          echo "APP_PATH=$APP_PATH" >> "$GITHUB_ENV"
+
+      - name: Capture release screenshots
+        run: |
+          mkdir -p "$RUNNER_TEMP/tapt-screenshots"
+          xcrun simctl install "$UDID" "$APP_PATH"
+
+          capture() {
+            name="$1"
+            tab="$2"
+            route="${3:-}"
+            xcrun simctl terminate "$UDID" app.tapt.tapt >/dev/null 2>&1 || true
+            if [ -n "$route" ]; then
+              env SIMCTL_CHILD_TAPT_SCREENSHOT_MODE=1 \
+                  SIMCTL_CHILD_TAPT_START_TAB="$tab" \
+                  "SIMCTL_CHILD_${route}=1" \
+                  xcrun simctl launch "$UDID" app.tapt.tapt
+            else
+              env SIMCTL_CHILD_TAPT_SCREENSHOT_MODE=1 \
+                  SIMCTL_CHILD_TAPT_START_TAB="$tab" \
+                  xcrun simctl launch "$UDID" app.tapt.tapt
+            fi
+            sleep 12
+            xcrun simctl io "$UDID" screenshot --type=png "$RUNNER_TEMP/tapt-screenshots/$name.png"
+          }
+
+          capture "01-home" 0
+          capture "02-beer-detail" 0 TAPT_BEER_PREVIEW
+          capture "03-catalog" 0 TAPT_CATALOG_PREVIEW
+          capture "04-beer-radar" 0 TAPT_MAP_PREVIEW
+          capture "05-discover" 3
+          capture "06-games" 3 TAPT_GAMES_PREVIEW
+
+          sips -g pixelWidth -g pixelHeight "$RUNNER_TEMP"/tapt-screenshots/*.png
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: tapt-app-store-screenshots
+          path: ${{ runner.temp }}/tapt-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 30

@@ -8,25 +8,49 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     var location: CLLocation?
     var authorized = false
+    var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    var lastError: String?
 
     override init() {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
-        let status = manager.authorizationStatus
-        authorized = status == .authorizedWhenInUse || status == .authorizedAlways
+        authorizationStatus = manager.authorizationStatus
+        authorized = authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
     }
 
     func request() {
-        manager.requestWhenInUseAuthorization()
-        manager.startUpdatingLocation()
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        case .denied, .restricted:
+            break
+        @unknown default:
+            break
+        }
+    }
+
+    func stop() {
+        manager.stopUpdatingLocation()
+    }
+
+    var deniedOrRestricted: Bool {
+        authorizationStatus == .denied || authorizationStatus == .restricted
     }
 
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         let status = manager.authorizationStatus
         Task { @MainActor in
+            self.authorizationStatus = status
             self.authorized = status == .authorizedWhenInUse || status == .authorizedAlways
-            if self.authorized { self.manager.startUpdatingLocation() }
+            if self.authorized {
+                self.lastError = nil
+                self.manager.startUpdatingLocation()
+            } else {
+                self.manager.stopUpdatingLocation()
+            }
         }
     }
 
@@ -35,5 +59,9 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         Task { @MainActor in self.location = loc }
     }
 
-    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+    nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        Task { @MainActor in
+            self.lastError = "Your location could not be updated. Check Location Services and try again."
+        }
+    }
 }

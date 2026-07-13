@@ -8,6 +8,8 @@ struct TonightBeer: Identifiable, Decodable, Sendable {
     let beerName: String
     let breweryName: String?
     let style: String?
+    let imageUrl: String?
+    let isNaLow: Bool
     let sourceLabel: String
     let heatScore: Int
     let updatedAt: String?
@@ -22,6 +24,8 @@ struct TonightBeer: Identifiable, Decodable, Sendable {
         case beerId = "beer_id"
         case beerName = "beer_name"
         case breweryName = "brewery_name"
+        case imageUrl = "image_url"
+        case isNaLow = "is_na_low"
         case style
         case sourceLabel = "source_label"
         case heatScore = "heat_score"
@@ -73,34 +77,66 @@ struct TasteProfilePoint: Identifiable, Decodable, Sendable {
 }
 
 enum LiveBeerService {
-    static func tonight(region: String? = nil, limit: Int = 20) async throws -> [TonightBeer] {
+    static func tonight(
+        region: String? = nil,
+        limit: Int = 20,
+        naOnly: Bool = false
+    ) async throws -> [TonightBeer] {
         struct Params: Encodable {
             let p_geo_bucket: String?
             let p_limit: Int
+            let p_na_only: Bool
         }
 
-        return try await Supa.client
-            .rpc("tonight_feed", params: Params(p_geo_bucket: region, p_limit: limit))
-            .execute()
-            .value
+        return try await Supa.authedRPC(
+            "tonight_feed_v2",
+            params: Params(p_geo_bucket: region, p_limit: limit, p_na_only: naOnly)
+        )
+    }
+
+    static func tonightNear(
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Int = 40_000,
+        limit: Int = 20,
+        naOnly: Bool = false
+    ) async throws -> [TonightBeer] {
+        struct Params: Encodable {
+            let p_lat: Double
+            let p_lon: Double
+            let p_radius_m: Int
+            let p_limit: Int
+            let p_na_only: Bool
+        }
+
+        return try await Supa.authedRPC(
+            "tonight_feed_near",
+            params: Params(
+                p_lat: latitude,
+                p_lon: longitude,
+                p_radius_m: radiusMeters,
+                p_limit: limit,
+                p_na_only: naOnly
+            )
+        )
     }
 
     static func socialPours(limit: Int = 30) async throws -> [SocialPour] {
         struct Params: Encodable { let p_limit: Int }
 
-        return try await Supa.client
-            .rpc("social_pour_feed", params: Params(p_limit: limit))
-            .execute()
-            .value
+        return try await Supa.authedRPC(
+            "social_pour_feed",
+            params: Params(p_limit: limit)
+        )
     }
 
     static func tasteProfile(userId: UUID? = nil) async throws -> [TasteProfilePoint] {
         struct Params: Encodable { let p_user: String? }
 
-        return try await Supa.client
-            .rpc("taste_profile_snapshot", params: Params(p_user: userId?.uuidString))
-            .execute()
-            .value
+        return try await Supa.authedRPC(
+            "taste_profile_snapshot",
+            params: Params(p_user: userId?.uuidString)
+        )
     }
 
     static func report(checkinId: String, userId: UUID, reason: String) async throws {
@@ -111,17 +147,15 @@ enum LiveBeerService {
             let p_details: String?
         }
 
-        try await Supa.client
-            .rpc(
-                "report_content",
-                params: Params(
-                    p_target_type: "checkin",
-                    p_target_id: checkinId,
-                    p_reason: reason,
-                    p_details: nil
-                )
+        try await Supa.authedRPCVoid(
+            "report_content",
+            params: Params(
+                p_target_type: "checkin",
+                p_target_id: checkinId,
+                p_reason: reason,
+                p_details: nil
             )
-            .execute()
+        )
     }
 
     static func block(actorId: String, userId: UUID) async throws {
@@ -129,8 +163,9 @@ enum LiveBeerService {
             let p_blocked_id: String
         }
 
-        try await Supa.client
-            .rpc("block_user", params: Params(p_blocked_id: actorId))
-            .execute()
+        try await Supa.authedRPCVoid(
+            "block_user",
+            params: Params(p_blocked_id: actorId)
+        )
     }
 }

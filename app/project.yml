@@ -53,3 +53,22 @@ targets:
     dependencies:
       - package: Supabase
         product: Supabase
+  TaptTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources: [TaptTests]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.tapt.tapt.tests
+        SWIFT_VERSION: "6.0"
+    dependencies:
+      - target: Tapt
+schemes:
+  Tapt:
+    build:
+      targets:
+        Tapt: all
+    test:
+      targets:
+        - TaptTests

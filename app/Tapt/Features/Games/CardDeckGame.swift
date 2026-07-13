@@ -1,7 +1,7 @@
 import SwiftUI
 
 // Mixed party prompts, not just beer, so anyone at the table can play. Swipe or
-// tap to draw. NA-friendly, penalty framing (a sip if you drink, a point if not).
+// tap to draw. No alcohol instructions; challenges use points, stories, or dares.
 private let deckPrompts = [
     // party / social
     "Most likely to. Everyone points. Most points gives a toast.",

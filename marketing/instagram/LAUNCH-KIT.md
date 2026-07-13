@@ -54,8 +54,8 @@ fake-hype. Celebrate the honesty ("boards stay empty until real people vote").
 1. **The Beer Market** — the live global up/down vote board; "the world ranks beer".
 2. **Passport** — stamps, country grids, "where has your palate been?"
 3. **Beer School** — one real, beautifully typeset fact (BJCP-cited).
-4. **Scan + catalog** — 11K beers, insights, "be the first to log it".
-5. **For breweries & bars** — free menu + QR, "what the incumbent charges $1,199/yr for".
+4. **Scan + catalog** — normalized products, real media, sourced details.
+5. **For breweries & bars** — free menu + QR, venue claim, and local activity.
 6. **Game night** — Beer Olympics, table games, guide teasers.
 7. **Zero-proof** — NA beers as first-class citizens (own the niche the big apps skip).
 
@@ -71,9 +71,9 @@ Current real numbers to use (verified, keep updated): **11,062 beers ·
 > #breweriesofinstagram #beergeek #hazyipa #beermarket`
 
 **Day 1 — Reveal.** Visual: app icon + pint glass render on foam background.
-> Building THE Beer Superapp. Scan any beer on Earth, ride a live beer market the
-> whole world moves, and stamp your Passport. 11,000+ beers and 8,700+ real venues
-> mapped across 108 countries already. Free forever. Early access + the free
+> Building THE Beer Superapp. Search or scan a beer, follow the live Beer Market,
+> and stamp your Passport. A global catalog and provenance-backed venue map are
+> already inside. Free for drinkers. Early access + the free
 > Dispatch at the link in bio. 🍺
 
 **Day 2 — The Beer Market.** Visual: the market board (risers/fallers with arrows).
@@ -82,9 +82,8 @@ Current real numbers to use (verified, keep updated): **11,062 beers ·
 > Beer of the Week crowned every Monday. What's topping your board?
 
 **Day 3 — Scan.** Visual: the scan flow (barcode -> beer page).
-> That obscure can nobody's heard of? Scan the barcode. If it's new to Tapt you're
-> the first person on Earth to log it, and your name goes on the pour. 11,000+ beers
-> and counting.
+> Scan a supported barcode or label, review the catalog match, and log the pour.
+> Your Cellar and Passport update from the beer and place you actually chose.
 
 **Day 4 — Beer School (fact).** Visual: typeset fact card in brand type.
 > Baltic Porter: a strong, smooth, dark porter that's actually lager-fermented,
@@ -93,7 +92,7 @@ Current real numbers to use (verified, keep updated): **11,062 beers ·
 
 **Day 5 — For breweries & bars.** Visual: the free menu + QR mock (from the landing).
 > Run a brewery, bar, pub, or taproom? A live hosted menu, a printable QR for your
-> tables, and a spot on the map. Free. The tools the incumbent charges $1,199/yr for.
+> tables, and a spot on the map. Free working tools without a required subscription.
 > You only ever pay to be louder. DM us "MENU" to claim your venue.
 
 **Day 6 — Zero-proof.** Visual: NA picks grid.
@@ -129,8 +128,8 @@ School quiz sticker · "tap the beer you'd send up the market" slider.
 > drinker moved it. That's the whole point.
 
 **Day 13 — Map / "where first".** Visual: the venue map.
-> 8,700+ breweries, bars, pubs, and taprooms already mapped with verified
-> coordinates across 25+ countries. Where should we stamp first? Drop your city.
+> Breweries, bars, pubs, and taprooms are mapped with source provenance and
+> verified coordinates. Where should we stamp first? Drop your city.
 
 **Day 14 — Recap + CTA.** Visual: a clean brand card, top 3 features.
 > Two weeks in. Scan any beer, ride the market, stamp your Passport, play a round,

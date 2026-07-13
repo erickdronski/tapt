@@ -1,0 +1,67 @@
+name: Ingest Beer Places
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Overture release (YYYY-MM-DD.0)
+        required: true
+        default: 2026-06-17.0
+        type: string
+      max_rows:
+        description: Maximum globally balanced venue rows
+        required: true
+        default: "120000"
+        type: string
+      confidence:
+        description: Minimum Overture confidence
+        required: true
+        default: "0.86"
+        type: string
+      dry_run:
+        description: Query and audit only; do not write Supabase
+        required: true
+        default: true
+        type: boolean
+  schedule:
+    - cron: "24 7 20 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tapt-overture-venue-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install query runtime
+        run: >-
+          python -m pip install --disable-pip-version-check
+          duckdb==1.4.3 h3==4.3.1 pycountry==24.6.1
+
+      - name: Query, validate, and ingest beer places
+        env:
+          SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OVERTURE_RELEASE: ${{ github.event.inputs.release || '2026-06-17.0' }}
+          MAX_ROWS: ${{ github.event.inputs.max_rows || '120000' }}
+          MIN_CONFIDENCE: ${{ github.event.inputs.confidence || '0.86' }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+        run: |
+          args=(
+            --release "$OVERTURE_RELEASE"
+            --max-rows "$MAX_ROWS"
+            --confidence "$MIN_CONFIDENCE"
+          )
+          if [[ "$DRY_RUN" == "true" ]]; then args+=(--dry-run); fi
+          python scripts/ingest_overture_venues.py "${args[@]}"

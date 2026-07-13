@@ -43,16 +43,18 @@ enum CatalogService {
 }
 
 struct CatalogView: View {
+    @Environment(Session.self) private var session
     private let pageSize = 30
     private let styles = ["IPA", "Lager", "Pilsner", "Stout", "Porter", "Sour", "Wheat", "Pale Ale", "Amber"]
 
     @State private var query = ""
     @State private var style: String? = nil
-    @State private var naOnly = false
+    @AppStorage("noLowDefault") private var naOnly = false
     @State private var results: [CatalogEntry] = []
     @State private var total = 0
     @State private var loading = false
     @State private var loadingMore = false
+    @State private var loadError: String?
 
     private var canLoadMore: Bool { results.count < total }
 
@@ -61,19 +63,32 @@ struct CatalogView: View {
             LazyVStack(spacing: 0) {
                 header
 
-                if loading && results.isEmpty {
+                if let loadError, results.isEmpty {
+                    errorState(loadError)
+                } else if loading && results.isEmpty {
                     TaptSkeletonList(rows: 8)
                 } else if results.isEmpty {
                     empty
                 } else {
                     ForEach(results) { beer in
-                        NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
-                            .buttonStyle(.plain)
-                            .task { if beer.id == results.last?.id { await loadMore() } }
+                        Group {
+                            if session.user != nil {
+                                NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
+                            } else {
+                                Button {
+                                    session.deferBeerDetail(beerId: beer.id)
+                                    session.endGuestSession()
+                                } label: { row(beer) }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .task { if beer.id == results.last?.id { await loadMore() } }
                         Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 78)
                     }
                     if loadingMore {
                         ProgressView().tint(Brand.gold).frame(maxWidth: .infinity).padding(.vertical, 18)
+                    } else if let loadError {
+                        inlineError(loadError)
                     }
                 }
             }
@@ -83,7 +98,7 @@ struct CatalogView: View {
         .navigationTitle("Catalog")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "Search every beer, brewery, style")
+                    prompt: "Search beers, breweries, and styles")
         .task(id: SearchKey(query: query, style: style, naOnly: naOnly)) { await reload() }
     }
 
@@ -179,12 +194,37 @@ struct CatalogView: View {
         .frame(maxWidth: .infinity).padding(.top, 60).padding(.horizontal, 40)
     }
 
+    private func errorState(_ message: String) -> some View {
+        TaptEmptyState(
+            icon: "wifi.exclamationmark",
+            title: "Catalog unavailable",
+            message: message,
+            actionTitle: "Try again",
+            action: { Task { await reload() } }
+        )
+        .padding(.top, 24)
+    }
+
+    private func inlineError(_ message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Brand.copper)
+            Text(message).font(.caption).foregroundStyle(Brand.muted)
+            Spacer(minLength: 0)
+            Button("Retry") { Task { await loadMore() } }
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Brand.malt)
+        }
+        .padding()
+    }
+
     // MARK: - Loading
 
     @MainActor private func reload() async {
         loading = true
+        loadError = nil
+        defer { loading = false }
         try? await Task.sleep(for: .milliseconds(280))  // debounce typing
-        if Task.isCancelled { loading = false; return }
+        if Task.isCancelled { return }
         do {
             let page = try await CatalogService.search(query: query, style: style, naOnly: naOnly,
                                                        limit: pageSize, offset: 0)
@@ -192,14 +232,15 @@ struct CatalogView: View {
             if Task.isCancelled { return }
             results = page
             total = page.first?.total ?? page.count
+            loadError = nil
         } catch is CancellationError {
             return
         } catch let error as URLError where error.code == .cancelled {
             return
         } catch {
             results = []; total = 0
+            loadError = "The beer catalog could not be loaded. Check your connection and try again."
         }
-        loading = false
     }
 
     @MainActor private func loadMore() async {
@@ -211,7 +252,10 @@ struct CatalogView: View {
             let existing = Set(results.map(\.id))
             results.append(contentsOf: page.filter { !existing.contains($0.id) })
             if let t = page.first?.total { total = t }
-        } catch { /* keep what we have */ }
+            loadError = nil
+        } catch {
+            loadError = "More beers could not be loaded."
+        }
         loadingMore = false
     }
 }

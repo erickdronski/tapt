@@ -17,10 +17,18 @@ enum ShareTools {
     static func loadBeerImage(_ pour: PourCard) async -> UIImage? {
         var urlString = pour.imageUrl
         if urlString == nil, let id = pour.beerId {
-            struct Row: Decodable { let label_image_url: String? }
+            struct Row: Decodable {
+                let cutoutUrl: String?
+                let labelImageUrl: String?
+
+                enum CodingKeys: String, CodingKey {
+                    case cutoutUrl = "cutout_url"
+                    case labelImageUrl = "label_image_url"
+                }
+            }
             let row: Row? = try? await Supa.client.from("beer_catalog")
-                .select("label_image_url").eq("id", value: id).single().execute().value
-            urlString = row?.label_image_url
+                .select("cutout_url,label_image_url").eq("id", value: id).single().execute().value
+            urlString = row?.cutoutUrl ?? row?.labelImageUrl
         }
         guard let s = urlString, let url = URL(string: s),
               let (data, _) = try? await URLSession.shared.data(from: url),

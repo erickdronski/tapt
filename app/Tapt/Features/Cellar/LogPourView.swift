@@ -4,7 +4,7 @@ import SwiftUI
 struct LogPourView: View {
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
-    var onLogged: () -> Void = {}
+    var onLogged: () -> Void
 
     @State private var beers: [CatalogBeer] = []
     @State private var venues: [BreweryMapVenue] = []
@@ -12,34 +12,27 @@ struct LogPourView: View {
     @State private var venueSearch = ""
     @State private var selected: BeerPick?
     @State private var selectedVenue: BreweryMapVenue?
-    // Starts unrated on purpose: a default 4 stars records an opinion the
-    // user never expressed, and aggregates would skew up from day one.
-    @State private var rating: Double = 0
+    // Starts unrated so Tapt never records an opinion the user did not express.
+    @State private var rating: Double?
     @State private var flavorTags: Set<String> = []
-    @State private var glassware = "Pint"
-    @State private var occasion = "bar"
+    @State private var glassware: String?
+    @State private var occasion: String?
     @State private var saving = false
     @State private var sharePour: PourCard?
     @State private var celebration: TaptCelebration?
     @State private var pendingShare: PourCard?
     @State private var errorMessage: String?
+    @State private var loadingCatalog = false
+    @State private var catalogError: String?
 
     private let tags = ["hoppy", "malty", "crisp", "fruity", "roasty", "sour", "sweet", "dry"]
     private let glasswareOptions = ["Pint", "Can", "Bottle", "Tulip", "Snifter", "Flight"]
     private let occasionOptions = ["home", "bar", "restaurant", "event", "sports", "other"]
 
-    @State private var serverResults: [CatalogBeer] = []
-    @State private var loadingCatalog = true
-
-    private var filtered: [CatalogBeer] {
-        if search.isEmpty { return beers }
-        // Local slice gives instant hits; the server search covers the WHOLE
-        // catalog (the preloaded list is only the first 200 beers) and replaces
-        // the local matches as soon as it lands.
-        let local = beers.filter {
-            $0.name.localizedCaseInsensitiveContains(search) || $0.breweryName.localizedCaseInsensitiveContains(search)
-        }
-        return serverResults.isEmpty ? local : serverResults
+    init(initialBeer: BeerPick? = nil, onLogged: @escaping () -> Void = {}) {
+        self.onLogged = onLogged
+        _selected = State(initialValue: initialBeer)
+        _venueSearch = State(initialValue: initialBeer?.breweryName ?? "")
     }
 
     var body: some View {
@@ -64,31 +57,9 @@ struct LogPourView: View {
                 }
             }
             .task {
-                // Ranked, junk-gated, deduped default list: catalog_search applies
-                // display-name normalization + tapt_name_ok. The raw alphabetical
-                // catalog put barcode-junk names at the top of the picker.
-                let rows = (try? await CatalogService.search(query: "", limit: 60)) ?? []
-                beers = rows.map {
-                    CatalogBeer(id: $0.id, name: $0.name, style: $0.style, abv: $0.abv,
-                                brewery: .init(name: $0.breweryName, country: $0.country))
-                }
-                loadingCatalog = false
                 venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []
             }
-            .task(id: search) {
-                // Full-catalog search (debounced). Without this, a pour could
-                // only be logged against the first 200 beers alphabetically.
-                let q = search.trimmingCharacters(in: .whitespaces)
-                guard q.count >= 2 else { serverResults = []; return }
-                try? await Task.sleep(for: .milliseconds(250))
-                guard !Task.isCancelled else { return }
-                let rows = (try? await CatalogService.search(query: q, limit: 30)) ?? []
-                guard !Task.isCancelled else { return }
-                serverResults = rows.map {
-                    CatalogBeer(id: $0.id, name: $0.name, style: $0.style, abv: $0.abv,
-                                brewery: .init(name: $0.breweryName, country: $0.country))
-                }
-            }
+            .task(id: search) { await loadCatalog() }
             .sheet(item: $sharePour) { pour in
                 NavigationStack {
                     ScrollView { CardShareView(pour: pour).padding(.vertical) }
@@ -115,33 +86,61 @@ struct LogPourView: View {
     }
 
     private var picker: some View {
-        List(filtered) { beer in
-            Button {
-                selected = beer.pick
-                rating = 0
-                flavorTags = []
-                selectedVenue = nil
-                venueSearch = beer.breweryName
-            } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(beer.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("\(beer.breweryName)  \(beer.style ?? "")").font(.caption).foregroundStyle(Brand.muted)
+        Group {
+            if loadingCatalog && beers.isEmpty {
+                TaptSkeletonList(rows: 6).padding()
+            } else if let catalogError, beers.isEmpty {
+                TaptEmptyState(
+                    icon: "wifi.exclamationmark",
+                    title: "Catalog unavailable",
+                    message: catalogError,
+                    actionTitle: "Try again",
+                    action: { Task { await loadCatalog() } }
+                )
+            } else if beers.isEmpty {
+                TaptEmptyState(
+                    icon: "magnifyingglass",
+                    title: "No beer found",
+                    message: "Try a beer name or brewery, or scan the label from the Scan tab.",
+                    actionTitle: nil
+                )
+            } else {
+                List {
+                    if let catalogError {
+                        Button {
+                            Task { await loadCatalog() }
+                        } label: {
+                            Label(catalogError, systemImage: "arrow.clockwise")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Brand.copper)
+                        }
+                    }
+
+                    ForEach(beers) { beer in
+                        Button {
+                            selected = beer.pick
+                            rating = nil
+                            flavorTags = []
+                            glassware = nil
+                            occasion = nil
+                            selectedVenue = nil
+                            venueSearch = beer.breweryName
+                        } label: {
+                            HStack(spacing: 10) {
+                                BeerThumb(imageUrl: beer.imageUrl, size: 44)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(beer.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                                    Text("\(beer.breweryName)  \(beer.style ?? "")").font(.caption).foregroundStyle(Brand.muted)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .padding(.vertical, 2)
             }
         }
         .searchable(text: $search, prompt: "Search beers")
-        .overlay {
-            // A search with no hits must never be a silent white void, but the
-            // initial load must not flash "No Results" before beers arrive.
-            if filtered.isEmpty {
-                if loadingCatalog && search.isEmpty {
-                    ProgressView().tint(Brand.gold)
-                } else {
-                    ContentUnavailableView.search(text: search)
-                }
-            }
-        }
     }
 
     private func rate(_ beer: BeerPick) -> some View {
@@ -149,33 +148,44 @@ struct LogPourView: View {
             VStack(spacing: 18) {
             Text(beer.name).font(.system(size: 26, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text).multilineTextAlignment(.center)
             Text("\(beer.breweryName)  \(beer.style ?? "")").foregroundStyle(Brand.muted)
+            Text("Your rating")
+                .font(.system(.headline, design: .rounded))
+                .foregroundStyle(Brand.text)
             HStack(spacing: 10) {
                 ForEach(1...5, id: \.self) { i in
-                    Image(systemName: Double(i) <= rating ? "star.fill" : "star")
-                        .font(.title).foregroundStyle(Brand.gold)
-                        .onTapGesture { withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { rating = Double(i) } }
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { rating = Double(i) }
+                    } label: {
+                        Image(systemName: Double(i) <= (rating ?? 0) ? "star.fill" : "star")
+                            .font(.title)
+                            .foregroundStyle(Brand.gold)
+                            .frame(width: 40, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(i) star\(i == 1 ? "" : "s")")
+                    .accessibilityAddTraits(rating == Double(i) ? .isSelected : [])
                 }
             }
             .padding(.vertical, 6)
             section("Flavor notes") {
                 chipWrap(tags, selection: $flavorTags)
             }
-            section("Glass") {
+            section("Glass (optional)") {
                 pickerRow(glasswareOptions, selection: $glassware)
             }
-            section("Occasion") {
+            section("Occasion (optional)") {
                 pickerRow(occasionOptions, selection: $occasion)
             }
             section("Brewery or taproom") {
                 venuePicker(for: beer)
             }
-            Button(saving ? "Saving..." : (rating > 0 ? "Log it" : "Tap a star to rate it")) { save(beer) }
+            Button(saving ? "Saving..." : (rating != nil ? "Log it" : "Tap a star to rate it")) { save(beer) }
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity).padding(.vertical, 15)
-                .background(rating > 0 ? Brand.gold : Brand.haze, in: RoundedRectangle(cornerRadius: 14))
-                .foregroundStyle(rating > 0 ? Brand.malt : Brand.muted)
+                .background(rating != nil ? Brand.gold : Brand.haze, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(rating != nil ? Brand.malt : Brand.muted)
                 // A rating is the one thing a pour means; never invent one.
-                .disabled(saving || rating == 0)
+                .disabled(saving || rating == nil)
             }
             .padding()
         }
@@ -326,12 +336,12 @@ struct LogPourView: View {
         }
     }
 
-    private func pickerRow(_ items: [String], selection: Binding<String>) -> some View {
+    private func pickerRow(_ items: [String], selection: Binding<String?>) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(items, id: \.self) { item in
                     let on = selection.wrappedValue == item
-                    Button { selection.wrappedValue = item } label: {
+                    Button { selection.wrappedValue = on ? nil : item } label: {
                         Text(item.capitalized)
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 12)
@@ -347,8 +357,13 @@ struct LogPourView: View {
     }
 
     private func save(_ beer: BeerPick) {
+        guard let rating else {
+            errorMessage = "Choose a rating before logging this pour."
+            return
+        }
         guard let uid = session.user?.id else {
-            errorMessage = "Your sign-in expired. Sign out and back in, then log the pour."
+            errorMessage = "Sign in to log this pour and add it to your Cellar."
+            session.endGuestSession()
             return
         }
         saving = true
@@ -391,6 +406,26 @@ struct LogPourView: View {
                     errorMessage = "Could not save the pour: \(error.localizedDescription)"
                 }
             }
+        }
+    }
+
+    @MainActor
+    private func loadCatalog() async {
+        loadingCatalog = true
+        defer { loadingCatalog = false }
+        if !search.isEmpty {
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+        if Task.isCancelled {
+            return
+        }
+        do {
+            beers = try await CheckinService.catalog(query: search)
+            catalogError = nil
+        } catch is CancellationError {
+            return
+        } catch {
+            catalogError = "The beer catalog could not be loaded. Check your connection and try again."
         }
     }
 

@@ -1,9 +1,11 @@
 import SwiftUI
 import MapKit
+import UIKit
 
 /// A local map of nearby beer spots from Tapt, Apple, and live local search.
 /// Includes breweries, pubs, bars, taprooms, beer gardens, and restaurants with beer energy.
 struct NearYouView: View {
+    @Environment(Session.self) private var session
     @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("homeRegion") private var homeRegion = "Global"
     @State private var location = LocationManager()
@@ -21,6 +23,11 @@ struct NearYouView: View {
     @State private var searchText = ""
     @State private var nearLoaded = false
     @State private var selectedVenue: BreweryMapVenue?
+    @State private var radarError: String?
+
+    private var canLoadTaptRadar: Bool {
+        session.user != nil && !session.isGuest
+    }
 
     private var visibleTaptVenues: [BreweryMapVenue] {
         let filtered = taptVenues.filter { venue in
@@ -46,14 +53,32 @@ struct NearYouView: View {
         }
     }
 
+    private var visibleAppleVenues: [MKMapItem] {
+        let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return breweries.filter { item in
+            let isUS = item.placemark.isoCountryCode == "US"
+                || item.placemark.country == "United States"
+            let inRegion: Bool
+            switch radarFilter {
+            case .all: inRegion = true
+            case .unitedStates: inRegion = isUS
+            case .world: inRegion = !isUS
+            }
+            guard inRegion, !term.isEmpty else { return inRegion }
+            return [item.name, item.placemark.locality, item.placemark.administrativeArea, item.placemark.country]
+                .compactMap { $0 }
+                .contains { $0.localizedCaseInsensitiveContains(term) }
+        }
+    }
+
     private var radarSummary: String {
-        let countries = Set(taptVenues.compactMap(\.country).filter { !$0.isEmpty }).count
-        let states = Set(taptVenues.filter { $0.country == "United States" }.compactMap(\.region).filter { !$0.isEmpty }).count
-        return "\(taptVenues.count) beer spots • \(states) states • \(countries) countries"
+        let countries = Set(visibleTaptVenues.compactMap(\.country).filter { !$0.isEmpty }).count
+        let states = Set(visibleTaptVenues.filter { $0.country == "United States" }.compactMap(\.region).filter { !$0.isEmpty }).count
+        return "\(visibleTaptVenues.count) beer spots • \(states) states • \(countries) countries"
     }
 
     private var spotlightVenue: BreweryMapVenue? {
-        visibleTaptVenues.first ?? taptVenues.first
+        visibleTaptVenues.first
     }
 
     var body: some View {
@@ -61,7 +86,7 @@ struct NearYouView: View {
             VStack(spacing: 0) {
                 Map(position: $camera) {
                     UserAnnotation()
-                    ForEach(taptVenues) { venue in
+                    ForEach(visibleTaptVenues) { venue in
                         Annotation(venue.name, coordinate: venue.coordinate) {
                             Button { selectedVenue = venue } label: {
                                 Image(systemName: "mappin.circle.fill")
@@ -75,7 +100,7 @@ struct NearYouView: View {
                         }
                         .annotationTitles(.hidden)
                     }
-                    ForEach(breweries, id: \.self) { item in
+                    ForEach(visibleAppleVenues, id: \.self) { item in
                         Marker(item.name ?? "Beer spot", systemImage: "mug.fill",
                                coordinate: item.placemark.coordinate)
                             .tint(Brand.gold)
@@ -89,6 +114,15 @@ struct NearYouView: View {
                 .frame(height: 320)
 
                 List {
+                    if let radarError {
+                        Button {
+                            Task { await loadTaptRadar() }
+                        } label: {
+                            Label(radarError, systemImage: "arrow.clockwise")
+                                .foregroundStyle(Brand.copper)
+                        }
+                    }
+
                     if let spotlightVenue {
                         Section {
                             spotlight(spotlightVenue)
@@ -132,6 +166,14 @@ struct NearYouView: View {
                     if !locationConsent {
                         Text("Location is off in your Tapt privacy choices.")
                             .foregroundStyle(Brand.muted)
+                    } else if location.deniedOrRestricted {
+                        Button {
+                            guard let settings = URL(string: UIApplication.openSettingsURLString) else { return }
+                            UIApplication.shared.open(settings)
+                        } label: {
+                            Label("Open Settings to allow nearby beer spots", systemImage: "gear")
+                                .foregroundStyle(Brand.copper)
+                        }
                     } else if !location.authorized {
                         Button {
                             location.request()
@@ -142,13 +184,19 @@ struct NearYouView: View {
                     } else if loading {
                         Label("Finding pubs, bars, taprooms, and beer gardens near you...", systemImage: "hourglass")
                             .foregroundStyle(Brand.muted)
-                    } else if breweries.isEmpty {
+                    } else if visibleAppleVenues.isEmpty {
                         Text("No beer spots found nearby yet.").foregroundStyle(Brand.muted)
                     } else {
-                        ForEach(breweries, id: \.self) { item in
+                        ForEach(visibleAppleVenues, id: \.self) { item in
                             Button { focus(item) } label: { row(item) }
                                 .buttonStyle(.plain)
                         }
+                    }
+
+                    if let locationError = location.lastError {
+                        Text(locationError)
+                            .font(.caption)
+                            .foregroundStyle(Brand.copper)
                     }
                 }
                 .listStyle(.plain)
@@ -157,7 +205,9 @@ struct NearYouView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search brewery, pub, city, state")
             .task {
-                await loadTaptRadar()
+                if canLoadTaptRadar {
+                    await loadTaptRadar()
+                }
                 if locationConsent { location.request() }
             }
             .onChange(of: location.location) { _, loc in
@@ -169,7 +219,18 @@ struct NearYouView: View {
                         camera = .region(MKCoordinateRegion(center: loc.coordinate,
                                                             latitudinalMeters: 24_000, longitudinalMeters: 24_000))
                     }
-                    Task { await loadNearbyRadar(loc.coordinate) }
+                    if canLoadTaptRadar {
+                        Task { await loadNearbyRadar(loc.coordinate) }
+                    }
+                }
+            }
+            .onChange(of: locationConsent) { _, enabled in
+                if enabled {
+                    location.request()
+                } else {
+                    location.stop()
+                    breweries = []
+                    nearLoaded = false
                 }
             }
             .sheet(item: $selectedVenue) { venue in
@@ -271,6 +332,10 @@ struct NearYouView: View {
     }
 
     private func loadTaptRadar() async {
+        guard canLoadTaptRadar else {
+            radarError = nil
+            return
+        }
         radarLoading = true
         defer { radarLoading = false }
         do {
@@ -281,8 +346,9 @@ struct NearYouView: View {
             if location.location == nil {
                 await centerOnHomeRegion(fallback: venues)
             }
+            radarError = nil
         } catch {
-            taptVenues = []
+            radarError = "Beer radar could not refresh. Tap to try again."
         }
     }
 

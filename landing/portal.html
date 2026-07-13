@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tapt for Business · Free menu hosting</title>
-<meta name="description" content="Free forever for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu. No subscription, ever.">
+<meta name="description" content="Free core tools for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu, and view real activity.">
 <meta property="og:title" content="Tapt for Business · Free menu hosting forever">
-<meta property="og:description" content="Claim your venue, publish your tap list, print your QR menu. Free forever, no subscription.">
+<meta property="og:description" content="Claim your venue, publish your tap list, print your QR menu, and view real activity. Core tools stay free.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://taptbeer.com/og.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -20,23 +20,27 @@
 :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.55}
+.skip{position:fixed;left:12px;top:10px;z-index:1000;transform:translateY(-180%);background:var(--malt);color:var(--foam);padding:10px 14px;border-radius:6px}.skip:focus{transform:none}
 .wrap{max-width:680px;margin:0 auto;padding:36px 20px 90px}
 .brand{font-family:'Poppins';font-weight:800;font-size:1.3rem}.brand span{color:var(--gold)}
-h1{font-family:'Poppins';font-size:1.9rem;letter-spacing:-.02em;margin:16px 0 6px}
+h1{font-family:'Poppins';font-size:1.9rem;letter-spacing:0;margin:16px 0 6px}
 .sub{color:var(--slate);margin-bottom:22px}
 .card{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:18px;padding:20px;margin-bottom:14px}
 h2{font-family:'Poppins';font-size:1.1rem;margin-bottom:10px}
-input,select{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit;font-size:.98rem;margin-bottom:8px;background:var(--foam)}
-input:focus{outline:none;border-color:var(--gold)}
+input,select,textarea{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit;font-size:.98rem;margin-bottom:8px;background:var(--foam);color:var(--malt)}
+input:focus,select:focus,textarea:focus{outline:3px solid rgba(242,169,0,.22);outline-offset:1px;border-color:var(--gold)}
+.field{display:grid;gap:4px;min-width:0}
+.field>span{font-size:.74rem;font-weight:700;color:var(--slate)}
 .btn{display:inline-block;background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:11px 22px;border:0;cursor:pointer;font-size:.95rem;font-family:inherit}
 .btn:disabled{opacity:.5}
 .btn.ghost{background:transparent;border:2px solid rgba(26,18,6,.2)}
-.row{display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--foam);margin-bottom:6px;cursor:pointer}
+.row{display:flex;width:100%;gap:8px;align-items:center;padding:10px 12px;border:0;border-radius:12px;background:var(--foam);margin-bottom:6px;cursor:pointer;font:inherit;color:inherit;text-align:left}
 .row:hover{background:#f3ead4}
+.row:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .tag{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:999px}
 .tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}
-.tapline{display:grid;grid-template-columns:2fr 1.4fr 1fr .8fr auto;gap:6px;margin-bottom:6px}
-.tapline input{margin:0;padding:9px 10px;font-size:.9rem}
+.tapline{display:grid;grid-template-columns:2fr 1.4fr 1fr .8fr auto auto;gap:8px;align-items:end;margin-bottom:10px;padding:10px;border-radius:12px;background:var(--foam)}
+.tapline input{margin:0;padding:9px 10px;font-size:.9rem;background:#fff}
 .msg{font-weight:600;font-size:.9rem;margin-top:8px}
 .hint{font-size:.8rem;color:var(--slate);margin-top:8px}
 a{color:var(--copper)}
@@ -45,18 +49,23 @@ a{color:var(--copper)}
 .stat{background:var(--foam);border-radius:12px;padding:12px;text-align:center}
 .stat b{display:block;font-family:'Poppins';font-size:1.5rem;color:var(--malt)}
 .stat span{font-size:.75rem;color:var(--slate)}
-.evline{display:grid;grid-template-columns:1.2fr 2fr auto;gap:6px;margin-bottom:6px}
-.evline input,.evline select{margin:0;padding:9px 10px;font-size:.9rem}
-textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
+.evline{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:end;margin-bottom:10px;padding:12px;border-radius:12px;background:var(--foam)}
+.evline .details{grid-column:1 / -1}
+.evline .timing{display:grid;grid-template-columns:1fr 1fr;gap:8px;grid-column:1 / -1}
+.evline input,.evline select,.evline textarea{margin:0;padding:9px 10px;font-size:.9rem;background:#fff}
+.evline textarea{min-height:72px;resize:vertical}
+.icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:10px;font-size:1.2rem}
 .wrap{animation:portalIn .7s cubic-bezier(.22,1,.36,1) both}
 .card{animation:cardIn .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes portalIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(max-width:560px){.evline{grid-template-columns:1fr auto}.evline .title{grid-column:1 / -1}.evline .timing{grid-template-columns:1fr}.tapline{grid-template-columns:1fr 1fr}.tapline .remove{grid-column:2;justify-self:end}}
 @media(prefers-reduced-motion:reduce){.wrap,.card{animation:none}}
 </style>
 </head>
 <body>
-<div class="wrap">
+<a class="skip" href="#main">Skip to content</a>
+<main class="wrap" id="main">
   <div class="brand">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">for Business</span></div>
   <h1>Free menu hosting. Forever.</h1>
   <p class="sub">Claim your venue, publish your tap list, print your QR. Free.</p>
@@ -64,13 +73,13 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
   <div class="card" id="authCard">
     <h2>1 · Sign in</h2>
     <div id="authForm">
-      <input type="email" id="email" placeholder="you@yourbrewery.com" autocomplete="email">
+      <label class="field" for="email"><span>Work email</span><input type="email" id="email" placeholder="you@yourbrewery.com" autocomplete="email" required></label>
       <button class="btn" onclick="sendCode()">Email me a sign-in code</button>
       <div id="codeRow" hidden style="margin-top:8px">
-        <input inputmode="numeric" id="code" placeholder="6-digit code from the email">
+        <label class="field" for="code"><span>Sign-in code</span><input inputmode="numeric" id="code" placeholder="6 digits" autocomplete="one-time-code" maxlength="6"></label>
         <button class="btn" onclick="verifyCode()">Verify</button>
       </div>
-      <div class="msg" id="authMsg"></div>
+      <div class="msg" id="authMsg" role="status" aria-live="polite"></div>
     </div>
     <div id="signedIn" hidden>
       <span id="whoami"></span> · <a href="#" onclick="signOut();return false">sign out</a>
@@ -80,22 +89,22 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
   <div class="card" id="claimCard" hidden>
     <h2>2 · Claim your venue</h2>
     <div id="myClaims"></div>
-    <input id="venueSearch" placeholder="Search your venue by name or city" oninput="searchVenues()">
+    <label class="field" for="venueSearch"><span>Venue name or city</span><input id="venueSearch" placeholder="Start typing to search" autocomplete="organization" oninput="searchVenues()"></label>
     <div id="venueResults"></div>
-    <div class="msg" id="claimMsg"></div>
+    <div class="msg" id="claimMsg" role="status" aria-live="polite"></div>
     <div class="hint">Claims are verified by a human (usually same day) to keep venue pages hijack-proof.</div>
   </div>
 
   <div class="card" id="brandCard" hidden>
     <h2>3 · Your logo &amp; branding</h2>
     <div style="display:flex;gap:14px;align-items:center">
-      <img id="logoPreview" style="width:64px;height:64px;border-radius:14px;object-fit:cover;background:var(--foam);border:1px solid rgba(26,18,6,.1)" alt="">
+      <img id="logoPreview" style="width:64px;height:64px;border-radius:14px;object-fit:cover;background:var(--foam);border:1px solid rgba(26,18,6,.1)" alt="Venue logo preview">
       <div>
-        <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="margin:0;padding:8px">
-        <div class="hint">PNG, JPG, WEBP, or SVG · up to 3MB. Shows on your menu page and (with Featured) in the app.</div>
+        <label class="field" for="logoFile"><span>Venue logo</span><input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" style="margin:0;padding:8px"></label>
+        <div class="hint">PNG, JPG, or WEBP · up to 3MB. Shows on your menu page and (with Featured) in the app.</div>
       </div>
     </div>
-    <div class="msg" id="logoMsg"></div>
+    <div class="msg" id="logoMsg" role="status" aria-live="polite"></div>
   </div>
 
   <div class="card" id="menuCard" hidden>
@@ -104,7 +113,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
     <div id="taps"></div>
     <button class="btn ghost" onclick="addTap();markDirty()">+ Add a tap</button>
     <button class="btn" id="pubBtn" onclick="publish()">Publish menu</button>
-    <div class="msg" id="pubMsg"></div>
+    <div class="msg" id="pubMsg" role="status" aria-live="polite"></div>
     <div class="hint" id="menuLinks"></div>
   </div>
 
@@ -114,7 +123,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
     <div id="events"></div>
     <button class="btn ghost" onclick="addEvent()">+ Add an event</button>
     <button class="btn" onclick="publishEvents()">Save events</button>
-    <div class="msg" id="evMsg"></div>
+    <div class="msg" id="evMsg" role="status" aria-live="polite"></div>
   </div>
 
   <div class="card" id="numbersCard" hidden>
@@ -125,25 +134,30 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--gold)}
     <div id="featuredReach"></div>
   </div>
 
-  <div class="card">
+  <div class="card" id="featuredCard" hidden>
     <h2>Want featured placement?</h2>
     <p class="sub" style="margin:0 0 12px">Everything above is free. To reach more drinkers nearby:</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div class="stat" style="text-align:left"><b style="font-size:1.05rem">Featured · $29/mo</b><span>Rail placement + event pushes to nearby drinkers</span></div>
       <div class="stat" style="text-align:left"><b style="font-size:1.05rem">Spotlight · $79/mo</b><span>Top slot + a feature in The Tapt Dispatch</span></div>
     </div>
-    <p class="sub" style="margin:0">Reply to your claim email or write <a href="mailto:hello@taptbeer.com?subject=Tapt%20Featured">hello@taptbeer.com</a>.</p>
+    <p class="sub" style="margin:0">Reply to your claim email or <a href="mailto:esdronski@gmail.com?subject=Tapt%20Featured">contact Tapt support</a>.</p>
   </div>
-</div>
+</main>
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/+esm';
 const supa = createClient('https://qfwiizvqxrhjlthbjosz.supabase.co', 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF');
 let approvedVenue = null;
+let activeVenueLoad = 0;
 const $ = id => document.getElementById(id);
 
 window.sendCode = async () => {
   const email = $('email').value.trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    $('authMsg').textContent = 'Enter a valid work email.';
+    return;
+  }
   const { error } = await supa.auth.signInWithOtp({ email });
   $('authMsg').textContent = error ? error.message : 'Check your email. Enter the 6-digit code below (or tap the link).';
   if (!error) $('codeRow').hidden = false;
@@ -160,11 +174,13 @@ async function refresh() {
   if (!user) return;
   $('authForm').hidden = true; $('signedIn').hidden = false;
   $('whoami').textContent = user.email;
+  $('featuredCard').hidden = false;
   $('claimCard').hidden = false;
   const { data: claims } = await supa.rpc('my_venue_claims');
   const box = $('myClaims'); box.innerHTML = '';
   (claims || []).forEach(c => {
-    const div = document.createElement('div'); div.className = 'row';
+    const div = document.createElement(c.status === 'approved' ? 'button' : 'div'); div.className = 'row';
+    if (c.status === 'approved') div.type = 'button';
     div.innerHTML = `<b style="flex:1">${esc(c.venue_name)}</b><span class="tag ${c.status}">${c.status}</span>`;
     if (c.status === 'approved') {
       div.onclick = () => openMenu(c.venue_id, c.venue_name);
@@ -173,7 +189,7 @@ async function refresh() {
     box.appendChild(div);
   });
   const approved = (claims || []).find(c => c.status === 'approved');
-  if (approved) openMenu(approved.venue_id, approved.venue_name);
+  if (approved && !approvedVenue) openMenu(approved.venue_id, approved.venue_name);
 }
 
 let searchTimer;
@@ -185,7 +201,7 @@ window.searchVenues = () => {
     const { data } = await supa.rpc('search_venues', { p_query: q });
     $('venueResults').innerHTML = '';
     (data || []).forEach(v => {
-      const div = document.createElement('div'); div.className = 'row';
+      const div = document.createElement('button'); div.className = 'row'; div.type = 'button';
       div.innerHTML = `<div style="flex:1"><b>${esc(v.name)}</b><br><span style="font-size:.8rem;color:var(--slate)">${[v.city, v.region, v.country].filter(Boolean).map(esc).join(', ')}</span></div><span style="color:var(--hop);font-weight:700;font-size:.85rem">claim</span>`;
       div.onclick = () => claim(v.venue_id, v.name);
       $('venueResults').appendChild(div);
@@ -217,11 +233,11 @@ async function claim(venueId, name) {
   const { data: { user } } = await supa.auth.getUser();
   const { error } = await supa.rpc('claim_venue', { p_venue: venueId, p_email: user.email, p_role: 'manager' });
   if (error) { $('claimMsg').textContent = error.message; return; }
-  // If it auto-approved (email domain matched the venue website), email the QR now.
+  // Existing approved claims can return here when an owner reopens onboarding.
   const { data: claims } = await supa.rpc('my_venue_claims');
   const c = (claims || []).find(x => x.venue_id === venueId);
   if (c && c.status === 'approved') {
-    $('claimMsg').textContent = `${name} approved instantly, you're live! Check your email for your QR.`;
+    $('claimMsg').textContent = `${name} is approved and ready. Check your email for your QR.`;
     const { data: { session } } = await supa.auth.getSession();
     fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
@@ -233,7 +249,8 @@ async function claim(venueId, name) {
   refresh();
 }
 
-function openMenu(venueId, name) {
+async function openMenu(venueId, name) {
+  const loadId = ++activeVenueLoad;
   // Hard reset the editor on every venue switch: carrying Venue A's taps into
   // Venue B's editor could publish A's menu to B. Each venue starts from its
   // own draft or published list, never another venue's rows.
@@ -247,24 +264,38 @@ function openMenu(venueId, name) {
   $('eventsCard').hidden = false;
   $('numbersCard').hidden = false;
   $('menuVenueName').textContent = name;
-  if (!$('taps').children.length) addTap();
-  loadNumbers(venueId);
-  loadEvents(venueId);
+  $('taps').innerHTML = '';
+  $('events').innerHTML = '';
+  $('numbers').innerHTML = '';
+  $('topBeers').innerHTML = '';
+  $('featuredReach').innerHTML = '';
+  $('logoPreview').removeAttribute('src');
+  $('pubMsg').textContent = '';
+  $('evMsg').textContent = '';
+  $('logoMsg').textContent = '';
+  loadNumbers(venueId, loadId);
+  loadEvents(venueId, loadId);
   const url = `${location.origin}/menu?v=${venueId}`;
   $('menuLinks').innerHTML = `Your live menu + printable QR: <a href="${url}" target="_blank">${url}</a>`;
-  supa.rpc('venue_brand', { p_venue: venueId }).then(({ data }) => {
-    if (data && data[0] && data[0].logo_url) $('logoPreview').src = data[0].logo_url;
-  });
-  // Unpublished edits from a previous visit beat the published list (newer work).
-  if (!restoreDraft(venueId)) {
-    supa.rpc('venue_menu', { p_venue: venueId }).then(({ data }) => {
-      if (data && data.length) {
-        $('taps').innerHTML = '';
-        data.forEach(r => addTap(r.beer_name, r.brewery_name, r.style, r.price_text));
-        dirty = false; const b = $('pubBtn'); if (b) b.textContent = 'Publish menu';
-      }
-    });
+  const [brandResult, menuResult] = await Promise.all([
+    supa.rpc('venue_brand', { p_venue: venueId }),
+    supa.rpc('venue_menu', { p_venue: venueId })
+  ]);
+  if (loadId !== activeVenueLoad || approvedVenue !== venueId) return;
+  if (brandResult.data?.[0]?.logo_url) $('logoPreview').src = brandResult.data[0].logo_url;
+  // Unpublished edits from a previous visit beat the published list.
+  if (restoreDraft(venueId)) {
+    return;
+  } else if (menuResult.error) {
+    $('pubMsg').textContent = 'Could not load this menu. Retry by selecting the venue again.';
+    addTap();
+  } else if (menuResult.data?.length) {
+    menuResult.data.forEach(r => addTap(r.beer_name, r.brewery_name, r.style, r.price_text));
+  } else {
+    addTap();
   }
+  dirty = false;
+  const button = $('pubBtn'); if (button) button.textContent = 'Publish menu';
 }
 
 document.addEventListener('change', async (e) => {
@@ -272,19 +303,34 @@ document.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 3145728) { $('logoMsg').textContent = 'Max 3MB.'; return; }
+  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) {
+    $('logoMsg').textContent = 'Use a PNG, JPG, or WEBP image.';
+    return;
+  }
+  const uploadVenue = approvedVenue;
   $('logoMsg').textContent = 'Uploading...';
-  const path = `${approvedVenue}/logo-${Date.now()}-${file.name.replace(/[^a-z0-9.]/gi,'_')}`;
+  const path = `${uploadVenue}/logo-${Date.now()}-${file.name.replace(/[^a-z0-9.]/gi,'_')}`;
   const { error: upErr } = await supa.storage.from('partner-assets').upload(path, file, { upsert: true });
   if (upErr) { $('logoMsg').textContent = upErr.message; return; }
   const { data: pub } = supa.storage.from('partner-assets').getPublicUrl(path);
-  const { error } = await supa.rpc('set_venue_logo', { p_venue: approvedVenue, p_url: pub.publicUrl });
+  const { error } = await supa.rpc('set_venue_logo', { p_venue: uploadVenue, p_url: pub.publicUrl });
+  if (approvedVenue !== uploadVenue) return;
   $('logoMsg').textContent = error ? error.message : 'Logo saved. It shows on your menu page now. 🎨';
   if (!error) $('logoPreview').src = pub.publicUrl;
 });
 
 window.addTap = (beer = '', brewery = '', style = '', price = '') => {
+  if ($('taps').children.length >= 60) {
+    $('pubMsg').textContent = 'A live menu can include up to 60 taps.';
+    return;
+  }
   const div = document.createElement('div'); div.className = 'tapline';
-  div.innerHTML = `<input placeholder="Beer name" value="${esc(beer)}"><input placeholder="Brewery" value="${esc(brewery || '')}"><input placeholder="Style" value="${esc(style || '')}"><input placeholder="$" value="${esc(price || '')}"><button class="btn ghost" style="padding:6px 10px" title="Move up" onclick="moveTapUp(this)">↑</button><button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove();markDirty()">✕</button>`;
+  div.innerHTML = `<label class="field"><span>Beer</span><input data-field="beer" maxlength="160" placeholder="Beer name" value="${esc(beer)}"></label>
+    <label class="field"><span>Brewery</span><input data-field="brewery" maxlength="160" placeholder="Brewery" value="${esc(brewery || '')}"></label>
+    <label class="field"><span>Style</span><input data-field="style" maxlength="120" placeholder="Style" value="${esc(style || '')}"></label>
+    <label class="field"><span>Price</span><input data-field="price" maxlength="40" placeholder="$8" value="${esc(price || '')}"></label>
+    <button class="btn ghost icon-btn" type="button" aria-label="Move tap up" title="Move tap up" onclick="moveTapUp(this)">↑</button>
+    <button class="btn ghost icon-btn remove" type="button" aria-label="Remove tap" title="Remove tap" onclick="this.parentElement.remove();markDirty()">×</button>`;
   $('taps').appendChild(div);
 };
 window.moveTapUp = (btn) => {
@@ -323,9 +369,13 @@ function restoreDraft(venueId) {
   } catch { return false; }
 }
 
-async function loadNumbers(venueId) {
+async function loadNumbers(venueId, loadId) {
   const { data, error } = await supa.rpc('venue_analytics', { p_venue: venueId });
-  if (error || !data) return;
+  if (loadId !== activeVenueLoad || approvedVenue !== venueId) return;
+  if (error || !data) {
+    $('numbers').innerHTML = '<div class="hint">Could not load analytics. Select the venue again to retry.</div>';
+    return;
+  }
   $('numbers').innerHTML = [
     ['pours_total','Pours logged'],['pours_7d','This week'],['unique_drinkers','Drinkers'],
     ['avg_rating','Avg rating']
@@ -343,7 +393,7 @@ async function loadNumbers(venueId) {
        <div class="stats" style="margin-top:8px">
          <div class="stat"><b>${f.impressions_total ?? 0}</b><span>Times shown</span></div>
          <div class="stat"><b>${f.taps_total ?? 0}</b><span>Taps</span></div>
-         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : '—'}</b><span>Tap rate</span></div>
+         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : 'N/A'}</b><span>Tap rate</span></div>
          <div class="stat"><b>${f.reached_drinkers ?? 0}</b><span>Drinkers reached</span></div>
        </div>`;
   } else {
@@ -352,41 +402,79 @@ async function loadNumbers(venueId) {
   }
 }
 
-async function loadEvents(venueId) {
-  const { data } = await supa.rpc('venue_events', { p_venue: venueId });
+async function loadEvents(venueId, loadId) {
+  const { data, error } = await supa.rpc('venue_events', { p_venue: venueId });
+  if (loadId !== activeVenueLoad || approvedVenue !== venueId) return;
   $('events').innerHTML = '';
-  if (data && data.length) data.forEach(e => addEvent(e.kind, e.title, e.details));
+  if (error) {
+    $('evMsg').textContent = 'Could not load events. Select the venue again to retry.';
+    return;
+  }
+  if (data && data.length) data.forEach(e => addEvent(e.kind, e.title, e.details, e.starts_at, e.ends_at));
 }
 
-window.addEvent = (kind = 'happy_hour', title = '', details = '') => {
+window.addEvent = (kind = 'happy_hour', title = '', details = '', startsAt = '', endsAt = '') => {
+  if ($('events').children.length >= 20) {
+    $('evMsg').textContent = 'A venue can publish up to 20 current events.';
+    return;
+  }
   const kinds = ['happy_hour','tap_takeover','release','live_music','trivia','other'];
   const div = document.createElement('div'); div.className = 'evline';
-  div.innerHTML = `<select>${kinds.map(k => `<option value="${k}" ${k===kind?'selected':''}>${k.replace('_',' ')}</option>`).join('')}</select>
-    <input placeholder="Title (e.g. Fri 4-6pm Happy Hour)" value="${esc(title)}">
-    <button class="btn ghost" style="padding:6px 12px" onclick="this.parentElement.remove()">✕</button>`;
+  div.innerHTML = `<label class="field"><span>Type</span><select data-field="kind">${kinds.map(k => `<option value="${k}" ${k===kind?'selected':''}>${k.replaceAll('_',' ')}</option>`).join('')}</select></label>
+    <label class="field title"><span>Event title</span><input data-field="title" maxlength="120" placeholder="Friday happy hour" value="${esc(title)}"></label>
+    <button class="btn ghost icon-btn" type="button" aria-label="Remove event" title="Remove event" onclick="this.parentElement.remove()">×</button>
+    <label class="field details"><span>Details</span><textarea data-field="details" maxlength="500" placeholder="What should guests know?">${esc(details)}</textarea></label>
+    <div class="timing">
+      <label class="field"><span>Starts</span><input data-field="starts_at" type="datetime-local" value="${esc(toLocalInput(startsAt))}"></label>
+      <label class="field"><span>Ends</span><input data-field="ends_at" type="datetime-local" value="${esc(toLocalInput(endsAt))}"></label>
+    </div>`;
   $('events').appendChild(div);
 };
 
 window.publishEvents = async () => {
-  const items = [...$('events').children].map(row => {
-    const kind = row.querySelector('select').value;
-    const title = row.querySelector('input').value.trim();
-    return title ? { kind, title } : null;
-  }).filter(Boolean);
-  const { data, error } = await supa.rpc('set_venue_events', { p_venue: approvedVenue, p_events: items });
-  $('evMsg').textContent = error ? error.message : `Saved ${data} events. Live on your menu + in the app. 🎉`;
+  const venueId = approvedVenue;
+  if (!venueId) return;
+  const items = [];
+  for (const row of $('events').children) {
+    const field = name => row.querySelector(`[data-field="${name}"]`).value.trim();
+    const title = field('title');
+    const details = field('details');
+    const starts = field('starts_at');
+    const ends = field('ends_at');
+    if (!title) {
+      $('evMsg').textContent = 'Every event needs a title, or remove the empty row.';
+      return;
+    }
+    if (starts && ends && new Date(ends) <= new Date(starts)) {
+      $('evMsg').textContent = `“${title}” must end after it starts.`;
+      return;
+    }
+    items.push({
+      kind: field('kind'), title, details: details || null,
+      starts_at: starts ? new Date(starts).toISOString() : null,
+      ends_at: ends ? new Date(ends).toISOString() : null
+    });
+  }
+  const { data, error } = await supa.rpc('set_venue_events', { p_venue: venueId, p_events: items });
+  if (approvedVenue !== venueId) return;
+  $('evMsg').textContent = error ? error.message : `Saved ${data} events. Live on your menu and in the app.`;
+  if (!error) loadEvents(venueId, activeVenueLoad);
 };
 
 window.publish = async () => {
+  const venueId = approvedVenue;
+  if (!venueId) return;
   const items = [...$('taps').children].map(row => {
-    const [beer, brewery, style, price] = [...row.querySelectorAll('input')].map(i => i.value.trim());
+    const values = name => row.querySelector(`[data-field="${name}"]`).value.trim();
+    const [beer, brewery, style, price] = ['beer','brewery','style','price'].map(values);
     return beer ? { beer_name: beer, brewery_name: brewery, style, price } : null;
   }).filter(Boolean);
   if (!items.length) { $('pubMsg').textContent = 'Add at least one tap.'; return; }
   const btn = $('pubBtn');
   btn.disabled = true; btn.textContent = 'Publishing…';
-  const { data, error } = await supa.rpc('publish_tap_list', { p_venue: approvedVenue, p_items: items });
+  const { data, error } = await supa.rpc('publish_tap_list', { p_venue: venueId, p_items: items });
   btn.disabled = false;
+  if (approvedVenue !== venueId) return;
   if (error) {
     btn.textContent = 'Publish menu · unsaved edits';
     $('pubMsg').textContent = `Couldn't publish: ${error.message}. Your edits are safe on this page, try again.`;
@@ -398,6 +486,13 @@ window.publish = async () => {
 };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toLocalInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
 refresh();
 </script>
 </body>

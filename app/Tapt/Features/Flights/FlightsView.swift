@@ -206,18 +206,33 @@ struct FlightsView: View {
             Text(next?.clue ?? "Start another flight or revisit your Passport to see what new territory opened up.")
                 .font(.subheadline)
                 .foregroundStyle(Brand.muted)
-            NavigationLink {
-                LogPourView(onLogged: { Task { await load() } })
-            } label: {
-                Label("Log a pour", systemImage: "plus.circle.fill")
-                    .font(.system(.headline, design: .rounded))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
-                    .background(selected.tint, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(Brand.malt)
+            if session.user == nil {
+                Button {
+                    session.endGuestSession()
+                } label: {
+                    Label("Sign in to log a pour", systemImage: "person.crop.circle.badge.plus")
+                        .font(.system(.headline, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(selected.tint, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(Brand.malt)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+            } else {
+                NavigationLink {
+                    LogPourView(onLogged: { Task { await load() } })
+                } label: {
+                    Label("Log a pour", systemImage: "plus.circle.fill")
+                        .font(.system(.headline, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(selected.tint, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(Brand.malt)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 4)
         }
         .padding(16)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))

@@ -2,6 +2,7 @@ import SwiftUI
 
 /// The "Discover" tab: a hub for the fun, secondary surfaces (Beer School + Games).
 struct DiscoverView: View {
+    @Environment(Session.self) private var session
     @State private var appeared = false
 
     var body: some View {
@@ -21,19 +22,23 @@ struct DiscoverView: View {
 
                     quickPlayRail
 
-                    DiscoverTile(title: "Leaderboards",
-                                 subtitle: "Top beers, top tasters, top styles, powered by real votes and pours.",
-                                 icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
+                    if session.user != nil {
+                        DiscoverTile(title: "Leaderboards",
+                                     subtitle: "Top beers, top tasters, top styles, powered by real votes and pours.",
+                                     icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
 
-                    TaptCollapse(title: "Community",
-                                 subtitle: "Tonight's feed and your beer circle",
-                                 icon: "person.3.fill", tint: Brand.copper, startExpanded: true) {
-                        DiscoverTile(title: "Tonight",
-                                     subtitle: "Live beer heat, friend pours, your taste graph.",
-                                     icon: "flame.fill", tint: Brand.copper) { TonightView() }
-                        DiscoverTile(title: "Find friends",
-                                     subtitle: "Follow your crew. Their pours light up your feed.",
-                                     icon: "person.badge.plus", tint: Brand.hop) { FindFriendsView() }
+                        TaptCollapse(title: "Community",
+                                     subtitle: "Tonight's feed and your beer circle",
+                                     icon: "person.3.fill", tint: Brand.copper, startExpanded: true) {
+                            DiscoverTile(title: "Tonight",
+                                         subtitle: "Live beer heat, friend pours, your taste graph.",
+                                         icon: "flame.fill", tint: Brand.copper) { TonightView() }
+                            DiscoverTile(title: "Find friends",
+                                         subtitle: "Follow your crew. Their pours light up your feed.",
+                                         icon: "person.badge.plus", tint: Brand.hop) { FindFriendsView() }
+                        }
+                    } else {
+                        guestSignIn
                     }
 
                     TaptCollapse(title: "Learn & play",
@@ -50,12 +55,14 @@ struct DiscoverView: View {
                                      icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
                     }
 
-                    TaptCollapse(title: "For breweries & bars",
-                                 subtitle: "Free tools, featured placement, partnerships",
-                                 icon: "storefront.fill", tint: Brand.copper) {
-                        DiscoverTile(title: "Breweries & Bars",
-                                     subtitle: "Claim your venue, publish taps, get your QR, see your local demand. Free.",
-                                     icon: "storefront.fill", tint: Brand.copper) { BreweriesHubView() }
+                    if session.user != nil {
+                        TaptCollapse(title: "For breweries & bars",
+                                     subtitle: "Free tools, featured placement, partnerships",
+                                     icon: "storefront.fill", tint: Brand.copper) {
+                            DiscoverTile(title: "Breweries & Bars",
+                                         subtitle: "Claim your venue, publish taps, get your QR, see your local demand. Free.",
+                                         icon: "storefront.fill", tint: Brand.copper) { BreweriesHubView() }
+                        }
                     }
 
                     NewsletterCard()
@@ -68,6 +75,34 @@ struct DiscoverView: View {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
         }
+    }
+
+    private var guestSignIn: some View {
+        Button {
+            session.endGuestSession()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.title2)
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 52, height: 52)
+                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 13))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Sign in for the live community")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                    Text("Vote, log pours, follow friends, and use partner tools.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+            }
+            .padding(14)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.taptPress)
     }
 
     private var quickPlayRail: some View {

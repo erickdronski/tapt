@@ -1,0 +1,54 @@
+name: ASC Release Prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Exact VALID TestFlight build number to attach
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write ASC API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Install dependencies
+        run: pip install pyjwt cryptography
+
+      - name: Prepare App Store release record
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          ASC_REVIEW_FIRST_NAME: ${{ secrets.ASC_REVIEW_FIRST_NAME }}
+          ASC_REVIEW_LAST_NAME: ${{ secrets.ASC_REVIEW_LAST_NAME }}
+          ASC_REVIEW_EMAIL: ${{ secrets.ASC_REVIEW_EMAIL }}
+          ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          TARGET_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: python scripts/asc_release_prepare.py
+
+      - name: Audit prepared record
+        if: always()
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          EXPECTED_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -o pipefail
+          python scripts/asc_release_audit.py | tee "$RUNNER_TEMP/asc-release-audit.txt"
+
+      - name: Publish audit summary
+        if: always()
+        run: |
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/asc-release-audit.txt" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"

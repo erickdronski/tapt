@@ -2,9 +2,18 @@
 
 A cohesive, high-design launch set for **Tapt, THE Beer Superapp** (@taptbeerapp · taptbeer.com).
 
+## Publishing gate
+
+The tracked renders are a design review library, not an automatic publishing
+queue. Do not publish `launch-post.png` or `launch-story.png` before the App
+Store release is live. Do not publish `market-hero.png`, `trending-1.png`,
+`trending-2.png`, `whatwedo-2.png`, or `beer-of-week.png`; those legacy frames
+contain illustrative market state. Replace them with a same-day production data
+render following `CONTENT-CALENDAR-V2.md`.
+
 - Source HTML lives in this folder. Rendered PNGs are in `out/`. Open `gallery.html` to review everything at a glance.
 - Built to match `../brand/master.html`: palette (gold `#F2A900`, malt `#1A1206`, foam `#FBF6EC`, hop `#3F8F5B`, copper `#B4531F`), Poppins + Inter, and the shaker-pint mark. Every asset is carried by a visual (the pint mark, style-tinted glass marks, the stock-market ticker language, inline SVG icons, QR marks, or real app screenshots), not by words.
-- **Honesty:** no invented data. All beers are real with correct styles and countries. Market boards, index sparklines, and per-row sparklines show the *shape* of a feature; each is labeled as filled in by real votes. Beer-glass marks are tinted to each beer's real style color, standing in for product photos so nothing is faked or logo-scraped.
+- **Honesty:** no invented data. All beers are real with correct styles and countries. Market ranks, directions, and sparklines are publishable only when generated from the production snapshot used for that render. Beer-glass marks are tinted to each beer's real style color, standing in for product photos so nothing is faked or logo-scraped.
 
 Voice: plain, direct, confident. No hype adjectives, no em dashes, no number-flexing. The claim is "THE Beer Superapp / All of beer, one app."
 
@@ -69,15 +78,12 @@ Frame count: **31**.
 > #beer #craftbeer #beercommunity #beerapp #beertography #cerveza
 
 ### Trending beer, weekly template (`out/trending-1.png`, `out/trending-2.png`)
-Two example instances, swap the beer each week once votes are live.
-> Climbing this week: Sierra Nevada Pale Ale.
-> American Pale Ale, on the up. See what's moving in Tapt.
-> taptbeer.com 🍺
-> #sierranevada #paleale #craftbeer #beer #beercommunity #beertography
+Legacy design examples only. Do not publish them. A replacement must be built
+from current production snapshots on the publishing day.
 
 ### Beer history, template (`out/history-1.png`, `out/history-2.png`)
 > IPA sailed to get its name.
-> India Pale Ale is named for the pale ale British brewers shipped to India in the 1800s. The extra hops helped it survive the long voyage.
+> London brewers shipped well-attenuated, heavily hopped pale stock ales to India from the late 1700s. The name India Pale Ale appeared around 1830.
 > Every style, decoded in Tapt → taptbeer.com 🍺
 > #ipa #beerhistory #craftbeer #beer #beereducation #beerfacts
 
@@ -114,14 +120,12 @@ Allagash White (Belgian Witbier · USA) · Pilsner Urquell (Czech Pilsner · Cze
 - **Pilsner, Plzeň 1842:** the first pale lager was brewed in Plzeň (Pilsen), Bohemia; Bavarian brewer Josef Groll brewed the first batch on 5 October 1842 at the Burghers' Brewery (now Pilsner Urquell / Plzeňský Prazdroj).
   - Wikipedia, "Pilsner Urquell": https://en.wikipedia.org/wiki/Pilsner_Urquell
   - Wikipedia, "Josef Groll": https://en.wikipedia.org/wiki/Josef_Groll
-- **IPA name and the voyage to India:** India Pale Ale is named for strongly-hopped pale ale that British brewers exported to India during the East India Company era; the higher hop content helped preserve it on the long voyage. George Hodgson's Bow Brewery was among the earliest exporters; the term "India Pale Ale" was in use by the 1830s.
-  - Wikipedia, "India pale ale": https://en.wikipedia.org/wiki/India_pale_ale
-  - Smithsonian, "How the India Pale Ale Got Its Name": https://www.smithsonianmag.com/history/how-india-pale-ale-got-its-name-180954891/
+- **IPA name and trade route:** London brewers shipped well-attenuated, heavily hopped pale stock ales to India from the late 1700s. George Hodgson's Bow Brewery became a prominent supplier, but did not invent the style for the voyage. The name India Pale Ale appeared around 1830.
+  - BJCP 2021, English IPA history and comments: https://www.bjcp.org/style/2021/12/pale-commonwealth-beer/
 - **Summer styles (seasonal card):** Witbier, Hefeweizen, and Pilsner are widely recognized light, warm-weather styles. This is a qualitative style claim, not a data point; taste descriptors (citrusy, banana/clove, crisp) follow standard BJCP sensory profiles.
 
 ## Honesty notes (what was intentionally left out)
-- **No vote counts, ratings, user totals, or percentage movers.** The Beer Market board and the trending template use direction only (▲/▼, "climbing") and are captioned as the shape of the feature, filled in by real votes. This mirrors the live site's honest empty-state.
-- **Sparklines are illustrative shapes,** not plotted data. They exist to carry the stock-market visual language; the market-hero footer says so on the graphic.
-- **The IPA "survived the voyage" story is framed accurately.** The name-and-export facts are well documented; the extra-hops-as-preservative point is stated as a general aid, not a precise mechanism, since some historians debate the popular narrative.
+- **No market render is publishable unless every rank, direction, and sparkline comes from the production snapshot used for that render.** The legacy illustrative frames above are quarantined from publishing.
+- **The IPA origin story avoids the voyage myth.** BJCP notes that IPA was not invented specifically for India and that other beer styles were also shipped there.
 - **No competitor is named and no competitor price is printed on any graphic.** The partner value is stated as "$0 forever for the basics" and "you only ever pay to be louder," consistent with the live site.
 - **Beer-glass marks, not product photos or logos.** Tinting a glass to a style's real color avoids fabricated or scraped brand imagery.
