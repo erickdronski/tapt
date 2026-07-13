@@ -42,7 +42,7 @@ struct RootView: View {
             }
         }
         .sheet(isPresented: $showCatalogPreview) {
-            NavigationStack { CatalogView() }
+            NavigationStack { CatalogView(initialQuery: "Sierra Nevada") }
         }
         .fullScreenCover(isPresented: $showMapPreview) {
             NearYouView()

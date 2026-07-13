@@ -28,13 +28,25 @@ struct BreweryMapVenue: Identifiable, Decodable, Sendable {
     }
     var typeLabel: String {
         guard let breweryType, !breweryType.isEmpty else { return "brewery" }
-        return breweryType.replacingOccurrences(of: "_", with: " ")
-    }
-    var sourceBadge: String {
-        if let sourceLabel, sourceLabel.localizedCaseInsensitiveContains("Open Brewery DB") {
-            return "OBDB"
+        switch breweryType.lowercased().replacingOccurrences(of: "-", with: "_") {
+        case "micro": return "Craft brewery"
+        case "nano": return "Nano brewery"
+        case "regional": return "Regional brewery"
+        case "large": return "Production brewery"
+        case "contract": return "Contract brewery"
+        case "proprietor": return "Brewery"
+        case "planning": return "Brewery in planning"
+        case "brewpub": return "Brewpub"
+        case "taproom": return "Taproom"
+        case "beer_garden": return "Beer garden"
+        case "pub": return "Pub"
+        case "bar": return "Bar"
+        case "restaurant": return "Restaurant"
+        default:
+            return breweryType
+                .replacingOccurrences(of: "_", with: " ")
+                .localizedCapitalized
         }
-        return "Tapt"
     }
 
     enum CodingKeys: String, CodingKey {

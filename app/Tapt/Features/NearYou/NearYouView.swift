@@ -8,12 +8,8 @@ struct NearYouView: View {
     @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("homeRegion") private var homeRegion = "Global"
     @State private var location = LocationManager()
-    // Start on a real region (continental US) -- never `.automatic`, which fit all
-    // ~800 global pins and dumped the map in the middle of the Pacific. This renders
-    // a real map instantly; geocode + GPS then zoom it in to home / near you.
-    @State private var camera: MapCameraPosition = .region(
-        MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 39.83, longitude: -98.58),
-                           span: MKCoordinateSpan(latitudeDelta: 40, longitudeDelta: 46)))
+    @State private var camera: MapCameraPosition
+    @State private var mapRegion: MKCoordinateRegion
     @State private var breweries: [MKMapItem] = []
     @State private var taptVenues: [BreweryMapVenue] = []
     @State private var loading = false
@@ -24,6 +20,17 @@ struct NearYouView: View {
     @State private var nearbyVenueIds = Set<String>()
     @State private var selectedVenue: BreweryMapVenue?
     @State private var radarError: String?
+
+    init() {
+        // Start on a stable continental view. GPS or the saved home region can
+        // replace it once that context is available.
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: 39.83, longitude: -98.58),
+            span: MKCoordinateSpan(latitudeDelta: 40, longitudeDelta: 46)
+        )
+        _camera = State(initialValue: .region(region))
+        _mapRegion = State(initialValue: region)
+    }
 
     private var visibleTaptVenues: [BreweryMapVenue] {
         let filtered = taptVenues.filter { venue in
@@ -67,6 +74,10 @@ struct NearYouView: View {
         }
     }
 
+    private var visibleMapVenues: [BreweryMapVenue] {
+        VenueMapSampler.sample(visibleTaptVenues, in: mapRegion)
+    }
+
     private var radarSummary: String {
         let countries = Set(visibleTaptVenues.compactMap(\.country).filter { !$0.isEmpty }).count
         let states = Set(visibleTaptVenues.filter { $0.country == "United States" }.compactMap(\.region).filter { !$0.isEmpty }).count
@@ -83,7 +94,7 @@ struct NearYouView: View {
             VStack(spacing: 0) {
                 Map(position: $camera) {
                     UserAnnotation()
-                    ForEach(visibleTaptVenues) { venue in
+                    ForEach(visibleMapVenues) { venue in
                         Annotation(venue.name, coordinate: venue.coordinate) {
                             Button { selectedVenue = venue } label: {
                                 Image(systemName: "mappin.circle.fill")
@@ -102,6 +113,9 @@ struct NearYouView: View {
                                coordinate: item.placemark.coordinate)
                             .tint(Brand.gold)
                     }
+                }
+                .onMapCameraChange(frequency: .onEnd) { context in
+                    mapRegion = context.region
                 }
                 .mapStyle(.standard(pointsOfInterest: .including([.brewery, .nightlife, .restaurant, .winery])))
                 .mapControls {
@@ -129,6 +143,7 @@ struct NearYouView: View {
                     if !taptVenues.isEmpty {
                         Section {
                             VStack(alignment: .leading, spacing: 10) {
+                                radarSearchField
                                 Text(radarSummary)
                                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                     .foregroundStyle(Brand.text)
@@ -153,7 +168,7 @@ struct NearYouView: View {
                         } header: {
                             Text("Tapt beer radar")
                         } footer: {
-                            Text("Seeded from Tapt's license-safe venue map layer. Local pubs, bars, taprooms, and beer gardens appear below when location is on.")
+                            Text("Explore breweries, pubs, bars, taprooms, and beer gardens. Turn on location to bring the closest places to the top.")
                         }
                     } else if radarLoading {
                         Label("Loading Tapt beer radar...", systemImage: "antenna.radiowaves.left.and.right")
@@ -200,7 +215,6 @@ struct NearYouView: View {
             }
             .navigationTitle("Beer Near You")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Search brewery, pub, city, state")
             .task {
                 await loadTaptRadar()
                 if locationConsent { location.request() }
@@ -210,10 +224,11 @@ struct NearYouView: View {
                 if breweries.isEmpty { search(near: loc.coordinate) }
                 if !nearLoaded {
                     nearLoaded = true
-                    withAnimation {
-                        camera = .region(MKCoordinateRegion(center: loc.coordinate,
-                                                            latitudinalMeters: 24_000, longitudinalMeters: 24_000))
-                    }
+                    moveCamera(to: MKCoordinateRegion(
+                        center: loc.coordinate,
+                        latitudinalMeters: 24_000,
+                        longitudinalMeters: 24_000
+                    ))
                     Task {
                         await loadNearbyRadar(loc.coordinate, establishesLocalContext: true)
                     }
@@ -286,6 +301,29 @@ struct NearYouView: View {
         .buttonStyle(.plain)
     }
 
+    private var radarSearchField: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Brand.muted)
+            TextField("Search brewery, pub, city, or state", text: $searchText)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+            if !searchText.isEmpty {
+                Button { searchText = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Brand.muted.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear venue search")
+            }
+        }
+        .font(.subheadline)
+        .padding(.horizontal, 12)
+        .frame(height: 42)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Brand.malt.opacity(0.10)))
+    }
+
     private func taptRow(_ venue: BreweryMapVenue) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "mappin.and.ellipse")
@@ -296,33 +334,39 @@ struct NearYouView: View {
                 Text(venue.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                 Text(venue.subtitle.isEmpty ? "Tapt beer map" : venue.subtitle)
                     .font(.subheadline).foregroundStyle(Brand.muted).lineLimit(1)
-                Text("\(venue.typeLabel.capitalized) • \(venue.sourceLabel ?? "Tapt map")")
+                Text(venue.typeLabel)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Brand.muted)
                     .lineLimit(1)
             }
             Spacer()
-            Text(venue.sourceBadge)
-                .font(.system(.caption2, design: .rounded).weight(.heavy))
-                .foregroundStyle(Brand.malt)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(Brand.gold, in: Capsule())
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Brand.muted.opacity(0.5))
         }
         .padding(.vertical, 4)
     }
 
     private func focus(_ item: MKMapItem) {
-        withAnimation {
-            camera = .region(MKCoordinateRegion(center: item.placemark.coordinate,
-                                                latitudinalMeters: 1200, longitudinalMeters: 1200))
-        }
+        moveCamera(to: MKCoordinateRegion(
+            center: item.placemark.coordinate,
+            latitudinalMeters: 1200,
+            longitudinalMeters: 1200
+        ))
     }
 
     private func focus(_ venue: BreweryMapVenue) {
+        moveCamera(to: MKCoordinateRegion(
+            center: venue.coordinate,
+            latitudinalMeters: 2400,
+            longitudinalMeters: 2400
+        ))
+    }
+
+    private func moveCamera(to region: MKCoordinateRegion) {
+        mapRegion = region
         withAnimation {
-            camera = .region(MKCoordinateRegion(center: venue.coordinate,
-                                                latitudinalMeters: 2400, longitudinalMeters: 2400))
+            camera = .region(region)
         }
     }
 
@@ -353,8 +397,11 @@ struct NearYouView: View {
 
         if let placemarks = try? await CLGeocoder().geocodeAddressString(region),
            let coord = placemarks.first?.location?.coordinate {
-            camera = .region(MKCoordinateRegion(center: coord,
-                                                latitudinalMeters: 60_000, longitudinalMeters: 60_000))
+            moveCamera(to: MKCoordinateRegion(
+                center: coord,
+                latitudinalMeters: 60_000,
+                longitudinalMeters: 60_000
+            ))
             await loadNearbyRadar(coord, establishesLocalContext: false)
             return
         }
@@ -363,8 +410,11 @@ struct NearYouView: View {
         if let home = venues.first(where: {
             $0.region?.localizedCaseInsensitiveCompare(region) == .orderedSame
         }) {
-            camera = .region(MKCoordinateRegion(center: home.coordinate,
-                                                latitudinalMeters: 200_000, longitudinalMeters: 200_000))
+            moveCamera(to: MKCoordinateRegion(
+                center: home.coordinate,
+                latitudinalMeters: 200_000,
+                longitudinalMeters: 200_000
+            ))
         }
     }
 
@@ -395,10 +445,56 @@ struct NearYouView: View {
             Task { @MainActor in
                 loading = false
                 breweries = response?.mapItems ?? []
-                camera = .region(MKCoordinateRegion(center: coord,
-                                                    latitudinalMeters: 6000, longitudinalMeters: 6000))
+                moveCamera(to: MKCoordinateRegion(
+                    center: coord,
+                    latitudinalMeters: 6000,
+                    longitudinalMeters: 6000
+                ))
             }
         }
+    }
+}
+
+/// Keeps the map legible at every zoom level while the full result set remains
+/// available in the list. One representative venue is rendered per viewport cell.
+enum VenueMapSampler {
+    static func sample(
+        _ venues: [BreweryMapVenue],
+        in region: MKCoordinateRegion,
+        columns: Int = 8,
+        rows: Int = 5
+    ) -> [BreweryMapVenue] {
+        guard columns > 0, rows > 0 else { return [] }
+
+        let latitudeSpan = max(abs(region.span.latitudeDelta), 0.000_001)
+        let longitudeSpan = min(max(abs(region.span.longitudeDelta), 0.000_001), 360)
+        let halfLatitude = latitudeSpan / 2
+        let halfLongitude = longitudeSpan / 2
+        let minimumLatitude = region.center.latitude - halfLatitude
+        var occupiedCells = Set<Int>()
+        var sampled: [BreweryMapVenue] = []
+
+        for venue in venues {
+            guard abs(venue.latitude - region.center.latitude) <= halfLatitude else { continue }
+            let longitudeOffset = normalizedLongitudeDelta(venue.longitude - region.center.longitude)
+            guard longitudeSpan >= 359.999 || abs(longitudeOffset) <= halfLongitude else { continue }
+
+            let latitudeProgress = (venue.latitude - minimumLatitude) / latitudeSpan
+            let longitudeProgress = (longitudeOffset + halfLongitude) / longitudeSpan
+            let row = min(rows - 1, max(0, Int(latitudeProgress * Double(rows))))
+            let column = min(columns - 1, max(0, Int(longitudeProgress * Double(columns))))
+            let cell = row * columns + column
+            guard occupiedCells.insert(cell).inserted else { continue }
+            sampled.append(venue)
+        }
+        return sampled
+    }
+
+    private static func normalizedLongitudeDelta(_ value: Double) -> Double {
+        var delta = value.truncatingRemainder(dividingBy: 360)
+        if delta > 180 { delta -= 360 }
+        if delta < -180 { delta += 360 }
+        return delta
     }
 }
 
@@ -430,7 +526,7 @@ private struct VenueDetailSheet: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(venue.name)
                                 .font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                            Text(venue.typeLabel.capitalized)
+                            Text(venue.typeLabel)
                                 .font(.caption.weight(.semibold)).foregroundStyle(Brand.copper)
                         }
                         Spacer(minLength: 0)

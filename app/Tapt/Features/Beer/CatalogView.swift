@@ -56,6 +56,10 @@ struct CatalogView: View {
     @State private var loadingMore = false
     @State private var loadError: String?
 
+    init(initialQuery: String = "") {
+        _query = State(initialValue: initialQuery)
+    }
+
     private var canLoadMore: Bool { results.count < total }
 
     var body: some View {
