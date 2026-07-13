@@ -27,6 +27,7 @@ struct RecommendedBeer: Decodable, Identifiable, Sendable {
 
 enum RecommendationService {
     struct Params: Encodable, Sendable { let p_user: String }
+    struct MenuParams: Encodable, Sendable { let p_user: String; let p_beer_ids: [String] }
 
     /// The user's pick for today, or nil when there is not enough taste signal yet.
     static func pick(userId: UUID) async throws -> RecommendedBeer? {
@@ -34,6 +35,16 @@ enum RecommendationService {
             "recommend_beer", params: Params(p_user: userId.uuidString)
         )
         return rows.first
+    }
+
+    /// The single beer ON a scanned menu that best fits the user's taste, or nil
+    /// when there is no taste signal or nothing on the menu matched.
+    static func menuPick(userId: UUID, beerIds: [String]) async -> RecommendedBeer? {
+        guard !beerIds.isEmpty else { return nil }
+        let rows: [RecommendedBeer]? = try? await Supa.authedRPC(
+            "recommend_from_menu", params: MenuParams(p_user: userId.uuidString, p_beer_ids: beerIds)
+        )
+        return rows?.first
     }
 }
 

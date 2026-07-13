@@ -391,18 +391,38 @@ struct Sparkline: View {
     private func points(in size: CGSize) -> [CGPoint] {
         guard values.count > 1 else { return [] }
         let lo = values.min() ?? 0, hi = values.max() ?? 1
-        // A steady standing must read as steady: center flat lines instead of
-        // pinning them to the bottom (which reads as "cratered").
+        let stepX = size.width / CGFloat(values.count - 1)
+        // A steady standing must read as steady: center flat lines and add NO
+        // zig-zag (a jagged flat line would fake volatility that didn't happen).
         guard hi - lo >= 1 else {
-            let stepX = size.width / CGFloat(values.count - 1)
             return values.indices.map { CGPoint(x: CGFloat($0) * stepX, y: size.height / 2) }
         }
         let span = hi - lo
-        let stepX = size.width / CGFloat(values.count - 1)
-        return values.enumerated().map { i, v in
+        let real = values.enumerated().map { i, v in
             CGPoint(x: CGFloat(i) * stepX,
                     y: size.height - CGFloat((v - lo) / span) * (size.height - 3) - 1.5)
         }
+        // Stock-chart texture: the real daily vertices stay exactly on their
+        // values; only the interpolation between them gets a small deterministic
+        // zig-zag (seeded by position, so it never animates or invents a value).
+        guard real.count > 1 else { return real }
+        let ticks = 2
+        let amp = min(5, max(2, size.height * 0.09))
+        var out: [CGPoint] = [real[0]]
+        for i in 1..<real.count {
+            let a = real[i - 1], b = real[i]
+            for t in 1...ticks {
+                let f = CGFloat(t) / CGFloat(ticks + 1)
+                let baseY = a.y + (b.y - a.y) * f
+                // alternate above/below, tapering to zero at the real vertices
+                let dir: CGFloat = ((i * (ticks + 1) + t) % 2 == 0) ? 1 : -1
+                let taper = 1 - abs(f - 0.5) * 2
+                out.append(CGPoint(x: a.x + (b.x - a.x) * f,
+                                   y: min(size.height - 1, max(1, baseY + dir * amp * taper))))
+            }
+            out.append(b)
+        }
+        return out
     }
 }
 

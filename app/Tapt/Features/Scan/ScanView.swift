@@ -21,6 +21,7 @@ struct ScanView: View {
     @State private var addingOFF = false
     @State private var visibleLines: [String] = []
     @State private var menuMatching = false
+    @State private var menuPick: RecommendedBeer?
     @State private var partnerVenueId: String?
     @State private var errorMessage: String?
     @State private var scannerStartError: String?
@@ -263,6 +264,10 @@ struct ScanView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
 
+                    // The star of a menu scan: the one beer on THIS menu that fits
+                    // your taste. Only shows when we have real signal + a real match.
+                    if let menuPick { menuPickCard(menuPick) }
+
                     if loadingMatches {
                         ProgressView().tint(Brand.gold).padding(.top, 16)
                     } else if matches.isEmpty, let offBeer {
@@ -445,20 +450,56 @@ struct ScanView: View {
         }
     }
 
-    /// Menu mode: batch-match every visible text line against the catalog.
+    /// Menu mode: batch-match every visible text line against the catalog, then
+    /// surface the one beer on the menu that best fits the taster's profile.
     private func matchMenu() async {
         menuMatching = true
         defer { menuMatching = false }
+        menuPick = nil
         var found: [ScannedBeer] = []
-        for line in visibleLines.prefix(10) {
-            if let hits = try? await CheckinService.matchScan(line), let best = hits.first, best.confidence >= 0.3 {
+        for line in visibleLines.prefix(30) {
+            if let hits = try? await CheckinService.matchScan(line), let best = hits.first, best.confidence >= 0.35 {
                 if !found.contains(where: { $0.id == best.id }) { found.append(best) }
             }
         }
         matches = found
         offBeer = nil
-        scanLabel = "Menu scan: \(visibleLines.count) lines read"
+        scanLabel = "Menu scan: \(found.count) beers matched from \(visibleLines.count) lines"
         showResult = true
+        // Personalized pick from what's actually on this menu.
+        if let uid = session.user?.id, !found.isEmpty {
+            menuPick = await RecommendationService.menuPick(userId: uid, beerIds: found.map(\.id))
+        }
+    }
+
+    /// "Your pick on this menu" -- the taste-matched highlight above the list.
+    private func menuPickCard(_ pick: RecommendedBeer) -> some View {
+        Button {
+            if let m = matches.first(where: { $0.id == pick.beerId }) { selected = m.pick; rating = nil }
+        } label: {
+            HStack(spacing: 12) {
+                BeerThumb(imageUrl: pick.imageUrl, size: 56, corner: 12)
+                VStack(alignment: .leading, spacing: 3) {
+                    Label("Your pick on this menu", systemImage: "sparkles")
+                        .font(.caption2.weight(.heavy)).foregroundStyle(Brand.copper)
+                        .labelStyle(.titleAndIcon)
+                    Text(pick.name).font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text).lineLimit(1)
+                    Text(pick.reason).font(.caption).foregroundStyle(Brand.muted)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .background(
+                LinearGradient(colors: [Brand.gold.opacity(0.18), Brand.surface],
+                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                in: RoundedRectangle(cornerRadius: 16)
+            )
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.gold.opacity(0.4)))
+        }
+        .buttonStyle(.taptPress)
+        .padding(.horizontal)
     }
 
     private func loadMatches(_ raw: String) async {

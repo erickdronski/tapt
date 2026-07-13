@@ -39,7 +39,12 @@ struct DataScannerView: UIViewControllerRepresentable {
         @Binding var scanned: String?
         @Binding var visibleLines: [String]
         @Binding var startError: String?
-        private var lines: [UUID: String] = [:]
+        // Menu lines ACCUMULATE across frames (keyed by normalized text) so a
+        // user can pan across a whole tap list and capture every beer, instead
+        // of only what fits in one viewfinder. Bounded so it can't grow forever.
+        private var accumulated: [String: String] = [:]
+        private var order: [String] = []
+        private let cap = 80
 
         init(
             scanned: Binding<String?>,
@@ -57,14 +62,18 @@ struct DataScannerView: UIViewControllerRepresentable {
         }
 
         private func sync(_ allItems: [RecognizedItem]) {
-            lines = [:]
             for item in allItems {
                 if case let .text(text) = item {
                     let line = text.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if line.count >= 3 { lines[item.id] = line }
+                    guard line.count >= 3 else { continue }
+                    let key = line.lowercased()
+                    if accumulated[key] == nil, accumulated.count < cap {
+                        accumulated[key] = line
+                        order.append(key)
+                    }
                 }
             }
-            visibleLines = Array(lines.values)
+            visibleLines = order.compactMap { accumulated[$0] }
         }
 
         func dataScanner(_ scanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
