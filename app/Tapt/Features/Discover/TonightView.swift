@@ -122,7 +122,7 @@ struct TonightView: View {
     private var tonightSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             sectionHeader(
-                localSignal ? "What is pouring nearby" : "Across Tapt tonight",
+                localSignal ? "What is pouring nearby" : "Trending on the Beer Market",
                 localSignal
                     ? "Fresh partner tap lists near you"
                     : "Global Beer Market signal; local taps appear as partners publish"

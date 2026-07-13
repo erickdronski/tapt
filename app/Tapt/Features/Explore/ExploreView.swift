@@ -217,7 +217,7 @@ struct ExploreView: View {
     /// First-glance duo: Leaderboards + the map, side by side under the hero.
     private var quickDuo: some View {
         HStack(spacing: 12) {
-            duoTile("Leaderboards", "Beers · tasters · styles", "trophy.fill", Brand.gold) { LeaderboardsView() }
+            duoTile("Leaderboards", "Top drinkers & styles, all-time", "trophy.fill", Brand.gold) { LeaderboardsView() }
             duoTile("Beer near you", "Breweries, pubs & bars", "map.fill", Brand.hop) { NearYouView() }
         }
         .padding(.horizontal)
@@ -439,7 +439,7 @@ struct ExploreView: View {
                     .frame(width: 42, height: 42).background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Leaderboards").font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                    Text("Top beers, tasters, and styles, all first-party signal").font(.caption).foregroundStyle(Brand.muted)
+                    Text("Top drinkers, styles, and all-time beers").font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
             }

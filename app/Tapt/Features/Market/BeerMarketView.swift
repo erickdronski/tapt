@@ -68,7 +68,7 @@ struct BeerMarketView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("Ranked by what's in season, real awards, and community votes.")
+                    Text("What's hot and moving right now, from season, awards, and votes.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()

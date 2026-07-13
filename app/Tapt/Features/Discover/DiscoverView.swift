@@ -24,7 +24,7 @@ struct DiscoverView: View {
 
                     if session.user != nil {
                         DiscoverTile(title: "Leaderboards",
-                                     subtitle: "Top beers, top tasters, top styles, powered by real votes and pours.",
+                                     subtitle: "Top drinkers, styles, and all-time beers. Real votes and pours.",
                                      icon: "trophy.fill", tint: Brand.gold) { LeaderboardsView() }
 
                         TaptCollapse(title: "Community",

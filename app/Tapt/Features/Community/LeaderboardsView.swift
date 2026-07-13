@@ -3,7 +3,9 @@ import SwiftUI
 /// Global leaderboards, beers, tasters, styles. Every number is first-party
 /// (votes + logged pours). Boards stay honestly empty until the community moves.
 struct LeaderboardsView: View {
-    @State private var board = Board.beers
+    // Default to Tasters, a board the Market has no room for, so Leaderboards stops
+    // opening on a beer list that mirrors the Market tab.
+    @State private var board = Board.tasters
     @State private var beers: [LeaderBeer] = []
     @State private var tasters: [LeaderTaster] = []
     @State private var styles: [LeaderStyle] = []
@@ -16,7 +18,7 @@ struct LeaderboardsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 TaptHeroPanel(
                     title: "Leaderboards",
-                    subtitle: "Votes and pours from real Tapt drinkers move every board. No bots, no paid placement.",
+                    subtitle: "All-time champions: top beers, drinkers, and styles. Real votes and pours, no bots.",
                     metric: "LIVE",
                     caption: "Powered by the community",
                     icon: "trophy.fill",
