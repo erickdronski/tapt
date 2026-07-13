@@ -183,4 +183,42 @@ enum ProfileService {
             )
         )
     }
+
+    struct MyProfile: Sendable { let displayName: String?; let handle: String?; let avatarUrl: String? }
+
+    /// The caller's own editable identity row.
+    static func myProfile(userId: UUID) async throws -> MyProfile {
+        struct Row: Decodable { let display_name: String?; let handle: String?; let avatar_url: String? }
+        _ = try await Supa.client.auth.session
+        let rows: [Row] = try await Supa.client.from("user_profile")
+            .select("display_name,handle,avatar_url").eq("id", value: userId.uuidString)
+            .limit(1).execute().value
+        let r = rows.first
+        return MyProfile(displayName: r?.display_name, handle: r?.handle, avatarUrl: r?.avatar_url)
+    }
+
+    /// Save display name and/or handle. nil leaves a field unchanged; "" clears the handle.
+    static func setIdentity(displayName: String?, handle: String?) async throws {
+        struct Params: Encodable { let p_display_name: String?; let p_handle: String? }
+        try await Supa.authedRPCVoid("set_profile_identity",
+            params: Params(p_display_name: displayName, p_handle: handle))
+    }
+
+    static func setAvatarURL(_ url: String?) async throws {
+        struct Params: Encodable { let p_url: String? }
+        try await Supa.authedRPCVoid("set_avatar_url", params: Params(p_url: url))
+    }
+
+    /// Upload a JPEG to avatars/{uid}/avatar.jpg, record the public URL on the
+    /// profile, and return it cache-busted so AsyncImage reloads.
+    static func uploadAvatar(_ jpeg: Data, userId: UUID) async throws -> String {
+        let path = "\(userId.uuidString)/avatar.jpg"
+        _ = try await Supa.client.storage.from("avatars").upload(
+            path: path, file: jpeg,
+            options: FileOptions(cacheControl: "3600", contentType: "image/jpeg", upsert: true))
+        let base = try Supa.client.storage.from("avatars").getPublicURL(path: path).absoluteString
+        let busted = base + "?v=\(Int(Date().timeIntervalSince1970))"
+        try await setAvatarURL(busted)
+        return busted
+    }
 }

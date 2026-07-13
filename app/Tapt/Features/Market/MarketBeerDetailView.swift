@@ -39,7 +39,7 @@ struct MarketBeerDetailView: View {
                     tradeButtons
                     statsGrid
                     contextCard
-                    Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
+                    Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented. Votes only. No money, no trading, not a financial product.")
                         .font(.caption2).foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: .infinity)

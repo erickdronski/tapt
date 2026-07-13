@@ -566,6 +566,8 @@ struct BeerDetailView: View {
             }
             Text("Source: Open Food Facts")
                 .font(.caption2).foregroundStyle(Brand.muted)
+            Text("Informational only. Not dietary or medical advice.")
+                .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -143,6 +143,11 @@ struct CellarView: View {
                 collectionShelf
                 regionalShelves
                 pourHistory
+                Text("Tapt celebrates variety and discovery, not volume. Please drink responsibly.")
+                    .font(.caption2).foregroundStyle(Brand.muted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8).padding(.horizontal)
             }
             .padding(.vertical)
         }

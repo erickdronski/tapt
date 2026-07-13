@@ -126,6 +126,10 @@ struct ScanView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(Brand.muted)
                                 .multilineTextAlignment(.center)
+                            Text("Know your limits. Never drink and drive.")
+                                .font(.caption2)
+                                .foregroundStyle(Brand.muted)
+                                .multilineTextAlignment(.center)
                             CardShareView(pour: pour)
                         }
                         .padding(.top, 22)

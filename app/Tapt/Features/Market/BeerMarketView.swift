@@ -181,7 +181,7 @@ struct BeerMarketView: View {
     }
 
     private var footer: some View {
-        Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
+        Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented. Votes only. No money, no trading, not a financial product.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)

@@ -1,5 +1,7 @@
 import SwiftUI
 import Supabase
+import PhotosUI
+import UIKit
 
 /// The "You" tab: account, appearance (dark/light/system), and preferences.
 struct ProfileView: View {
@@ -25,13 +27,45 @@ struct ProfileView: View {
     @State private var deletionError: String?
     @State private var myActivity: [MyBeerActivity] = []
     @State private var activityError: String?
+    @State private var myProfile: ProfileService.MyProfile?
+    @State private var pickedItem: PhotosPickerItem?
+    @State private var avatarUploading = false
+    @State private var identityError: String?
+    @State private var showEditIdentity = false
 
     private var displayName: String {
+        if let n = myProfile?.displayName, !n.isEmpty { return n }
         if let name = session.user?.userMetadata["full_name"]?.stringValue, !name.isEmpty { return name }
         return session.user?.email ?? "Guest explorer"
     }
     private var email: String { session.user?.email ?? "" }
     private var initial: String { String(displayName.first ?? "T").uppercased() }
+
+    private var initialAvatar: some View {
+        Text(initial)
+            .font(.system(size: 26, weight: .heavy, design: .rounded))
+            .foregroundStyle(Brand.malt)
+            .frame(width: 58, height: 58)
+            .background(Brand.gold)
+    }
+
+    @ViewBuilder private var avatarView: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Group {
+                if let u = myProfile?.avatarUrl, let url = URL(string: u) {
+                    AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { initialAvatar }
+                } else { initialAvatar }
+            }
+            .frame(width: 58, height: 58).clipShape(Circle())
+            .overlay(Circle().stroke(Brand.malt, lineWidth: 2))
+            if session.user != nil {
+                Image(systemName: avatarUploading ? "arrow.triangle.2.circlepath" : "camera.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Brand.malt).padding(5).background(Brand.gold, in: Circle())
+                    .overlay(Circle().stroke(Brand.background, lineWidth: 2))
+            }
+        }
+    }
     private var tasteSummary: String {
         let count = TastePreferences.decode(favoriteStyles).count
         return count == 0 ? "Choose" : "\(count) selected"
@@ -42,20 +76,49 @@ struct ProfileView: View {
             List {
                 Section {
                     HStack(spacing: 14) {
-                        Text(initial)
-                            .font(.system(size: 26, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Brand.malt)
-                            .frame(width: 58, height: 58)
-                            .background(Brand.gold, in: Circle())
-                            .overlay(Circle().stroke(Brand.malt, lineWidth: 2))
+                        if session.user != nil {
+                            PhotosPicker(selection: $pickedItem, matching: .images) {
+                                avatarView
+                            }
+                            .disabled(avatarUploading)
+                        } else {
+                            avatarView
+                        }
                         VStack(alignment: .leading, spacing: 2) {
                             Text(displayName).font(.system(.title3, design: .rounded).weight(.bold))
+                            if let h = myProfile?.handle, !h.isEmpty {
+                                Text("@\(h)").font(.subheadline).foregroundStyle(Brand.gold)
+                            }
                             if !email.isEmpty {
                                 Text(email).font(.subheadline).foregroundStyle(.secondary)
+                            }
+                            if session.user != nil {
+                                Button("Edit name and handle") { showEditIdentity = true }
+                                    .font(.footnote.weight(.semibold)).foregroundStyle(Brand.malt)
+                                    .padding(.top, 2)
                             }
                         }
                     }
                     .padding(.vertical, 6)
+                    if let identityError {
+                        Text(identityError).font(.caption).foregroundStyle(Brand.copper)
+                    }
+                }
+
+                if let id = session.user?.id.uuidString {
+                    Section {
+                        NavigationLink { PublicProfileView(userId: id, initialName: displayName) } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.crop.circle.badge.checkmark").foregroundStyle(Brand.gold)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Your passport").font(.system(.subheadline, design: .rounded).weight(.bold))
+                                    Text(socialVisible ? "This is what friends see"
+                                                       : "Private for now. Turn on Public passport below to share.")
+                                        .font(.caption).foregroundStyle(Brand.muted)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if session.user == nil {
@@ -247,7 +310,12 @@ struct ProfileView: View {
             .navigationTitle("You")
             .task {
                 await loadActivity()
+                await loadMyProfile()
                 _ = await loadPrivacyChoices()
+            }
+            .onChange(of: pickedItem) { _, item in Task { await uploadAvatar(item) } }
+            .sheet(isPresented: $showEditIdentity) {
+                EditIdentityView(initial: myProfile) { updated in myProfile = updated }
             }
             .onChange(of: appLanguage) { _, newValue in
                 (AppLanguage(rawValue: newValue) ?? .system).apply()
@@ -272,6 +340,41 @@ struct ProfileView: View {
             } message: {
                 Text("This permanently removes your profile, private notes, votes, pours, follows, venue claims, and sign-in identity. This cannot be undone.")
             }
+        }
+    }
+
+    private func loadMyProfile() async {
+        guard let id = session.user?.id else { return }
+        myProfile = try? await ProfileService.myProfile(userId: id)
+    }
+
+    /// Downscale the picked photo to a <=512px JPEG, upload it, and reflect the
+    /// new avatar URL. Never stores anything but a real uploaded image.
+    private func uploadAvatar(_ item: PhotosPickerItem?) async {
+        guard let item, let id = session.user?.id else { return }
+        avatarUploading = true
+        identityError = nil
+        defer { avatarUploading = false }
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self),
+                  let ui = UIImage(data: data) else {
+                identityError = "That photo could not be read. Try another."
+                return
+            }
+            let side: CGFloat = 512
+            let scale = min(1, side / max(ui.size.width, ui.size.height))
+            let target = CGSize(width: ui.size.width * scale, height: ui.size.height * scale)
+            let renderer = UIGraphicsImageRenderer(size: target)
+            let resized = renderer.image { _ in ui.draw(in: CGRect(origin: .zero, size: target)) }
+            guard let jpeg = resized.jpegData(compressionQuality: 0.8) else {
+                identityError = "That photo could not be prepared. Try another."
+                return
+            }
+            let url = try await ProfileService.uploadAvatar(jpeg, userId: id)
+            myProfile = ProfileService.MyProfile(displayName: myProfile?.displayName,
+                                                 handle: myProfile?.handle, avatarUrl: url)
+        } catch {
+            identityError = "Your photo did not upload. Check your connection and try again."
         }
     }
 

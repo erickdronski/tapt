@@ -95,7 +95,10 @@ struct ShareCard: View {
             Spacer(minLength: 8)
 
             Text("@\(pour.user) tapt it").font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(Brand.malt.opacity(0.5)).padding(.bottom, 26)
+                .foregroundStyle(Brand.malt.opacity(0.5)).padding(.bottom, 6)
+            Text("21+ · please drink responsibly")
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundStyle(Brand.malt.opacity(0.45)).padding(.bottom, 18)
         }
         .frame(width: 360, height: 640)
         .background(LinearGradient(colors: [Brand.foam, Brand.haze], startPoint: .top, endPoint: .bottom))

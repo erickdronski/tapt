@@ -186,6 +186,11 @@ struct LogPourView: View {
                 .foregroundStyle(rating != nil ? Brand.malt : Brand.muted)
                 // A rating is the one thing a pour means; never invent one.
                 .disabled(saving || rating == nil)
+                Text("Know your limits. Never drink and drive. 21+.")
+                    .font(.caption2).foregroundStyle(Brand.muted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 2)
             }
             .padding()
         }
