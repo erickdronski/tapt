@@ -8,6 +8,13 @@ import AuthenticationServices
 final class Session {
     private static let pendingPartnerVenueKey = "pendingPartnerVenueId"
     private static let pendingBeerDetailKey = "pendingBeerDetailId"
+    private static let pendingBeerVoteKey = "pendingBeerVote"
+
+    private struct PendingBeerVote: Codable {
+        let beerId: String
+        let value: Int
+        let createdAt: Date
+    }
 
     var user: User?
     var isLoading = true
@@ -82,6 +89,37 @@ final class Session {
         }
         UserDefaults.standard.removeObject(forKey: Self.pendingBeerDetailKey)
         return UUID(uuidString: beerId) == nil ? nil : beerId
+    }
+
+    /// Preserve the exact thumb a guest tapped while auth takes over the screen.
+    /// The short expiry prevents an abandoned choice from being replayed later.
+    func deferBeerVote(beerId: String, value: Int) {
+        guard UUID(uuidString: beerId) != nil, value == 1 || value == -1 else { return }
+        let vote = PendingBeerVote(beerId: beerId, value: value, createdAt: Date())
+        guard let data = try? JSONEncoder().encode(vote) else { return }
+        UserDefaults.standard.set(data, forKey: Self.pendingBeerVoteKey)
+    }
+
+    func pendingBeerVote(for beerId: String) -> Int? {
+        guard let data = UserDefaults.standard.data(forKey: Self.pendingBeerVoteKey) else {
+            return nil
+        }
+        guard let vote = try? JSONDecoder().decode(PendingBeerVote.self, from: data) else {
+            UserDefaults.standard.removeObject(forKey: Self.pendingBeerVoteKey)
+            return nil
+        }
+        guard Date().timeIntervalSince(vote.createdAt) <= 30 * 60 else {
+            UserDefaults.standard.removeObject(forKey: Self.pendingBeerVoteKey)
+            return nil
+        }
+        return vote.beerId == beerId ? vote.value : nil
+    }
+
+    func clearPendingBeerVote(for beerId: String) {
+        guard let data = UserDefaults.standard.data(forKey: Self.pendingBeerVoteKey),
+              let vote = try? JSONDecoder().decode(PendingBeerVote.self, from: data),
+              vote.beerId == beerId else { return }
+        UserDefaults.standard.removeObject(forKey: Self.pendingBeerVoteKey)
     }
 
     func signInWithOAuth(_ provider: Provider) async {
@@ -184,5 +222,6 @@ final class Session {
             "passport.seenBadges", "passport.badgesSeeded"
         ]
         for key in keys { UserDefaults.standard.removeObject(forKey: key) }
+        UserDefaults.standard.removeObject(forKey: Self.pendingBeerVoteKey)
     }
 }

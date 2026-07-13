@@ -3,14 +3,14 @@
 // POST ?t=<token> | {token} | form body -> unsubscribe immediately (one-click)
 // Token-gated: the token is the secret, so no JWT. Responses are generic on
 // purpose -- this endpoint must never confirm whether an address exists.
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.106.2";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "content-type",
 };
-const LANDING = "https://tapt-landing-three.vercel.app";
+const LANDING = "https://taptbeer.com";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function tokenFrom(req: Request): Promise<string | null> {

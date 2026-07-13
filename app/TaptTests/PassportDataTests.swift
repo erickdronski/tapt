@@ -50,6 +50,41 @@ final class PassportDataTests: XCTestCase {
         XCTAssertEqual(CountryFlag.symbol(for: "USA"), "\u{1F37A}")
     }
 
+    @MainActor
+    func testGuestVoteIntentPersistsUntilCleared() {
+        let session = Session()
+        let beerId = UUID().uuidString
+
+        session.deferBeerVote(beerId: beerId, value: 1)
+        let pending = session.pendingBeerVote(for: beerId)
+
+        XCTAssertEqual(pending, 1)
+        session.clearPendingBeerVote(for: beerId)
+        XCTAssertNil(session.pendingBeerVote(for: beerId))
+    }
+
+    @MainActor
+    func testGuestVoteIntentRejectsInvalidValues() {
+        let session = Session()
+        let beerId = UUID().uuidString
+
+        session.deferBeerVote(beerId: beerId, value: 0)
+
+        XCTAssertNil(session.pendingBeerVote(for: beerId))
+    }
+
+    @MainActor
+    func testGuestVoteIntentSurvivesUnrelatedBeerLookup() {
+        let session = Session()
+        let intendedBeerId = UUID().uuidString
+
+        session.deferBeerVote(beerId: intendedBeerId, value: -1)
+
+        XCTAssertNil(session.pendingBeerVote(for: UUID().uuidString))
+        XCTAssertEqual(session.pendingBeerVote(for: intendedBeerId), -1)
+        session.clearPendingBeerVote(for: intendedBeerId)
+    }
+
     private func makeCheckin(
         id: String,
         beerId: String?,

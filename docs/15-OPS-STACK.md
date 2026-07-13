@@ -1,16 +1,15 @@
-# Tapt, Operational Stack (all free tier)
+# Tapt Operational Stack
 
-Everything running Tapt as a business, on $0 tooling. This is the full
-operational picture: what each tool does, what's automatic, and the few
-owner setup actions.
+This is the operational picture: what each service does, what is automatic,
+and which owner actions still gate production reliability.
 
 ## The free-tool stack
 | Tool | Job | Tier | Status |
 |---|---|---|---|
-| **Supabase** | Postgres DB, Auth, Storage, Edge Functions, RLS | Free | Live (project qfwiizvqxrhjlthbjosz) |
-| **Vercel** | Hosts landing, /portal, /admin, /menu, /pitch | Free | Live (tapt-landing-three.vercel.app) |
-| **GitHub Actions** | CI compile-check + TestFlight upload + ASC admin | Free (public repo = unlimited macOS min) | Live |
-| **Resend** | Transactional + newsletter email | Free (3k/mo, 100/day) | Wired, needs owner API key |
+| **Supabase** | Postgres DB, Auth, Storage, Edge Functions, RLS | Account plan | Live; outstanding invoice warning |
+| **Vercel** | Hosts landing, /portal, /admin, /menu, /pitch | Account plan | Live at taptbeer.com |
+| **GitHub Actions** | CI compile-check + TestFlight upload + ASC admin | Account allocation | Live |
+| **Resend** | Transactional + newsletter email | Account plan | Functions deployed; production sender/secret proof pending |
 | **Open Brewery DB** | Venue/brewery data | Free/open | Ingested |
 | **Open Food Facts** | Barcodes, label photos, nutrition | Free/open | Ingested + live scan |
 | **BJCP 2021** | Beer style science | Free/reference | Ingested |
@@ -18,18 +17,19 @@ owner setup actions.
 | **App Store Connect** | TestFlight + App Store | Apple dev acct (owned) | Live |
 
 ## What runs automatically (no human)
-- **CI + TestFlight**: every push compiles; TestFlight builds auto-assign to
-  the tester group (asc-admin.yml on workflow_run).
+- **CI**: app-touching pushes compile and test. TestFlight upload is manual;
+  successful uploads trigger the App Store Connect administration workflow.
 - **Partner claims**: auto-approve when the claimant's email domain matches the
   venue's website domain (generic providers -> /admin queue).
 - **Beer market**: recomputes on every vote/check-in; nightly trend refresh +
   Monday Beer of the Week lock (pg_cron).
-- **Partner welcome email**: fires on approval (auto or admin) with the venue's
-  QR/menu link. (Requires the Resend key, below.)
-- **Menu freshness**: published tap lists expire after 14 days.
+- **Partner welcome email**: the approval path calls the deployed sender with
+  the venue's QR/menu link and reports success only on provider confirmation.
+- **Menu persistence**: partner-published tap lists remain until replaced;
+  short-lived crowd sightings expire separately.
 
 ## The owner control panel: /admin
-`tapt-landing-three.vercel.app/admin` (sign in with esdronski@gmail.com). One
+`taptbeer.com/admin` (sign in with esdronski@gmail.com). One
 page to run the business:
 - **Ops dashboard**: real first-party metrics (drinkers, venues claimed, live
   menus, pours, votes, Dispatch subs, new inquiries, beers). All from our own
@@ -39,26 +39,24 @@ page to run the business:
 - **Send The Tapt Dispatch**: compose subject + body, blast all subscribers.
 
 ## Owner setup (the only actions to go fully operational)
-1. **Resend** (5 min): create a free account at resend.com -> API Keys ->
-   create key. In the Supabase dashboard: Edge Functions -> Manage secrets ->
-   add `RESEND_API_KEY = re_...`. (Optional `RESEND_FROM` once you verify a
-   sending domain; until then it sends from `onboarding@resend.dev`, which
-   works on the free tier with no domain setup.)
-   -> The moment this key is set, partner welcome emails + the Dispatch send
-   work. Until then, everything else runs and email calls no-op gracefully.
-2. **App Store**: submit for review (screenshots + metadata).
-3. **Apple auth**: docs/09 dashboard clicks.
-4. **Stripe**: create account -> use Payment Links for Featured/Spotlight
-   invoicing when the first venue upgrades (no code needed).
-5. **Social handles**: claim @taptbeer.
+1. **Supabase billing:** resolve the outstanding invoice warning before relying
+   on the project for an App Store release.
+2. **Resend:** verify `RESEND_API_KEY`, `RESEND_FROM`, the sender domain, postal
+   address, and a real partner welcome/Dispatch delivery.
+3. **App Store:** complete screenshots, metadata, privacy answers, agreements,
+   tax/banking, territories, beta review settings, and signed-device auth tests.
+4. **Apple auth:** finish the provider configuration in `docs/09-AUTH-SETUP.md`.
+5. **Paid reach:** approve commercial terms before wiring Stripe or publishing
+   self-service prices.
 
-## Cost ceiling (honest)
-$0 today. First real costs only appear at scale: Resend past 3k emails/mo
-(then $20/mo), Supabase past the free tier (8GB DB / 5GB bandwidth), Vercel
-past free bandwidth. All are usage-gated and far past first-metro traction, so
-the business runs at $0 until it's clearly working.
+## Cost controls
+No agent may add a paid service or change a plan without owner approval. Check
+current provider billing pages instead of relying on hardcoded tier limits or
+prices in this document. The existing Supabase invoice warning is not a future
+scale cost; it is a current service-continuity risk.
 
-## Verified working (2026-07-10)
+## Verified working (2026-07-13)
 - admin_stats() returns real metrics · resend-send deployed (graceful no-op
-  without key) · portal auto-approve emails on domain match · admin approve
-  emails owner · Dispatch send admin-gated · all pages live (200).
+  without a working sender) · portal domain-match claims and owner approvals
+  can request welcome mail · Dispatch send remains admin-gated · canonical
+  public pages on taptbeer.com return 200.

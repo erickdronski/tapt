@@ -178,7 +178,10 @@ window.sendCode = async () => {
     $('authMsg').textContent = 'Enter a valid work email.';
     return;
   }
-  const { error } = await supa.auth.signInWithOtp({ email });
+  const { error } = await supa.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: `${location.origin}/portal.html` }
+  });
   $('authMsg').textContent = error ? error.message : 'Check your email. Enter the 6-digit code below (or tap the link).';
   if (!error) $('codeRow').hidden = false;
 };
@@ -251,18 +254,31 @@ window.requestVenue = async (name) => {
 
 async function claim(venueId, name) {
   const { data: { user } } = await supa.auth.getUser();
+  if (!user) {
+    $('claimMsg').textContent = 'Your sign-in expired. Sign in again to claim this venue.';
+    return;
+  }
   const { error } = await supa.rpc('claim_venue', { p_venue: venueId, p_email: user.email, p_role: 'manager' });
   if (error) { $('claimMsg').textContent = error.message; return; }
   // Existing approved claims can return here when an owner reopens onboarding.
   const { data: claims } = await supa.rpc('my_venue_claims');
   const c = (claims || []).find(x => x.venue_id === venueId);
   if (c && c.status === 'approved') {
-    $('claimMsg').textContent = `${name} is approved and ready. Check your email for your QR.`;
     const { data: { session } } = await supa.auth.getSession();
-    fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-      body: JSON.stringify({ kind: 'partner_welcome', venue_id: venueId })
-    }).catch(() => {});
+    let emailSent = false;
+    if (session?.access_token) {
+      try {
+        const response = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ kind: 'partner_welcome', venue_id: venueId })
+        });
+        const result = await response.json().catch(() => ({}));
+        emailSent = response.ok && result.sent === true;
+      } catch {}
+    }
+    $('claimMsg').textContent = emailSent
+      ? `${name} is approved and ready. Your menu and QR link are in your inbox.`
+      : `${name} is approved and ready. Open it under your claims to manage the menu and print its QR.`;
   } else {
     $('claimMsg').textContent = `Claim for ${name} submitted. We verify fast, watch your inbox.`;
   }
@@ -396,26 +412,34 @@ async function loadNumbers(venueId, loadId) {
     $('numbers').innerHTML = '<div class="hint">Could not load analytics. Select the venue again to retry.</div>';
     return;
   }
+  const allReady = data.privacy_threshold_met === true;
+  const weekReady = data.weekly_threshold_met === true;
+  const protectedValue = ready => ready ? null : 'Private';
   $('numbers').innerHTML = [
-    ['pours_total','Pours logged'],['pours_7d','This week'],['unique_drinkers','Drinkers'],
-    ['avg_rating','Avg rating']
-  ].map(([k,l]) => `<div class="stat"><b>${data[k] ?? 0}</b><span>${l}</span></div>`).join('');
+    ['pours_total','Pours logged',allReady],['pours_7d','This week',weekReady],
+    ['unique_drinkers','Drinkers',allReady],['avg_rating','Avg rating',allReady]
+  ].map(([k,l,ready]) => `<div class="stat"><b>${protectedValue(ready) ?? data[k] ?? 0}</b><span>${l}</span></div>`).join('');
   const top = data.top_beers || [];
-  $('topBeers').innerHTML = top.length
+  $('topBeers').innerHTML = !allReady
+    ? `<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">Activity stays private until at least ${data.minimum_drinkers ?? 10} eligible drinkers contribute. Smaller groups are never shown as venue analytics.</div>`
+    : top.length
     ? '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">Top poured: ' +
       top.map(b => `${esc(b.name)} (${b.pours})`).join(', ') + '</div>'
     : '<div style="margin-top:10px;font-size:.85rem;color:var(--slate)">No pours logged here yet, they show up as drinkers check in.</div>';
 
   const f = data.featured || {};
   if ((f.active_campaigns || 0) > 0 || (f.impressions_total || 0) > 0) {
+    const featuredReady = f.privacy_threshold_met === true;
+    const featuredValue = value => featuredReady ? (value ?? 0) : 'Private';
     $('featuredReach').innerHTML =
       `<div style="margin-top:16px;font-family:'Poppins';font-weight:800;font-size:.95rem">Your Featured reach</div>
        <div class="stats" style="margin-top:8px">
-         <div class="stat"><b>${f.impressions_total ?? 0}</b><span>Times shown</span></div>
-         <div class="stat"><b>${f.taps_total ?? 0}</b><span>Taps</span></div>
-         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : 'N/A'}</b><span>Tap rate</span></div>
-         <div class="stat"><b>${f.reached_drinkers ?? 0}</b><span>Drinkers reached</span></div>
-       </div>`;
+         <div class="stat"><b>${featuredValue(f.impressions_total)}</b><span>Times shown</span></div>
+         <div class="stat"><b>${featuredValue(f.taps_total)}</b><span>Taps</span></div>
+         <div class="stat"><b>${featuredReady ? (f.ctr_pct != null ? f.ctr_pct + '%' : 'N/A') : 'Private'}</b><span>Tap rate</span></div>
+         <div class="stat"><b>${featuredValue(f.reached_drinkers)}</b><span>Drinkers reached</span></div>
+       </div>
+       ${featuredReady ? '' : `<div class="hint">Reach appears after at least ${f.minimum_drinkers ?? 10} eligible drinkers. Smaller audiences stay private.</div>`}`;
   } else {
     $('featuredReach').innerHTML =
       `<div style="margin-top:16px;font-size:.85rem;color:var(--slate)">No Featured campaign running. Upgrade below to reach nearby drinkers in your metro, your impressions, taps, and reach will show up here.</div>`;

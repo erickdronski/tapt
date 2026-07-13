@@ -116,6 +116,13 @@ promptly (small commits, don't sit on local state another agent can't see).
   hides unambiguous price, deposit, barcode, placeholder, country-only, and
   malformed-quote scrape rows. Stored display/name gates are rewritten in
   place and market standings refreshed.
+- **Auth + partner truth pass (Codex, 2026-07-13):** guest beer-detail votes
+  survive the sign-in handoff and replay once, with visible success/failure;
+  portal magic links return to the portal, approved-claim email delivery is
+  reported honestly, and privacy-suppressed analytics render as private rather
+  than fake zeroes. Transactional and unsubscribe links use `taptbeer.com`.
+  App Store capture now presents Beer Radar full-screen and rejects nearly
+  black screenshot edge bands that can hide the status bar.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in
@@ -148,20 +155,19 @@ promptly (small commits, don't sit on local state another agent can't see).
      catalog_search (debounced, local-instant + server-replace).
   5. Image downsampling for list thumbs; ticker TimelineView -> 30fps periodic.
      DONE (Codex): LocationManager stops updates when location is disabled.
-- **Codex release lane:** Claude's latest `64c2e92` is merged under the
-  release-readiness work. Production migrations `0069` through `0078` are
-  applied and mirrored; they cover venue import, partner assets, age/social
-  boundaries, canonical menu check-ins, Cellar pagination, media processing,
-  Tonight, No / Low, and advisor cleanup. Native/web resilience, responsible
-  game framing, account deletion, consent hydration, guest navigation, landing,
-  portal, and TestFlight feedback automation are integrated on
-  `agent/release-readiness` pending CI-backed merge.
-- **Auth truth (2026-07-12):** email magic link + six-digit code are enabled and
-  working. Supabase reports Google/Facebook enabled, but Google has not completed
-  a signed-device callback and remains a release gate. Apple is implemented in
-  the app but disabled in Supabase pending Apple credentials. X and phone are
-  disabled. Unverified external providers are hidden in release builds. Do not
-  claim these gates are complete until TestFlight proves them.
+- **Codex release lane:** the release-readiness branch and PR #46 are merged;
+  their GitHub Xcode builds passed. Production migrations through `0083` are
+  applied and mirrored. Native/web resilience, responsible game framing,
+  account deletion, consent hydration, guest navigation, landing, portal, and
+  TestFlight feedback automation are on `main`.
+- **Auth truth (2026-07-13):** email magic link + six-digit code are enabled and
+  verified in production. Google is enabled and linked to the owner account,
+  but its signed-device callback still needs TestFlight proof. Apple is
+  implemented in the app but disabled in Supabase pending real Apple
+  credentials. Facebook, X, and phone are disabled. Google remains visible so
+  its signed-device return path can be tested; the other unfinished external
+  providers stay hidden. Do not claim these gates are complete until TestFlight
+  proves them.
 - **Legal truth:** `/privacy` and `/terms` are counsel-review drafts with open
   company, address, liability, governing-law, and dispute placeholders. They
   are not App Store-final until those placeholders and the review are complete.
@@ -169,7 +175,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   toggles (leaked-password protection ON; auth pool -> percentage); complete
   Google consent and Apple provider credentials; verify email/Google/Apple on a
   signed TestFlight device; dispatch the next TestFlight build after CI passes;
-  RESEND_API_KEY/Stripe/FB App ID when wanted.
+  resolve the outstanding Supabase invoice; RESEND_API_KEY/Stripe/FB App ID when
+  wanted.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

@@ -25,6 +25,21 @@ guard paths.count == expectedPhrases.count else {
     exit(1)
 }
 
+func averageLuminance(_ bitmap: NSBitmapImageRep, rows: Range<Int>) -> Double {
+    var total = 0.0
+    var samples = 0
+    for y in stride(from: rows.lowerBound, to: rows.upperBound, by: 12) {
+        for x in stride(from: 0, to: bitmap.pixelsWide, by: 12) {
+            guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { continue }
+            total += 0.2126 * color.redComponent
+                + 0.7152 * color.greenComponent
+                + 0.0722 * color.blueComponent
+            samples += 1
+        }
+    }
+    return samples == 0 ? 0 : total / Double(samples)
+}
+
 var failed = false
 for path in paths.sorted() {
     let name = URL(fileURLWithPath: path).lastPathComponent
@@ -53,6 +68,20 @@ for path in paths.sorted() {
         fputs("\(name) is \(cgImage.width)x\(cgImage.height), expected 1320x2868.\n", stderr)
         failed = true
         continue
+    }
+
+    // Sheets can expose an unpainted host window above the rounded presentation.
+    // Check both bitmap edges because AppKit's row orientation is format-dependent.
+    let bitmap = NSBitmapImageRep(cgImage: cgImage)
+    let edgeRows = 160
+    let firstEdge = averageLuminance(bitmap, rows: 0..<edgeRows)
+    let lastEdge = averageLuminance(
+        bitmap,
+        rows: (bitmap.pixelsHigh - edgeRows)..<bitmap.pixelsHigh
+    )
+    if min(firstEdge, lastEdge) < 0.04 {
+        fputs("\(name) has a nearly black edge band; the status bar or host background may be unreadable.\n", stderr)
+        failed = true
     }
 
     let request = VNRecognizeTextRequest()

@@ -44,8 +44,8 @@ struct RootView: View {
         .sheet(isPresented: $showCatalogPreview) {
             NavigationStack { CatalogView() }
         }
-        .sheet(isPresented: $showMapPreview) {
-            NavigationStack { NearYouView() }
+        .fullScreenCover(isPresented: $showMapPreview) {
+            NearYouView()
         }
         .sheet(isPresented: $showGamesPreview) {
             NavigationStack { GamesView() }

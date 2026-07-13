@@ -17,6 +17,8 @@ struct BeerDetailView: View {
     @State private var savingNote = false
     @State private var showLogPour = false
     @State private var loadError: String?
+    @State private var voteMessage: String?
+    @State private var voteMessageIsError = false
 
     var body: some View {
         ScrollView {
@@ -24,6 +26,12 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header(d)
                     communityBar(d)
+                    if let voteMessage {
+                        Label(voteMessage, systemImage: voteMessageIsError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(voteMessageIsError ? Brand.copper : Brand.hop)
+                            .padding(.horizontal, 4)
+                    }
                     logPourButton(d)
                     if session.user != nil {
                         noteCard(d)
@@ -207,6 +215,8 @@ struct BeerDetailView: View {
         let active = myVote == value
         return Button {
             guard let uid = session.user?.id else {
+                session.deferBeerVote(beerId: d.id, value: value)
+                session.deferBeerDetail(beerId: d.id)
                 session.endGuestSession()
                 return
             }
@@ -222,10 +232,18 @@ struct BeerDetailView: View {
                     } else {
                         try await BeerService.unvote(beerId: d.id, userId: uid)
                     }
+                    await MainActor.run {
+                        session.clearPendingBeerVote(for: d.id)
+                        voteMessage = nil
+                    }
                 } catch {
                     // The optimistic thumb must not lie: revert on failure.
-                    withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = previous }
-                    Haptic.tap()
+                    await MainActor.run {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.62)) { myVote = previous }
+                        voteMessage = "Vote did not save. Check your connection and try again."
+                        voteMessageIsError = true
+                        Haptic.tap()
+                    }
                 }
             }
         } label: {
@@ -677,6 +695,18 @@ struct BeerDetailView: View {
             let existing = try? await BeerService.currentVote(beerId: beerId, userId: uid)
             loadedVote = existing
             myVote = existing
+            if let pendingVote = session.pendingBeerVote(for: beerId) {
+                do {
+                    try await BeerService.vote(beerId: beerId, userId: uid, value: pendingVote)
+                    myVote = pendingVote
+                    session.clearPendingBeerVote(for: beerId)
+                    voteMessage = "Signed in. Your vote counted."
+                    voteMessageIsError = false
+                } catch {
+                    voteMessage = "You are signed in, but the vote did not save. Tap it again."
+                    voteMessageIsError = true
+                }
+            }
             let n = (try? await BeerNoteService.get(beerId)) ?? nil
             note = n ?? ""
             savedNote = note

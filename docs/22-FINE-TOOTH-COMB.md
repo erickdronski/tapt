@@ -745,7 +745,7 @@ The spotlight card is just visibleTaptVenues.first ?? taptVenues.first. location
 
 **Fix:** Only render the spotlight card when the venue is provably near the user: gate it on the brewery_map_feed_near result (or venue.region == homeRegion) and hide it otherwise, instead of falling back to the global list head. Retitle honestly if a non-near fallback is ever wanted ('From the Tapt map', no SPOT badge), and delete the fabricated 'Fresh taps, events, and game nights nearby' fallback line — show the real place line or nothing.
 
-### [OPEN] Both deployed email functions hardcode tapt-landing-three.vercel.app instead of taptbeer.com
+### [FIXED this round] Both deployed email functions hardcode tapt-landing-three.vercel.app instead of taptbeer.com
 *Surface:* Live edge functions resend-send and newsletter-unsubscribe (partner emails + unsubscribe redirect)  ·  *Anchor:* `supabase/functions/resend-send/index.ts:17`  ·  *Found by:* fleet
 
 Verified in the DEPLOYED code, not just the mirror: resend-send v2 has LANDING = 'https://tapt-landing-three.vercel.app', used for the partner welcome email's 'View menu + print QR' link, the portal link, and the footer brand link on every email it sends; newsletter-unsubscribe v1 has the same LANDING and 303-redirects the human (GET) unsubscribe path to tapt-landing-three.vercel.app/unsubscribe. dispatch-weekly correctly uses https://taptbeer.com, so emails from different functions brand two different domains. Both vercel URLs currently resolve (verified 200 with the real unsubscribe page), so nothing is broken today, but partners who open their menu from the welcome email will print table QR codes bearing the vercel URL, and the CAN-SPAM human unsubscribe path lives on a domain that dies if the Vercel alias is ever renamed.
@@ -754,7 +754,11 @@ Verified in the DEPLOYED code, not just the mirror: resend-send v2 has LANDING =
 
 **Fix:** Change LANDING to https://taptbeer.com in supabase/functions/resend-send/index.ts:17 and supabase/functions/newsletter-unsubscribe/index.ts:13, redeploy both functions, and keep the repo mirror in the same commit. Optionally read the domain from a single LANDING_URL env/secret so all three email functions cannot drift again.
 
-### [OPEN] No Privacy/Terms links on the portal, the public menu page, or the pitch page
+**Resolution (2026-07-13):** Deployed `resend-send` v4 and
+`newsletter-unsubscribe` v3 with `https://taptbeer.com`, pinned Supabase client
+imports, and a canonical invalid-token redirect verified at runtime.
+
+### [FIXED this round] No Privacy/Terms links on the portal, the public menu page, or the pitch page
 *Surface:* landing/portal.html, landing/menu.html, landing/pitch.html  ·  *Anchor:* `landing/portal.html:137`  ·  *Found by:* fleet
 
 The footer-legal rule is on every page: index, dispatch, and unsubscribe carry Privacy/Terms links, but portal.html (which collects business emails via OTP sign-in, venue claims, inquiry messages, and logo uploads) has no privacy policy or terms link anywhere, no link back to the main site, and ends on the paid-placement card. menu.html is the public page every table QR resolves to and has only a 'What is Tapt?' link. pitch.html is a public business page with no legal links. For the portal specifically, collecting personal/business data on a page with zero legal links is a trust and compliance gap in the exact flow where a bar owner decides whether Tapt is legitimate.
@@ -763,7 +767,10 @@ The footer-legal rule is on every page: index, dispatch, and unsubscribe carry P
 
 **Fix:** Add a small shared footer line to portal.html, menu.html, and pitch.html: 'Privacy Policy · Terms of Service · hello@taptbeer.com' linking to /privacy and /terms (root-relative so it works from /menu?v=... too), plus a wordmark link back to /. On portal.html place it after the featured-placement card; on menu.html merge it into the existing .foot line so print CSS still hides the CTA but keeps legal links.
 
-### [OPEN] Incumbent price framed as $1,199/yr when Untappd for Business publicly lists an $899/yr tier, and the pitch's '21% of Untappd's floor' math is wrong
+**Resolution (2026-07-13):** Portal already carried its legal footer; menu and
+pitch now link Privacy, Terms, and the appropriate Tapt/contact destination.
+
+### [FIXED this round] Incumbent price framed as $1,199/yr when Untappd for Business publicly lists an $899/yr tier, and the pitch's '21% of Untappd's floor' math is wrong
 *Surface:* landing/index.html business comparison + landing/pitch.html business model slide  ·  *Anchor:* `landing/pitch.html:107`  ·  *Found by:* fleet
 
 The landing's 'The incumbent · $1,199/yr' card and the pitch's 'Thousands of US venues pay $1,199/yr' present Untappd's PREMIUM tier as the incumbent's price. Untappd for Business publicly lists two tiers: Essentials $899/yr and Premium $1,199/yr, and menu hosting (the feature Tapt's $0 comparison targets) is included in the $899 tier. Picking the top tier without disclosure overstates the wedge on a site whose brand is honesty. The pitch also claims 'Top tier ≈ 21% of Untappd's floor': Spotlight at $79/mo is $948/yr, which is 79% of $1,199 and 105% of the real $899 floor; no tier arithmetic produces 21%, so the stat contradicts the tier table two lines above it.
@@ -771,6 +778,10 @@ The landing's 'The incumbent · $1,199/yr' card and the pitch's 'Thousands of US
 **Evidence:** index.html:350 `<div class="price">$1,199<span...>/yr</span></div>` under 'The incumbent'; pitch.html:67 'business pricing doubled to $1,199/yr'; pitch.html:107 'Top tier ≈ 21% of Untappd's floor'. Web sources: Untappd help center and BeerMenus report Essentials $899/yr and Premium $1,199/yr two-tier pricing (help.untappd.com 'What is Untappd for Business Premium?', beermenus.com/blog/312 'Untappd for Business price increase', utfb.untappd.com/get-pricing). $948/$1,199 = 79%, not 21%.
 
 **Fix:** Anchor the comparison to the incumbent's real floor: label the card 'The incumbent · from $899/yr' (or '$899-1,199/yr') on index.html and pitch.html, and fix the derived stat to the true math, e.g. 'Top tier costs about a quarter of what the incumbent's cheapest plan charges per month' only if that is actually true after recomputation; with Spotlight $79/mo vs Essentials $74.92/mo it is not, so the honest line is 'Featured at $29/mo is about a third of the incumbent's floor'. Recompute every derived percentage from the published tier table before it ships.
+
+**Resolution (2026-07-13):** Removed the unstable competitor price and derived
+percentage claims. The landing and pitch now describe paid menu suites and
+Tapt's free-core/optional-reach model without a hardcoded competitor price.
 
 ### [OPEN] Catalog country and style counts on public pages do not match the live database
 *Surface:* landing/pitch.html moat slide + landing/index.html data-promise section  ·  *Anchor:* `landing/pitch.html:90`  ·  *Found by:* fleet
