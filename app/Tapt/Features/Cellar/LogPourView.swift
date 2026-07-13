@@ -1,5 +1,29 @@
 import SwiftUI
 
+/// Race an async operation against a wall-clock timeout so a hung network call
+/// (e.g. the Simulator keychain/session gotcha, or a dropped connection) can
+/// never wedge the UI on a spinner with no success and no error. On timeout it
+/// throws, so the caller's catch surfaces a real, dismissible error.
+private func withTaptTimeout<T: Sendable>(
+    seconds: Double,
+    _ operation: @escaping @Sendable () async throws -> T
+) async throws -> T {
+    try await withThrowingTaskGroup(of: T.self) { group in
+        group.addTask { try await operation() }
+        group.addTask {
+            try await Task.sleep(for: .seconds(seconds))
+            throw TaptTimeoutError()
+        }
+        guard let result = try await group.next() else { throw TaptTimeoutError() }
+        group.cancelAll()
+        return result
+    }
+}
+
+private struct TaptTimeoutError: LocalizedError {
+    var errorDescription: String? { "Timed out. Check your connection and try again." }
+}
+
 /// Log a Pour: pick a beer, rate it, save the check-in, then share the card.
 struct LogPourView: View {
     @Environment(Session.self) private var session
@@ -364,22 +388,31 @@ struct LogPourView: View {
             return
         }
         guard let uid = session.user?.id else {
+            // Do NOT tear the session down here: endGuestSession() swapped the app
+            // root to SignInView and killed this sheet before the alert could show,
+            // which read as "Log it does nothing". Just surface the error.
             errorMessage = "Sign in to log this pour and add it to your Cellar."
-            session.endGuestSession()
             return
         }
         saving = true
+        let tags = Array(flavorTags).sorted()
+        let glass = glassware
+        let occ = occasion
+        let venueId = selectedVenue?.venueId
         Task {
             do {
-                try await CheckinService.log(
-                    beer: beer,
-                    userId: uid,
-                    rating: rating,
-                    flavorTags: Array(flavorTags).sorted(),
-                    glassware: glassware,
-                    occasion: occasion,
-                    venueId: selectedVenue?.venueId
-                )
+                // Timeout-guarded so a hung write can never wedge "Saving…" silently.
+                try await withTaptTimeout(seconds: 20) {
+                    try await CheckinService.log(
+                        beer: beer,
+                        userId: uid,
+                        rating: rating,
+                        flavorTags: tags,
+                        glassware: glass,
+                        occasion: occ,
+                        venueId: venueId
+                    )
+                }
                 await MainActor.run {
                     saving = false
                     // Leave the rate form immediately: a stale form behind the
