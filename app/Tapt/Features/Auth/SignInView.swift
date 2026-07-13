@@ -5,7 +5,7 @@ import Security
 import Supabase
 
 /// Sign in. External providers appear only when they are enabled in Supabase
-/// and have passed a signed-device callback test for this release.
+/// and have completed the live provider verification gate for this release.
 /// Email supports both the magic link AND typing the 6-digit code from the
 /// same email (survives cross-device and link-scanner problems).
 struct SignInView: View {
