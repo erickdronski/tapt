@@ -125,6 +125,14 @@ struct NearYouView: View {
                 .frame(height: 320)
 
                 List {
+                    // Paid-visibility surface: local partners who pay for reach. With no
+                    // paid rows yet it shows an honest "feature your spot" invite, never a fake ad.
+                    Section {
+                        FeaturedPartnersRail()
+                    }
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowBackground(Color.clear)
+
                     if let radarError {
                         Button {
                             Task { await loadTaptRadar() }
@@ -512,64 +520,51 @@ private struct VenueDetailSheet: View {
     let venue: BreweryMapVenue
     @Environment(\.dismiss) private var dismiss
     @State private var menu: [VenueMenuRow] = []
+    @State private var events: [VenueEvent] = []
+    @State private var detail: VenueDetail?
     @State private var loaded = false
+
+    private var glyph: String {
+        let cat = (detail?.poiCategory ?? venue.breweryType ?? "").lowercased()
+        if cat.contains("brewery") { return "building.2.fill" }
+        if cat.contains("garden") { return "leaf.fill" }
+        if cat.contains("taproom") { return "drop.fill" }
+        return "mug.fill"
+    }
+
+    private var premiseLabel: String? {
+        switch detail?.onOffPremise {
+        case "on_premise": return "Serves on site"
+        case "off_premise": return "Bottles to go"
+        default: return nil
+        }
+    }
+
+    private var addressLine: String? {
+        let parts = [detail?.address, detail?.city, detail?.region, detail?.postalCode]
+            .compactMap { $0 }.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: ", ")
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    HStack(spacing: 14) {
-                        Image(systemName: "mug.fill")
-                            .font(.title2).foregroundStyle(Brand.malt)
-                            .frame(width: 54, height: 54)
-                            .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(venue.name)
-                                .font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                            Text(venue.typeLabel)
-                                .font(.caption.weight(.semibold)).foregroundStyle(Brand.copper)
-                        }
-                        Spacer(minLength: 0)
+                    header
+                    if let line = addressLine {
+                        Label(line, systemImage: "mappin.and.ellipse").font(.subheadline).foregroundStyle(Brand.muted)
+                    } else if !venue.subtitle.isEmpty {
+                        Label(venue.subtitle, systemImage: "mappin.and.ellipse").font(.subheadline).foregroundStyle(Brand.muted)
                     }
-                    if !venue.subtitle.isEmpty {
-                        Label(venue.subtitle, systemImage: "mappin.and.ellipse")
-                            .font(.subheadline).foregroundStyle(Brand.muted)
+                    if let p = premiseLabel {
+                        Label(p, systemImage: "checkmark.circle").font(.caption.weight(.semibold)).foregroundStyle(Brand.muted)
                     }
-                    HStack(spacing: 10) {
-                        Button { openInMaps() } label: {
-                            Label("Directions", systemImage: "location.fill")
-                                .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
-                                .padding(.horizontal, 14).padding(.vertical, 9)
-                                .background(Brand.gold, in: Capsule())
-                        }.buttonStyle(.plain)
-                        if let site = venue.websiteURL, !site.isEmpty,
-                           let url = URL(string: site.hasPrefix("http") ? site : "https://" + site) {
-                            Link(destination: url) {
-                                Label("Website", systemImage: "safari")
-                                    .font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
-                                    .padding(.horizontal, 14).padding(.vertical, 9)
-                                    .overlay(Capsule().stroke(Brand.malt.opacity(0.2)))
-                            }
-                        }
-                    }
-                    if !menu.isEmpty {
-                        Text("On tap now").font(.headline).foregroundStyle(Brand.text).padding(.top, 4)
-                        ForEach(menu) { row in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(row.beerName).font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
-                                    Text([row.breweryName, row.style].compactMap { $0 }.joined(separator: " · "))
-                                        .font(.caption).foregroundStyle(Brand.muted)
-                                }
-                                Spacer(minLength: 0)
-                                if let p = row.priceText { Text(p).font(.subheadline.weight(.heavy)).foregroundStyle(Brand.copper) }
-                            }
-                            .padding(11).background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
-                        }
-                    } else if loaded {
-                        Text("No live tap list yet. If you run this spot, claim it free on Tapt to publish your menu here.")
-                            .font(.caption).foregroundStyle(Brand.muted).padding(.top, 4)
-                    }
+                    actionRow
+                    if !events.isEmpty { eventsBlock }
+                    menuBlock
+                    if detail?.isClaimed == false { claimTile }
+                    Text("Place details from OpenStreetMap, Overture, and Open Brewery DB.")
+                        .font(.caption2).foregroundStyle(Brand.muted)
                 }
                 .padding()
             }
@@ -579,9 +574,135 @@ private struct VenueDetailSheet: View {
         }
         .task {
             guard !loaded else { return }
-            menu = (try? await VenueMenuService.menu(venueId: venue.venueId)) ?? []
+            async let m = VenueMenuService.menu(venueId: venue.venueId)
+            async let e = VenueMenuService.events(venueId: venue.venueId)
+            async let d = VenueDetailService.detail(venueId: venue.venueId)
+            menu = (try? await m) ?? []
+            events = (try? await e) ?? []
+            detail = try? await d
             loaded = true
         }
+    }
+
+    private var header: some View {
+        HStack(spacing: 14) {
+            Group {
+                if let logo = detail?.logoUrl, !logo.isEmpty, let u = URL(string: logo) {
+                    AsyncImage(url: u) { phase in
+                        if let img = phase.image { img.resizable().scaledToFill() }
+                        else { Image(systemName: glyph).font(.title2).foregroundStyle(Brand.malt) }
+                    }
+                } else {
+                    Image(systemName: glyph).font(.title2).foregroundStyle(Brand.malt)
+                }
+            }
+            .frame(width: 54, height: 54)
+            .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(venue.name).font(.system(.title2, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                HStack(spacing: 6) {
+                    Text(venue.typeLabel).font(.caption.weight(.semibold)).foregroundStyle(Brand.copper)
+                    if detail?.isClaimed == true {
+                        Label("Claimed on Tapt", systemImage: "checkmark.seal.fill")
+                            .font(.caption2.weight(.bold)).foregroundStyle(Brand.hop)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 10) {
+            Button { openInMaps() } label: {
+                Label("Directions", systemImage: "location.fill")
+                    .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 14).padding(.vertical, 9)
+                    .background(Brand.gold, in: Capsule())
+            }.buttonStyle(.plain)
+            if let phone = detail?.phone, !phone.isEmpty,
+               let url = URL(string: "tel://" + phone.filter { $0.isNumber || $0 == "+" }) {
+                Link(destination: url) {
+                    Label("Call", systemImage: "phone.fill")
+                        .font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                        .padding(.horizontal, 14).padding(.vertical, 9)
+                        .overlay(Capsule().stroke(Brand.malt.opacity(0.2)))
+                }
+            }
+            if let site = (detail?.websiteUrl ?? venue.websiteURL), !site.isEmpty,
+               let url = URL(string: site.hasPrefix("http") ? site : "https://" + site) {
+                Link(destination: url) {
+                    Label("Website", systemImage: "safari")
+                        .font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                        .padding(.horizontal, 14).padding(.vertical, 9)
+                        .overlay(Capsule().stroke(Brand.malt.opacity(0.2)))
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var eventsBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Happening here").font(.headline).foregroundStyle(Brand.text).padding(.top, 4)
+            ForEach(events) { e in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "calendar").font(.subheadline).foregroundStyle(Brand.copper).padding(.top, 2)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(e.title).font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                        Text([e.kindLabel, e.scheduleLabel].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Brand.muted)
+                        if let d = e.details, !d.isEmpty {
+                            Text(d).font(.caption).foregroundStyle(Brand.muted)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(11).background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    @ViewBuilder private var menuBlock: some View {
+        if !menu.isEmpty {
+            Text("On tap now").font(.headline).foregroundStyle(Brand.text).padding(.top, 4)
+            ForEach(menu) { row in
+                HStack {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(row.beerName).font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                        Text([row.breweryName, row.style].compactMap { $0 }.joined(separator: " · "))
+                            .font(.caption).foregroundStyle(Brand.muted)
+                    }
+                    Spacer(minLength: 0)
+                    if let p = row.priceText { Text(p).font(.subheadline.weight(.heavy)).foregroundStyle(Brand.copper) }
+                }
+                .padding(11).background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
+            }
+        } else if loaded {
+            Text("No live tap list yet.").font(.caption).foregroundStyle(Brand.muted).padding(.top, 4)
+        }
+    }
+
+    // The claim entry the owner asked for: any venue on the map can be claimed by
+    // the partner who runs it, which routes them into the free partner flow.
+    private var claimTile: some View {
+        NavigationLink { BreweriesHubView() } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.seal.fill").font(.title3).foregroundStyle(Brand.malt)
+                    .frame(width: 40, height: 40).background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Run this place?").font(.subheadline.weight(.bold)).foregroundStyle(Brand.text)
+                    Text("Claim it free to publish your tap list, add events, and see who is drinking here.")
+                        .font(.caption).foregroundStyle(Brand.muted)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption).foregroundStyle(Brand.muted)
+            }
+            .padding(12).background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.gold.opacity(0.3)))
+        }
+        .buttonStyle(.plain)
     }
 
     private func openInMaps() {

@@ -553,3 +553,41 @@ enum VenueMenuService {
         return try await Supa.client.rpc("venue_events", params: Params(p_venue: venueId)).execute().value
     }
 }
+
+/// Enriched, honest venue detail for the map sheet: only real fields from the
+/// venue row + external_ids, plus whether it is claimed. Anon-capable.
+struct VenueDetail: Decodable, Sendable {
+    let name: String?
+    let logoUrl: String?
+    let poiCategory: String?
+    let onOffPremise: String?
+    let address: String?
+    let city: String?
+    let region: String?
+    let country: String?
+    let postalCode: String?
+    let phone: String?
+    let websiteUrl: String?
+    let sourceNote: String?
+    let isClaimed: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case name, address, city, region, country, phone
+        case logoUrl = "logo_url"
+        case poiCategory = "poi_category"
+        case onOffPremise = "on_off_premise"
+        case postalCode = "postal_code"
+        case websiteUrl = "website_url"
+        case sourceNote = "source_note"
+        case isClaimed = "is_claimed"
+    }
+}
+
+enum VenueDetailService {
+    static func detail(venueId: String) async throws -> VenueDetail? {
+        struct Params: Encodable { let p_venue: String }
+        let rows: [VenueDetail] = try await Supa.client
+            .rpc("venue_detail", params: Params(p_venue: venueId)).execute().value
+        return rows.first
+    }
+}
