@@ -262,10 +262,10 @@
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation"><span aria-hidden="true">☰</span><span class="sr-only">Menu</span></button>
     <div class="nav-links" id="primary-navigation">
       <a href="#features">Features</a>
-      <a href="#market-card">Beer market</a>
+      <a href="#preview">The app</a>
       <a href="#business">For business</a>
       <a href="dispatch.html">Dispatch</a>
-      <a class="btn btn-gold" href="#get">Get Tapt</a>
+      <a class="btn btn-gold" href="#get">Get launch access</a>
     </div>
   </div>
 </nav>
@@ -273,40 +273,21 @@
 <main id="main">
 <div class="wrap">
   <div class="hero">
-    <div>
-      <span class="kicker">FOR DRINKERS + BEER BUSINESSES</span>
-      <h1><span>THE Beer</span><span><em>Superapp</em>.</span></h1>
-      <p class="lede">All of beer, one app: discover, rank, learn, play, find local pours, and build your Beer Passport.</p>
+    <div id="get">
+      <span class="kicker">THE BEER SUPERAPP</span>
+      <h1 style="white-space:normal">Scan any beer.<br>Know its whole story.</h1>
+      <p class="lede">Scan a bottle, a label, or a bar QR and get the real beer: its style, strength, awards, and where to find it near you. Free for drinkers, always.</p>
       <form class="signup hero-signup" id="hero-form" novalidate>
         <input type="email" name="email" placeholder="you@example.com" required maxlength="320" autocomplete="email" aria-label="Email for launch access">
         <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         <button class="btn btn-gold" type="submit">Get launch access</button>
       </form>
       <div class="msg" id="hero-msg" role="status"></div>
-      <div class="hero-ctas" id="get">
-        <a class="btn btn-ghost" href="#business">For breweries &amp; bars</a>
-      </div>
-      <p class="fineprint"><b>iOS, launching soon.</b> Free for drinkers, always. No ads that bury the honest boards.</p>
+      <p class="fineprint"><b>iOS, launching soon.</b> Free for drinkers, always. Breweries and bars get free menu hosting.</p>
     </div>
-    <div class="market" id="market-card">
-      <h4>The Beer Market</h4>
-      <p class="sub">Real beers. Real votes. The world decides.</p>
-      <div class="row"><span class="rank">1</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Real votes</b><span>One current vote per signed-in drinker</span></div><span class="mv up">INPUT</span></div>
-      <div class="row"><span class="rank">2</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Logged pours</b><span>First-party activity from the Cellar</span></div><span class="mv up">LIVE</span></div>
-      <div class="row"><span class="rank">3</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Seasonal context</b><span>Style fit for the current season</span></div><span class="mv up">TIME</span></div>
-      <div class="row"><span class="rank">4</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Cited awards</b><span>Verified medal records with sources</span></div><span class="mv up">PROOF</span></div>
-      <p class="foot">The app ranks real catalog beers from these inputs. Movement appears only after stored snapshots change.</p>
-    </div>
-  </div>
-</div>
-
-<div class="stats">
-  <div class="wrap">
-    <div class="stats-grid">
-      <div class="stat reveal"><b>Deep catalog</b><span>normalized beer identities</span></div>
-      <div class="stat reveal d1"><b>Worldwide</b><span>breweries and beers</span></div>
-      <div class="stat reveal d2"><b>On the map</b><span>taprooms and bars</span></div>
-      <div class="stat reveal d3"><b>Cited</b><span>real BJCP style science</span></div>
+    <div style="display:flex;justify-content:center">
+      <img src="img/screens/03-home.png" alt="The Tapt home screen: scan a beer, the Beer Market, and Beer near you"
+           style="width:min(300px,82%);border-radius:34px;border:1px solid rgba(19,10,2,.14);box-shadow:0 30px 70px rgba(19,10,2,.28);display:block">
     </div>
   </div>
 </div>
@@ -385,7 +366,7 @@
       <div class="tile big dark reveal">
         <div class="ic" style="background:var(--gold);color:var(--malt)">📈</div>
         <h3>The Beer Market</h3>
-        <p>Catalog beers move like tickers. Upvote what deserves it, downvote what does not, and watch the rankings move with real votes and check-ins from drinkers worldwide. Beer of the Week gets crowned every Monday. No pay to bury, no fake hype, ever.</p>
+        <p>Catalog beers move like tickers. Upvote what deserves it, downvote what does not, and watch rankings move on real votes and check-ins, cited awards, and what is in season. Beer of the Week gets crowned every Monday.</p>
       </div>
       <div class="tile small gold reveal d1">
         <div class="ic" style="background:var(--malt);color:var(--gold)">📷</div>
@@ -417,14 +398,6 @@
         <p>A location-aware map of breweries, bars, pubs, and taprooms, with live tap lists from claimed venues and a Tonight board of local beer heat.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<section id="market" class="biz" style="background:var(--foam)">
-  <div class="wrap">
-    <span class="sec-kicker">The honest part</span>
-    <h2>Real votes. Real beers.<br>Zero fabricated hype.</h2>
-    <p class="sec-lede">The market only moves on real community signal. No bots, no bought placement, no invented numbers. When the community is quiet, the boards say so. Every ranking you see was earned by a real drinker tapping a real button.</p>
   </div>
 </section>
 
@@ -495,9 +468,9 @@
 
 <section id="honest">
   <div class="wrap">
-    <span class="sec-kicker">Our data promise</span>
-    <h2>Zero fabricated data. Open sources, cited.</h2>
-    <p class="sec-lede">Every venue has real coordinates and provenance. Every beer is a real product. Every popularity number comes from real votes and check-ins. Boards stay honestly empty until the community moves them. Blank beats invented, always.</p>
+    <span class="sec-kicker">Our promise</span>
+    <h2>Every number is real or cited.<br>Nothing is invented.</h2>
+    <p class="sec-lede">The Beer Market moves on real signal: community votes and check-ins, real cited awards, and what is genuinely in season, never on money or bots. Every venue has real coordinates. Every beer is a real product. When the community is quiet, the boards say so. Blank beats invented, always.</p>
     <div class="sources">
       <div class="source reveal"><h3>Overture Maps</h3><p>Global beer-place coverage with real coordinates, monthly release lineage, and permissive per-source licenses.</p><a href="https://docs.overturemaps.org/guides/places/" rel="noopener">Overture Places →</a></div>
       <div class="source reveal d1"><h3>Open Brewery DB</h3><p>A dedicated brewery directory used for location and venue enrichment.</p><a href="https://www.openbrewerydb.org/" rel="noopener">openbrewerydb.org →</a></div>
