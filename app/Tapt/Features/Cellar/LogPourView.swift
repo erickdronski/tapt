@@ -7,11 +7,11 @@ struct LogPourView: View {
     var onLogged: () -> Void
 
     @State private var beers: [CatalogBeer] = []
-    @State private var venues: [BreweryMapVenue] = []
+    @State private var venueResults: [VenueSearchResult] = []
     @State private var search = ""
     @State private var venueSearch = ""
     @State private var selected: BeerPick?
-    @State private var selectedVenue: BreweryMapVenue?
+    @State private var selectedVenue: VenueSearchResult?
     // Starts unrated so Tapt never records an opinion the user did not express.
     @State private var rating: Double?
     @State private var flavorTags: Set<String> = []
@@ -24,6 +24,8 @@ struct LogPourView: View {
     @State private var errorMessage: String?
     @State private var loadingCatalog = false
     @State private var catalogError: String?
+    @State private var loadingVenues = false
+    @State private var venueError: String?
 
     private let tags = ["hoppy", "malty", "crisp", "fruity", "roasty", "sour", "sweet", "dry"]
     private let glasswareOptions = ["Pint", "Can", "Bottle", "Tulip", "Snifter", "Flight"]
@@ -56,10 +58,8 @@ struct LogPourView: View {
                     }
                 }
             }
-            .task {
-                venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []
-            }
             .task(id: search) { await loadCatalog() }
+            .task(id: venueSearchTaskKey) { await loadVenues() }
             .sheet(item: $sharePour) { pour in
                 NavigationStack {
                     ScrollView { CardShareView(pour: pour).padding(.vertical) }
@@ -204,7 +204,7 @@ struct LogPourView: View {
                             .font(.system(.subheadline, design: .rounded).weight(.bold))
                             .foregroundStyle(Brand.text)
                             .lineLimit(1)
-                        Text(selectedVenue.subtitle.isEmpty ? "Tapt brewery map" : selectedVenue.subtitle)
+                        Text(selectedVenue.placeLine.isEmpty ? "Venue on Tapt" : selectedVenue.placeLine)
                             .font(.caption)
                             .foregroundStyle(Brand.muted)
                             .lineLimit(1)
@@ -235,14 +235,30 @@ struct LogPourView: View {
                 .background(Brand.surface, in: RoundedRectangle(cornerRadius: 13))
                 .overlay(RoundedRectangle(cornerRadius: 13).stroke(Brand.malt.opacity(0.10), lineWidth: 1))
 
-                let matches = venueMatches(for: beer)
-                if matches.isEmpty {
-                    Text(venues.isEmpty ? "Brewery radar is loading." : "No brewery match yet. You can still log the pour.")
+                if loadingVenues {
+                    Label("Searching Tapt venues...", systemImage: "magnifyingglass")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                } else if let venueError {
+                    Button {
+                        Task { await loadVenues() }
+                    } label: {
+                        Label(venueError, systemImage: "arrow.clockwise")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Brand.copper)
+                    }
+                    .buttonStyle(.plain)
+                } else if venueSearch.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
+                    Text("Type at least two letters to search every Tapt venue.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                } else if venueResults.isEmpty {
+                    Text("No venue match yet. You can still log the pour.")
                         .font(.caption)
                         .foregroundStyle(Brand.muted)
                 } else {
                     LazyVStack(spacing: 8) {
-                        ForEach(matches) { venue in
+                        ForEach(venueResults.prefix(8)) { venue in
                             Button {
                                 selectedVenue = venue
                                 venueSearch = venue.name
@@ -257,7 +273,7 @@ struct LogPourView: View {
         }
     }
 
-    private func venueRow(_ venue: BreweryMapVenue) -> some View {
+    private func venueRow(_ venue: VenueSearchResult) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "mappin.and.ellipse")
                 .foregroundStyle(Brand.malt)
@@ -268,44 +284,25 @@ struct LogPourView: View {
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
                     .foregroundStyle(Brand.text)
                     .lineLimit(1)
-                Text(venue.subtitle.isEmpty ? venue.typeLabel.capitalized : venue.subtitle)
+                Text(venue.placeLine.isEmpty ? "Venue on Tapt" : venue.placeLine)
                     .font(.caption)
                     .foregroundStyle(Brand.muted)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
-            Text(venue.sourceBadge)
-                .font(.system(.caption2, design: .rounded).weight(.heavy))
-                .foregroundStyle(Brand.malt)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 4)
-                .background(Brand.gold, in: Capsule())
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Brand.muted)
         }
         .padding(10)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 13))
         .overlay(RoundedRectangle(cornerRadius: 13).stroke(Brand.malt.opacity(0.08), lineWidth: 1))
     }
 
-    private func venueMatches(for beer: BeerPick) -> [BreweryMapVenue] {
-        let term = venueSearch.trimmingCharacters(in: .whitespacesAndNewlines)
-        if term.isEmpty {
-            return Array(venues.prefix(8))
-        }
-
-        let searchMatches = venues.filter { venue in
-            [venue.name, venue.city, venue.region, venue.country, venue.breweryType]
-                .compactMap { $0 }
-                .contains { $0.localizedCaseInsensitiveContains(term) }
-        }
-        if !searchMatches.isEmpty {
-            return Array(searchMatches.prefix(8))
-        }
-
-        let brewery = beer.breweryName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !brewery.isEmpty else { return [] }
-        return Array(venues.filter { venue in
-            venue.name.localizedCaseInsensitiveContains(brewery) || brewery.localizedCaseInsensitiveContains(venue.name)
-        }.prefix(8))
+    private var venueSearchTaskKey: String {
+        [selected?.id, selectedVenue?.venueId, venueSearch]
+            .compactMap { $0 }
+            .joined(separator: "|")
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
@@ -376,7 +373,7 @@ struct LogPourView: View {
                     flavorTags: Array(flavorTags).sorted(),
                     glassware: glassware,
                     occasion: occasion,
-                    venue: selectedVenue
+                    venueId: selectedVenue?.venueId
                 )
                 await MainActor.run {
                     saving = false
@@ -429,11 +426,43 @@ struct LogPourView: View {
         }
     }
 
-    private func sharePlace(_ venue: BreweryMapVenue) -> String {
-        let location = [venue.city, venue.region, venue.country]
-            .compactMap { $0 }
-            .filter { !$0.isEmpty }
-            .joined(separator: ", ")
-        return location.isEmpty ? venue.name : "\(venue.name), \(location)"
+    @MainActor
+    private func loadVenues() async {
+        guard selected != nil else {
+            venueResults = []
+            venueError = nil
+            loadingVenues = false
+            return
+        }
+        guard selectedVenue == nil else {
+            loadingVenues = false
+            return
+        }
+        let term = venueSearch.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard term.count >= 2 else {
+            venueResults = []
+            venueError = nil
+            loadingVenues = false
+            return
+        }
+
+        loadingVenues = true
+        venueError = nil
+        try? await Task.sleep(for: .milliseconds(250))
+        guard !Task.isCancelled else { return }
+        do {
+            let results = try await PartnerService.searchVenues(term, limit: 20)
+            guard !Task.isCancelled else { return }
+            venueResults = results
+        } catch is CancellationError {
+            return
+        } catch {
+            venueError = "Venue search is unavailable. Tap to retry."
+        }
+        loadingVenues = false
+    }
+
+    private func sharePlace(_ venue: VenueSearchResult) -> String {
+        venue.placeLine.isEmpty ? venue.name : "\(venue.name), \(venue.placeLine)"
     }
 }

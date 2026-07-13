@@ -84,7 +84,33 @@ struct FeaturedPartner: Identifiable, Decodable, Sendable {
     }
 }
 
+struct VenueSearchResult: Identifiable, Decodable, Sendable {
+    let venueId: String
+    let name: String
+    let city: String?
+    let region: String?
+    let country: String?
+
+    var id: String { venueId }
+    var placeLine: String {
+        [city, region, country].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name, city, region, country
+        case venueId = "venue_id"
+    }
+}
+
 enum PartnerService {
+    static func searchVenues(_ query: String, limit: Int = 20) async throws -> [VenueSearchResult] {
+        struct Params: Encodable { let p_query: String; let p_limit: Int }
+        return try await Supa.authedRPC(
+            "search_venues",
+            params: Params(p_query: query, p_limit: limit)
+        )
+    }
+
     static func featured(limit: Int = 10, region: String? = nil) async throws -> [FeaturedPartner] {
         struct Params: Encodable { let p_limit: Int; let p_region: String? }
         return try await Supa.client

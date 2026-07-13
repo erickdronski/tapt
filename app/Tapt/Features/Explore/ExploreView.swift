@@ -494,12 +494,20 @@ struct ExploreView: View {
         else { return }
         var detected: String?
         if mark.isoCountryCode == "US", let area = mark.administrativeArea {
-            detected = BeerRegions.states.first { $0 == area }
-                ?? guides.first { $0.scope == "state" && $0.stateCode == area }?.name
-        } else if let country = mark.country, BeerRegions.countries.contains(country) {
-            detected = country
+            detected = BeerRegions.canonicalUSRegion(area)
+        } else if let country = mark.country {
+            detected = BeerRegions.canonicalCountry(country)
         }
         if let detected {
+            if let userId = session.user?.id {
+                do {
+                    try await ProfileService.setRegion(detected, userId: userId)
+                } catch {
+                    // Keep the visible board and server vote region aligned.
+                    // A later appearance retries automatic detection.
+                    return
+                }
+            }
             homeRegionGeocoded = true
             homeRegion = detected
             withAnimation { region = detected }

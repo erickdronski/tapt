@@ -14,22 +14,6 @@ private enum PartnerLinks {
 
 // MARK: - Models for the owner tools
 
-struct VenueSearchResult: Identifiable, Decodable, Sendable {
-    let venueId: String
-    let name: String
-    let city: String?
-    let region: String?
-    let country: String?
-    var id: String { venueId }
-    enum CodingKeys: String, CodingKey {
-        case name, city, region, country
-        case venueId = "venue_id"
-    }
-    var placeLine: String {
-        [city, region, country].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
-    }
-}
-
 struct VenueClaim: Identifiable, Decodable, Sendable {
     let claimId: String
     let venueId: String
@@ -75,14 +59,6 @@ struct VenueAnalytics: Decodable, Sendable {
 }
 
 extension PartnerService {
-    static func searchVenues(_ query: String, limit: Int = 20) async throws -> [VenueSearchResult] {
-        struct P: Encodable { let p_query: String; let p_limit: Int }
-        return try await Supa.authedRPC(
-            "search_venues",
-            params: P(p_query: query, p_limit: limit)
-        )
-    }
-
     @discardableResult
     static func claimVenue(venueId: String, email: String, role: String) async throws -> String {
         struct P: Encodable { let p_venue: String; let p_email: String; let p_role: String }

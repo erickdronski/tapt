@@ -367,7 +367,7 @@ Japan's 80 rows include 'Asahi Super Dry', 'Super Dry', 'Asahi Super "Dry"' (cur
 
 **Fix:** Reuse the 0065 display-name dedupe approach on the trend feed: normalize a dedupe key (strip diacritics/quotes/non-ASCII wrappers, collapse whitespace, prepend brewery when the name omits it) and make the fallback branch DISTINCT ON that key per region, keeping the row with an image/display_name. Client-side stopgap: dedupe on (brewery.lowercased() + normalized name with brewery prefix stripped) instead of raw name.
 
-### [OPEN] The only real vote in production is stranded under region key 'CA' that no board can ever query
+### [FIXED this round] The only real vote in production is stranded under region key 'CA' that no board can ever query
 *Surface:* Voting -> state boards pipeline  ·  *Anchor:* `supabase/migrations/0055_real_activity_consent_gates.sql:153`  ·  *Found by:* fleet
 
 beer_trend holds exactly two rows, both for the one genuinely-voted beer, under regions 'CA' and 'Global'. Every board key the app can send is a full state name ('California'), so this real community activity is invisible on the California board (which then falls back to the mislabeled Global feed). Root cause: refresh_beer_trend regionalizes votes by user_profile.region_code verbatim, and the live profile row holds the abbreviation 'CA' while onboarding writes full names - two formats in one column with no normalization. Every future user whose region_code lands as an abbreviation will have their votes silently excluded from their state board.
@@ -484,7 +484,7 @@ The first screen of the log picker (catalog_search top 60) contains rows a real 
 
 **Fix:** Two-part: (1) tighten tapt_name_ok/tapt_display_name for pack-fragment patterns ('Can ... Hd', leading 'N,N ' decimals, all-caps retailer strings) and recompute the generated columns; (2) collapse brand-as-brewery duplicates either by merging duplicate brewery rows via canonical_merge_queue (overlaps docs/21 P1-2) or by making catalog_search's partition key display-name-only when one of the colliding breweries' names is a substring of the display name; separately null the style on rows where style='Non Alcoholic Beers' and abv >= 1.0 so the contradiction cannot render.
 
-### [OPEN] Venue search only covers a daily-rotating 800 of 8,694 venues, so most real breweries are unfindable at log time
+### [FIXED this round] Venue search only covers a daily-rotating 800 of 8,694 venues, so most real breweries are unfindable at log time
 *Surface:* Log a pour (brewery/taproom picker)  ·  *Anchor:* `app/Tapt/Features/Cellar/LogPourView.swift:76`  ·  *Found by:* fleet
 
 LogPourView loads WorldBeerService.breweryMap(limit: 800) once and does client-side filtering over that array. brewery_map_feed orders by heat_score desc then md5(id || current_date), a daily shuffle, and with zero checkins and few taps nearly all 8,694 venues tie at heat 1, so the 800 the picker can search is essentially a random daily sample (~9%). A user typing their local taproom's exact name usually gets 'No brewery match yet. You can still log the pour.' even though the venue exists in Tapt, and the same search may work tomorrow and fail the day after. The search field promises search; it delivers a lottery.
@@ -492,6 +492,11 @@ LogPourView loads WorldBeerService.breweryMap(limit: 800) once and does client-s
 **Evidence:** LogPourView.swift:76 'venues = (try? await WorldBeerService.breweryMap(limit: 800)) ?? []' and venueMatches() (279-299) filters only that array. Live: select count(*) from venue = 8,694 (5,491 US). Live brewery_map_feed def: 'order by 9 desc, md5(v.id::text || to_char(now(), ''YYYY-MM-DD'')) limit least(greatest(coalesce(p_limit,500),1),1000)' with heat = checkins*3 + taps + seed bonus (all ~1 today).
 
 **Fix:** Use the existing search_venues RPC (or a new venue_search) driven by the venueSearch text with debounce, exactly like the beer picker's server search, keeping the 800-venue prefetch only as the empty-query suggestion list. This also honors the docs/21 P1-12 note about fetching venues on field focus.
+
+**Resolution (2026-07-13):** Log a Pour no longer downloads or filters a
+rotating venue sample. The brewery/city field debounces against the existing
+server `search_venues` RPC, shows loading, empty, retry, and selected states,
+and passes the exact selected venue ID into the check-in.
 
 ### [OPEN] Menu matching at 0.3 similarity turns non-beer menu lines into confident-looking beer matches
 *Surface:* Scan (Match menu mode)  ·  *Anchor:* `app/Tapt/Features/Scan/ScanView.swift:331`  ·  *Found by:* fleet
@@ -556,7 +561,7 @@ Rows display ups, downs, and pours, but rank order is the undisclosed score net 
 
 **Fix:** Change the visibility filter to `(s.ups + s.downs) > 0 or s.checkins > 0` so equally-contested beers stay on the board, and gate the gold podium styling on positive net (rank<=3 AND netVotes>0) so a downvoted beer can never wear the trophy look. Explain the rank in one honest caption under the board picker ('Ranked by net votes; each logged pour counts double') — one Text line — or simplify the formula to net votes only and show pours as pure context.
 
-### [OPEN] Votes are attributed to user_profile.region_code, which never matches the board vocabulary — the platform's only real vote is stranded on an unreachable 'CA' board
+### [FIXED this round] Votes are attributed to user_profile.region_code, which never matches the board vocabulary — the platform's only real vote is stranded on an unreachable 'CA' board
 *Surface:* Vote → state board pipeline (refresh_beer_trend + region_code)  ·  *Anchor:* `supabase/migrations/0055_real_activity_consent_gates.sql:153`  ·  *Found by:* fleet
 
 refresh_beer_trend's vote_base attributes each vote to the voter's user_profile.region_code verbatim. Live, the only two profiles have region_code '' and 'CA' — neither matches any picker value (the app queries the full name 'California'), so the one real vote in production produced a beer_trend row region='CA' that no screen can ever display; it only surfaces via the Global rollup. Compounding it: onboarding preselects 'Global' as home base, and detectHomeState changes only the local @AppStorage homeRegion — it never syncs region_code — so a user auto-defaulted to the 'New Jersey' board votes there, watches the number bump (optimistic applyVoteDelta), and the vote vanishes from that board on the next load because it was attributed to 'Global' (or a legacy code). State boards can structurally never accumulate the votes cast on them.
@@ -565,7 +570,15 @@ refresh_beer_trend's vote_base attributes each vote to the voter's user_profile.
 
 **Fix:** Normalize once at the pipeline seam: in refresh_beer_trend, map 2-letter region_code through region_beer_guide.state_code to the full state name (and pass anything already matching BeerRegions vocabulary through), so legacy codes stop stranding votes. In the app, call ProfileService.setRegion when detectHomeState resolves a state and when the user changes home region, so votes follow the board the user actually lives on. Backfill: update the existing 'CA' profile row to 'California'.
 
-### [OPEN] Home-state detection silently fails for 14 states — region_beer_guide has only 36 of 50 state rows and detection depends on it
+**Resolution (2026-07-13):** Migration 0085 adds a canonical full-name region
+function and a `user_profile` trigger, backfills every existing USPS code or
+case variant, and refreshes `beer_trend`. Swift uses the same 50-state plus
+District of Columbia mapping without depending on the incomplete guide table.
+Automatic location detection persists the canonical region before switching
+the visible board, so a vote cannot be optimistically shown under a region the
+server still considers Global or abbreviated.
+
+### [FIXED this round] Home-state detection silently fails for 14 states — region_beer_guide has only 36 of 50 state rows and detection depends on it
 *Surface:* detectHomeState (Explore auto-region)  ·  *Anchor:* `app/Tapt/Features/Explore/ExploreView.swift:477`  ·  *Found by:* fleet
 
 CLGeocoder returns two-letter administrativeArea codes for US placemarks, so detectHomeState's primary full-name match rarely fires and detection falls through to `guides.first { $0.stateCode == area }`. region_beer_guide contains only 36 state rows; Pennsylvania, Ohio, Illinois, Florida, Georgia, North Carolina, Washington, Arizona, Missouri, Minnesota, Oklahoma, Alabama, Alaska, and Delaware are missing — users in those states (over a third of the US population, including major beer states like PA and NC) grant location and nothing happens, with no feedback. It also races loadGuides: both run as parallel .task blocks, so if location resolves before the guides fetch, the lookup runs against an empty array even for covered states.
@@ -628,7 +641,7 @@ leaderboard_beers ranks beer_score rows per catalog UUID with no display-name de
 
 **Fix:** Mirror the 0067 rule inside leaderboard_beers: aggregate beer_score by lower(display_name) before ranking — sum net/ups/downs/checkins across same-name SKUs, pick the representative row the way 0065 does (image first, brewery first), and rank on the summed score. That both dedupes the rendering and un-splits votes, keeping Leaderboards consistent with Market and Search. (Tracked in docs/21 P1-2 for market/search; the leaderboard RPC is not covered there.)
 
-### [OPEN] Vote-driven regional signal is keyed by region_code ('CA') while every shelf filters by full names ('California') — state boards can never show votes
+### [FIXED this round] Vote-driven regional signal is keyed by region_code ('CA') while every shelf filters by full names ('California') — state boards can never show votes
 *Surface:* Explore regional/state boards (beer_trend)  ·  *Anchor:* `supabase/migrations/0055_real_activity_consent_gates.sql:155`  ·  *Found by:* fleet
 
 refresh_beer_trend buckets votes by raw user_profile.region_code and checkins by venue external_ids region. Live, the only real vote sits in beer_trend under region 'CA' (the voter's region_code), while venue-derived regions are full names ('California' 803 venues, 'New York' 234) and the app's shelf filter uses BeerRegions full names ('California', 'New Jersey', country names). A Californian picking the California shelf runs .eq("region","California") and will never see any vote-driven trend row keyed 'CA'; the signal is only reachable via Global, where the same beer appears as two rows (regions 'CA' + 'Global', both momentum 1) that burn 2 of the 40 fetched slots. One column carries three vocabularies (codes, US state names, country names) so state/country boards silently under-report forever.
@@ -691,7 +704,7 @@ brewery.country mixes synonym spellings, and every read surface treats them as d
 
 **Fix:** Make every dedupe key punctuation/case-insensitive: key on lower(regexp_replace(display_name,'[^[:alnum:]]+','','g')) in catalog_search, the market refresh distinct-on, and the Swift visibleBeers Set. In tapt_display_name, normalize curly quotes to straight and title-case single-word all-lowercase brands even when a non-ASCII apostrophe is present. Then run the Beck's/Carlsberg brewery variants through canonical_merge_queue so countries stop contradicting.
 
-### [OPEN] State boards can never match their data ('CA' written vs 'California' queried) and the Global fallback is labeled as local ('Top in New Jersey', '<brewery> is climbing in New Jersey')
+### [FIXED this round] State boards can never match their data ('CA' written vs 'California' queried) and the Global fallback is labeled as local ('Top in New Jersey', '<brewery> is climbing in New Jersey')
 *Surface:* Explore state/country board (region picker + hero + 'Top in <region>' list)  ·  *Anchor:* `app/Tapt/Features/Explore/ExploreView.swift:118`  ·  *Found by:* fleet
 
 The only real community trend row in beer_trend is keyed region='CA', but the app's picker and geo-detect send full state names ('California'), so the one genuine local signal is unreachable on any board — and beer_trend_feed's fallback only generates country-name regions, so every US-state query returns empty and silently falls back to Global. After the fallback, ExploreView still titles the list 'Top in <state>' and the hero says '<brewery> is climbing in <state>' with a momentum arrow — live data makes that 'Brasserie Thibord (France) is climbing in New Jersey', a locality claim the data does not support, directly contradicting the small 'guide + Global radar' caption on the same screen. (Task #57's 'drop state abbrevs' overlaps; included because it is the state-board surface, and the mislabel itself is untracked.)
@@ -700,7 +713,7 @@ The only real community trend row in beer_trend is keyed region='CA', but the ap
 
 **Fix:** Pick one region vocabulary (full state names), migrate the existing 'CA' beer_trend row and the writer that produced it, and make the fallback honest in the UI: when load() falls back to Global, set a flag so topSection titles 'Trending worldwide' and the hero subtitle drops the 'in <region>' clause (or says 'climbing worldwide'). Never render a state name next to data that did not come from that state.
 
-### [OPEN] Consent ledger records ui_text_shown the user never saw; server silently discards the app's uiText
+### [FIXED this round] Consent ledger records ui_text_shown the user never saw; server silently discards the app's uiText
 *Surface:* Profile > Privacy Choices (consent ledger integrity)  ·  *Anchor:* `supabase/migrations/0007_backend_contract_and_content_pipeline.sql:576`  ·  *Found by:* fleet
 
 When a user flips a Privacy Choices toggle, ProfileView passes the on-screen label ('Nearby beer spots', 'Anonymous trend reports', 'Partner insight aggregates') into record_privacy_choice as p_ui_text. The live function body never references p_ui_text: it inserts a hardcoded per-purpose sentence into consent_ledger.ui_text_shown. For the 'location' purpose that stored sentence — 'Use my location for nearby breweries and local recommendations.' — matches no string anywhere in the current app (the profile toggle says 'Nearby beer spots'; onboarding says 'Use my location for nearby pubs, bars, breweries, taprooms, and beer gardens.'). The column exists to prove what text the user consented to, and for every profile-screen location consent it now provably records text that was never shown. That is a false record in the exact artifact meant to demonstrate consent honesty (GDPR/CCPA evidence trail).
@@ -708,6 +721,11 @@ When a user flips a Privacy Choices toggle, ProfileView passes the on-screen lab
 **Evidence:** Live pg_get_functiondef(record_privacy_choice): body inserts ui_text_shown from 'case v_purpose when location then Use my location for nearby breweries and local recommendations. ...' — p_ui_text appears only in the signature. ProfileView.swift:201 calls syncPrivacy("location", granted:, text: "Nearby beer spots"); grep of app/Tapt for 'nearby breweries and local recommendations' returns zero hits.
 
 **Fix:** Replace the hardcoded case block with a server-side allowlist that accepts p_ui_text only when it exactly matches one of the known UI strings for that purpose (profile label or onboarding sentence), falling back to the canonical sentence plus a source marker if the client sends something unexpected — this keeps the anti-forgery intent while making ui_text_shown truthful. At minimum, update the canonical 'location' sentence to the string the app actually shows, and align ProfileView's toggle labels with the stored sentences so screen and ledger agree.
+
+**Resolution (2026-07-13):** Migration 0086 leaves historical attestations
+unchanged and makes future Profile rows store the nonempty label supplied by
+the visible toggle. Onboarding's three server-owned sentences now exactly
+match the three toggles, including partner aggregate sharing.
 
 ### [OPEN] Onboarding promises 'We will tune your feed' but the picked styles are read by nothing
 *Surface:* Onboarding (styles step claim vs reality)  ·  *Anchor:* `app/Tapt/Features/Onboarding/OnboardingView.swift:79`  ·  *Found by:* fleet
@@ -1078,7 +1096,7 @@ The only definition of leaderboard_tasters in the repo is 0009's, which has no s
 
 **Fix:** Add a migration (or amend the mirror) that captures the current live body of leaderboard_tasters verbatim, so the repo is the source of truth again and the social_visible/moderation gates are protected by review. Audit the mirror for other silently-patched functions the same way (compare pg_proc prosrc against the repo per function).
 
-### [OPEN] Profile-toggle consents are recorded against policy version 2026-07-08 while the published policy and onboarding say 2026-07-12
+### [FIXED this round] Profile-toggle consents are recorded against policy version 2026-07-08 while the published policy and onboarding say 2026-07-12
 *Surface:* Consent records (policy_version drift)  ·  *Anchor:* `supabase/migrations/0007_backend_contract_and_content_pipeline.sql:547`  ·  *Found by:* fleet
 
 record_privacy_choice defaults p_policy_version to '2026-07-08' and the app never passes one, so every consent flipped from the Profile screen is logged against policy version 2026-07-08. The onboarding RPC hardcodes '2026-07-12' and the live legal pages say 'Last updated: July 12, 2026'. The same account therefore carries consent rows attesting to two different policy versions depending on which screen was used, and the profile-toggle rows point at a version that predates the published policy — a contradiction inside the compliance record.
@@ -1086,6 +1104,11 @@ record_privacy_choice defaults p_policy_version to '2026-07-08' and the app neve
 **Evidence:** Live def: record_privacy_choice(... p_policy_version text DEFAULT '2026-07-08') and coalesce(...,'2026-07-08'); live complete_profile_onboarding inserts policy_version '2026-07-12'; landing/privacy.html:21 = 'Last updated: July 12, 2026'. ProfileService.setPrivacyChoice sends no policy version (ProfileService.swift:46-57), and its own recordConsent wrapper's policyVersion parameter is dead.
 
 **Fix:** Single source of truth: store the current policy version in one place (a config table or a SQL constant function) and have both record_privacy_choice and complete_profile_onboarding read it; update it in the same migration that changes the legal pages. Immediate patch: alter record_privacy_choice's default to '2026-07-12' so new profile-toggle rows match the published policy date.
+
+**Resolution (2026-07-13):** `tapt_current_policy_version()` is the server
+source for both Profile and onboarding consent writes. Its current value is
+`2026-07-12`, matching the published pages; the legacy overload remains for
+installed clients but can no longer choose a stale policy version.
 
 ### [FIXED this round] A failed 'Send a new email' hides the 6-digit code field even though the user may hold a valid code
 *Surface:* Sign-in (email code entry)  ·  *Anchor:* `app/Tapt/Features/Auth/SignInView.swift:216`  ·  *Found by:* fleet

@@ -11,12 +11,13 @@ struct AccountPrivacyChoices: Sendable {
 
 /// Account preferences, consent choices, and deletion through narrow server APIs.
 enum ProfileService {
-    static func setRegion(_ region: String, userId: UUID) async {
+    static func setRegion(_ region: String, userId: UUID) async throws {
         struct Params: Encodable {
             let p_region_code: String
             let p_beer_geek_mode: Bool?
         }
-        _ = try? await Supa.authedRPCVoid(
+        _ = userId
+        try await Supa.authedRPCVoid(
             "set_profile_preferences",
             params: Params(p_region_code: region, p_beer_geek_mode: nil)
         )
@@ -56,17 +57,6 @@ enum ProfileService {
             "record_privacy_choice",
             params: Params(p_purpose: purpose, p_granted: granted, p_ui_text: uiText)
         )
-    }
-
-    static func recordConsent(
-        purpose: String,
-        granted: Bool,
-        policyVersion: String = "2026-07-08",
-        uiText: String,
-        source: String,
-        userId: UUID
-    ) async throws {
-        try await setPrivacyChoice(purpose: purpose, granted: granted, uiText: uiText, userId: userId)
     }
 
     static func privacyChoices(userId: UUID) async throws -> AccountPrivacyChoices {

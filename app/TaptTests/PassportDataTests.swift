@@ -50,6 +50,18 @@ final class PassportDataTests: XCTestCase {
         XCTAssertEqual(CountryFlag.symbol(for: "USA"), "\u{1F37A}")
     }
 
+    func testUSRegionCanonicalizationAcceptsCodesAndNames() {
+        XCTAssertEqual(BeerRegions.canonicalUSRegion("NJ"), "New Jersey")
+        XCTAssertEqual(BeerRegions.canonicalUSRegion(" california "), "California")
+        XCTAssertEqual(BeerRegions.canonicalUSRegion("dc"), "District of Columbia")
+        XCTAssertNil(BeerRegions.canonicalUSRegion("Global"))
+    }
+
+    func testPassportStateCountExcludesFederalDistrict() {
+        XCTAssertEqual(BeerRegions.states.count, 50)
+        XCTAssertEqual(BeerRegions.usRegions.count, 51)
+    }
+
     @MainActor
     func testGuestVoteIntentPersistsUntilCleared() {
         let session = Session()

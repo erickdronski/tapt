@@ -107,7 +107,7 @@ struct OnboardingView: View {
             stepTitle("Where is home base?", "So we can show what is hot in your area.")
             ScrollView {
                 VStack(spacing: 10) {
-                    ForEach(["Global"] + BeerRegions.countries + BeerRegions.states, id: \.self) { r in
+                    ForEach(["Global"] + BeerRegions.countries + BeerRegions.usRegions, id: \.self) { r in
                         Button { region = r } label: {
                             HStack {
                                 Text(r).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)

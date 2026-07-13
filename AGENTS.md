@@ -141,6 +141,19 @@ promptly (small commits, don't sit on local state another agent can't see).
   a still-valid six-digit code field. The app retains the address that received
   the last successful code and verifies against that address even if the email
   text field is edited later.
+- **Canonical profile regions (Codex, 2026-07-13):** 0085 maps USPS codes and
+  case variants to the same full state names used by Explore and venue data,
+  backfills profiles, and refreshes trends. Swift carries all 50 states plus
+  District of Columbia locally, and auto-detection persists the server region
+  before switching the visible board.
+- **Pour venue search (Codex, 2026-07-13):** Log a Pour now debounces the
+  server `search_venues` RPC instead of filtering a daily-rotating 800-row map
+  sample. A selected result passes its exact venue ID into the check-in, so the
+  full venue catalog remains usable as ingestion grows.
+- **Consent ledger truth (Codex, 2026-07-13):** 0086 centralizes the current
+  policy version (`2026-07-12`) for Profile and onboarding writes. Profile rows
+  preserve the visible toggle label, onboarding's stored sentences match its
+  toggles, and historical attestations are not rewritten.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in
