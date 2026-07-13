@@ -14,6 +14,10 @@ struct ProfileView: View {
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
     @State private var languageChanged = false
     @State private var isHydratingPrivacy = true
+    // What the server currently holds, keyed by purpose. Writes that only echo
+    // these values back are skipped: hydration can fire onChange after the
+    // isHydratingPrivacy window closes, and those are not user edits.
+    @State private var serverConsents: [String: Bool] = [:]
     @State private var privacyError: String?
     @State private var showDeleteConfirmation = false
     @State private var deleting = false
@@ -264,11 +268,16 @@ struct ProfileView: View {
     /// Persist beer-geek mode to the profile so it follows the account across devices.
     private func syncBeerGeek(_ value: Bool) {
         guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
+        guard serverConsents["beer_geek_mode"] != value else { return }
+        serverConsents["beer_geek_mode"] = value
         Task { await ProfileService.setBeerGeek(value, userId: id) }
     }
 
     private func syncPrivacy(_ purpose: String, granted: Bool, text: String) {
         guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
+        // No-op echoes of the server's own value are not consent events.
+        guard serverConsents[purpose] != granted else { return }
+        serverConsents[purpose] = granted  // optimistic; the failure path reloads
         Task {
             do {
                 try await ProfileService.setPrivacyChoice(
@@ -289,6 +298,8 @@ struct ProfileView: View {
 
     private func syncSocialVisibility(_ visible: Bool) {
         guard !isHydratingPrivacy, !deleting else { return }
+        guard serverConsents["social_visible"] != visible else { return }
+        serverConsents["social_visible"] = visible
         Task {
             do {
                 try await ProfileService.setSocialVisibility(visible)
@@ -311,6 +322,15 @@ struct ProfileView: View {
         do {
             let choices = try await ProfileService.privacyChoices(userId: id)
             isHydratingPrivacy = true
+            // The map goes first: if an onChange from these assignments lands
+            // after the hydration window closes, the echo guard still holds.
+            serverConsents = [
+                "location": choices.location,
+                "aggregate_analytics": choices.aggregateAnalytics,
+                "data_sale": choices.dataSale,
+                "social_visible": choices.socialVisible,
+                "beer_geek_mode": choices.beerGeekMode
+            ]
             locationConsent = choices.location
             aggregateConsent = choices.aggregateAnalytics
             dataSaleConsent = choices.dataSale

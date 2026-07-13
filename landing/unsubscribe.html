@@ -1,0 +1,57 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Tapt · Unsubscribe</title><style>
+:root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--copper:#B4531F;--slate:#6B6459}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.65}
+.wrap{max-width:560px;margin:0 auto;padding:64px 24px 80px;text-align:center}
+h1{font-family:'Poppins',system-ui,sans-serif;font-size:1.9rem;letter-spacing:-.02em;margin-bottom:10px}
+p{font-size:.98rem;color:#3d3423;margin-bottom:12px}
+a{color:var(--copper)}
+.logo{font-family:'Poppins',system-ui,sans-serif;font-weight:800;font-size:1.5rem;margin-bottom:26px}
+.logo span{color:var(--gold)}
+button{background:var(--malt);color:var(--foam);font:inherit;font-weight:700;border:0;border-radius:999px;padding:13px 30px;cursor:pointer;margin-top:8px}
+button:disabled{opacity:.5;cursor:default}
+.note{font-size:.85rem;color:var(--slate);margin-top:22px}
+.ok{color:#2c6e31;font-weight:700}
+.err{color:var(--copper);font-weight:600}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet"></head><body><div class="wrap">
+<div class="logo">Tapt<span>.</span></div>
+<div id="ask">
+  <h1>Unsubscribe from The Tapt Dispatch</h1>
+  <p>You will stop receiving the newsletter at this address. This takes effect immediately.</p>
+  <button id="go" onclick="unsub()">Unsubscribe</button>
+</div>
+<div id="done" style="display:none">
+  <h1>You're unsubscribed</h1>
+  <p class="ok">No more Dispatch emails will be sent to this address.</p>
+  <p class="note">Change your mind later? Sign up again any time at <a href="index.html">taptbeer.com</a>.</p>
+</div>
+<div id="bad" style="display:none">
+  <h1>That link didn't work</h1>
+  <p class="err">This unsubscribe link is missing or malformed.</p>
+  <p>Use the unsubscribe link from the bottom of any Dispatch email, or email <a href="mailto:hello@taptbeer.com">hello@taptbeer.com</a> and we'll remove you by hand.</p>
+</div>
+<p class="note"><a href="privacy.html">Privacy Policy</a> · <a href="index.html">Back to Tapt</a></p>
+<script>
+const FN = "https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/newsletter-unsubscribe";
+const t = new URLSearchParams(location.search).get("t") || "";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+if (!UUID.test(t)) { show("bad"); }
+function show(id){ for (const s of ["ask","done","bad"]) document.getElementById(s).style.display = s===id ? "" : "none"; }
+async function unsub(){
+  const b = document.getElementById("go");
+  b.disabled = true; b.textContent = "Unsubscribing…";
+  try {
+    const r = await fetch(FN + "?t=" + encodeURIComponent(t), { method:"POST" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    show("done");
+  } catch (e) {
+    b.disabled = false; b.textContent = "Unsubscribe";
+    alert("That didn't go through. Check your connection and try again, or email hello@taptbeer.com.");
+  }
+}
+</script>
+</div></body></html>
