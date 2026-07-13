@@ -33,7 +33,7 @@ struct RootView: View {
             NavigationStack { BeerDetailView(beerId: beerId) }
         }
         .sheet(isPresented: $showBeerPreview) {
-            NavigationStack { BeerDetailView(beerId: "5f176aee-a946-4c4c-9d0f-daed02e10f62") }
+            NavigationStack { BeerDetailView(beerId: "8c25e595-f6fc-425c-ad11-b3b8acf9bb9d") }
         }
         .fullScreenCover(isPresented: $showGamePreview) {
             NavigationStack {
