@@ -20,6 +20,7 @@ struct NearYouView: View {
     @State private var nearbyVenueIds = Set<String>()
     @State private var selectedVenue: BreweryMapVenue?
     @State private var radarError: String?
+    @State private var sheetDetent: RadarSheetDetent = .half
 
     init() {
         // Start on a stable continental view. GPS or the saved home region can
@@ -91,7 +92,7 @@ struct NearYouView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
                 Map(position: $camera) {
                     UserAnnotation()
                     ForEach(visibleMapVenues) { venue in
@@ -122,104 +123,11 @@ struct NearYouView: View {
                     MapUserLocationButton()
                     MapCompass()
                 }
-                .frame(height: 320)
+                .ignoresSafeArea(edges: .top)
 
-                List {
-                    // Paid-visibility surface: local partners who pay for reach. With no
-                    // paid rows yet it shows an honest "feature your spot" invite, never a fake ad.
-                    Section {
-                        FeaturedPartnersRail()
-                    }
-                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
-                    .listRowBackground(Color.clear)
-
-                    if let radarError {
-                        Button {
-                            Task { await loadTaptRadar() }
-                        } label: {
-                            Label(radarError, systemImage: "arrow.clockwise")
-                                .foregroundStyle(Brand.copper)
-                        }
-                    }
-
-                    if let spotlightVenue {
-                        Section {
-                            spotlight(spotlightVenue)
-                        }
-                    }
-
-                    if !taptVenues.isEmpty {
-                        Section {
-                            VStack(alignment: .leading, spacing: 10) {
-                                radarSearchField
-                                Text(radarSummary)
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                    .foregroundStyle(Brand.text)
-                                Picker("Radar filter", selection: $radarFilter) {
-                                    ForEach(RadarFilter.allCases) { filter in
-                                        Text(filter.rawValue).tag(filter)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                            }
-                            .padding(.vertical, 4)
-
-                            if visibleTaptVenues.isEmpty {
-                                Text("No beer spots match that search yet.")
-                                    .foregroundStyle(Brand.muted)
-                            }
-
-                            ForEach(visibleTaptVenues.prefix(120)) { venue in
-                                Button { focus(venue) } label: { taptRow(venue) }
-                                    .buttonStyle(.plain)
-                            }
-                        } header: {
-                            Text("Tapt beer radar")
-                        } footer: {
-                            Text("Explore breweries, pubs, bars, taprooms, and beer gardens. Turn on location to bring the closest places to the top.")
-                        }
-                    } else if radarLoading {
-                        Label("Loading Tapt beer radar...", systemImage: "antenna.radiowaves.left.and.right")
-                            .foregroundStyle(Brand.muted)
-                    }
-
-                    if !locationConsent {
-                        Text("Location is off in your Tapt privacy choices.")
-                            .foregroundStyle(Brand.muted)
-                    } else if location.deniedOrRestricted {
-                        Button {
-                            guard let settings = URL(string: UIApplication.openSettingsURLString) else { return }
-                            UIApplication.shared.open(settings)
-                        } label: {
-                            Label("Open Settings to allow nearby beer spots", systemImage: "gear")
-                                .foregroundStyle(Brand.copper)
-                        }
-                    } else if !location.authorized {
-                        Button {
-                            location.request()
-                        } label: {
-                            Label("Turn on location to find beer spots near you", systemImage: "location.fill")
-                                .foregroundStyle(Brand.copper)
-                        }
-                    } else if loading {
-                        Label("Finding pubs, bars, taprooms, and beer gardens near you...", systemImage: "hourglass")
-                            .foregroundStyle(Brand.muted)
-                    } else if visibleAppleVenues.isEmpty {
-                        Text("No beer spots found nearby yet.").foregroundStyle(Brand.muted)
-                    } else {
-                        ForEach(visibleAppleVenues, id: \.self) { item in
-                            Button { focus(item) } label: { row(item) }
-                                .buttonStyle(.plain)
-                        }
-                    }
-
-                    if let locationError = location.lastError {
-                        Text(locationError)
-                            .font(.caption)
-                            .foregroundStyle(Brand.copper)
-                    }
+                RadarSheet(detent: $sheetDetent) {
+                    radarList
                 }
-                .listStyle(.plain)
             }
             .navigationTitle("Beer Near You")
             .navigationBarTitleDisplayMode(.inline)
@@ -257,6 +165,109 @@ struct NearYouView: View {
                     .presentationDetents([.medium, .large])
             }
         }
+    }
+
+    /// The nearby list that lives inside the draggable sheet. Content is the
+    /// same radar the map used to stack beneath it: featured partners, the
+    /// spotlight, the Tapt beer radar, and the Apple fallback.
+    private var radarList: some View {
+        List {
+            // Paid-visibility surface: local partners who pay for reach. With no
+            // paid rows yet it shows an honest "feature your spot" invite, never a fake ad.
+            Section {
+                FeaturedPartnersRail()
+            }
+            .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+            .listRowBackground(Color.clear)
+
+            if let radarError {
+                Button {
+                    Task { await loadTaptRadar() }
+                } label: {
+                    Label(radarError, systemImage: "arrow.clockwise")
+                        .foregroundStyle(Brand.copper)
+                }
+            }
+
+            if let spotlightVenue {
+                Section {
+                    spotlight(spotlightVenue)
+                }
+            }
+
+            if !taptVenues.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 10) {
+                        radarSearchField
+                        Text(radarSummary)
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundStyle(Brand.text)
+                        Picker("Radar filter", selection: $radarFilter) {
+                            ForEach(RadarFilter.allCases) { filter in
+                                Text(filter.rawValue).tag(filter)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.vertical, 4)
+
+                    if visibleTaptVenues.isEmpty {
+                        Text("No beer spots match that search yet.")
+                            .foregroundStyle(Brand.muted)
+                    }
+
+                    ForEach(visibleTaptVenues.prefix(120)) { venue in
+                        Button { focus(venue) } label: { taptRow(venue) }
+                            .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Tapt beer radar")
+                } footer: {
+                    Text("Explore breweries, pubs, bars, taprooms, and beer gardens. Turn on location to bring the closest places to the top.")
+                }
+            } else if radarLoading {
+                Label("Loading Tapt beer radar...", systemImage: "antenna.radiowaves.left.and.right")
+                    .foregroundStyle(Brand.muted)
+            }
+
+            if !locationConsent {
+                Text("Location is off in your Tapt privacy choices.")
+                    .foregroundStyle(Brand.muted)
+            } else if location.deniedOrRestricted {
+                Button {
+                    guard let settings = URL(string: UIApplication.openSettingsURLString) else { return }
+                    UIApplication.shared.open(settings)
+                } label: {
+                    Label("Open Settings to allow nearby beer spots", systemImage: "gear")
+                        .foregroundStyle(Brand.copper)
+                }
+            } else if !location.authorized {
+                Button {
+                    location.request()
+                } label: {
+                    Label("Turn on location to find beer spots near you", systemImage: "location.fill")
+                        .foregroundStyle(Brand.copper)
+                }
+            } else if loading {
+                Label("Finding pubs, bars, taprooms, and beer gardens near you...", systemImage: "hourglass")
+                    .foregroundStyle(Brand.muted)
+            } else if visibleAppleVenues.isEmpty {
+                Text("No beer spots found nearby yet.").foregroundStyle(Brand.muted)
+            } else {
+                ForEach(visibleAppleVenues, id: \.self) { item in
+                    Button { focus(item) } label: { row(item) }
+                        .buttonStyle(.plain)
+                }
+            }
+
+            if let locationError = location.lastError {
+                Text(locationError)
+                    .font(.caption)
+                    .foregroundStyle(Brand.copper)
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
     }
 
     private func row(_ item: MKMapItem) -> some View {

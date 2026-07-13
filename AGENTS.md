@@ -102,6 +102,19 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Radar bottom sheet (Claude, 2026-07-13 pm):** NearYouView is now a full-bleed
+  map with a draggable bottom sheet (Apple Maps / Uber style) instead of a map
+  fixed at 320pt stacked over a list. New reusable `Design/BottomSheet.swift`
+  (`RadarSheet` + `RadarSheetDetent`): three detents (peek 0.16 / half 0.5 /
+  full 0.92), Capsule handle, velocity-aware snapping via
+  `predictedEndTranslation`, light haptic on snap. Custom in-bounds sheet on
+  purpose, NOT a system `.sheet` (that would cover the tab bar on the
+  guest-reachable Near You tab). The radar list is unchanged, moved into a
+  `radarList` computed property; the venue `.sheet(item:)` still presents over
+  the ZStack. Built for iPhone 17 Pro sim (BUILD SUCCEEDED); all three detents
+  verified rendering over the live map with real data. Interactive finger-drag
+  not hand-run this session (Simulator control unavailable); gesture is a
+  standard DragGesture per spec.
 - **Perfection push (Claude, 2026-07-13 pm):** fleet spec in
   docs/24-PERFECTION-PLAN.md. Shipped: (a) GLOBAL MAP - applied the 119K staged
   Overture places (0094 batched apply per country); venue 8,645->128,043,
