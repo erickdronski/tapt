@@ -728,11 +728,11 @@ struct BeerDetailView: View {
 enum BeerNoteService {
     static func get(_ beerId: String) async throws -> String? {
         struct P: Encodable { let p_beer: String }
-        return try await Supa.client.rpc("get_beer_note", params: P(p_beer: beerId)).execute().value
+        return try await Supa.authedRPC("get_beer_note", params: P(p_beer: beerId))
     }
     static func save(_ beerId: String, note: String) async throws {
         struct P: Encodable { let p_beer: String; let p_note: String }
-        try await Supa.client.rpc("save_beer_note", params: P(p_beer: beerId, p_note: note)).execute()
+        try await Supa.authedRPCVoid("save_beer_note", params: P(p_beer: beerId, p_note: note))
     }
 }
 

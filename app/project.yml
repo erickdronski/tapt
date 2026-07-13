@@ -7,7 +7,7 @@ options:
 packages:
   Supabase:
     url: https://github.com/supabase/supabase-swift
-    from: "2.0.0"
+    exactVersion: "2.46.0"
 targets:
   Tapt:
     type: application

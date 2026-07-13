@@ -57,6 +57,9 @@ jobs:
           fi
           tail -25 "$RUNNER_TEMP/xcodebuild.log"
 
+      - name: Verify Swift package lock
+        run: git diff --exit-code -- app/Tapt.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
       - name: Test (iOS Simulator)
         working-directory: app
         run: |

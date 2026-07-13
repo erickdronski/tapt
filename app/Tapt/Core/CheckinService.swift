@@ -169,7 +169,8 @@ enum CheckinService {
             let p_source: String
         }
 
-        try await Supa.client.rpc(
+        _ = userId
+        try await Supa.authedRPCVoid(
             "log_checkin",
             params: Params(
                 p_beer_id: beer.id,
@@ -187,7 +188,6 @@ enum CheckinService {
                 p_source: source ?? ((venueId ?? venue?.venueId) == nil ? "manual" : "manual_with_venue")
             )
         )
-            .execute()
     }
 
     static func mine(userId: UUID) async throws -> [MyCheckin] {

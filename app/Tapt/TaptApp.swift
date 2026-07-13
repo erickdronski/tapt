@@ -4,6 +4,8 @@ import SwiftUI
 struct TaptApp: App {
     @State private var session = Session()
     @State private var serverOnboarded: [String: Bool] = [:]
+    @State private var onboardingCheckFailed: Set<String> = []
+    @State private var onboardingBypassedForSession: Set<String> = []
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("onboardedUserIDs") private var onboardedUserIDs = ""
     @AppStorage("legalAgeConfirmed") private var legalAgeConfirmed = false
@@ -22,10 +24,12 @@ struct TaptApp: App {
                 } else if session.isGuest {
                     RootView()
                 } else if let id = session.user?.id.uuidString {
-                    if localOnboarded(id) {
+                    if localOnboarded(id) || onboardingBypassedForSession.contains(id) {
                         RootView()
                     } else if serverOnboarded[id] == false {
                         OnboardingView()
+                    } else if onboardingCheckFailed.contains(id) {
+                        onboardingRecovery(id)
                     } else {
                         // Not onboarded locally (e.g. reinstall / new device):
                         // confirm against the server before making them redo it.
@@ -61,15 +65,34 @@ struct TaptApp: App {
         }
         switch answer {
         case true?:
+            onboardingCheckFailed.remove(id)
             markLocallyOnboarded(id)
         case false?:
+            onboardingCheckFailed.remove(id)
             serverOnboarded[id] = false
         case nil:
-            // Still unknown: NEVER force re-onboarding on a network failure --
-            // completing it again would overwrite the user's saved region,
-            // styles, and consents. Let them into the app; preferences remain
-            // editable from Profile, and the next launch re-checks.
-            markLocallyOnboarded(id)
+            // Unknown is not the same as complete. Keep this recoverable and do
+            // not persist a false completion marker across future launches.
+            onboardingCheckFailed.insert(id)
+        }
+    }
+
+    private func onboardingRecovery(_ id: String) -> some View {
+        ContentUnavailableView {
+            Label("Couldn't check your setup", systemImage: "wifi.exclamationmark")
+        } description: {
+            Text("Reconnect and retry. You can also continue for this session without changing your saved setup.")
+        } actions: {
+            Button("Retry") {
+                onboardingCheckFailed.remove(id)
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button("Continue for now") {
+                onboardingCheckFailed.remove(id)
+                onboardingBypassedForSession.insert(id)
+            }
+            .buttonStyle(.bordered)
         }
     }
 

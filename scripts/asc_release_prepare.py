@@ -137,11 +137,42 @@ def contact_from_environment() -> dict:
     }
 
 
+def validate_public_legal_pages() -> None:
+    blockers = (
+        "draft for counsel review",
+        "[company_legal_name",
+        "[address",
+        "to be completed",
+    )
+    for label, url in (
+        ("privacy policy", "https://taptbeer.com/privacy"),
+        ("terms", "https://taptbeer.com/terms"),
+    ):
+        request = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Tapt release readiness audit"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                page = response.read().decode("utf-8", errors="replace").lower()
+        except urllib.error.URLError as error:
+            raise RuntimeError(f"{label} could not be verified: {error.reason}") from error
+        matched = next((marker for marker in blockers if marker in page), None)
+        if matched:
+            raise RuntimeError(
+                f"{label} is not publication-ready ({matched}); "
+                "refusing to prepare App Store metadata"
+            )
+        print(f"{label}: publication-ready")
+
+
 def main() -> int:
     if not TARGET_BUILD_NUMBER:
         raise RuntimeError(
             "TARGET_BUILD_NUMBER is required; refusing to attach a build by recency"
         )
+
+    validate_public_legal_pages()
 
     encoded_bundle = urllib.parse.quote(BUNDLE_ID, safe="")
     status, body = api("GET", f"/v1/apps?filter[bundleId]={encoded_bundle}&limit=1")
