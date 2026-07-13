@@ -230,6 +230,10 @@ def main() -> int:
                 blockers.append(
                     f"Selected build {selected_build_number or 'missing'} does not match expected build {EXPECTED_BUILD_NUMBER}."
                 )
+            if build_attrs.get("processingState") != "VALID":
+                blockers.append(
+                    f"Selected build {selected_build_number or 'missing'} is not VALID."
+                )
         else:
             if build_status not in (200, 404):
                 api_error("selected build", build_status, build_body)
@@ -384,7 +388,7 @@ def main() -> int:
             "App Privacy data-use answers and their published state (not exposed by the public API).",
             "Agreements, tax, banking, DSA trader status, and territory availability.",
             "The public legal pages contain no draft text or unresolved placeholders.",
-            "Sign in with Apple and each advertised third-party login work on a signed device.",
+            "Every login shown in the selected build works on a signed device; Sign in with Apple is also required when another third-party login is shown.",
         ]
     )
 

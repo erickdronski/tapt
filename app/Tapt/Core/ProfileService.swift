@@ -27,12 +27,13 @@ enum ProfileService {
             .update(["birth_verified": true]).eq("id", value: userId.uuidString).execute()
     }
 
-    static func setBeerGeek(_ value: Bool, userId: UUID) async {
+    static func setBeerGeek(_ value: Bool, userId: UUID) async throws {
         struct Params: Encodable {
             let p_region_code: String?
             let p_beer_geek_mode: Bool
         }
-        _ = try? await Supa.authedRPCVoid(
+        _ = userId
+        try await Supa.authedRPCVoid(
             "set_profile_preferences",
             params: Params(p_region_code: nil, p_beer_geek_mode: value)
         )

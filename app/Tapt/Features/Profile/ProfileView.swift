@@ -270,7 +270,17 @@ struct ProfileView: View {
         guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
         guard serverConsents["beer_geek_mode"] != value else { return }
         serverConsents["beer_geek_mode"] = value
-        Task { await ProfileService.setBeerGeek(value, userId: id) }
+        Task {
+            do {
+                try await ProfileService.setBeerGeek(value, userId: id)
+                privacyError = nil
+            } catch {
+                let restored = await loadPrivacyChoices(reportErrors: false)
+                privacyError = restored
+                    ? "Beer-geek mode was not saved. Your server setting was restored."
+                    : "Beer-geek mode was not saved. Reconnect and try again."
+            }
+        }
     }
 
     private func syncPrivacy(_ purpose: String, granted: Bool, text: String) {

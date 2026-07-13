@@ -115,7 +115,7 @@ promptly (small commits, don't sit on local state another agent can't see).
      catalog_search (debounced, local-instant + server-replace).
   5. Image downsampling for list thumbs; ticker TimelineView -> 30fps periodic.
      DONE (Codex): LocationManager stops updates when location is disabled.
-- **Codex release lane:** Claude's latest `fdf0666` was rebased under the
+- **Codex release lane:** Claude's latest `64c2e92` is merged under the
   release-readiness work. Production migrations `0069` through `0078` are
   applied and mirrored; they cover venue import, partner assets, age/social
   boundaries, canonical menu check-ins, Cellar pagination, media processing,
@@ -129,6 +129,9 @@ promptly (small commits, don't sit on local state another agent can't see).
   the app but disabled in Supabase pending Apple credentials. X and phone are
   disabled. Unverified external providers are hidden in release builds. Do not
   claim these gates are complete until TestFlight proves them.
+- **Legal truth:** `/privacy` and `/terms` are counsel-review drafts with open
+  company, address, liability, governing-law, and dispute placeholders. They
+  are not App Store-final until those placeholders and the review are complete.
 - Owner queue: delete `simtest@tapt.app` when QA settles; Supabase dashboard
   toggles (leaked-password protection ON; auth pool -> percentage); complete
   Google consent and Apple provider credentials; verify email/Google/Apple on a
