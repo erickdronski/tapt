@@ -4,6 +4,7 @@ import SwiftUI
 /// with a depth animation into the board; flick harder and your grouping
 /// scatters. Pass-and-play, 2 players, 3 darts x 3 rounds each.
 struct DartsGame: View {
+    @AppStorage("dartsBestScore") private var bestScore = 0
     @State private var players = ["Player 1", "Player 2"]
     @State private var scores = [0, 0]
     @State private var turn = 0
@@ -172,6 +173,7 @@ struct DartsGame: View {
                 dartFlying = false
                 dartsThrown += 1
                 if dartsThrown >= 18 {
+                    bestScore = max(bestScore, scores.max() ?? 0)
                     gameOver = true
                     Haptic.celebrate()
                 } else if dartsThrown % 3 == 0 {
@@ -198,31 +200,41 @@ struct DartsGame: View {
     // MARK: - Score UI
 
     private var scoreboard: some View {
-        HStack(spacing: 12) {
-            ForEach(0..<2, id: \.self) { i in
-                VStack(spacing: 2) {
-                    Text(players[i])
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(turn == i && !gameOver ? Brand.malt : Brand.muted)
-                    Text("\(scores[i])")
-                        .font(.system(.title2, design: .rounded).weight(.heavy))
-                        .foregroundStyle(turn == i && !gameOver ? Brand.malt : Brand.text)
-                        .contentTransition(.numericText())
+        VStack(spacing: 7) {
+            HStack(spacing: 12) {
+                ForEach(0..<2, id: \.self) { i in
+                    VStack(spacing: 2) {
+                        Text(players[i])
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(turn == i && !gameOver ? Brand.malt : Brand.muted)
+                        Text("\(scores[i])")
+                            .font(.system(.title2, design: .rounded).weight(.heavy))
+                            .foregroundStyle(turn == i && !gameOver ? Brand.malt : Brand.text)
+                            .contentTransition(.numericText())
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(
+                        turn == i && !gameOver ? (i == 0 ? Brand.copper : Brand.hop) : Brand.surface,
+                        in: RoundedRectangle(cornerRadius: 14)
+                    )
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(
-                    turn == i && !gameOver ? (i == 0 ? Brand.copper : Brand.hop) : Brand.surface,
-                    in: RoundedRectangle(cornerRadius: 14)
-                )
             }
+            Label("Best game \(bestScore)", systemImage: "crown.fill")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Brand.muted)
+                .contentTransition(.numericText())
         }
     }
 
     private var resultPanel: some View {
         VStack(spacing: 10) {
-            Text(scores[0] == scores[1] ? "Dead heat! 🤝"
-                 : "🏆 \(players[scores[0] > scores[1] ? 0 : 1]) wins!")
+            Label(
+                scores[0] == scores[1]
+                    ? "Dead heat"
+                    : "\(players[scores[0] > scores[1] ? 0 : 1]) wins",
+                systemImage: scores[0] == scores[1] ? "equal.circle.fill" : "trophy.fill"
+            )
                 .font(.system(.title2, design: .rounded).weight(.heavy))
                 .foregroundStyle(Brand.text)
             Button("Rematch") {

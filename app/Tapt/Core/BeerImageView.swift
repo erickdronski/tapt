@@ -1,6 +1,7 @@
 import SwiftUI
 import Vision
 import CoreImage
+import ImageIO
 import UIKit
 
 /// Lifts the beer off its background on-device (iOS Vision), so raw Open Food Facts
@@ -8,10 +9,43 @@ import UIKit
 /// Real photo, background removed -- never fabricated. Cached per URL so it runs once.
 enum SubjectLift {
     // NSCache is internally thread-safe, so this shared instance is safe to use nonisolated.
-    nonisolated(unsafe) private static let cache = NSCache<NSString, UIImage>()
+    nonisolated(unsafe) private static let cache: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.countLimit = 160
+        cache.totalCostLimit = 48 * 1_024 * 1_024
+        return cache
+    }()
 
     static func cached(_ key: String) -> UIImage? { cache.object(forKey: key as NSString) }
-    static func store(_ key: String, _ img: UIImage) { cache.setObject(img, forKey: key as NSString) }
+    static func store(_ key: String, _ img: UIImage) {
+        let width = img.cgImage?.width ?? Int(img.size.width * img.scale)
+        let height = img.cgImage?.height ?? Int(img.size.height * img.scale)
+        cache.setObject(img, forKey: key as NSString, cost: max(1, width * height * 4))
+    }
+
+    /// Decodes only the pixels the destination can display. Catalog sources can
+    /// be multi-megapixel photos, while most Tapt placements are compact rows.
+    static func downsample(_ fileURL: URL, maxPixelSize: CGFloat) -> UIImage? {
+        let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, sourceOptions) else {
+            return nil
+        }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: max(64, maxPixelSize)
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        return UIImage(cgImage: image)
+    }
+
+    static func hasAlpha(_ image: UIImage) -> Bool {
+        guard let alpha = image.cgImage?.alphaInfo else { return false }
+        return !(alpha == .none || alpha == .noneSkipFirst || alpha == .noneSkipLast)
+    }
 
     /// Returns the subject cut out onto transparency, or nil if no clear subject.
     static func lift(_ image: UIImage) -> UIImage? {
@@ -38,44 +72,82 @@ enum SubjectLift {
 struct BeerImageView: View {
     let url: String?
     var contentMode: ContentMode = .fit
+    var maxPixelSize: CGFloat = 900
+    var liftsSubject = true
 
     @State private var display: UIImage?
     @State private var loaded = false
+
+    private var loadIdentity: String {
+        "\(url ?? "")|\(Int(maxPixelSize.rounded()))|\(liftsSubject ? "lift" : "raw")"
+    }
 
     var body: some View {
         Group {
             if let img = display {
                 Image(uiImage: img).resizable().aspectRatio(contentMode: contentMode)
             } else if loaded {
-                Image(systemName: "mug.fill").font(.system(size: 22)).foregroundStyle(Brand.gold.opacity(0.6))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                BeerGlassView(pour: 0.76, animatesPour: false)
+                    .padding(6)
+                    .accessibilityHidden(true)
             } else {
                 Color.clear
             }
         }
-        .task(id: url) { await load() }
+        .task(id: loadIdentity) { await load() }
     }
 
     private func load() async {
-        display = nil; loaded = false
-        guard let s = url, let u = URL(string: s) else { loaded = true; return }
-        if let hit = SubjectLift.cached(s) { display = hit; loaded = true; return }
-        guard let (data, _) = try? await URLSession.shared.data(from: u),
-              let raw = UIImage(data: data) else { loaded = true; return }
-        // show the raw photo immediately, then swap in the cut-out when ready
-        display = raw
-        loaded = true
-        // Already-cut images (transparent PNGs from our storage) are used as-is.
-        if hasAlpha(raw) { SubjectLift.store(s, raw); return }
-        let cut = await Task.detached(priority: .userInitiated) { SubjectLift.lift(raw) }.value
-        if let cut {
-            SubjectLift.store(s, cut)
-            await MainActor.run { withAnimation(.easeInOut(duration: 0.25)) { display = cut } }
+        display = nil
+        loaded = false
+        guard let source = url, let remoteURL = URL(string: source) else {
+            loaded = true
+            return
         }
-    }
+        let cacheKey = "\(source)|\(Int(maxPixelSize.rounded()))|\(liftsSubject ? "lift" : "raw")"
+        if let hit = SubjectLift.cached(cacheKey) {
+            display = hit
+            loaded = true
+            return
+        }
 
-    private func hasAlpha(_ img: UIImage) -> Bool {
-        guard let a = img.cgImage?.alphaInfo else { return false }
-        return !(a == .none || a == .noneSkipFirst || a == .noneSkipLast)
+        do {
+            let (fileURL, response) = try await URLSession.shared.download(from: remoteURL)
+            guard !Task.isCancelled else { return }
+            if let response = response as? HTTPURLResponse,
+               !(200...299).contains(response.statusCode) {
+                loaded = true
+                return
+            }
+
+            guard let raw = await Task.detached(priority: .userInitiated, operation: {
+                SubjectLift.downsample(fileURL, maxPixelSize: maxPixelSize)
+            }).value else {
+                loaded = true
+                return
+            }
+            guard !Task.isCancelled else { return }
+
+            // Show the real source immediately, then swap in the lifted subject.
+            display = raw
+            loaded = true
+            if !liftsSubject || SubjectLift.hasAlpha(raw) {
+                SubjectLift.store(cacheKey, raw)
+                return
+            }
+
+            let cut = await Task.detached(priority: .userInitiated) {
+                SubjectLift.lift(raw)
+            }.value
+            guard !Task.isCancelled else { return }
+            let final = cut ?? raw
+            SubjectLift.store(cacheKey, final)
+            if cut != nil {
+                withAnimation(.easeInOut(duration: 0.25)) { display = final }
+            }
+        } catch {
+            guard !Task.isCancelled else { return }
+            loaded = true
+        }
     }
 }

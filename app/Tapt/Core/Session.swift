@@ -180,7 +180,8 @@ final class Session {
         let keys = [
             "locationConsent", "aggregateConsent", "dataSaleConsent",
             "socialVisible", "beerGeekMode", "noLowDefault",
-            "homeRegion", "homeRegionGeocoded"
+            "homeRegion", "homeRegionGeocoded",
+            "passport.seenBadges", "passport.badgesSeeded"
         ]
         for key in keys { UserDefaults.standard.removeObject(forKey: key) }
     }

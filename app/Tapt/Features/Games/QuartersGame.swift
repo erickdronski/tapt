@@ -6,7 +6,7 @@ import SwiftUI
 struct QuartersGame: View {
     @State private var score = 0
     @State private var streak = 0
-    @State private var best = 0
+    @AppStorage("quartersBestStreak") private var best = 0
     @State private var round = 1
 
     @State private var coin = CGPoint(x: 150, y: 280)
@@ -167,7 +167,7 @@ struct QuartersGame: View {
                     streak += 1
                     best = max(best, streak)
                     Haptic.success()
-                    message = streak > 1 ? "🔥 \(streak) in a row!" : "Nothing but cup."
+                    message = streak > 1 ? "\(streak) in a row." : "Nothing but cup."
                 } else {
                     streak = 0
                     Haptic.tap()

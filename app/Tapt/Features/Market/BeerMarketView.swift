@@ -26,6 +26,8 @@ struct BeerMarketView: View {
                             ForEach(Array(beers.enumerated()), id: \.element.id) { i, b in
                                 Button { Haptic.tap(); selected = b } label: { row(rank: i + 1, b) }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel(rowAccessibilityLabel(rank: i + 1, beer: b))
+                                    .accessibilityHint("Opens beer details")
                                 Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 60)
                             }
                             footer
@@ -125,7 +127,9 @@ struct BeerMarketView: View {
                 }
             }
             Spacer(minLength: 6)
-            Sparkline(values: b.spark, trend: b.change).frame(width: 54, height: 30)
+            Sparkline(values: b.spark, trend: b.change)
+                .frame(width: 54, height: 30)
+                .accessibilityHidden(true)
             VStack(alignment: .trailing, spacing: 1) {
                 Text("\(b.net)").font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
                     .contentTransition(.numericText())
@@ -141,17 +145,24 @@ struct BeerMarketView: View {
     private func symbolMark(_ b: MarketBeer) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 9).fill(Brand.surface)
-            if let s = b.imageUrl, let u = URL(string: s) {
-                AsyncImage(url: u) { phase in
-                    if let img = phase.image { img.resizable().scaledToFit().padding(3) }
-                    else { Text(String(b.symbol.prefix(2))).font(.caption2.weight(.heavy)).foregroundStyle(Brand.gold) }
-                }
+            if let source = b.imageUrl, URL(string: source) != nil {
+                BeerImageView(url: source, maxPixelSize: 160, liftsSubject: false)
+                    .padding(3)
             } else {
                 Text(String(b.symbol.prefix(2))).font(.caption2.weight(.heavy)).foregroundStyle(Brand.gold)
             }
         }
         .frame(width: 34, height: 34)
         .overlay(RoundedRectangle(cornerRadius: 9).stroke(Brand.malt.opacity(0.08)))
+        .accessibilityHidden(true)
+    }
+
+    private func rowAccessibilityLabel(rank: Int, beer: MarketBeer) -> String {
+        let brewery = beer.brewery.map { ", \($0)" } ?? ""
+        let movement = beer.isFlat
+            ? "steady"
+            : "\(abs(beer.change)) points \(beer.isUp ? "up" : "down")"
+        return "Rank \(rank), \(beer.name)\(brewery), standing \(beer.net), \(movement)"
     }
 
     @ViewBuilder
@@ -227,26 +238,35 @@ struct MarketTicker: View {
     let items: [MarketBeer]
     var onTap: (MarketBeer) -> Void
     private let speed: Double = 34
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     // The row's true laid-out width, measured once. Feeds the seamless-loop math so
     // cells can size to their OWN content (no wrapping, even gaps) instead of a fixed
     // width that clipped and wrapped 4-letter symbols like STON -> "STO"/"N".
     @State private var rowWidth: CGFloat = 0
 
     var body: some View {
-        // A GeometryReader container is "greedy": it fills the offered space and reports
-        // NO intrinsic preference, so the wide marquee row can never push the parent
-        // layout wide (the bug that blanked Home). We only read the visible width.
-        GeometryReader { geo in
-            // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
-            SwiftUI.TimelineView(.animation) { tl in
-                HStack(spacing: 0) {
-                    row(at: tl.date)
-                    row(at: tl.date)
+        Group {
+            if reduceMotion {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    cells(at: nil)
                 }
-                .offset(x: tickerOffset(at: tl.date))
+            } else {
+                // A GeometryReader container is "greedy": it fills the offered space and reports
+                // NO intrinsic preference, so the wide marquee row can never push the parent
+                // layout wide (the bug that blanked Home). We only read the visible width.
+                GeometryReader { geo in
+                    // SwiftUI-qualified: the app also defines a local `TimelineView` (Learn).
+                    SwiftUI.TimelineView(.periodic(from: .now, by: 1.0 / 30.0)) { tl in
+                        HStack(spacing: 0) {
+                            row(at: tl.date)
+                            row(at: tl.date).accessibilityHidden(true)
+                        }
+                        .offset(x: tickerOffset(at: tl.date))
+                    }
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
+                    .clipped()
+                }
             }
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .leading)
-            .clipped()
         }
         .frame(height: 40)
     }
@@ -258,12 +278,7 @@ struct MarketTicker: View {
     }
 
     private func row(at date: Date) -> some View {
-        HStack(spacing: 0) {
-            ForEach(items) { b in
-                Button { onTap(b) } label: { cell(b, at: date) }
-                    .buttonStyle(.plain)
-            }
-        }
+        cells(at: date)
         .background(GeometryReader { g in
             Color.clear.preference(key: TickerRowWidthKey.self, value: g.size.width)
         })
@@ -272,11 +287,26 @@ struct MarketTicker: View {
         }
     }
 
-    private func cell(_ b: MarketBeer, at date: Date) -> some View {
+    private func cells(at date: Date?) -> some View {
+        HStack(spacing: 0) {
+            ForEach(items) { beer in
+                Button { onTap(beer) } label: { cell(beer, at: date) }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(accessibilityLabel(for: beer))
+                    .accessibilityHint("Opens beer details")
+            }
+        }
+    }
+
+    private func cell(_ b: MarketBeer, at date: Date?) -> some View {
         // Hot beers pulse in sync with the timeline so a real surge in global
         // sentiment is impossible to miss as the ticker slides by.
-        let t = date.timeIntervalSinceReferenceDate
-        let pulse = b.isHot ? (0.55 + 0.45 * abs(sin(t * 2.3))) : 1.0
+        let pulse: Double
+        if let date, b.isHot {
+            pulse = 0.55 + 0.45 * abs(sin(date.timeIntervalSinceReferenceDate * 2.3))
+        } else {
+            pulse = 1
+        }
         return HStack(spacing: 5) {
             if b.isHot {
                 Image(systemName: "flame.fill")
@@ -298,7 +328,14 @@ struct MarketTicker: View {
         .lineLimit(1)                      // symbols never wrap to a second line
         .fixedSize()                       // cell hugs its content, even gaps
         .padding(.leading, 4)
-        .scaleEffect(b.isHot ? 0.97 + 0.05 * pulse : 1)
+        .scaleEffect(date != nil && b.isHot ? 0.97 + 0.05 * pulse : 1)
+    }
+
+    private func accessibilityLabel(for beer: MarketBeer) -> String {
+        let movement = beer.isFlat
+            ? "steady"
+            : "\(abs(beer.change)) points \(beer.isUp ? "up" : "down")"
+        return "\(beer.name), standing \(beer.net), \(movement)"
     }
 }
 

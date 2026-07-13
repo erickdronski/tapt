@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tapt for Business · Free menu hosting</title>
 <meta name="description" content="Free core tools for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu, and view real activity.">
+<link rel="canonical" href="https://taptbeer.com/portal.html">
 <meta property="og:title" content="Tapt for Business · Free menu hosting forever">
 <meta property="og:description" content="Claim your venue, publish your tap list, print your QR menu, and view real activity. Core tools stay free.">
 <meta property="og:type" content="website">
@@ -22,7 +23,9 @@
 body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.55}
 .skip{position:fixed;left:12px;top:10px;z-index:1000;transform:translateY(-180%);background:var(--malt);color:var(--foam);padding:10px 14px;border-radius:6px}.skip:focus{transform:none}
 .wrap{max-width:680px;margin:0 auto;padding:36px 20px 90px}
-.brand{font-family:'Poppins';font-weight:800;font-size:1.3rem}.brand span{color:var(--gold)}
+.portal-nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{font-family:'Poppins';font-weight:800;font-size:1.3rem;color:var(--malt);text-decoration:none}.brand>span{color:var(--gold)}
+.portal-links{display:flex;gap:16px;align-items:center}.portal-links a{font-size:.78rem;font-weight:700;color:var(--slate);text-decoration:none}.portal-links a:hover{color:var(--copper)}
 h1{font-family:'Poppins';font-size:1.9rem;letter-spacing:0;margin:16px 0 6px}
 .sub{color:var(--slate);margin-bottom:22px}
 .card{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:18px;padding:20px;margin-bottom:14px}
@@ -55,18 +58,26 @@ a{color:var(--copper)}
 .evline input,.evline select,.evline textarea{margin:0;padding:9px 10px;font-size:.9rem;background:#fff}
 .evline textarea{min-height:72px;resize:vertical}
 .icon-btn{width:40px;height:40px;display:grid;place-items:center;padding:0;border-radius:10px;font-size:1.2rem}
+.portal-footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid rgba(26,18,6,.1);margin-top:28px;padding-top:20px;color:var(--slate);font-size:.76rem}
+.portal-footer nav{display:flex;gap:14px;flex-wrap:wrap}.portal-footer a{color:var(--slate);font-weight:700;text-decoration:none}.portal-footer a:hover{color:var(--copper)}
 .wrap{animation:portalIn .7s cubic-bezier(.22,1,.36,1) both}
 .card{animation:cardIn .5s cubic-bezier(.22,1,.36,1) both}
 @keyframes portalIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@media(max-width:560px){.evline{grid-template-columns:1fr auto}.evline .title{grid-column:1 / -1}.evline .timing{grid-template-columns:1fr}.tapline{grid-template-columns:1fr 1fr}.tapline .remove{grid-column:2;justify-self:end}}
+@media(max-width:560px){.portal-nav{align-items:flex-start}.portal-links{gap:10px}.evline{grid-template-columns:1fr auto}.evline .title{grid-column:1 / -1}.evline .timing{grid-template-columns:1fr}.tapline{grid-template-columns:1fr 1fr}.tapline .remove{grid-column:2;justify-self:end}}
 @media(prefers-reduced-motion:reduce){.wrap,.card{animation:none}}
 </style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <main class="wrap" id="main">
-  <div class="brand">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">for Business</span></div>
+  <header class="portal-nav">
+    <a class="brand" href="index.html" aria-label="Tapt home">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">for Business</span></a>
+    <nav class="portal-links" aria-label="Partner help">
+      <a href="support.html">Support</a>
+      <a href="index.html">For drinkers</a>
+    </nav>
+  </header>
   <h1>Free menu hosting. Forever.</h1>
   <p class="sub">Claim your venue, publish your tap list, print your QR. Free.</p>
 
@@ -141,8 +152,17 @@ a{color:var(--copper)}
       <div class="stat" style="text-align:left"><b style="font-size:1.05rem">Featured · $29/mo</b><span>Rail placement + event pushes to nearby drinkers</span></div>
       <div class="stat" style="text-align:left"><b style="font-size:1.05rem">Spotlight · $79/mo</b><span>Top slot + a feature in The Tapt Dispatch</span></div>
     </div>
-    <p class="sub" style="margin:0">Reply to your claim email or <a href="mailto:esdronski@gmail.com?subject=Tapt%20Featured">contact Tapt support</a>.</p>
+    <p class="sub" style="margin:0">Reply to your claim email or <a href="mailto:hello@taptbeer.com?subject=Tapt%20Featured">contact Tapt support</a>.</p>
   </div>
+
+  <footer class="portal-footer">
+    <span>Tapt for breweries, bars, pubs, and taprooms.</span>
+    <nav aria-label="Partner legal links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="support.html">Contact</a>
+    </nav>
+  </footer>
 </main>
 
 <script type="module">
