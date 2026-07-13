@@ -5,7 +5,7 @@ The script is idempotent and deliberately stops short of creating a review
 submission. It may reuse an existing TestFlight review contact, but never logs
 contact values or demo credentials.
 
-Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH.
+Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH, TARGET_BUILD_NUMBER.
 Optional review-contact fallbacks: ASC_REVIEW_FIRST_NAME, ASC_REVIEW_LAST_NAME,
 ASC_REVIEW_EMAIL, ASC_REVIEW_PHONE.
 """
@@ -28,6 +28,7 @@ ISSUER = os.environ["ASC_ISSUER_ID"]
 KEY_PATH = os.environ["ASC_KEY_PATH"]
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
+TARGET_BUILD_NUMBER = os.environ.get("TARGET_BUILD_NUMBER", "").strip()
 
 DESCRIPTION = """Meet Tapt, THE Beer Superapp.
 
@@ -64,11 +65,11 @@ KEYWORDS = "beer,brewery,bar,pub,taproom,cellar,passport,scanner,pong,trivia,cra
 REVIEW_NOTES = """Tapt is an informational and social beer app for legal-drinking-age adults. It does not sell alcohol.
 
 PUBLIC REVIEW PATH
-- Tap "Explore without an account" to inspect the real catalog, Beer Radar map, Beer School, games, Discover, partner information, and sourced beer details without providing credentials.
+- Tap "Explore without an account" to inspect catalog search, the local MapKit beer-place map, Beer School, games, Discover, and partner information without providing credentials.
 - Account-only actions clearly return the reviewer to sign-in.
 
 ACCOUNT REVIEW PATH
-- Sign in with Apple and email one-time-code sign-in provide account access.
+- Enter an App Review email address, request a sign-in email, and type the six-digit code from that email. New accounts complete the short age and preference onboarding. External providers are not shown until they pass a signed-device callback test.
 - Delete account: You tab > Delete account > confirm. This deletes the auth identity and personal-plane rows.
 - Privacy controls: You tab > Privacy Choices. Optional aggregate and partner-insight sharing default off.
 - UGC safety: report/block actions are available from social feed items and public profiles.
@@ -137,6 +138,11 @@ def contact_from_environment() -> dict:
 
 
 def main() -> int:
+    if not TARGET_BUILD_NUMBER:
+        raise RuntimeError(
+            "TARGET_BUILD_NUMBER is required; refusing to attach a build by recency"
+        )
+
     encoded_bundle = urllib.parse.quote(BUNDLE_ID, safe="")
     status, body = api("GET", f"/v1/apps?filter[bundleId]={encoded_bundle}&limit=1")
     require("app lookup", status, body, (200,))
@@ -322,7 +328,19 @@ def main() -> int:
         for item in body.get("data", [])
         if item.get("attributes", {}).get("processingState") == "VALID"
     ]
-    build = first(builds, "valid 1.0 build")
+    build = next(
+        (
+            item
+            for item in builds
+            if str(item.get("attributes", {}).get("version"))
+            == TARGET_BUILD_NUMBER
+        ),
+        None,
+    )
+    if not build:
+        raise RuntimeError(
+            f"VALID build {TARGET_BUILD_NUMBER} not found; refusing to attach a different build"
+        )
     status, body = api(
         "PATCH",
         f"/v1/appStoreVersions/{version_id}/relationships/build",

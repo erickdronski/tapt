@@ -1,10 +1,7 @@
--- 0062_age_social_and_guest_market.sql
--- Require explicit legal-age self-attestation, enforce social visibility on
--- every discovery feed, and expose the read-only Market aggregate to guests.
-
-drop function if exists public.complete_profile_onboarding(
-  text, text[], boolean, boolean, boolean, text
-);
+-- 0071_age_social_and_guest_market.sql
+-- Require explicit legal-age self-attestation and enforce social visibility on
+-- every discovery feed. The prior onboarding overload remains available while
+-- installed builds roll forward; the new parameter names disambiguate calls.
 
 create or replace function public.complete_profile_onboarding(
   p_age_confirmed boolean,
@@ -12,8 +9,7 @@ create or replace function public.complete_profile_onboarding(
   p_top_styles text[],
   p_location_consent boolean,
   p_aggregate_consent boolean,
-  p_data_sale_consent boolean,
-  p_policy_version text default '2026-07-12'
+  p_data_sale_consent boolean
 )
 returns void
 language plpgsql
@@ -45,25 +41,56 @@ begin
   values
     (v_user, 'location',
      case when p_location_consent then 'granted'::consent_action else 'withdrawn'::consent_action end,
-     p_location_consent, p_policy_version,
+     p_location_consent, '2026-07-12',
      'Use my location for nearby pubs, bars, breweries, taprooms, and beer gardens.',
      'onboarding'),
     (v_user, 'aggregate_analytics',
      case when p_aggregate_consent then 'granted'::consent_action else 'withdrawn'::consent_action end,
-     p_aggregate_consent, p_policy_version,
+     p_aggregate_consent, '2026-07-12',
      'Use my check-ins for anonymous aggregate trend reports.', 'onboarding'),
     (v_user, 'data_sale',
      case when p_data_sale_consent then 'granted'::consent_action else 'withdrawn'::consent_action end,
-     p_data_sale_consent, p_policy_version,
+     p_data_sale_consent, '2026-07-12',
      'Include my anonymous aggregate data in partner insights.', 'onboarding');
 end;
 $$;
 
+-- Compatibility wrapper for installed builds that used the previous payload.
+-- Those builds already gated this call behind the legal-age toggle. Ignore the
+-- caller-supplied policy version and record the server-owned current version.
+create or replace function public.complete_profile_onboarding(
+  p_region_code text,
+  p_top_styles text[],
+  p_location_consent boolean,
+  p_aggregate_consent boolean,
+  p_data_sale_consent boolean,
+  p_policy_version text default '2026-07-08'
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.complete_profile_onboarding(
+    true,
+    p_region_code,
+    p_top_styles,
+    p_location_consent,
+    p_aggregate_consent,
+    p_data_sale_consent
+  );
+end;
+$$;
+
 revoke all on function public.complete_profile_onboarding(
-  boolean, text, text[], boolean, boolean, boolean, text
+  boolean, text, text[], boolean, boolean, boolean
 ) from public, anon;
 grant execute on function public.complete_profile_onboarding(
-  boolean, text, text[], boolean, boolean, boolean, text
+  boolean, text, text[], boolean, boolean, boolean
+) to authenticated;
+grant execute on function public.complete_profile_onboarding(
+  text, text[], boolean, boolean, boolean, text
 ) to authenticated;
 
 create or replace function public.search_profiles(p_query text, p_limit int default 12)
@@ -187,8 +214,9 @@ grant execute on function public.search_profiles(text, int) to authenticated;
 grant execute on function public.leaderboard_tasters(int) to authenticated;
 grant execute on function public.social_pour_feed(int) to authenticated;
 
--- The Market is a read-only aggregate with no personal-plane rows.
-grant execute on function public.beer_market(text, integer, boolean)
-  to anon, authenticated;
+-- Keep the deployed anonymous RPC boundary intact. The app resolves a session
+-- before loading the Market; public web pages do not call this function.
+revoke execute on function public.beer_market(text, integer, boolean) from anon;
+grant execute on function public.beer_market(text, integer, boolean) to authenticated;
 
 notify pgrst, 'reload schema';

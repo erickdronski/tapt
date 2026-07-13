@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tapt — Live App Preview</title>
+<title>Tapt: Live App Preview</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -145,7 +145,7 @@
 </head>
 <body>
   <div class="note">
-    <span class="live">Live prototype</span> — a <b>web mockup</b> of the Tapt app using its real design system, and
+    <span class="live">Live prototype</span>: a <b>web mockup</b> of the Tapt app using its real design system and
     <b>real, live beer data</b> from Supabase. It is <b>not</b> the compiled iOS app, so native camera, gestures and haptics are simulated.
     Tap the tabs. Open a beer. Hit <b>Log it</b> to see the celebration.
   </div>
@@ -176,7 +176,7 @@
         <div class="bow">
           <div class="crown">👑</div>
           <div class="k kicker">Catalog spotlight</div>
-          <b id="bowName">—</b>
+          <b id="bowName">Loading</b>
           <span id="bowSub">A real beer from the catalog</span>
         </div>
         <div class="sec"><h2>Explore real beers</h2><span class="kicker" style="color:var(--muted)">from the catalog</span></div>
@@ -210,7 +210,7 @@
         <div class="px">
           <div class="bow" style="background:linear-gradient(120deg,#eafaf0,#d7f0e0)">
             <div class="k kicker" style="color:var(--hop)">Passport</div>
-            <b>50 states · 47 countries</b>
+            <b>States · countries · styles</b>
             <span>Log a pour to stamp your Passport</span>
           </div>
           <div class="logbtn" onclick="celebrate()">Log a pour</div>
@@ -231,12 +231,12 @@
       <div class="sheet">
         <div class="close" onclick="closeDetail()">‹ Catalog</div>
         <div class="dhero"><img id="dImg" alt=""></div>
-        <div class="dname" id="dName">—</div>
-        <div class="dsub" id="dSub">—</div>
+        <div class="dname" id="dName">Not available</div>
+        <div class="dsub" id="dSub">Not available</div>
         <div class="dstats">
-          <div class="dstat"><b id="dAbv">—</b><span>ABV</span></div>
-          <div class="dstat"><b id="dStyle">—</b><span>STYLE</span></div>
-          <div class="dstat"><b id="dCountry">—</b><span>ORIGIN</span></div>
+          <div class="dstat"><b id="dAbv">N/A</b><span>ABV</span></div>
+          <div class="dstat"><b id="dStyle">N/A</b><span>STYLE</span></div>
+          <div class="dstat"><b id="dCountry">N/A</b><span>ORIGIN</span></div>
         </div>
         <div class="votebar">
           <div class="vote up" onclick="bump(this,'▲')"><span>👍</span><span class="n">0</span></div>
@@ -361,10 +361,10 @@ document.getElementById('q').addEventListener('input',e=>{clearTimeout(timer);ti
 function openDetail(b){
   document.getElementById('dImg').src=b.image_url||'';
   document.getElementById('dName').textContent=b.name;
-  document.getElementById('dSub').textContent=[b.brewery_name,b.country].filter(Boolean).join(' · ')||'—';
-  document.getElementById('dAbv').textContent=b.abv!=null?b.abv+'%':'—';
-  document.getElementById('dStyle').textContent=b.style||'—';
-  document.getElementById('dCountry').textContent=b.country||'—';
+  document.getElementById('dSub').textContent=[b.brewery_name,b.country].filter(Boolean).join(' · ')||'Not available';
+  document.getElementById('dAbv').textContent=b.abv!=null?b.abv+'%':'N/A';
+  document.getElementById('dStyle').textContent=b.style||'N/A';
+  document.getElementById('dCountry').textContent=b.country||'N/A';
   document.querySelectorAll('#detail .vote .n').forEach(n=>n.textContent='0');
   document.getElementById('detail').classList.add('on');
 }

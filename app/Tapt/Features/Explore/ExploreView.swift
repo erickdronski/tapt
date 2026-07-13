@@ -71,12 +71,10 @@ struct ExploreView: View {
             .task(id: region) { await load() }
             .task { await loadGuides() }
             .task { await detectHomeState() }
-            .task(id: noLowDefault) {
-                ticker = (try? await MarketService.feed(
-                    sort: .active,
-                    limit: 18,
-                    naOnly: noLowDefault
-                )) ?? []
+            .task(id: noLowDefault) { await loadTicker() }
+            .refreshable {
+                await load()
+                await loadTicker()
             }
             .sheet(item: $tickerBeer) { b in
                 NavigationStack { BeerDetailView(beerId: b.beerId) }
@@ -429,8 +427,19 @@ struct ExploreView: View {
                 feedNote = nil
             }
         } catch {
-            beers = []
-            feedNote = "Guide mode"
+            feedNote = "Could not refresh. Pull to try again."
+        }
+    }
+
+    private func loadTicker() async {
+        do {
+            ticker = try await MarketService.feed(
+                sort: .active,
+                limit: 18,
+                naOnly: noLowDefault
+            )
+        } catch {
+            // Keep the last good tape visible through a transient refresh failure.
         }
     }
 

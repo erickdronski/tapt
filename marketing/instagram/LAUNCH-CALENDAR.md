@@ -19,15 +19,13 @@ never stock photos of strangers drinking, never fabricated numbers, always
 6. **Game night** — Beer Olympics medal tables, guide teasers
 
 ## Week 1 — "It exists" (captions ready below)
-- **P1 (launch):** App icon + glass render. "Meet Tapt — THE Beer Superapp.
-  Scan any beer on Earth, log the pour, stamp your Passport across 50 states
-  and 47 countries. Free forever. Link in bio. 🍺🛂 #craftbeer #beerapp"
-- **P2 (map):** Radar screenshot. "8,700+ real breweries, pubs, bars, and
-  taprooms across 25 countries — already on the map, verified coordinates,
-  zero fabricated data. Where should we stamp first?"
-- **P3 (scan):** Scan flow screens. "That beer nobody's heard of? Scan the
-  barcode — if it's new to Tapt, you're the first person ON EARTH to log it.
-  Your name goes on the pour."
+- **P1 (launch):** App icon + glass render. "Meet Tapt, THE Beer Superapp.
+  Search or scan a beer, log the pour, and build your Passport across states
+  and countries. Free for drinkers. Link in bio. 🍺🛂 #craftbeer #beerapp"
+- **P2 (map):** Radar screenshot. "Real breweries, pubs, bars, and taprooms,
+  mapped with source provenance and no fabricated places. Where should we stamp first?"
+- **P3 (scan):** Scan flow screens. "Scan a supported barcode or label, review
+  the match, and log the pour to your Cellar."
 - **P4 (BOW):** BOW card. "Every week the community votes a Beer of the Week.
   Every Monday a winner is crowned. No bots, no paid placement — one vote per
   drinker, live global race."

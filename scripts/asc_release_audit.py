@@ -26,6 +26,7 @@ ISSUER = os.environ["ASC_ISSUER_ID"]
 KEY_PATH = os.environ["ASC_KEY_PATH"]
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
+EXPECTED_BUILD_NUMBER = os.environ.get("EXPECTED_BUILD_NUMBER", "").strip()
 
 
 def token() -> str:
@@ -219,11 +220,16 @@ def main() -> int:
         build = build_body.get("data") if build_status == 200 else None
         if build:
             build_attrs = build.get("attributes", {})
+            selected_build_number = str(build_attrs.get("version") or "")
             print(
-                f"  selected build: {build_attrs.get('version')} "
+                f"  selected build: {selected_build_number} "
                 f"uploaded={build_attrs.get('uploadedDate')} "
                 f"processing={build_attrs.get('processingState')}"
             )
+            if EXPECTED_BUILD_NUMBER and selected_build_number != EXPECTED_BUILD_NUMBER:
+                blockers.append(
+                    f"Selected build {selected_build_number or 'missing'} does not match expected build {EXPECTED_BUILD_NUMBER}."
+                )
         else:
             if build_status not in (200, 404):
                 api_error("selected build", build_status, build_body)
@@ -401,7 +407,7 @@ def main() -> int:
             else "API METADATA READY; manual gates remain"
         )
     )
-    return 0
+    return 1 if blockers else 0
 
 
 if __name__ == "__main__":

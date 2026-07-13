@@ -8,23 +8,7 @@ struct RootView: View {
     @State private var pendingBeerDetailId: String?
 
     var body: some View {
-        TabView(selection: $selection) {
-            ExploreView()
-                .tag(0)
-                .tabItem { Label("Home", systemImage: "house.fill") }
-            BeerMarketView()
-                .tag(1)
-                .tabItem { Label("Market", systemImage: "chart.line.uptrend.xyaxis") }
-            CellarView()
-                .tag(2)
-                .tabItem { Label("Cellar", systemImage: "square.stack.3d.up") }
-            DiscoverView()
-                .tag(3)
-                .tabItem { Label("Discover", systemImage: "sparkles") }
-            ProfileView()
-                .tag(4)
-                .tabItem { Label("You", systemImage: "person.crop.circle") }
-        }
+        tabShell
         .onAppear {
             #if targetEnvironment(simulator)
             if let t = ProcessInfo.processInfo.environment["TAPT_START_TAB"], let i = Int(t) { selection = i }
@@ -78,6 +62,44 @@ struct RootView: View {
                     .padding(.vertical)
                 }
                 .navigationTitle("Share your pour").navigationBarTitleDisplayMode(.inline)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var tabShell: some View {
+        if session.isGuest {
+            TabView(selection: $selection) {
+                NavigationStack { CatalogView() }
+                    .tag(0)
+                    .tabItem { Label("Catalog", systemImage: "books.vertical.fill") }
+                NearYouView()
+                    .tag(1)
+                    .tabItem { Label("Near You", systemImage: "map.fill") }
+                DiscoverView()
+                    .tag(2)
+                    .tabItem { Label("Discover", systemImage: "sparkles") }
+                ProfileView()
+                    .tag(3)
+                    .tabItem { Label("You", systemImage: "person.crop.circle") }
+            }
+        } else {
+            TabView(selection: $selection) {
+                ExploreView()
+                    .tag(0)
+                    .tabItem { Label("Home", systemImage: "house.fill") }
+                BeerMarketView()
+                    .tag(1)
+                    .tabItem { Label("Market", systemImage: "chart.line.uptrend.xyaxis") }
+                CellarView()
+                    .tag(2)
+                    .tabItem { Label("Cellar", systemImage: "square.stack.3d.up") }
+                DiscoverView()
+                    .tag(3)
+                    .tabItem { Label("Discover", systemImage: "sparkles") }
+                ProfileView()
+                    .tag(4)
+                    .tabItem { Label("You", systemImage: "person.crop.circle") }
             }
         }
     }

@@ -16,6 +16,7 @@ struct BeerDetailView: View {
     @State private var savedNote = ""
     @State private var savingNote = false
     @State private var showLogPour = false
+    @State private var loadError: String?
 
     var body: some View {
         ScrollView {
@@ -47,6 +48,14 @@ struct BeerDetailView: View {
                     TaptSkeletonList(rows: 4, rowHeight: 80)
                 }
                 .padding(.top, 20)
+            } else if let loadError {
+                TaptEmptyState(
+                    icon: "wifi.exclamationmark",
+                    title: "Beer details unavailable",
+                    message: loadError,
+                    actionTitle: "Try again",
+                    action: { Task { await load() } }
+                )
             } else {
                 TaptEmptyState(
                     icon: "questionmark.circle",
@@ -656,7 +665,13 @@ struct BeerDetailView: View {
     private func load() async {
         loading = true
         defer { loading = false }
-        detail = try? await BeerDetailService.detail(beerId: beerId)
+        do {
+            detail = try await BeerDetailService.detail(beerId: beerId)
+            loadError = nil
+        } catch {
+            loadError = "Check your connection and try again."
+            return
+        }
         // Reflect the user's existing vote so the thumbs + counts are correct.
         if let uid = session.user?.id {
             let existing = try? await BeerService.currentVote(beerId: beerId, userId: uid)

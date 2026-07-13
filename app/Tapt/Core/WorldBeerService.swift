@@ -83,10 +83,10 @@ enum WorldBeerService {
     static func breweryMap(limit: Int = 800) async throws -> [BreweryMapVenue] {
         struct Params: Encodable { let p_limit: Int }
 
-        return try await Supa.client
-            .rpc("brewery_map_feed", params: Params(p_limit: limit))
-            .execute()
-            .value
+        return try await Supa.authedRPC(
+            "brewery_map_feed",
+            params: Params(p_limit: limit)
+        )
     }
 
     /// Distance-ordered venues around a coordinate (PostGIS-backed).
@@ -98,10 +98,10 @@ enum WorldBeerService {
             let p_limit: Int
         }
 
-        return try await Supa.client
-            .rpc("brewery_map_feed_near", params: Params(p_lat: latitude, p_lng: longitude, p_km: km, p_limit: limit))
-            .execute()
-            .value
+        return try await Supa.authedRPC(
+            "brewery_map_feed_near",
+            params: Params(p_lat: latitude, p_lng: longitude, p_km: km, p_limit: limit)
+        )
     }
 
     static func regionGuides() async throws -> [RegionBeerGuide] {

@@ -393,7 +393,7 @@ async function loadNumbers(venueId, loadId) {
        <div class="stats" style="margin-top:8px">
          <div class="stat"><b>${f.impressions_total ?? 0}</b><span>Times shown</span></div>
          <div class="stat"><b>${f.taps_total ?? 0}</b><span>Taps</span></div>
-         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : '—'}</b><span>Tap rate</span></div>
+         <div class="stat"><b>${f.ctr_pct != null ? f.ctr_pct + '%' : 'N/A'}</b><span>Tap rate</span></div>
          <div class="stat"><b>${f.reached_drinkers ?? 0}</b><span>Drinkers reached</span></div>
        </div>`;
   } else {

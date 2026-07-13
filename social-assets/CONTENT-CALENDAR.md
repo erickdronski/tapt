@@ -30,7 +30,7 @@ All facts are real. Handle **@taptbeerapp**, site **taptbeer.com**.
 | W1 Wed | Story poll: IPA vs Stout | `ig/out/post-05-poll-story.png` |
 | W1 Thu | The Beer Market explainer | `ig/out/post-02-market.png` |
 | W1 Fri | Meet Tapt (identity carousel) | `ig/out/carousel-identity-1…6.png` |
-| W2 Mon | History: IPA was built for a boat | `ig/out/fact-1.png` |
+| W2 Mon | History: IPA and the India trade route | `ig/out/fact-1.png` |
 | W2 Tue | Beer School: American IPA | `ig/out/post-04-ipa.png` |
 | W2 Wed | Story poll: pineapple in beer? yes/no | *(story, to design)* |
 | W2 Thu | Market: "what's climbing today" | *(single, to design — real once votes are live)* |
@@ -76,7 +76,7 @@ All facts are real. Handle **@taptbeerapp**, site **taptbeer.com**.
 > #brewery #craftbeer #taproom #beerbusiness #supportlocalbeer #beertography
 
 ### fact-1 — IPA / boat
-> Beer history: IPA was built for a boat. India Pale Ale was hopped hard so it could survive the long voyage to India. The hops kept it fresh at sea.
+> Beer history: London brewers shipped well-attenuated, heavily hopped pale stock ales to India from the late 1700s. The name India Pale Ale appeared around 1830.
 > Learn every style in Tapt → taptbeer.com 🍺
 >
 > #ipa #beerhistory #craftbeer #beer #beereducation #beerfacts

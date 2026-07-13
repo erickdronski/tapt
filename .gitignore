@@ -10,6 +10,8 @@ xcuserdata/
 build/
 DerivedData/
 .supabase/
+__pycache__/
+*.pyc
 
 # XcodeGen output (regenerate with: cd app && xcodegen generate)
 app/*.xcodeproj/

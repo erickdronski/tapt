@@ -88,7 +88,7 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 Toggle("Use my location for nearby pubs, bars, breweries, taprooms, and beer gardens.", isOn: $locationConsent)
                 Toggle("Use my check-ins for anonymous aggregate trend reports.", isOn: $aggregateConsent)
-                Toggle("Include my anonymous aggregate data in partner insights.", isOn: $dataSaleConsent)
+                Toggle("Share anonymized aggregates with partners.", isOn: $dataSaleConsent)
             }
             .toggleStyle(.switch)
             .font(.system(.body, design: .rounded))

@@ -1,4 +1,4 @@
--- 0065_media_pipeline_and_security_cleanup.sql
+-- 0074_media_pipeline_and_security_cleanup.sql
 -- Track real-photo cutout processing, make the write path server-only, and
 -- resolve the actionable database advisor findings without fabricating media.
 

@@ -1,4 +1,4 @@
--- 0067_local_tonight_feed.sql
+-- 0076_local_tonight_feed.sql
 -- Separate verified nearby tap-list truth from the global Beer Market fallback.
 -- Coordinates are used only for this request and are never written by these RPCs.
 
@@ -167,6 +167,6 @@ revoke all on function public.tonight_feed_near(numeric, numeric, integer, integ
   from public, anon, authenticated;
 
 grant execute on function public.tonight_feed_v2(text, integer, boolean)
-  to anon, authenticated;
+  to authenticated;
 grant execute on function public.tonight_feed_near(numeric, numeric, integer, integer, boolean)
-  to anon, authenticated;
+  to authenticated;

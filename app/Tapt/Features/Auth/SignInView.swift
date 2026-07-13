@@ -4,9 +4,8 @@ import CryptoKit
 import Security
 import Supabase
 
-/// Sign in. Providers are detected at runtime from the Supabase project, so
-/// only buttons that can actually succeed are shown, the moment a provider is
-/// enabled in the dashboard it appears here with no app update.
+/// Sign in. External providers appear only when they are enabled in Supabase
+/// and have passed a signed-device callback test for this release.
 /// Email supports both the magic link AND typing the 6-digit code from the
 /// same email (survives cross-device and link-scanner problems).
 struct SignInView: View {
@@ -34,28 +33,35 @@ struct SignInView: View {
                         Text(".").foregroundStyle(Brand.gold)
                     }
                     .font(.system(size: 60, weight: .heavy, design: .rounded))
-                    Text("THE Beer Superapp")
+                    Text("THE Beer Superapp. All of beer, one app.")
                         .font(.system(.headline, design: .rounded))
                         .foregroundStyle(Brand.muted)
-                    Text("Scan it. Score it. Stamp your Passport.")
+                        .multilineTextAlignment(.center)
+                    Text("Discover, log, learn, play, and find what is pouring near you.")
                         .font(.subheadline)
                         .foregroundStyle(Brand.muted)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 30)
                     Spacer(minLength: 24)
 
-                    if providers.apple {
-                        appleButton.padding(.horizontal, 36)
+                    if providers.email {
+                        emailSection.padding(.horizontal, 36)
                     }
 
-                    VStack(spacing: 10) {
-                        if providers.google { oauthButton("Continue with Google", "globe", .google) }
-                        if providers.facebook { oauthButton("Continue with Facebook", "person.2.fill", .facebook) }
-                        if providers.twitter { oauthButton("Continue with X", "x.circle.fill", .x) }
+                    if hasExternalProviders {
+                        divider("or continue with")
+
+                        if providers.apple {
+                            appleButton.padding(.horizontal, 36)
+                        }
+
+                        VStack(spacing: 10) {
+                            if providers.google { oauthButton("Continue with Google", "globe", .google) }
+                            if providers.facebook { oauthButton("Continue with Facebook", "person.2.fill", .facebook) }
+                            if providers.twitter { oauthButton("Continue with X", "x.circle.fill", .x) }
+                        }
+                        .padding(.horizontal, 36)
                     }
-                    .padding(.horizontal, 36)
-
-                    divider
-
-                    emailSection.padding(.horizontal, 36)
 
                     if !session.isGuest {
                         Button {
@@ -119,10 +125,14 @@ struct SignInView: View {
         }
     }
 
-    private var divider: some View {
+    private var hasExternalProviders: Bool {
+        providers.apple || providers.google || providers.facebook || providers.twitter
+    }
+
+    private func divider(_ label: String) -> some View {
         HStack(spacing: 10) {
             Rectangle().fill(Brand.muted.opacity(0.25)).frame(height: 1)
-            Text("or use email")
+            Text(label)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(Brand.muted)
                 .fixedSize()

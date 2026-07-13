@@ -394,6 +394,7 @@ struct TonightView: View {
 
     private func loadAll() async {
         loading = true
+        message = nil
         defer { loading = false }
         await loadTonight()
         await loadSocial()
@@ -418,8 +419,6 @@ struct TonightView: View {
             tonight = try await LiveBeerService.tonight(limit: 24, naOnly: noLowDefault)
             localSignal = false
         } catch {
-            tonight = []
-            localSignal = false
             message = "Tonight's beer signal could not be loaded."
         }
     }
@@ -432,7 +431,6 @@ struct TonightView: View {
         do {
             pours = try await LiveBeerService.socialPours(limit: 30)
         } catch {
-            pours = []
             message = "Your social feed could not be loaded."
         }
     }
@@ -445,7 +443,6 @@ struct TonightView: View {
         do {
             tasteProfile = try await LiveBeerService.tasteProfile(userId: userId)
         } catch {
-            tasteProfile = []
             message = "Your taste graph could not be loaded."
         }
     }

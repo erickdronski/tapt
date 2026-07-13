@@ -6,6 +6,7 @@ struct AccountPrivacyChoices: Sendable {
     let aggregateAnalytics: Bool
     let dataSale: Bool
     let socialVisible: Bool
+    let beerGeekMode: Bool
 }
 
 /// Account preferences, consent choices, and deletion through narrow server APIs.
@@ -15,10 +16,10 @@ enum ProfileService {
             let p_region_code: String
             let p_beer_geek_mode: Bool?
         }
-        _ = try? await Supa.client.rpc(
+        _ = try? await Supa.authedRPCVoid(
             "set_profile_preferences",
             params: Params(p_region_code: region, p_beer_geek_mode: nil)
-        ).execute()
+        )
     }
 
     static func confirmLegalAge(userId: UUID) async {
@@ -31,10 +32,10 @@ enum ProfileService {
             let p_region_code: String?
             let p_beer_geek_mode: Bool
         }
-        _ = try? await Supa.client.rpc(
+        _ = try? await Supa.authedRPCVoid(
             "set_profile_preferences",
             params: Params(p_region_code: nil, p_beer_geek_mode: value)
-        ).execute()
+        )
     }
 
     static func setTopStyles(_ styles: [String], userId: UUID) async {
@@ -50,10 +51,10 @@ enum ProfileService {
             let p_ui_text: String
         }
         _ = userId
-        try await Supa.client.rpc(
+        try await Supa.authedRPCVoid(
             "record_privacy_choice",
             params: Params(p_purpose: purpose, p_granted: granted, p_ui_text: uiText)
-        ).execute()
+        )
     }
 
     static func recordConsent(
@@ -74,16 +75,21 @@ enum ProfileService {
         }
         struct ProfileRow: Decodable {
             let socialVisible: Bool
-            enum CodingKeys: String, CodingKey { case socialVisible = "social_visible" }
+            let beerGeekMode: Bool
+            enum CodingKeys: String, CodingKey {
+                case socialVisible = "social_visible"
+                case beerGeekMode = "beer_geek_mode"
+            }
         }
 
+        _ = try await Supa.client.auth.session
         let rows: [ConsentRow] = try await Supa.client.from("consent_ledger")
             .select("purpose,granted")
             .eq("user_id", value: userId.uuidString)
             .order("created_at", ascending: false)
             .execute().value
         let profile: [ProfileRow] = try await Supa.client.from("user_profile")
-            .select("social_visible")
+            .select("social_visible,beer_geek_mode")
             .eq("id", value: userId.uuidString)
             .limit(1)
             .execute().value
@@ -96,16 +102,17 @@ enum ProfileService {
             location: latest["location"] ?? false,
             aggregateAnalytics: latest["aggregate_analytics"] ?? false,
             dataSale: latest["data_sale"] ?? false,
-            socialVisible: profile.first?.socialVisible ?? false
+            socialVisible: profile.first?.socialVisible ?? false,
+            beerGeekMode: profile.first?.beerGeekMode ?? false
         )
     }
 
     static func setSocialVisibility(_ visible: Bool) async throws {
         struct Params: Encodable { let p_visible: Bool }
-        try await Supa.client.rpc(
+        try await Supa.authedRPCVoid(
             "set_social_visibility",
             params: Params(p_visible: visible)
-        ).execute()
+        )
     }
 
     /// Real, immediate account deletion (App Store 5.1.1(v) + GDPR/CCPA): the
@@ -114,7 +121,8 @@ enum ProfileService {
     /// the k-anon aggregate plane is retained per the two-plane design. Then sign out.
     static func requestAccountDeletion(userId: UUID, reason: String? = nil) async throws {
         _ = reason // kept for call-site compatibility; deletion is immediate, not queued
-        try await Supa.client.rpc("delete_my_account").execute()
+        struct Empty: Encodable {}
+        try await Supa.authedRPCVoid("delete_my_account", params: Empty())
         try? await Supa.client.auth.signOut()
     }
 
@@ -126,6 +134,7 @@ enum ProfileService {
     static func isOnboarded(userId: UUID) async -> Bool? {
         struct Row: Decodable { let region_code: String? }
         do {
+            _ = try await Supa.client.auth.session
             let rows: [Row] = try await Supa.client.from("user_profile")
                 .select("region_code").eq("id", value: userId.uuidString).limit(1)
                 .execute().value
@@ -152,7 +161,7 @@ enum ProfileService {
             let p_aggregate_consent: Bool
             let p_data_sale_consent: Bool
         }
-        try await Supa.client.rpc(
+        try await Supa.authedRPCVoid(
             "complete_profile_onboarding",
             params: Params(
                 p_age_confirmed: ageConfirmed,
@@ -162,6 +171,6 @@ enum ProfileService {
                 p_aggregate_consent: aggregateConsent,
                 p_data_sale_consent: dataSaleConsent
             )
-        ).execute()
+        )
     }
 }

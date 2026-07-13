@@ -1,4 +1,4 @@
--- 0061_partner_asset_hardening.sql
+-- 0070_partner_asset_hardening.sql
 -- Scope partner uploads to approved venue owners and keep executable SVG out
 -- of the public logo bucket.
 
@@ -38,8 +38,18 @@ set file_size_limit = 3145728,
 where id = 'partner-assets';
 
 drop policy if exists partner_assets_write on storage.objects;
+drop policy if exists partner_assets_select_owned on storage.objects;
 drop policy if exists partner_assets_update on storage.objects;
 drop policy if exists partner_assets_delete on storage.objects;
+
+-- Storage upsert checks the existing object before updating it, so approved
+-- owners need SELECT on their own venue folder in addition to UPDATE.
+create policy partner_assets_select_owned
+on storage.objects for select to authenticated
+using (
+  bucket_id = 'partner-assets'
+  and public.can_manage_partner_asset(name)
+);
 
 create policy partner_assets_write
 on storage.objects for insert to authenticated

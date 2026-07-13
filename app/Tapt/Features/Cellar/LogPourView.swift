@@ -105,26 +105,38 @@ struct LogPourView: View {
                     actionTitle: nil
                 )
             } else {
-                List(beers) { beer in
-                    Button {
-                        selected = beer.pick
-                        rating = nil
-                        flavorTags = []
-                        glassware = nil
-                        occasion = nil
-                        selectedVenue = nil
-                        venueSearch = beer.breweryName
-                    } label: {
-                        HStack(spacing: 10) {
-                            BeerThumb(imageUrl: beer.imageUrl, size: 44)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(beer.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                                Text("\(beer.breweryName)  \(beer.style ?? "")").font(.caption).foregroundStyle(Brand.muted)
-                            }
+                List {
+                    if let catalogError {
+                        Button {
+                            Task { await loadCatalog() }
+                        } label: {
+                            Label(catalogError, systemImage: "arrow.clockwise")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Brand.copper)
                         }
-                        .padding(.vertical, 2)
                     }
-                    .buttonStyle(.plain)
+
+                    ForEach(beers) { beer in
+                        Button {
+                            selected = beer.pick
+                            rating = nil
+                            flavorTags = []
+                            glassware = nil
+                            occasion = nil
+                            selectedVenue = nil
+                            venueSearch = beer.breweryName
+                        } label: {
+                            HStack(spacing: 10) {
+                                BeerThumb(imageUrl: beer.imageUrl, size: 44)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(beer.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+                                    Text("\(beer.breweryName)  \(beer.style ?? "")").font(.caption).foregroundStyle(Brand.muted)
+                                }
+                            }
+                            .padding(.vertical, 2)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
         }
@@ -413,7 +425,6 @@ struct LogPourView: View {
         } catch is CancellationError {
             return
         } catch {
-            beers = []
             catalogError = "The beer catalog could not be loaded. Check your connection and try again."
         }
     }

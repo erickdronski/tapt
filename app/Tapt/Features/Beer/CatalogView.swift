@@ -43,6 +43,7 @@ enum CatalogService {
 }
 
 struct CatalogView: View {
+    @Environment(Session.self) private var session
     private let pageSize = 30
     private let styles = ["IPA", "Lager", "Pilsner", "Stout", "Porter", "Sour", "Wheat", "Pale Ale", "Amber"]
 
@@ -70,9 +71,18 @@ struct CatalogView: View {
                     empty
                 } else {
                     ForEach(results) { beer in
-                        NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
-                            .buttonStyle(.plain)
-                            .task { if beer.id == results.last?.id { await loadMore() } }
+                        Group {
+                            if session.user != nil {
+                                NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
+                            } else {
+                                Button {
+                                    session.deferBeerDetail(beerId: beer.id)
+                                    session.endGuestSession()
+                                } label: { row(beer) }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .task { if beer.id == results.last?.id { await loadMore() } }
                         Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 78)
                     }
                     if loadingMore {

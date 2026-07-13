@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tapt — THE Beer Superapp</title>
-<meta name="description" content="THE Beer Superapp. A massive beer catalog, live rankings, trending and seasonal beers by state and country, games, and a passport for every pour. Free for drinkers. Free tools for breweries, bars, pubs, and taprooms.">
-<meta property="og:title" content="Tapt — THE Beer Superapp">
-<meta property="og:description" content="THE Beer Superapp. All things beer in one app: the catalog, live rankings, trending and seasonal by state and country, games, and a passport for every pour. Free for drinkers, free tools for the bars and breweries who pour.">
+<title>Tapt: THE Beer Superapp</title>
+<meta name="description" content="THE Beer Superapp. A searchable beer catalog, live rankings, regional and seasonal discovery, games, and a Passport for every pour. Free for drinkers. Free tools for breweries, bars, pubs, and taprooms.">
+<meta property="og:title" content="Tapt: THE Beer Superapp">
+<meta property="og:description" content="THE Beer Superapp. All of beer, one app: catalog search, live rankings, regional and seasonal discovery, games, and a Passport for every pour. Free for drinkers and free tools for beer businesses.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://taptbeer.com/og.png">
 <meta property="og:url" content="https://taptbeer.com/">
@@ -78,7 +78,7 @@
   /* Honest style marker: a beer glass tinted to the beer's real color, not a fabricated
      product photo or a brand logo. Conveys the style at a glance without inventing anything. */
   .row .mark{width:32px;height:32px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(251,246,236,.05);border-radius:9px}
-  .row .mark svg{width:19px;height:26px;display:block}
+  .row .mark svg,.row .mark img{width:19px;height:26px;display:block;object-fit:contain}
   .row .nm{flex:1;min-width:0}
   .row .nm b{display:block;font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .row .nm span{font-size:.74rem;color:rgba(251,246,236,.55)}
@@ -92,6 +92,19 @@
   @media(max-width:960px){
     .hero{grid-template-columns:1fr;gap:34px;padding-top:56px}
     .hero h1{font-size:clamp(1.5rem,7.6vw,3.3rem)}
+  }
+  @media(max-width:480px){
+    .hero{gap:16px;padding-top:32px;padding-bottom:18px}
+    .kicker{margin-bottom:14px}
+    .hero p.lede{font-size:1.08rem;margin:14px 0 18px}
+    .hero-ctas{gap:10px}
+    .hero-ctas .btn{padding:10px 18px}
+    .fineprint{margin-top:12px}
+    .market{padding:16px;border-radius:22px}
+    .market .sub{margin-bottom:10px}
+    .market .row{padding:8px 10px;margin-bottom:7px}
+    .market .row:nth-of-type(n+3){display:none}
+    .market .foot{margin-top:8px}
   }
 
   /* stats */
@@ -221,7 +234,7 @@
   <div class="hero">
     <div>
       <span class="kicker">FOR DRINKERS + BEER BUSINESSES</span>
-      <h1><span>The Beer</span><span><em>Superapp</em>.</span></h1>
+      <h1><span>THE Beer</span><span><em>Superapp</em>.</span></h1>
       <p class="lede">All of beer, one app: discover, rank, learn, play, find local pours, and build your Beer Passport.</p>
       <div class="hero-ctas" id="get">
         <span class="btn btn-dark" aria-disabled="true">App Store release in progress</span>
@@ -232,11 +245,11 @@
     <div class="market" id="market-card">
       <h4>The Beer Market</h4>
       <p class="sub">Real beers. Real votes. The world decides.</p>
-      <div class="row"><span class="rank">1</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#EAD07A"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#FBF6EC" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Allagash White</b><span>Belgian Witbier · USA</span></div><span class="mv up">▲</span></div>
-      <div class="row"><span class="rank">2</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#E3A72B"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#FBF6EC" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><span class="mv up">▲</span></div>
-      <div class="row"><span class="rank">3</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#3A2414"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#EFE6D2" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><span class="mv down">▼</span></div>
-      <div class="row"><span class="rank">4</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#C9812B"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#FBF6EC" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Sierra Nevada Pale Ale</b><span>American Pale Ale · USA</span></div><span class="mv up">▲</span></div>
-      <p class="foot">Illustrative feature preview. In-app standing uses real season, award, catalog, vote, and pour signals.</p>
+      <div class="row"><span class="rank">1</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Real votes</b><span>One current vote per signed-in drinker</span></div><span class="mv up">INPUT</span></div>
+      <div class="row"><span class="rank">2</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Logged pours</b><span>First-party activity from the Cellar</span></div><span class="mv up">LIVE</span></div>
+      <div class="row"><span class="rank">3</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Seasonal context</b><span>Style fit for the current season</span></div><span class="mv up">TIME</span></div>
+      <div class="row"><span class="rank">4</span><span class="mark"><img src="favicon.svg" alt=""></span><div class="nm"><b>Cited awards</b><span>Verified medal records with sources</span></div><span class="mv up">PROOF</span></div>
+      <p class="foot">The app ranks real catalog beers from these inputs. Movement appears only after stored snapshots change.</p>
     </div>
   </div>
 </div>
@@ -244,7 +257,7 @@
 <div class="stats">
   <div class="wrap">
     <div class="stats-grid">
-      <div class="stat reveal"><b>9.5K+ beers</b><span>normalized catalog</span></div>
+      <div class="stat reveal"><b>Deep catalog</b><span>normalized beer identities</span></div>
       <div class="stat reveal d1"><b>Worldwide</b><span>breweries and beers</span></div>
       <div class="stat reveal d2"><b>On the map</b><span>taprooms and bars</span></div>
       <div class="stat reveal d3"><b>Cited</b><span>real BJCP style science</span></div>
@@ -431,7 +444,7 @@
     <div class="foot-grid">
       <div>
         <div class="wordmark" style="color:var(--foam)">Tapt<span>.</span></div>
-        <p style="max-width:26rem;margin-top:10px;color:rgba(251,246,236,.72)">THE Beer Superapp. All of beer, in one app. For drinkers, and for the bars and breweries who pour.</p>
+        <p style="max-width:26rem;margin-top:10px;color:rgba(251,246,236,.72)">THE Beer Superapp. All of beer, one app. For drinkers and the businesses who pour.</p>
       </div>
       <div class="foot-links">
         <a href="#features">Features</a>
@@ -493,7 +506,7 @@
   "alternateName": "THE Beer Superapp",
   "applicationCategory": "LifestyleApplication",
   "operatingSystem": "iOS",
-  "description": "THE Beer Superapp. All of beer in one app: a massive catalog, live rankings, trending and seasonal beers by state and country, games, and a passport for every pour. Free to download. Breweries, bars, pubs, and taprooms get free menu hosting, QR codes, and a claimed profile, forever.",
+  "description": "THE Beer Superapp. All of beer, one app: a searchable catalog, live rankings, regional and seasonal discovery, games, and a Passport for every pour. Free to download. Breweries, bars, pubs, and taprooms get free menu hosting, QR codes, and a claimed profile.",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
   "featureList": ["Free to download", "Beer scanner", "Global beer market with voting", "World beer catalog with insights", "Mini games and activities", "Beer Passport", "Free menu hosting for bars and breweries", "Free QR code menus", "Brewery and bar analytics"]
 }

@@ -204,17 +204,18 @@ enum LeaderboardService {
             let p_limit: Int
             let p_na_only: Bool
         }
-        return try await Supa.client
-            .rpc("leaderboard_beers", params: BeerParams(p_limit: limit, p_na_only: naOnly))
-            .execute().value
+        return try await Supa.authedRPC(
+            "leaderboard_beers",
+            params: BeerParams(p_limit: limit, p_na_only: naOnly)
+        )
     }
 
     static func tasters(limit: Int = 20) async throws -> [LeaderTaster] {
-        try await Supa.client.rpc("leaderboard_tasters", params: Params(p_limit: limit)).execute().value
+        try await Supa.authedRPC("leaderboard_tasters", params: Params(p_limit: limit))
     }
 
     static func styles(limit: Int = 20) async throws -> [LeaderStyle] {
-        try await Supa.client.rpc("leaderboard_styles", params: Params(p_limit: limit)).execute().value
+        try await Supa.authedRPC("leaderboard_styles", params: Params(p_limit: limit))
     }
 }
 
@@ -245,19 +246,20 @@ enum SocialGraphService {
             let p_query: String
             let p_limit: Int
         }
-        return try await Supa.client
-            .rpc("search_profiles", params: Params(p_query: query, p_limit: limit))
-            .execute().value
+        return try await Supa.authedRPC(
+            "search_profiles",
+            params: Params(p_query: query, p_limit: limit)
+        )
     }
 
     static func follow(_ userId: String) async throws {
         struct Params: Encodable { let p_followee: String }
-        try await Supa.client.rpc("follow_user", params: Params(p_followee: userId)).execute()
+        try await Supa.authedRPCVoid("follow_user", params: Params(p_followee: userId))
     }
 
     static func unfollow(_ userId: String) async throws {
         struct Params: Encodable { let p_followee: String }
-        try await Supa.client.rpc("unfollow_user", params: Params(p_followee: userId)).execute()
+        try await Supa.authedRPCVoid("unfollow_user", params: Params(p_followee: userId))
     }
 
     /// The public passport card shown when you tap a person you follow (or found
@@ -265,9 +267,10 @@ enum SocialGraphService {
     /// returns venues, timestamps, or geo. Honors blocks + the social_visible switch.
     static func profile(_ userId: String) async throws -> ProfileCard {
         struct Params: Encodable { let p_user: String }
-        return try await Supa.client
-            .rpc("public_profile", params: Params(p_user: userId))
-            .execute().value
+        return try await Supa.authedRPC(
+            "public_profile",
+            params: Params(p_user: userId)
+        )
     }
 }
 

@@ -8,6 +8,7 @@ struct LeaderboardsView: View {
     @State private var tasters: [LeaderTaster] = []
     @State private var styles: [LeaderStyle] = []
     @State private var loading = false
+    @State private var loadError: String?
     @AppStorage("noLowDefault") private var naOnly = false
 
     var body: some View {
@@ -24,6 +25,21 @@ struct LeaderboardsView: View {
                 .padding(.horizontal)
 
                 boardPicker
+
+                if let loadError {
+                    Button {
+                        Task { await load() }
+                    } label: {
+                        Label(loadError, systemImage: "arrow.clockwise")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Brand.copper)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(Brand.copper.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal)
+                }
 
                 if loading && beers.isEmpty && tasters.isEmpty && styles.isEmpty {
                     TaptSkeletonList(rows: 6)
@@ -68,7 +84,7 @@ struct LeaderboardsView: View {
         VStack(spacing: 10) {
             Button {
                 naOnly.toggle()
-                Task { beers = (try? await LeaderboardService.beers(naOnly: naOnly)) ?? [] }
+                Task { await loadBeerBoard() }
             } label: {
                 Label(naOnly ? "No / Low only, showing zero-proof podium" : "Show No / Low board",
                       systemImage: naOnly ? "checkmark.circle.fill" : "sparkle.magnifyingglass")
@@ -220,13 +236,34 @@ struct LeaderboardsView: View {
     private func load() async {
         loading = true
         defer { loading = false }
-        async let b: [LeaderBeer] = (try? LeaderboardService.beers(naOnly: naOnly)) ?? []
-        async let t: [LeaderTaster] = (try? LeaderboardService.tasters()) ?? []
-        async let s: [LeaderStyle] = (try? LeaderboardService.styles()) ?? []
-        beers = await b
-        tasters = await t
-        styles = await s
+        var failed = false
+        do {
+            beers = try await LeaderboardService.beers(naOnly: naOnly)
+        } catch {
+            failed = true
+        }
+        do {
+            tasters = try await LeaderboardService.tasters()
+        } catch {
+            failed = true
+        }
+        do {
+            styles = try await LeaderboardService.styles()
+        } catch {
+            failed = true
+        }
+        loadError = failed ? "Some boards could not refresh. Tap to try again." : nil
     }
+
+    private func loadBeerBoard() async {
+        do {
+            beers = try await LeaderboardService.beers(naOnly: naOnly)
+            loadError = nil
+        } catch {
+            loadError = "The beer board could not refresh. Tap to try again."
+        }
+    }
+
 }
 
 private enum Board: String, CaseIterable, Identifiable {

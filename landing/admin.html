@@ -125,7 +125,7 @@ async function load() {
     const place = [c.city, c.region].filter(Boolean).map(esc).join(', ');
     div.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center">
       <h3>${esc(c.venue_name)}</h3><span class="tag ${c.status}">${c.status}</span></div>
-      <div class="meta">${place} · ${esc(c.business_email)} · role: ${esc(c.claimant_role||'—')}</div>`;
+      <div class="meta">${place} · ${esc(c.business_email)} · role: ${esc(c.claimant_role||'Not provided')}</div>`;
     if (c.status === 'pending') {
       const actions = document.createElement('div'); actions.className = 'actions';
       const ap = document.createElement('button'); ap.className = 'btn g'; ap.textContent = 'Approve';

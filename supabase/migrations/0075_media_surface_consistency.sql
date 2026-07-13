@@ -1,4 +1,4 @@
--- 0066_media_surface_consistency.sql
+-- 0075_media_surface_consistency.sql
 -- Prefer reviewed background-removed product images across every public beer
 -- surface and expose a privacy-safe distinct-beer total for Passport profiles.
 
@@ -28,7 +28,7 @@ as $$
   with candidates as (
     select
       bc.id,
-      public.tapt_display_name(bc.name) as name,
+      bc.display_name as name,
       bc.style,
       bc.abv,
       bc.is_na_low,
@@ -37,7 +37,7 @@ as $$
       coalesce(bc.cutout_url, bc.label_image_url) as image_url,
       row_number() over (
         partition by
-          lower(public.tapt_display_name(bc.name)),
+          lower(bc.display_name),
           coalesce(bc.brewery_id::text, lower(b.name), '')
         order by
           (bc.cutout_url is not null) desc,
@@ -49,10 +49,11 @@ as $$
       ) as package_rank
     from public.beer_catalog bc
     left join public.brewery b on b.id = bc.brewery_id
-    where public.tapt_name_ok(bc.name)
+    where bc.name_ok
       and (
         p_query is null
         or btrim(p_query) = ''
+        or bc.display_name ilike '%' || p_query || '%'
         or bc.name ilike '%' || p_query || '%'
         or b.name ilike '%' || p_query || '%'
       )
@@ -100,15 +101,17 @@ as $$
     group by bv.beer_id
   )
   select
-    (row_number() over (order by wv.votes desc, b.name))::int,
-    b.id, b.name, b.style, br.name, br.country,
+    (row_number() over (
+      order by wv.votes desc, coalesce(nullif(b.display_name, ''), b.name)
+    ))::int,
+    b.id, coalesce(nullif(b.display_name, ''), b.name), b.style, br.name, br.country,
     coalesce(b.cutout_url, b.label_image_url),
     wv.votes
   from week_votes wv
   join public.beer_catalog b on b.id = wv.wb_id
   left join public.brewery br on br.id = b.brewery_id
   where wv.votes > 0
-  order by wv.votes desc, b.name
+  order by wv.votes desc, coalesce(nullif(b.display_name, ''), b.name)
   limit least(greatest(coalesce(p_limit, 10), 1), 25);
 $$;
 
@@ -128,7 +131,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select w.week_start, b.id, b.name, b.style, br.name, br.country,
+  select w.week_start, b.id, coalesce(nullif(b.display_name, ''), b.name), b.style, br.name, br.country,
          coalesce(b.cutout_url, b.label_image_url), w.week_votes
   from public.beer_of_week_winner w
   join public.beer_catalog b on b.id = w.beer_id
@@ -148,7 +151,7 @@ as $$
     select (extract(isoyear from now())::int * 100 + extract(week from now())::int)::text as w
   ),
   featured as (
-    select bc.id, bc.name, bc.style, bc.abv,
+    select bc.id, coalesce(nullif(bc.display_name, ''), bc.name) as name, bc.style, bc.abv,
            coalesce(bc.cutout_url, bc.label_image_url) as image,
            br.name as brewery, br.country
     from public.beer_catalog bc
@@ -156,7 +159,8 @@ as $$
     cross join wk
     where coalesce(bc.cutout_url, bc.label_image_url) is not null
       and bc.abv is not null and nullif(bc.style, '') is not null
-      and bc.name ~ '^[A-Za-z]' and length(bc.name) between 4 and 34
+      and bc.name_ok
+      and bc.display_name ~ '^[A-Za-z]' and length(bc.display_name) between 4 and 34
     order by md5(bc.id::text || wk.w)
     limit 1
   ),
@@ -240,21 +244,20 @@ begin
 
   select
     count(*)::int,
-    count(distinct (
-      lower(public.tapt_display_name(b.name)),
+    (count(distinct (
+      lower(b.display_name),
       coalesce(b.brewery_id::text, '')
-    ))::int,
+    )) filter (where b.id is not null))::int,
     count(distinct nullif(ce.style, ''))::int,
     count(distinct br.country) filter (where coalesce(br.country, '') <> '')::int,
     count(distinct (v.external_ids->>'region')) filter (
-      where br.country ilike 'united states%'
-         or br.country ilike 'usa'
-         or br.country = 'US'
+      where lower(coalesce(v.external_ids->>'country', '')) in
+        ('united states', 'united states of america', 'usa', 'us')
     )::int
   into s_pours, s_beers, s_styles, s_countries, s_states
   from public.checkin_event ce
   left join public.beer_catalog b on b.id = ce.beer_id
-  left join public.brewery br on br.id = ce.brewery_id
+  left join public.brewery br on br.id = coalesce(ce.brewery_id, b.brewery_id)
   left join public.venue v on v.id = ce.venue_id
   where ce.user_id = p_user and ce.moderation_status = 'visible';
 
@@ -274,7 +277,7 @@ begin
   select to_jsonb(fb)
   into fav
   from (
-    select b.name,
+    select coalesce(nullif(b.display_name, ''), b.name) as name,
            brz.name as brewery,
            coalesce(b.cutout_url, b.label_image_url) as image_url,
            count(*)::int as pours
@@ -282,7 +285,7 @@ begin
     join public.beer_catalog b on b.id = ce.beer_id
     left join public.brewery brz on brz.id = b.brewery_id
     where ce.user_id = p_user and ce.moderation_status = 'visible'
-    group by b.name, brz.name, coalesce(b.cutout_url, b.label_image_url)
+    group by b.display_name, b.name, brz.name, coalesce(b.cutout_url, b.label_image_url)
     order by count(*) desc, max(ce.rating) desc nulls last, max(ce.event_ts) desc
     limit 1
   ) fb;
@@ -326,9 +329,9 @@ revoke all on function public.catalog_search(text, text, boolean, integer, integ
   from public, anon, authenticated;
 
 grant execute on function public.beer_of_week_standings(integer)
-  to anon, authenticated;
+  to authenticated;
 grant execute on function public.beer_of_week_latest_winner()
-  to anon, authenticated;
+  to authenticated;
 grant execute on function public.build_dispatch_content()
   to service_role;
 grant execute on function public.public_profile(uuid)

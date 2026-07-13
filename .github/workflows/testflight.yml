@@ -12,7 +12,17 @@ jobs:
     env:
       PROFILE_NAME: "Tapt App Store CI"
       BUNDLE_ID: app.tapt.tapt
+    outputs:
+      uploaded: ${{ steps.upload.outputs.uploaded }}
+      build_number: ${{ github.run_number }}
     steps:
+      - name: Verify release branch
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error title=Wrong release branch::TestFlight uploads must run from main."
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Select newest Xcode
@@ -71,8 +81,10 @@ jobs:
             CURRENT_PROJECT_VERSION=${{ github.run_number }}
 
       - name: Export and upload to TestFlight
+        id: upload
         working-directory: app
         run: |
+          echo "uploaded=false" >> "$GITHUB_OUTPUT"
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -96,17 +108,26 @@ jobs:
             -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
             -authenticationKeyIssuerID ${{ secrets.ASC_ISSUER_ID }} 2>&1 | tee "$RUNNER_TEMP/upload.log"; then
             echo "Uploaded to TestFlight."
+            echo "uploaded=true" >> "$GITHUB_OUTPUT"
           else
             # Apple caps uploads per app per day. Hitting that cap is expected after
             # several uploads in a day and is NOT a build failure, so end neutrally
             # (green, no failure email) instead of spamming a red run. Real export/
             # signing/validation failures still fall through and fail loudly.
             if grep -q "Upload limit reached" "$RUNNER_TEMP/upload.log"; then
-              echo "::warning title=TestFlight upload skipped::Apple's daily upload limit was reached. This is expected after several uploads in one day — try again tomorrow. Not a build failure."
-              echo "### ⏭️ TestFlight upload skipped" >> "$GITHUB_STEP_SUMMARY"
+              echo "::warning title=TestFlight upload skipped::Apple's daily upload limit was reached. Try again tomorrow. Not a build failure."
+              echo "### TestFlight upload skipped" >> "$GITHUB_STEP_SUMMARY"
               echo "Apple's daily upload cap was reached. Try again tomorrow. This is **not** a build failure." >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
-            echo "::error title=TestFlight upload failed::Export/upload failed for a real reason — see the log above."
+            echo "::error title=TestFlight upload failed::Export/upload failed. See the log above."
             exit 1
           fi
+
+  asc-admin:
+    needs: build
+    if: needs.build.outputs.uploaded == 'true'
+    uses: ./.github/workflows/asc-admin.yml
+    with:
+      build_number: ${{ needs.build.outputs.build_number }}
+    secrets: inherit

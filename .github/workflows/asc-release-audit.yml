@@ -2,6 +2,11 @@ name: ASC Release Audit
 
 on:
   workflow_dispatch:
+    inputs:
+      build_number:
+        description: Exact build number expected on the editable App Store version
+        required: true
+        type: string
 
 jobs:
   audit:
@@ -23,7 +28,10 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
-        run: python scripts/asc_release_audit.py | tee "$RUNNER_TEMP/asc-release-audit.txt"
+          EXPECTED_BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -o pipefail
+          python scripts/asc_release_audit.py | tee "$RUNNER_TEMP/asc-release-audit.txt"
 
       - name: Publish audit summary
         if: always()

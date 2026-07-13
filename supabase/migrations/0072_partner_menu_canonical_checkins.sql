@@ -1,4 +1,4 @@
--- 0063_partner_menu_canonical_checkins.sql
+-- 0072_partner_menu_canonical_checkins.sql
 -- Resolve defensible exact menu entries to canonical beers so a partner QR can
 -- create a venue-attributed pour and close the analytics loop. Ambiguous menu
 -- text remains visible but is deliberately not guessed.
@@ -35,31 +35,39 @@ begin
 
   insert into public.venue_tap_snapshot
     (venue_id, captured_by, source, observed_at, expires_at)
-  values (p_venue, auth.uid(), 'partner_portal', now(), now() + interval '14 days')
+  values (p_venue, auth.uid(), 'partner_portal', now(), now() + interval '3650 days')
   returning id into v_snap;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_beer_id := null;
-    v_name_key := regexp_replace(lower(trim(v_item->>'beer_name')), '[^a-z0-9]+', '', 'g');
+    v_name_key := lower(public.tapt_display_name(trim(v_item->>'beer_name')));
     v_brewery_key := regexp_replace(lower(trim(coalesce(v_item->>'brewery_name', ''))), '[^a-z0-9]+', '', 'g');
 
     if length(v_name_key) >= 2 and length(v_brewery_key) >= 2 then
       select b.id into v_beer_id
       from public.beer_catalog b
       join public.brewery br on br.id = b.brewery_id
-      where regexp_replace(lower(trim(b.name)), '[^a-z0-9]+', '', 'g') = v_name_key
+      where b.name_ok
+        and lower(b.display_name) = v_name_key
         and regexp_replace(lower(trim(br.name)), '[^a-z0-9]+', '', 'g') = v_brewery_key
-      order by (b.label_image_url is not null) desc, b.updated_at desc, b.id
+      order by (b.cutout_url is not null) desc,
+               (b.label_image_url is not null) desc,
+               b.updated_at desc,
+               b.id
       limit 1;
     elsif length(v_name_key) >= 2 then
-      select min(x.id) into v_beer_id
+      select case when count(*) = 1 then (array_agg(x.id))[1] else null end
+      into v_beer_id
       from (
         select b.id
         from public.beer_catalog b
-        where regexp_replace(lower(trim(b.name)), '[^a-z0-9]+', '', 'g') = v_name_key
+        where b.name_ok and lower(b.display_name) = v_name_key
+        order by (b.cutout_url is not null) desc,
+                 (b.label_image_url is not null) desc,
+                 b.updated_at desc,
+                 b.id
         limit 2
-      ) x
-      having count(*) = 1;
+      ) x;
     end if;
 
     insert into public.venue_tap_item

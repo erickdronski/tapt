@@ -69,28 +69,32 @@ struct VenueAnalytics: Decodable, Sendable {
 extension PartnerService {
     static func searchVenues(_ query: String, limit: Int = 20) async throws -> [VenueSearchResult] {
         struct P: Encodable { let p_query: String; let p_limit: Int }
-        return try await Supa.client
-            .rpc("search_venues", params: P(p_query: query, p_limit: limit))
-            .execute().value
+        return try await Supa.authedRPC(
+            "search_venues",
+            params: P(p_query: query, p_limit: limit)
+        )
     }
 
     @discardableResult
     static func claimVenue(venueId: String, email: String, role: String) async throws -> String {
         struct P: Encodable { let p_venue: String; let p_email: String; let p_role: String }
-        return try await Supa.client
-            .rpc("claim_venue", params: P(p_venue: venueId, p_email: email, p_role: role))
-            .execute().value
+        return try await Supa.authedRPC(
+            "claim_venue",
+            params: P(p_venue: venueId, p_email: email, p_role: role)
+        )
     }
 
     static func myClaims() async throws -> [VenueClaim] {
-        try await Supa.client.rpc("my_venue_claims").execute().value
+        struct Empty: Encodable {}
+        return try await Supa.authedRPC("my_venue_claims", params: Empty())
     }
 
     static func analytics(venueId: String) async throws -> VenueAnalytics {
         struct P: Encodable { let p_venue: String }
-        return try await Supa.client
-            .rpc("venue_analytics", params: P(p_venue: venueId))
-            .execute().value
+        return try await Supa.authedRPC(
+            "venue_analytics",
+            params: P(p_venue: venueId)
+        )
     }
 }
 
@@ -277,7 +281,7 @@ struct ClaimVenueView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Search for your venue by name or city. We've already mapped 8,600+ breweries, bars, and taprooms.")
+                Text("Search for your brewery, bar, pub, taproom, or beer garden by name or city.")
                     .font(.subheadline).foregroundStyle(Brand.muted)
 
                 HStack(spacing: 10) {

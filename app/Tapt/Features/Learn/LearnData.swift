@@ -35,7 +35,7 @@ struct BreweryOrigin: Identifiable {
 
 enum LearnData {
     static let brewing: [BrewStep] = [
-        .init(n: 1, title: "Malting", what: "Barley is soaked, sprouted, then kiln-dried. That locks in the sugars and sets the color, from pale gold to roasty black.", machine: "The kiln"),
+        .init(n: 1, title: "Malting", what: "Barley is soaked and germinated to develop the enzymes brewers need, then kilned to stop growth and shape color and flavor.", machine: "The kiln"),
         .init(n: 2, title: "Milling", what: "The malt is cracked open so hot water can reach the starch inside. Not ground to flour, just cracked.", machine: "The roller mill"),
         .init(n: 3, title: "Mashing", what: "Cracked malt steeps in hot water and enzymes turn starch into sugar, making a sweet liquid called wort.", machine: "The mash tun"),
         .init(n: 4, title: "Lautering", what: "The sweet wort is drained off and separated from the leftover grain husks.", machine: "The lauter tun"),
@@ -46,13 +46,13 @@ enum LearnData {
 
     static let glossary: [GlossaryTerm] = [
         .init(term: "ABV", definition: "Alcohol by volume. The percent of the drink that is alcohol.", slang: false),
-        .init(term: "IBU", definition: "International Bitterness Units. Roughly how bitter the hops make it.", slang: false),
+        .init(term: "IBU", definition: "International Bitterness Units. A lab measure tied largely to hop bittering compounds; perceived bitterness also depends on the rest of the beer.", slang: false),
         .init(term: "SRM", definition: "The color scale, from pale straw to pitch black.", slang: false),
         .init(term: "Wort", definition: "The sweet, unfermented liquid before yeast turns it into beer.", slang: false),
-        .init(term: "Dry hopping", definition: "Adding hops after the boil for big aroma without extra bitterness.", slang: false),
-        .init(term: "Hazy / NEIPA", definition: "New England IPA. Soft, juicy, cloudy, low bitterness.", slang: false),
-        .init(term: "Sessionable", definition: "Low enough in alcohol to enjoy a few over a session.", slang: false),
-        .init(term: "Crushable", definition: "So easy to drink you immediately want another. High praise.", slang: true),
+        .init(term: "Dry hopping", definition: "Adding hops during or after fermentation to build aroma and hop flavor without the bitterness of a long boil.", slang: false),
+        .init(term: "Hazy / NEIPA", definition: "New England IPA. Usually cloudy, hop-aromatic, and built around a soft, juicy impression.", slang: false),
+        .init(term: "Sessionable", definition: "Relatively moderate in alcohol and easy-drinking for its style.", slang: false),
+        .init(term: "Crushable", definition: "Beer slang for easy-drinking. It describes balance and texture, not how quickly to drink it.", slang: true),
         .init(term: "Growler", definition: "A refillable jug, usually 32 or 64 oz, filled straight from the tap.", slang: false),
         .init(term: "Crowler", definition: "A big single-use can filled and sealed at the bar.", slang: false),
         .init(term: "Flight", definition: "A row of small pours so you can taste several beers at once.", slang: false),
@@ -62,7 +62,7 @@ enum LearnData {
         .init(term: "Lacing", definition: "The rings of foam a good beer leaves down the inside of the glass.", slang: false),
         .init(term: "Gravity (OG/FG)", definition: "How much sugar is in the wort before and after fermenting. It tells you the strength.", slang: false),
         .init(term: "Adjunct", definition: "Anything fermentable besides malt: corn, rice, oats, fruit, and more.", slang: false),
-        .init(term: "Lager vs ale", definition: "Two yeast families. Lagers ferment cold and clean, ales ferment warm and fruity.", slang: false),
+        .init(term: "Lager vs ale", definition: "Two broad fermentation traditions defined mainly by yeast lineage. Lagers often ferment cooler and cleaner; ales often ferment warmer and fruitier.", slang: false),
         .init(term: "Whale", definition: "A rare, hard-to-find beer that collectors chase.", slang: true),
         .init(term: "Haul", definition: "The beers you scored on a run, drop, or trade.", slang: true),
         .init(term: "Tick", definition: "To log a beer you have tried for the first time.", slang: true),
@@ -74,12 +74,12 @@ enum LearnData {
         .init(year: "c. 1800 BC", title: "The Hymn to Ninkasi", detail: "The Sumerian goddess of beer gets a hymn that doubles as a brewing recipe, one of the oldest we know of."),
         .init(year: "c. 1754 BC", title: "Beer in the law books", detail: "The Code of Hammurabi regulates beer sellers in Babylon, beer rules are older than most empires."),
         .init(year: "822 AD", title: "Hops on the record", detail: "A Frankish abbot writes one of the first clear mentions of using hops in beer."),
-        .init(year: "Middle Ages", title: "The monastery era", detail: "European monasteries turn brewing into a craft, better records, better methods, and beer safe enough to drink daily. Trappist brewing survives to this day."),
+        .init(year: "Middle Ages", title: "The monastery era", detail: "European monasteries preserve brewing records, refine methods, and make beer part of organized hospitality. Trappist brewing continues today."),
         .init(year: "1516", title: "The Reinheitsgebot", detail: "Bavaria limits beer to water, barley, and hops, the famous purity law. Yeast had not been discovered yet."),
         .init(year: "1722", title: "Porter conquers London", detail: "A dark, hoppy beer brewed for London's working porters becomes arguably the world's first industrial-scale beer style."),
         .init(year: "1759", title: "Guinness signs a 9,000-year lease", detail: "Arthur Guinness leases St. James's Gate in Dublin for 45 pounds a year, and bets on dark porter."),
-        .init(year: "1800s", title: "IPA rides the trade routes", detail: "Strongly hopped pale ales survive the long sea voyage to British India, the style that would someday rule American craft taps."),
-        .init(year: "1842", title: "The first pale lager", detail: "Pilsner Urquell is brewed in Plze. The clear, golden pilsner is born and takes over the world."),
+        .init(year: "Late 1700s", title: "Pale ale reaches India", detail: "Well-attenuated, heavily hopped pale stock ales from London are shipped to India. The name India Pale Ale appears around 1830."),
+        .init(year: "1842", title: "The first golden pilsner", detail: "Josef Groll brews the first Pilsner Urquell in Plzeň. Its clear, golden lager inspires a new family of beer styles."),
         .init(year: "1840s", title: "Lager crosses the Atlantic", detail: "German immigrants bring lager yeast and brewing tradition to America, Milwaukee, St. Louis, and Cincinnati become beer towns."),
         .init(year: "1857", title: "Pasteur explains yeast", detail: "Louis Pasteur shows that living yeast drives fermentation, turning brewing into a science."),
         .init(year: "1883", title: "Pure yeast", detail: "Emil Hansen at the Carlsberg Laboratory isolates a single lager yeast strain for clean, repeatable beer."),
@@ -92,11 +92,11 @@ enum LearnData {
     ]
 
     static let origins: [BreweryOrigin] = [
-        .init(name: "Guinness", founded: "1759", place: "Dublin, Ireland", story: "Arthur Guinness took over a small Dublin brewery and signed a legendary 9,000-year lease. He bet everything on a dark porter, and the dry Irish stout became a global icon.", fact: "The 'surge' in a nitro Guinness is bubbles sinking, not rising."),
-        .init(name: "Heineken", founded: "1864", place: "Amsterdam, Netherlands", story: "Gerard Heineken bought a brewery at 22 and chased one thing: consistency. The 'A-yeast' his lab developed in 1886 still flavors every Heineken today.", fact: "The tilted 'e's in the logo are meant to look like little smiling faces."),
+        .init(name: "Guinness", founded: "1759", place: "Dublin, Ireland", story: "Arthur Guinness took over a small Dublin brewery and signed a legendary 9,000-year lease. He built the business around porter, and dry Irish stout became its signature.", fact: "The downward-looking cascade in a nitro pour comes from circulation in the glass; the bubbles ultimately rise."),
+        .init(name: "Heineken", founded: "1864", place: "Amsterdam, Netherlands", story: "Gerard Heineken bought an Amsterdam brewery and focused on consistent lager brewing. A pure yeast culture isolated for the brewery in the 1880s became central to its house character.", fact: "The company's first purpose-built Amsterdam brewery now houses the Heineken Experience."),
         .init(name: "Budweiser (Anheuser-Busch)", founded: "1876", place: "St. Louis, USA", story: "Adolphus Busch used new refrigerated rail cars and pasteurization to ship a light lager coast to coast, something no brewer had done at that scale.", fact: "It became one of the first truly national beer brands in America."),
         .init(name: "Carlsberg", founded: "1847", place: "Copenhagen, Denmark", story: "J.C. Jacobsen was obsessed with science. His Carlsberg Laboratory isolated the first pure lager yeast and gave the discovery to the world for free.", fact: "That same lab invented the pH scale in 1909."),
-        .init(name: "Pilsner Urquell", founded: "1842", place: "Plze, Czechia", story: "Fed up with bad beer, the townspeople of Plze built a new brewery and hired Bavarian brewer Josef Groll. His pale lager created a whole new style: pilsner.", fact: "'Urquell' means 'original source'. Most of the world's beer descends from it."),
+        .init(name: "Pilsner Urquell", founded: "1842", place: "Plzeň, Czechia", story: "The citizens' brewery in Plzeň hired Bavarian brewer Josef Groll. His clear golden lager created a new style: pilsner.", fact: "'Urquell' means 'original source,' and the city name became the name of the style."),
         .init(name: "Sierra Nevada", founded: "1980", place: "Chico, California, USA", story: "Ken Grossman built his brewery partly from repurposed dairy tanks and scrap. Sierra Nevada Pale Ale made citrusy American hops famous.", fact: "It helped kick off the modern American craft beer boom."),
         .init(name: "Samuel Adams (Boston Beer)", founded: "1984", place: "Boston, USA", story: "Jim Koch brewed his great-great-grandfather's recipe in his kitchen, then sold it bar to bar out of a briefcase.", fact: "It's named for a founding father who was also a maltster."),
         .init(name: "Stella Artois", founded: "1366", place: "Leuven, Belgium", story: "The Den Hoorn brewery in Leuven traces back to 1366. Its 'Stella' (Latin for star) Christmas lager launched in 1926 and simply never left.", fact: "The star and '1366' on the label point back to that medieval brewery."),

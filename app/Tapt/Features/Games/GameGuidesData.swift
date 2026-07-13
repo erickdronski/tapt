@@ -1,9 +1,8 @@
 import Foundation
 
 // Game Night Guides, original rule summaries for classic party games.
-// House law, non-negotiable: Tapt games NEVER require drinking. Every guide
-// uses penalty/point framing ("a sip if you're drinking, a point if you're
-// not"), zero-proof always counts, and the safety banner ships on every
+// House law, non-negotiable: Tapt games never direct alcohol use. Every guide
+// uses points, dares, or table chores, and the safety banner ships on every
 // surface. Game mechanics are public tradition; all text here is our own.
 
 struct GameGuide: Identifiable {
@@ -25,24 +24,24 @@ enum GuideKind: String, CaseIterable, Identifiable {
 }
 
 enum GameGuidesData {
-    static let safetyLine = "Tapt games never require alcohol. Penalties can be sips, points, or dares, zero-proof counts everywhere. Be of legal age if you drink, know your limits, and never drive after drinking."
+    static let safetyLine = "Tapt games never direct alcohol use. Score with points, dares, or table chores. Water and No / Low are always welcome. Never drive after drinking."
 
     static let guides: [GameGuide] = [
         // ------------------------------------------------ with a real deck
         .init(
             id: "kings",
             title: "Kings (Ring of Fire)",
-            needs: "One deck, one big cup, a table",
+            needs: "One deck, a center token, a table",
             players: "4-10",
             vibe: "The classic circle game, every card is a mini-rule.",
             steps: [
-                "Spread the deck face-down in a ring around a center cup.",
+                "Spread the deck face-down in a ring around a center token.",
                 "Take turns drawing a card. Each rank has a rule, agree on your table's set before you start.",
-                "A common set: Ace = everyone pays a penalty, 2 = pick someone, 3 = you pay, 4 = floor (last to touch pays), 5 = guys, 6 = girls, 7 = heaven (last hand up pays), 8 = pick a mate who shares your penalties, 9 = rhyme until someone breaks, 10 = categories, J = make a rule, Q = questions, K = add to the center cup.",
-                "Breaking the ring or fumbling a rule costs a penalty.",
-                "Whoever draws the fourth King takes the center-cup forfeit, decide what that is up front."
+                "A common set: Ace = group challenge, 2 = pick someone, 3 = self challenge, 4 = floor, 5 = categories, 6 = rhyme, 7 = heaven, 8 = pick a teammate, 9 = make a rule, 10 = questions, J = wild card, Q = quiz master, K = add a point token to the center.",
+                "Breaking the ring or fumbling a rule costs a point.",
+                "Whoever draws the fourth King takes the center challenge, decided before play starts."
             ],
-            houseRule: "A 'penalty' is whatever your table says: a sip if you're drinking, a point against you if you're not. The center-cup forfeit can be a dare or a silly chore.",
+            houseRule: "Use points, a harmless dare, or a silly table chore for every challenge.",
             kind: .cards
         ),
         .init(
@@ -58,7 +57,7 @@ enum GameGuidesData {
                 "Next round: the Peasant hands the President their best card; the President returns any card.",
                 "Ranks shift every round, the ladder is the game."
             ],
-            houseRule: "Traditionally the President may hand out penalties. Keep them as points, sips, or dares, your table's call.",
+            houseRule: "The President may hand out points or harmless dares between rounds.",
             kind: .cards
         ),
         .init(
@@ -70,12 +69,12 @@ enum GameGuidesData {
             steps: [
                 "Pull the four Aces and line them up, those are the horses.",
                 "Deal a sideline of 6-8 face-down cards perpendicular to the track.",
-                "Everyone bets a penalty amount on a suit.",
+                "Everyone bets points on a suit.",
                 "Flip deck cards one at a time, the matching Ace advances one length.",
                 "Each time the lead horse passes a sideline card, flip it: that suit's horse falls back one.",
                 "First Ace past the last sideline card wins. Losing bettors pay their bet; winners hand theirs out."
             ],
-            houseRule: "Bets are penalties: sips, points, or the loser refills snacks. Commentate the race like it's the Derby, that's the whole point.",
+            houseRule: "Bet points, or have the last-place player refill the snacks. Commentate the race like it is the Derby.",
             kind: .cards
         ),
         .init(
@@ -90,7 +89,7 @@ enum GameGuidesData {
                 "Anyone can call 'Cheat!' Flip the cards: if the claim was a lie, the liar takes the pile; if it was true, the caller takes it.",
                 "First player to shed every card wins."
             ],
-            houseRule: "Taking the pile can also cost a penalty, points or sips per your table.",
+            houseRule: "Taking the pile can also cost a point or a harmless dare.",
             kind: .cards
         ),
         // ------------------------------------------------ no props
@@ -103,7 +102,7 @@ enum GameGuidesData {
             steps: [
                 "Pick a category, beer styles, world capitals, cereal brands.",
                 "Go around the circle; each person names one item, no repeats.",
-                "Hesitate, repeat, or blank and you take the penalty.",
+                "Hesitate, repeat, or blank and you take a point.",
                 "Loser picks the next category."
             ],
             houseRule: "Use Tapt's Beer School glossary as a category and call it studying.",
@@ -118,7 +117,7 @@ enum GameGuidesData {
             steps: [
                 "Someone asks 'Who's most likely to…', sleep through a flight, adopt a fifth dog, become a regular at a taproom.",
                 "On three, everyone points at their pick.",
-                "The most-pointed-at person takes a penalty per finger, or just owns the title.",
+                "The most-pointed-at person takes a point, or just owns the title.",
                 "They ask the next question."
             ],
             houseRule: "Keep it kind, roast the behavior, not the person.",
@@ -134,7 +133,7 @@ enum GameGuidesData {
                 "Everyone writes the most ridiculous (clean-ish) sentence they can.",
                 "Fold the papers into a pile.",
                 "Take turns drawing one and reading it aloud, dead-serious.",
-                "Smile or laugh while reading and you take the penalty."
+                "Smile or laugh while reading and you take a point."
             ],
             houseRule: "Two-round minimum: sentences get unhinged once people learn the meta.",
             kind: .noProps
@@ -148,7 +147,7 @@ enum GameGuidesData {
             steps: [
                 "Count around the circle: 1, 2, 3…",
                 "Any number with a 7 in it or divisible by 7 becomes 'buzz'.",
-                "Say the number instead of buzz, or buzz at the wrong time, and you pay, and the count restarts.",
+                "Say the number instead of buzz, or buzz at the wrong time, and you take a point before the count restarts.",
                 "Feeling strong? Add 'fizz' for 5s."
             ],
             houseRule: "The table's record becomes a standing challenge for next time.",
@@ -174,12 +173,12 @@ enum GameGuidesData {
         .init(
             id: "tasting-night",
             title: "Tasting Flight Night",
-            needs: "4-6 different beers (NA welcome), small glasses, Tapt",
+            needs: "A few different beers or No / Low picks, small tasting glasses, water, Tapt",
             players: "2-8",
             vibe: "The classy one. Taste, rate, argue, stamp your Passport.",
             steps: [
-                "Everyone brings a bottle or can nobody else has tried, mix styles, countries, and at least one No/Low pick.",
-                "Pour small, a flight is a journey, not a race.",
+                "Everyone brings a bottle or can nobody else has tried. Alcohol is optional; include No / Low choices and water.",
+                "Use small tasting portions and take your time.",
                 "Scan and log each pour in Tapt as you go; rate before discussing so nobody anchors.",
                 "Reveal ratings together. Debate accordingly.",
                 "Highest-rated bottle's bringer picks next month's theme."
@@ -199,7 +198,7 @@ enum GameGuidesData {
                 "Three rounds plus a final wager round: bet any or all of your points.",
                 "Champion team names the next trivia night's theme."
             ],
-            houseRule: "Wrong-answer penalties are points by default; your table can house-rule anything.",
+            houseRule: "Wrong answers cost points. The best team name wins the tiebreaker.",
             kind: .templates
         ),
     ]

@@ -193,19 +193,28 @@ enum CheckinService {
     static func mine(userId: UUID) async throws -> [MyCheckin] {
         struct Params: Encodable {
             let p_limit: Int
-            let p_offset: Int
+            let p_before_ts: String?
+            let p_before_id: String?
         }
 
         _ = userId
         let pageSize = 250
         var rows: [MyCheckin] = []
+        var beforeTimestamp: String?
+        var beforeID: String?
         while true {
-            let page: [MyCheckin] = try await Supa.client.rpc(
+            let page: [MyCheckin] = try await Supa.authedRPC(
                 "my_checkins",
-                params: Params(p_limit: pageSize, p_offset: rows.count)
-            ).execute().value
+                params: Params(
+                    p_limit: pageSize,
+                    p_before_ts: beforeTimestamp,
+                    p_before_id: beforeID
+                )
+            )
             rows.append(contentsOf: page)
-            if page.count < pageSize { return rows }
+            guard page.count == pageSize, let last = page.last else { return rows }
+            beforeTimestamp = last.eventTs
+            beforeID = last.id
         }
     }
 }

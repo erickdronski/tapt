@@ -1,4 +1,4 @@
--- 0060_overture_beer_places.sql
+-- 0069_overture_beer_places.sql
 -- Adds a monthly, provenance-preserving import path for real breweries, pubs,
 -- bars, taprooms, beer gardens, and gastropubs from Overture Maps Places.
 
@@ -280,21 +280,26 @@ as $$
     v.external_ids->>'country', st_y(v.geo::geometry)::numeric,
     st_x(v.geo::geometry)::numeric,
     coalesce(v.external_ids->>'source_note', 'Tapt beer map'),
-    greatest(count(c.id)::int * 3 + count(ti.id)::int +
+    greatest(coalesce(c.checkins, 0) * 3 + coalesce(t.taps, 0) +
       case when v.external_ids ? 'tapt_seed' then 2 else 1 end, 1),
-    greatest(v.updated_at, coalesce(max(c.event_ts), v.updated_at),
-      coalesce(max(ts.observed_at), v.updated_at)),
+    greatest(v.updated_at, coalesce(c.latest, v.updated_at),
+      coalesce(t.latest, v.updated_at)),
     coalesce(v.external_ids->>'venue_type', v.external_ids->>'brewery_type', v.poi_category),
     v.external_ids->>'website_url'
   from public.venue v
-  left join public.checkin_event c
-    on c.venue_id = v.id and c.moderation_status = 'visible'
-  left join public.venue_tap_snapshot ts
-    on ts.venue_id = v.id and ts.expires_at > now()
-  left join public.venue_tap_item ti on ti.snapshot_id = ts.id
+  left join lateral (
+    select count(*)::int as checkins, max(ce.event_ts) as latest
+    from public.checkin_event ce
+    where ce.venue_id = v.id and ce.moderation_status = 'visible'
+  ) c on true
+  left join lateral (
+    select count(i.id)::int as taps, max(s.observed_at) as latest
+    from public.venue_tap_snapshot s
+    left join public.venue_tap_item i on i.snapshot_id = s.id
+    where s.venue_id = v.id and s.expires_at > now()
+  ) t on true
   where v.poi_category in ('brewery','bar','pub','taproom','beer_garden','nightlife')
     and v.geo is not null
-  group by v.id
   order by 9 desc, md5(v.id::text || to_char(now(), 'YYYY-MM-DD'))
   limit least(greatest(coalesce(p_limit, 500), 1), 1000);
 $$;
@@ -338,10 +343,11 @@ as $$
   limit least(greatest(coalesce(p_limit, 250), 1), 500);
 $$;
 
-revoke all on function public.brewery_map_feed(int) from public;
-revoke all on function public.brewery_map_feed_near(numeric, numeric, int, int) from public;
-grant execute on function public.brewery_map_feed(int) to anon, authenticated;
+revoke all on function public.brewery_map_feed(int) from public, anon, authenticated;
+revoke all on function public.brewery_map_feed_near(numeric, numeric, int, int)
+  from public, anon, authenticated;
+grant execute on function public.brewery_map_feed(int) to authenticated;
 grant execute on function public.brewery_map_feed_near(numeric, numeric, int, int)
-  to anon, authenticated;
+  to authenticated;
 
 notify pgrst, 'reload schema';

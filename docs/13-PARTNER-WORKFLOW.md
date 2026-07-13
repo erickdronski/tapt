@@ -30,13 +30,13 @@ BUSINESS                         TAPT BACKEND                    DRINKER
 --------                         ------------                    -------
 1. Opens /portal
 2. Email code sign-in    ----->  Supabase Auth (magic OTP)
-3. Searches their venue  ----->  search_venues()  [8,700+ already mapped]
+3. Searches their venue  ----->  search_venues()  [provenance-backed map]
 4. Taps "Claim"          ----->  claim_venue() -> venue_claim (pending)
                                        |
                                  5. WE APPROVE (concierge today:
                                     one SQL line; admin UI later)
                                     -> status = approved
-6. Builds tap list       ----->  publish_tap_list() (1-60 taps, 14-day fresh)
+6. Builds tap list       ----->  publish_tap_list() (1-60 taps, permanent until replaced)
 7. Uploads logo          ----->  partner-assets bucket + set_venue_logo()
 8. Gets QR + menu URL    <-----  /menu?v={venue_id}  (public, hosted, free)
 9. Prints QR for tables
