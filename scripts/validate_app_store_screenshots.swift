@@ -7,7 +7,7 @@ import Vision
 let expectedPhrases: [String: [String]] = [
     "01-home.png": ["Explore", "Scan a beer"],
     "02-beer-detail.png": ["Guinness Draught"],
-    "03-catalog.png": ["Catalog", "Search beers"],
+    "03-catalog.png": ["Catalog", "Sierra Nevada"],
     "04-beer-radar.png": ["Tapt beer radar", "beer spots"],
     "05-discover.png": ["Discover", "Tapt Dispatch"],
     "06-games.png": ["Games", "Beer Pong", "Flip Cup"],

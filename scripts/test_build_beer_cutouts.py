@@ -3,7 +3,13 @@ from __future__ import annotations
 import unittest
 from typing import Any
 
-from scripts.build_beer_cutouts import SupabaseAPI
+from PIL import Image, ImageDraw
+
+from scripts.build_beer_cutouts import (
+    PipelineError,
+    SupabaseAPI,
+    validate_normalized_cutout,
+)
 
 
 class FakeResponse:
@@ -63,6 +69,61 @@ class CandidatePagingTests(unittest.TestCase):
 
         self.assertEqual([candidate.id for candidate in candidates], ["new-500"])
         self.assertEqual(api.catalog_offsets, [0, 500])
+
+
+class CutoutQualityTests(unittest.TestCase):
+    @staticmethod
+    def canvas(
+        box: tuple[int, int, int, int] = (350, 100, 674, 900),
+        color: tuple[int, int, int, int] = (40, 150, 220, 255),
+    ) -> Image.Image:
+        image = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(image)
+        draw.rectangle(box, fill=color)
+        left, top, right, bottom = box
+        accent = tuple(min(channel + 80, 255) for channel in color[:3]) + (color[3],)
+        draw.rectangle(
+            (left, top + (bottom - top) // 3, right, top + (bottom - top) // 2),
+            fill=accent,
+        )
+        return image
+
+    def assert_rejected(self, image: Image.Image, code: str) -> None:
+        with self.assertRaises(PipelineError) as raised:
+            validate_normalized_cutout(image, "Test lager")
+        self.assertEqual(raised.exception.code, code)
+
+    def test_clean_portrait_product_passes(self) -> None:
+        validate_normalized_cutout(self.canvas(), "Test lager")
+
+    def test_small_foreground_is_rejected(self) -> None:
+        self.assert_rejected(self.canvas((400, 300, 624, 700)), "output_too_small")
+
+    def test_wide_single_product_is_rejected(self) -> None:
+        self.assert_rejected(self.canvas((150, 300, 874, 700)), "mask_not_portrait")
+
+    def test_asymmetric_foreground_is_rejected(self) -> None:
+        image = self.canvas((400, 100, 624, 900))
+        ImageDraw.Draw(image).rectangle((624, 500, 850, 650), fill=(210, 130, 90, 255))
+        self.assert_rejected(image, "mask_asymmetric")
+
+    def test_soft_foreground_is_rejected(self) -> None:
+        self.assert_rejected(
+            self.canvas(color=(40, 150, 220, 180)),
+            "alpha_too_soft",
+        )
+
+    def test_dark_foreground_is_rejected(self) -> None:
+        self.assert_rejected(
+            self.canvas(color=(8, 8, 8, 255)),
+            "image_too_dark",
+        )
+
+    def test_explicit_multipack_can_be_wide(self) -> None:
+        validate_normalized_cutout(
+            self.canvas((150, 300, 874, 700)),
+            "Test lager 12 pack",
+        )
 
 
 if __name__ == "__main__":

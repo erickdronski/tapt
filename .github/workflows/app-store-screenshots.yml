@@ -96,6 +96,7 @@ jobs:
         run: swift scripts/validate_app_store_screenshots.swift "$RUNNER_TEMP"/tapt-screenshots/*.png
 
       - name: Upload screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: tapt-app-store-screenshots

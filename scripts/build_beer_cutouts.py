@@ -31,6 +31,7 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote
 
+import numpy as np
 import requests
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -44,6 +45,7 @@ OUTPUT_SIZE = 1024
 MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_SOURCE_PIXELS = 40_000_000
 MAX_ATTEMPTS = 3
+MIN_OUTPUT_FOREGROUND_EDGE = 700
 
 Image.MAX_IMAGE_PIXELS = MAX_SOURCE_PIXELS
 
@@ -289,7 +291,7 @@ def normalize_cutout(
     # OFF occasionally stores a can/bottle photographed sideways. Very wide
     # single-object silhouettes are normalized upright; multipacks and wider
     # scenes below this threshold retain their authored orientation.
-    multipack = bool(re.search(r"(?:\bpack\b|\bcase\b|\b\d+\s*[xX]\s*\d+)", product_name))
+    multipack = is_multipack(product_name)
     if not multipack and crop.width > crop.height * 1.6:
         crop = crop.rotate(90, expand=True)
 
@@ -303,6 +305,7 @@ def normalize_cutout(
         crop = crop.resize(target, Image.Resampling.LANCZOS)
     canvas = Image.new("RGBA", (OUTPUT_SIZE, OUTPUT_SIZE), (0, 0, 0, 0))
     canvas.alpha_composite(crop, ((OUTPUT_SIZE - crop.width) // 2, (OUTPUT_SIZE - crop.height) // 2))
+    validate_normalized_cutout(canvas, product_name)
 
     output = io.BytesIO()
     canvas.save(output, format="PNG", optimize=True, compress_level=9)
@@ -311,6 +314,73 @@ def normalize_cutout(
         source_sha256=hashlib.sha256(source).hexdigest(),
         foreground_fraction=foreground_fraction,
     )
+
+
+def is_multipack(product_name: str) -> bool:
+    return bool(re.search(
+        r"(?:\bpack\b|\bcase\b|\bcarton\b|\b\d+\s*[xX]\s*\d+)",
+        product_name,
+        re.IGNORECASE,
+    ))
+
+
+def validate_normalized_cutout(image: Image.Image, product_name: str = "") -> None:
+    """Reject visibly weak foregrounds before they become catalog defaults."""
+    rgba = np.asarray(image.convert("RGBA"))
+    alpha = rgba[:, :, 3]
+    mask = alpha > 96
+    ys, xs = np.where(mask)
+    if not len(xs):
+        raise PipelineError("empty_mask", "normalized cutout has no foreground")
+
+    left, top = int(xs.min()), int(ys.min())
+    right, bottom = int(xs.max()) + 1, int(ys.max()) + 1
+    width, height = right - left, bottom - top
+    if max(width, height) < MIN_OUTPUT_FOREGROUND_EDGE:
+        raise PipelineError(
+            "output_too_small",
+            f"foreground edge is only {max(width, height)}px",
+        )
+
+    crop_mask = mask[top:bottom, left:right]
+    occupancy = float(crop_mask.mean())
+    if occupancy < 0.48:
+        raise PipelineError("mask_sparse", f"foreground occupancy is {occupancy:.3f}")
+
+    multipack = is_multipack(product_name)
+    if not multipack and height < width * 1.12:
+        raise PipelineError(
+            "mask_not_portrait",
+            f"foreground aspect is {height / width:.3f}",
+        )
+
+    mirrored = np.fliplr(crop_mask)
+    union = np.logical_or(crop_mask, mirrored).sum()
+    symmetry = float(np.logical_and(crop_mask, mirrored).sum() / union)
+    minimum_symmetry = 0.72 if multipack else 0.84
+    if symmetry < minimum_symmetry:
+        raise PipelineError("mask_asymmetric", f"silhouette symmetry is {symmetry:.3f}")
+
+    visible_alpha = alpha[mask]
+    median_alpha = float(np.median(visible_alpha))
+    if median_alpha < 224:
+        raise PipelineError("alpha_too_soft", f"median alpha is {median_alpha:.0f}")
+
+    rgb = rgba[:, :, :3].astype(np.float32)
+    luminance = (
+        rgb[:, :, 0] * 0.2126
+        + rgb[:, :, 1] * 0.7152
+        + rgb[:, :, 2] * 0.0722
+    )[mask]
+    median_luminance = float(np.median(luminance))
+    if median_luminance < 24:
+        raise PipelineError(
+            "image_too_dark",
+            f"median luminance is {median_luminance:.1f}",
+        )
+    contrast = float(np.percentile(luminance, 90) - np.percentile(luminance, 10))
+    if contrast < 30:
+        raise PipelineError("image_low_contrast", f"luminance range is {contrast:.1f}")
 
 
 def parse_args() -> argparse.Namespace:
@@ -362,6 +432,9 @@ def main() -> int:
             terminal = candidate.attempts + 1 >= MAX_ATTEMPTS or error.code in {
                 "source_not_image", "source_too_small", "source_too_large",
                 "empty_mask", "mask_too_small", "mask_too_large",
+                "output_too_small", "mask_sparse", "mask_not_portrait",
+                "mask_asymmetric", "alpha_too_soft", "image_too_dark",
+                "image_low_contrast",
             }
             api.mark(candidate, "rejected" if terminal else "retry", error_code=error.code)
             if terminal:
