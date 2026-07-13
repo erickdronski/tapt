@@ -158,6 +158,23 @@ enum PartnerService {
             )
         ).execute()
     }
+
+    /// Confirm a filed inquiry and route the submitter to the portal. The edge
+    /// function emails only the caller's own verified address (derived from the
+    /// session, never from the client), so we pass no recipient. Best effort,
+    /// like logFeatured: a delivery miss must never block or fail the inquiry,
+    /// so every error is swallowed.
+    static func sendInquiryAck() async {
+        struct Body: Encodable { let kind: String }
+        guard let session = try? await Supa.client.auth.session else { return }
+        var request = URLRequest(url: Supa.url.appendingPathComponent("functions/v1/resend-send"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(Supa.publishableKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try? JSONEncoder().encode(Body(kind: "inquiry_ack"))
+        _ = try? await URLSession.shared.data(for: request)
+    }
 }
 
 // MARK: - Leaderboards (all first-party signal)

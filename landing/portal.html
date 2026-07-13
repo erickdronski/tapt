@@ -293,6 +293,21 @@ window.requestVenue = async (name) => {
     p_contact_email: user.email, p_city: city || null, p_region: null, p_country: null,
     p_message: 'Portal request: add this venue so I can claim it and publish a menu.'
   });
+  // Confirm receipt to the person who filed it. The edge function emails only
+  // their own verified address (derived from the session token, never the
+  // client), and no-ops without RESEND_API_KEY. Best effort: never block the UI.
+  if (!error) {
+    try {
+      const { data: { session } } = await supa.auth.getSession();
+      if (session?.access_token) {
+        await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/resend-send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({ kind: 'inquiry_ack' })
+        });
+      }
+    } catch {}
+  }
   $('claimMsg').textContent = error
     ? (error.message.includes('too many') ? 'You have a few requests in already, we are on it.' : error.message)
     : `Got it. We'll add ${name} and email ${user.email} when it's ready to claim, usually same day.`;

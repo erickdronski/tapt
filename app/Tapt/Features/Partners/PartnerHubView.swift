@@ -327,6 +327,9 @@ struct PartnerInquiryView: View {
                     message: message.isEmpty ? nil : message
                 )
                 sent = true
+                // Confirm receipt to the submitter and point them at the portal.
+                // Fire and forget: a delivery miss must not undo a filed inquiry.
+                Task { await PartnerService.sendInquiryAck() }
             } catch {
                 errorText = "Could not send that yet. Check the fields and try again."
             }

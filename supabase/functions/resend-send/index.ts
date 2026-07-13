@@ -167,5 +167,35 @@ Deno.serve(async (req) => {
     }, { headers: CORS });
   }
 
+  // 3. Inquiry acknowledgement: after a partner files a "get featured" or
+  //    "add my venue" inquiry, confirm receipt and point them at the portal.
+  //    We email ONLY the caller's own verified address (user.email, derived
+  //    from the session above, never from the request body), so a signed-in
+  //    user can only ever mail their own inbox. hello@taptbeer.com gets an
+  //    optional heads-up; failing to reach it never affects the caller's ack.
+  if (body.kind === "inquiry_ack") {
+    const recipient = user.email ?? "";
+    if (!recipient) {
+      return Response.json({ error: "account has no email" }, { status: 422, headers: CORS });
+    }
+    const portalUrl = `${LANDING}/portal`;
+    const html = shell(`<h2 style="margin:14px 0 6px">We got your inquiry</h2>
+<p>Thanks for reaching out to Tapt. Your inquiry is in and we read every one. We will follow up at this address.</p>
+<p><a href="${portalUrl}" style="background:#F2A900;color:#1A1206;font-weight:700;padding:11px 22px;border-radius:999px;text-decoration:none;display:inline-block">Open your portal</a></p>
+<p style="font-size:14px;color:#6B6459">In the portal you can claim your venue and publish a free menu any time.</p>`);
+    const res = await sendEmail(recipient, "We got your inquiry", html);
+    if (KEY) {
+      // Best-effort internal notice. Swallow any failure so the ack stands.
+      await sendEmail(
+        "hello@taptbeer.com",
+        "New partner inquiry",
+        shell(`<h2 style="margin:14px 0 6px">New partner inquiry</h2>
+<p>A partner just submitted an inquiry from ${escapeHTML(recipient)}.</p>
+<p style="font-size:14px;color:#6B6459">Full details are in the partner_inquiry table.</p>`),
+      ).catch(() => {});
+    }
+    return Response.json(res, { headers: CORS });
+  }
+
   return Response.json({ error: "unknown kind" }, { status: 400, headers: CORS });
 });

@@ -204,6 +204,19 @@ promptly (small commits, don't sit on local state another agent can't see).
   policy version (`2026-07-12`) for Profile and onboarding writes. Profile rows
   preserve the visible toggle label, onboarding's stored sentences match its
   toggles, and historical attestations are not rewritten.
+- **Partner inquiry ack (Claude, 2026-07-13):** submitting a "get featured" /
+  "add my venue" inquiry now sends the submitter a plain confirmation with an
+  "Open your portal" button. New `inquiry_ack` kind in
+  `supabase/functions/resend-send/index.ts` emails ONLY `user.email` (derived
+  server-side from the session, never client-supplied) and optionally pings
+  hello@taptbeer.com. Fired best-effort (failures ignored, like logFeatured)
+  from iOS `PartnerInquiryView.submit()` via new `PartnerService.sendInquiryAck()`
+  and web `portal.html` `requestVenue()`. **Owner actions:** (1) redeploy the
+  function — `supabase functions deploy resend-send` (the CLI in the working
+  session was not logged in, so this was NOT deployed by the agent; repo + prod
+  will drift until you run it); (2) sends stay a silent no-op until
+  `RESEND_API_KEY` (and ideally `RESEND_FROM` = a verified taptbeer.com sender)
+  are set in Supabase secrets. Web change auto-deploys via Vercel on push.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in
