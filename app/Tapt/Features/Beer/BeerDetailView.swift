@@ -19,6 +19,8 @@ struct BeerDetailView: View {
     @State private var loadError: String?
     @State private var voteMessage: String?
     @State private var voteMessageIsError = false
+    @State private var market: MarketBeer?
+    @State private var celebration: TaptCelebration?
 
     var body: some View {
         ScrollView {
@@ -26,6 +28,7 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header(d)
                     communityBar(d)
+                    if let m = market { marketCard(m) }
                     if let voteMessage {
                         Label(voteMessage, systemImage: voteMessageIsError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
                             .font(.caption.weight(.semibold))
@@ -74,6 +77,7 @@ struct BeerDetailView: View {
             }
         }
         .background(Brand.background)
+        .taptCelebration($celebration)
         .navigationTitle(detail?.name ?? "Beer")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
@@ -181,6 +185,63 @@ struct BeerDetailView: View {
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
     }
 
+    // MARK: - Beer Market standing (how this beer is tracking, on the one page)
+
+    /// The live market block, folded in from the old separate market screen so the
+    /// profile shows sentiment, standing, and movement in one place. Read-only:
+    /// the up/down vote above is the single vote action. Renders only when the beer
+    /// is on the board (market != nil).
+    private func marketCard(_ m: MarketBeer) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Label("Beer Market", systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.text)
+                Spacer()
+                if m.isFlat {
+                    Text("steady today").font(.caption.weight(.semibold)).foregroundStyle(Brand.muted)
+                } else {
+                    Label("\(m.changeText) today", systemImage: m.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                        .font(.caption.weight(.heavy)).labelStyle(.titleAndIcon)
+                        .foregroundStyle(m.isUp ? Brand.hop : Brand.copper)
+                }
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("\(m.net)").font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
+                Text("standing").font(.subheadline).foregroundStyle(Brand.muted)
+            }
+            if !m.moveReason.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: m.isSeasonal ? "sun.max.fill" : "person.3.fill")
+                        .font(.footnote).foregroundStyle(m.isSeasonal ? Brand.copper : Brand.hop)
+                    Text(m.moveReason).font(.footnote.weight(.semibold)).foregroundStyle(Brand.text)
+                    Spacer(minLength: 0)
+                }
+            }
+            Sparkline(values: m.spark, trend: m.change)
+                .frame(height: 84)
+            HStack(spacing: 10) {
+                marketStat("Total votes", "\(m.votes)")
+                marketStat("Votes 24h", "\(m.volume)")
+            }
+            Text("Standing blends season fit, real awards, and community votes. Votes only. No money, no trading, not a financial product.")
+                .font(.caption2).foregroundStyle(Brand.muted)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.malt.opacity(0.08)))
+    }
+
+    private func marketStat(_ label: String, _ value: String) -> some View {
+        VStack(spacing: 3) {
+            Text(value).font(.system(.headline, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
+            Text(label).font(.caption2).foregroundStyle(Brand.muted)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 10)
+        .background(Brand.background, in: RoundedRectangle(cornerRadius: 12))
+    }
+
     private func logPourButton(_ d: BeerDetail) -> some View {
         Button {
             guard session.user != nil else {
@@ -229,6 +290,10 @@ struct BeerDetailView: View {
                 do {
                     if let v = newValue {
                         try await BeerService.vote(beerId: d.id, userId: uid, value: v)
+                        if v == 1 {
+                            let upCount = max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + 1
+                            await MainActor.run { celebration = .voteCounted(beer: d.name, count: upCount) }
+                        }
                     } else {
                         try await BeerService.unvote(beerId: d.id, userId: uid)
                     }
@@ -692,6 +757,9 @@ struct BeerDetailView: View {
             loadError = "Check your connection and try again."
             return
         }
+        // The one profile also shows how this beer is tracking on the Beer Market.
+        // Non-fatal: if it isn't on the board yet, the block simply doesn't render.
+        market = try? await MarketService.one(beerId: beerId)
         // Reflect the user's existing vote so the thumbs + counts are correct.
         if let uid = session.user?.id {
             let existing = try? await BeerService.currentVote(beerId: beerId, userId: uid)

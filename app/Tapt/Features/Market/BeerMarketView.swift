@@ -43,7 +43,7 @@ struct BeerMarketView: View {
             .task(id: naOnly) { await load() }
             .refreshable { await load() }
             .sheet(item: $selected) { b in
-                MarketBeerDetailView(beer: b).presentationDetents([.large])
+                NavigationStack { BeerDetailView(beerId: b.beerId) }.presentationDetents([.large])
             }
         }
     }

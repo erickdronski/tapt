@@ -109,4 +109,16 @@ enum MarketService {
             )
         )
     }
+
+    /// One beer's live standing + 7-day sparkline for the unified beer profile.
+    /// Anon-capable (beer_market_one is granted to anon + authenticated), so a
+    /// guest browsing a beer page sees it too. Returns nil when the beer isn't on
+    /// the board yet, so the profile simply hides its market block. Non-fatal.
+    static func one(beerId: String) async throws -> MarketBeer? {
+        struct Params: Encodable { let p_beer_id: String }
+        let rows: [MarketBeer] = try await Supa.client
+            .rpc("beer_market_one", params: Params(p_beer_id: beerId))
+            .execute().value
+        return rows.first
+    }
 }
