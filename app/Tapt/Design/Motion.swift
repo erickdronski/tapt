@@ -103,11 +103,16 @@ struct TaptSkeletonList: View {
 
 // MARK: - The beer glass, done properly
 
-/// A real glass of beer: curved pint silhouette, gradient-depth beer, live
-/// rising bubbles, an irregular foam head, and a glass shine. Pure vector, /// crisp at any size. The app's signature graphic.
+/// The canonical Tapt beer glass, matching brand/glass.svg: a line-art pint with
+/// a gold beer fill, a solid foam cap, ONE soft highlight, and a heavy dark
+/// outline. No rising bubbles, no glossy sheen. It still fills on appear for a
+/// little life, but the resting mark is the canonical one, used everywhere.
 struct BeerGlassView: View {
     var pour: CGFloat = 0.8          // 0...1 fill level
     var animatesPour: Bool = true
+
+    /// The canonical mark's ink (brand/glass.svg #130A02).
+    private let ink = Color(hex: 0x130A02)
 
     @State private var poured = false
 
@@ -132,22 +137,6 @@ struct BeerGlassView: View {
                 // Beer body with depth + live bubbles, clipped to the glass
                 ZStack(alignment: .bottom) {
                     beerBody(h: h)
-                    ForEach(0..<12, id: \.self) { i in
-                        let bx = w * (0.18 + CGFloat((Double(i) * 0.618).truncatingRemainder(dividingBy: 1.0)) * 0.64)
-                        let size = CGFloat(2 + (i % 4))
-                        Circle()
-                            .fill(Brand.foam.opacity(i % 3 == 0 ? 0.55 : 0.35))
-                            .frame(width: size, height: size)
-                            .position(x: bx, y: poured ? h * (1 - fill) + 10 : h - 6)
-                            .animation(
-                                animatesPour
-                                    ? .linear(duration: Double(3 + (i % 5)))
-                                        .repeatForever(autoreverses: false)
-                                        .delay(Double(i) * 0.4)
-                                    : nil,
-                                value: poured
-                            )
-                    }
                     foam(w: w)
                         .offset(y: -h * fill + 2)
                         .frame(maxHeight: .infinity, alignment: .bottom)
@@ -155,27 +144,16 @@ struct BeerGlassView: View {
                 .frame(width: w, height: h, alignment: .bottom)
                 .clipShape(glass)
 
-                // Glass shine streak
-                RoundedRectangle(cornerRadius: w * 0.08)
-                    .fill(
-                        LinearGradient(
-                            colors: [Brand.foam.opacity(0.5), Brand.foam.opacity(0.02)],
-                            startPoint: .top, endPoint: .bottom
-                        )
-                    )
-                    .frame(width: w * 0.12, height: h * 0.62)
-                    .offset(x: -w * 0.26, y: -h * 0.08)
+                // ONE soft highlight streak (the canonical mark's single shine, not a glossy sheen)
+                RoundedRectangle(cornerRadius: w * 0.06)
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: w * 0.08, height: h * 0.55)
+                    .offset(x: -w * 0.24, y: -h * 0.02)
                     .clipShape(glass)
 
-                // Glass outline
+                // Heavy dark outline, matching the canonical mark's ink.
                 glass
-                    .stroke(
-                        LinearGradient(
-                            colors: [Brand.malt.opacity(0.85), Brand.malt.opacity(0.55)],
-                            startPoint: .top, endPoint: .bottom
-                        ),
-                        style: StrokeStyle(lineWidth: max(3, w * 0.035), lineJoin: .round)
-                    )
+                    .stroke(ink, style: StrokeStyle(lineWidth: max(4, w * 0.05), lineJoin: .round))
             }
             .shadow(color: Brand.malt.opacity(0.22), radius: 16, y: 10)
         }
@@ -197,9 +175,9 @@ struct BeerGlassView: View {
             .fill(
                 LinearGradient(
                     stops: [
-                        .init(color: Color(hex: 0xF7C94B), location: 0),
+                        .init(color: Color(hex: 0xFFD24D), location: 0),
                         .init(color: Color(hex: 0xF2A900), location: 0.45),
-                        .init(color: Color(hex: 0xC97E07), location: 1),
+                        .init(color: Color(hex: 0xC56B10), location: 1),
                     ],
                     startPoint: .top, endPoint: .bottom
                 )
@@ -244,22 +222,14 @@ struct BeerGlassView: View {
         return p
     }
 
-    /// Centered foam dome with three bubbles, matching the app icon exactly.
+    /// Solid foam cap outlined in ink, matching the canonical mark. No bubbles.
     private func foam(w: CGFloat) -> some View {
-        let bubbles: [(x: CGFloat, r: CGFloat)] = [(-0.24, 0.10), (0, 0.13), (0.24, 0.10)]
-        return ZStack {
-            Capsule()
-                .fill(Brand.foam)
-                .frame(width: w * 0.88, height: w * 0.16)
-            ForEach(Array(bubbles.enumerated()), id: \.offset) { _, b in
-                Circle()
-                    .fill(Brand.foam)
-                    .frame(width: w * b.r * 2)
-                    .offset(x: w * b.x, y: -w * 0.06)
-            }
-        }
-        .compositingGroup()
-        .shadow(color: Brand.malt.opacity(0.10), radius: 3, y: 2)
+        Capsule()
+            .fill(Brand.foam)
+            .frame(width: w * 0.9, height: max(8, w * 0.17))
+            .overlay(Capsule().stroke(ink, lineWidth: max(2, w * 0.028)))
+            .compositingGroup()
+            .shadow(color: ink.opacity(0.10), radius: 3, y: 2)
     }
 }
 

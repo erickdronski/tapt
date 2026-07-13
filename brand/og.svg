@@ -27,10 +27,8 @@
   <g clip-path="url(#clip)">
     <rect x="895" y="270" width="146" height="320" fill="url(#beer)"/>
     <rect x="925" y="278" width="13" height="270" rx="6" fill="#fff" opacity=".2"/>
-    <circle cx="965" cy="470" r="5" fill="#FFF3D7" opacity=".55"/><circle cx="990" cy="420" r="4" fill="#FFF3D7" opacity=".5"/>
   </g>
   <path d="M888 258 C883 208 923 182 960 197 C982 172 1014 172 1032 197 C1069 182 1109 208 1104 258 C1104 280 1064 288 968 288 C872 288 888 280 888 258 Z"
         transform="translate(-40,0)" fill="url(#foam)" stroke="#130A02" stroke-width="12" stroke-linejoin="round"/>
-  <circle cx="928" cy="222" r="11" fill="#fff"/><circle cx="968" cy="216" r="14" fill="#fff"/><circle cx="1008" cy="222" r="11" fill="#fff"/>
   <path d="M900 250 C907 430 918 540 940 580 Q968 596 996 580 C1018 540 1029 430 1036 250" fill="none" stroke="#130A02" stroke-width="14" stroke-linejoin="round" stroke-linecap="round"/>
 </svg>
