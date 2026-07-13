@@ -104,16 +104,18 @@ promptly (small commits, don't sit on local state another agent can't see).
   complete (per-recipient unsubscribe + RFC 8058 + postal gate) and de-flexed;
   dispatch.html personalization claims rewritten honest; Explore state/country
   labels honest ("Trending in X" only when X really has data, "Beers found in
-  X" for shelf rows, Global fallback labeled Global). NEXT OPEN P0 (either
-  agent): names v4 - keep the NA marker in display_name (sans-alcool masquerade),
-  tighten tapt_name_ok for deposit/barcode/placeholder strings beyond the
-  catalog_search-level filter 0079 added.
+  X" for shelf rows, Global fallback labeled Global).
 - **Guest release contract (Codex, 2026-07-13):** PR #46 restored public beer
   detail, Beer of the Week, and radar reads promised by guest mode. 0082 makes
   activity-derived fields consent-safe, removes invented baseline heat, and
   asserts the exact 12-function anon surface. OFF ingesters now verify TLS,
   fail closed without dropping or advancing failed batches, and never treat a
   scan country as brewery origin.
+- **Beer names v4 (Codex, 2026-07-13):** 0083 preserves `1664` and other
+  numeric brand identity, keeps No / Low qualifiers as `Non-Alcoholic`, and
+  hides unambiguous price, deposit, barcode, placeholder, country-only, and
+  malformed-quote scrape rows. Stored display/name gates are rewritten in
+  place and market standings refreshed.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in

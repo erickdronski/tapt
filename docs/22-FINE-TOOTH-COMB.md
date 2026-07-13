@@ -31,7 +31,7 @@ Tapping the 'Georgia' chip (a US state, listed in BeerRegions.states) returns ex
 
 **Fix:** Namespace the two axes so they can never collide: in the feed view emit country fallback rows under a key that the state picker never sends (e.g. keep country names but have the app query states via a separate 'state' column, or prefix state regions 'US-<State>' end to end - view, refresh_beer_trend, and BeerService). Minimal immediate patch: exclude country names that match US state names from the fallback branch ('Georgia' is the only live collision today) so the state chip gets the honest empty state instead of a foreign beer.
 
-### [OPEN] Placeholder and scrape-junk beer names pass the name gate onto live boards
+### [FIXED round 2] Placeholder and scrape-junk beer names pass the name gate onto live boards
 *Surface:* Explore country boards (Belgium, Germany, Japan)  ·  *Anchor:* `supabase/migrations/0048_names_style_science_market_momentum.sql:5`  ·  *Found by:* fleet
 
 The Belgium board contains a 'beer' literally named 'Chargement…' (French for 'Loading…' - a scraped placeholder string) and one named 'Belgium' (by Stella Artois). The Germany board contains 'Erdinger Brauhaus Helles 2,19 € 4,38 € pro zzgl. Pfand 0.08€' (a shelf-price + bottle-deposit string) and '2,5 Original Lemon'. Japan shows 'Sapporo @ chiller' and 'Asahi draft super dry beer ~ 68. Platinum 72075'. Belgium also has mangled fragments 'de 12 de Leffe blonde de' and 'de 4 Chimay'. These are lorem-grade placeholder/scrape artifacts on user-visible boards - an automatic P0 under the zero-placeholder law.
@@ -67,7 +67,7 @@ Product law 4 locks the anon RPC surface to exactly catalog_search, venue_brand,
 
 **Fix:** New migration mirroring 0061's pattern: revoke execute on public.match_beers(text,int), public.region_guide_feed(), public.clean_beer_name(text), public.tapt_display_name(text), public.tapt_name_ok(text), public.tapt_ref_style_name(text,text) from anon (keep authenticated - the app's CheckinService.swift:117 calls match_beers signed-in). Then update the AGENTS.md locked-anon list and re-verify with the same pg_proc + has_function_privilege query; also add that query as a CI/audit check so future migrations can't silently widen the surface.
 
-### [OPEN] Retail shelf strings with EUR deposit pricing and raw barcodes pass tapt_name_ok and render as beer names
+### [FIXED round 2] Retail shelf strings with EUR deposit pricing and raw barcodes pass tapt_name_ok and render as beer names
 *Surface:* Catalog search results + beer page titles  ·  *Anchor:* `supabase/migrations/0064_beer_name_normalize_v3_retail_strings.sql:51`  ·  *Found by:* fleet
 
 Searching 'guinness' (top-30, an obvious first query) shows a beer named 'ALDI Guinness Draught Irisches Bier Zzgl. Pfand 4 x 0.25EUR = 1.00EUR Packung 2.84EUR' and another named 'Guinness Extra Stout 4053400211428 Schankbier Stout' (a 13-digit GTIN inside the name). These names also become the beer page navigation title and header if tapped. 9 such rows pass name_ok live (others include 'Erdinger Brauhaus Helles 2,19 EUR 4,38 EUR pro zzgl. Pfand 0.08EUR' and a Stoertebeker row carrying a full price breakdown). Product law 3 explicitly bans price fragments as names; this is the exact junk the v3 normalizer + name gate exist to stop, and these slip through because the gate has no currency/deposit ('Zzgl. Pfand', 'EUR', 'Basispreis', 'Packung') or long-digit-run patterns.
@@ -166,7 +166,7 @@ brewery.country for OFF-ingested rows reflects where the product was scanned (mo
 
 **Fix:** Stop displaying and grouping by brewery.country for OFF-sourced breweries until it is verified: null out country where external_ids->>'source' is the OFF lane and no OBDB match confirms it (blank beats wrong, per house rule), and backfill from Open Brewery DB name matches where available. In the same pass, delete/merge the misspelled 'Guiness' brewery row. Rebuild beer_trend_feed regions and refresh_beer_market_standing afterward so country boards and flags only claim origins that are real.
 
-### [OPEN] Normalizer strips 'sans alcool' and leading brand numerals, so NA variants masquerade as the flagship beer (e.g. '1664 Blanc' shown at 0.4% ABV) and as generic names ('Blonde')
+### [FIXED round 2] Normalizer strips 'sans alcool' and leading brand numerals, so NA variants masquerade as the flagship beer (e.g. '1664 Blanc' shown at 0.4% ABV) and as generic names ('Blonde')
 *Surface:* Catalog browse + No/Low filter + beer detail (ABV) for flagship brands  ·  *Anchor:* `supabase/migrations/0064_beer_name_normalize_v3_retail_strings.sql:35`  ·  *Found by:* fleet
 
 tapt_display_name deliberately removes no-alcohol phrases (0064 s4) and strips a leading 4+ digit token when followed by a letter (s0). Result: '1664 Blanc Sans Alcool 0.4' rows display as '1664 Blanc', and '1664 Blonde sans alcool' displays as just 'Blonde' (brand deleted). Because catalog_search then keeps one row per (display_name, brewery), the NA row can be the row a user gets: the live default browse page shows '1664 Blanc' at ABV 0.40 with is_na_low=true — a real person reads that the well-known 5.0% witbier is a 0.4% beer, and the No/Low lens surfaces it as an NA beer under the regular beer's name. The identity of the product shown is wrong.
