@@ -27,7 +27,7 @@ h1{font-family:'Poppins';font-size:2rem;letter-spacing:0;margin:18px 0 2px}
 .price{font-family:'Poppins';font-weight:800;color:var(--copper);white-space:nowrap}
 .empty{background:#fff;border-radius:16px;padding:28px;text-align:center;color:var(--slate)}
 .qrbox{margin-top:34px;text-align:center;background:var(--malt);color:var(--foam);border-radius:20px;padding:26px}
-.qrbox img{background:#fff;padding:10px;border-radius:12px;margin:12px 0}
+.qrbox #qr{display:flex;justify-content:center;margin:12px 0}.qrbox img,.qrbox canvas{display:block;background:#fff;padding:10px;border-radius:12px}
 .btn{display:inline-block;background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:10px 22px;text-decoration:none;margin-top:8px;cursor:pointer;border:0;font-size:.95rem}
 .foot{margin-top:30px;font-size:.78rem;color:var(--slate);text-align:center}
 .updated{font-size:.78rem;color:var(--slate);margin-bottom:16px}
@@ -55,12 +55,13 @@ h1{font-family:'Poppins';font-size:2rem;letter-spacing:0;margin:18px 0 2px}
   <div id="taps"></div>
   <div class="qrbox" id="qrbox" hidden>
     <div style="font-family:'Poppins';font-weight:800">Scan for the live menu</div>
-    <img id="qr" width="180" height="180" alt="QR code to this menu">
-    <div><button class="btn" onclick="window.print()">Print this menu + QR</button></div>
+    <div id="qr" aria-label="QR code to this menu"></div>
+    <div><a class="btn" id="printPack" href="#">Open the QR print pack</a></div>
     <div style="font-size:.78rem;opacity:.7;margin-top:10px">Free forever, hosted by Tapt · THE Beer Superapp</div>
   </div>
   <div class="foot">Menus are published by the venue via Tapt. Enjoy responsibly, 21+/legal drinking age. <span class="cta"><a href="mailto:hello@taptbeer.com?subject=Tapt%20menu%20feedback" style="color:var(--copper)">Report a menu issue</a> · <a href="index.html" style="color:var(--copper)">What is Tapt?</a></span> · <a href="privacy.html" style="color:var(--copper)">Privacy</a> · <a href="terms.html" style="color:var(--copper)">Terms</a></div>
 </main>
+<script src="/vendor/qrcode.min.js"></script>
 <script>
 const v = new URLSearchParams(location.search).get('v');
 const el = id => document.getElementById(id);
@@ -103,7 +104,8 @@ async function load(){
     if(Array.isArray(events) && events.length){
       el('events').innerHTML = '<div style="margin-bottom:14px">' + events.map(eventCard).join('') + '</div>';
     }
-    el('qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=360x360&data=' + encodeURIComponent(location.href);
+    new QRCode(el('qr'), { text: `https://taptbeer.com/menu?v=${encodeURIComponent(v)}`, width: 180, height: 180, colorDark: '#1A1206', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H });
+    el('printPack').href = `/print?v=${encodeURIComponent(v)}`;
     el('qrbox').hidden = false;
     if(!brand && (!Array.isArray(rows) || !rows.length)){
       el('venue').textContent = 'Venue not found';

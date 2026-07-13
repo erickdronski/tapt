@@ -141,15 +141,13 @@ Legend: effort S < M < L. "Anon change" = deviation from the locked surface
 
 ### For partners
 
-#### G. Embeddable tap-list widget
-- **Partner value:** high. "Put your live Tapt menu on your own site" with a
-  copy-paste iframe snippet: `<iframe src="https://taptbeer.com/menu?v=<uuid>&embed=1">`.
-  `embed=1` hides the brand chrome/QR box in menu.html (a few lines of JS/CSS).
-  Their site stays current when they publish in the portal; every embed is a
-  live backlink to taptbeer.com.
-- **Feasibility:** **no anon change** (`venue_menu` already anon). Surface the
-  snippet in portal step 4's `menuLinks` area (portal.html:108).
-- **Effort:** S. Highest value-per-effort on this list.
+#### G. Embeddable tap-list widget (shipped 2026-07-13)
+- The portal now provides a copyable `<tapt-menu>` custom-element snippet.
+  `embed.js` renders inside an open shadow root, so partner-site CSS cannot
+  distort the menu and Tapt styles cannot leak into the host page.
+- It reads the existing anonymous `venue_brand`, `venue_menu`, and
+  `venue_events` contracts and links back to the canonical live menu. No new
+  anonymous database surface or frame-ancestor exception was required.
 
 #### H. Portal depth (incremental)
 - Already present: claim, branding upload, tap list with draft autosave +
@@ -168,10 +166,10 @@ Legend: effort S < M < L. "Anon change" = deviation from the locked surface
 
 ## 3. Recommended order
 
-1. **D-lite: robots.txt + sitemap.xml** for existing pages. XS, zero risk.
+1. **D-lite: robots.txt + sitemap.xml** for existing pages. Shipped.
 2. **A: static style guide (61 pages)** + add them to the sitemap. The SEO
    foundation, no anon change.
-3. **G: menu embed mode + portal snippet.** S, pure partner win.
+3. **G: menu embed mode + portal snippet.** Shipped as a custom element.
 4. **B: public beer page + anon `beer_detail(uuid)` grant** (deliberate
    exception, update AGENTS.md locked list in the same commit) + wire the URL
    into the app share flows.

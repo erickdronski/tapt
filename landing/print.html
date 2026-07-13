@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Table QR print pack · Tapt</title>
+<meta name="theme-color" content="#1A1206">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--copper:#B4531F;--slate:#6B6459;--line:rgba(26,18,6,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#E8E2D7;color:var(--malt);min-height:100vh}
+.skip{position:fixed;left:12px;top:10px;z-index:1000;transform:translateY(-180%);background:var(--malt);color:var(--foam);padding:10px 14px;border-radius:6px}.skip:focus{transform:none}
+.toolbar{position:sticky;top:0;z-index:20;background:rgba(251,246,236,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(14px)}
+.toolbar-in{max-width:1080px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-family:'Poppins';font-size:1.25rem;font-weight:800;color:var(--malt);text-decoration:none}.brand span{color:var(--gold)}
+.title{min-width:190px;flex:1}.title b{display:block;font-family:'Poppins';font-size:.96rem}.title span{display:block;color:var(--slate);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.segments{display:inline-flex;padding:3px;background:#E9E0CE;border-radius:8px}.segments button{border:0;background:transparent;color:var(--slate);padding:8px 11px;border-radius:6px;font:700 .78rem/1 'Inter';cursor:pointer}.segments button[aria-pressed="true"]{background:#fff;color:var(--malt);box-shadow:0 2px 8px rgba(26,18,6,.1)}
+.print{border:0;border-radius:999px;background:var(--gold);color:var(--malt);font:700 .88rem/1 'Inter';padding:12px 18px;cursor:pointer}.print:active{transform:translateY(1px)}
+.status{max-width:1080px;margin:0 auto;padding:14px 20px 0;color:var(--copper);font-weight:700;font-size:.88rem}
+.stage{padding:24px;overflow:auto}
+.sheet{width:8.5in;min-height:11in;margin:0 auto;background:#fff;box-shadow:0 18px 50px rgba(26,18,6,.18);display:grid;overflow:hidden}
+.piece{position:relative;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;border:1px dashed rgba(26,18,6,.18);background:var(--foam);padding:.28in}
+.piece::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,transparent 66%,rgba(242,169,0,.16));pointer-events:none}
+.piece-in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%}
+.venue-logo{width:.56in;height:.56in;object-fit:cover;border-radius:8px;margin-bottom:.08in}.venue-logo[hidden]{display:none}
+.eyebrow{font:800 .11in/1.2 'Poppins';letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
+.venue{font:800 .28in/1.1 'Poppins';margin:.08in 0 .04in;max-width:100%;overflow-wrap:anywhere}
+.place{font-size:.11in;color:var(--slate);min-height:.15in}
+.qr{margin:.12in 0;background:#fff;padding:.08in;border-radius:8px;line-height:0}.qr img,.qr canvas{display:block;width:1.72in!important;height:1.72in!important}
+.scan{font:800 .16in/1.2 'Poppins'}.tagline{margin-top:.05in;font-size:.1in;color:var(--slate)}
+.tapt{position:absolute;bottom:.16in;right:.18in;font:800 .12in/1 'Poppins'}.tapt span{color:var(--gold)}
+body[data-layout="tent"] .sheet{grid-template-columns:1fr;grid-template-rows:repeat(2,5.5in)}
+body[data-layout="tent"] .piece:nth-child(n+3){display:none}
+body[data-layout="tent"] .piece:nth-child(2){transform:rotate(180deg)}
+body[data-layout="tent"] .piece{border-left:0;border-right:0}
+body[data-layout="cards"] .sheet{grid-template-columns:repeat(2,4.25in);grid-template-rows:repeat(2,5.5in)}
+body[data-layout="cards"] .piece:nth-child(n+5){display:none}
+body[data-layout="poster"] .sheet{display:block}
+body[data-layout="poster"] .piece{display:none}
+body[data-layout="poster"] .piece:first-child{display:flex;width:8.5in;height:11in;padding:1in}
+body[data-layout="poster"] .venue-logo{width:1in;height:1in}body[data-layout="poster"] .venue{font-size:.55in}body[data-layout="poster"] .place{font-size:.18in}body[data-layout="poster"] .qr{padding:.14in;margin:.3in 0}body[data-layout="poster"] .qr img,body[data-layout="poster"] .qr canvas{width:3.8in!important;height:3.8in!important}body[data-layout="poster"] .scan{font-size:.32in}body[data-layout="poster"] .tagline{font-size:.16in}body[data-layout="poster"] .tapt{font-size:.2in;bottom:.4in;right:.45in}
+body[data-layout="stickers"] .sheet{grid-template-columns:repeat(2,4.25in);grid-template-rows:repeat(3,3.6667in)}
+body[data-layout="stickers"] .piece{padding:.18in}body[data-layout="stickers"] .venue{font-size:.22in}body[data-layout="stickers"] .qr{margin:.08in 0}body[data-layout="stickers"] .qr img,body[data-layout="stickers"] .qr canvas{width:1.35in!important;height:1.35in!important}body[data-layout="stickers"] .tagline{display:none}
+@media(max-width:760px){.toolbar-in{gap:10px}.title{order:3;flex-basis:100%}.segments{max-width:100%;overflow:auto}.segments button{white-space:nowrap}.stage{padding:12px}.sheet{margin:0}}
+@media print{
+  @page{size:letter portrait;margin:0}
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .skip,.toolbar,.status{display:none!important}
+  .stage{padding:0;overflow:visible}
+  .sheet{margin:0;box-shadow:none}
+}
+</style>
+</head>
+<body data-layout="tent">
+<a class="skip" href="#print-sheet">Skip to print preview</a>
+<header class="toolbar">
+  <div class="toolbar-in">
+    <a class="brand" href="/portal" aria-label="Tapt partner portal">Tapt<span>.</span></a>
+    <div class="title"><b>Table QR print pack</b><span id="toolbarVenue">Loading venue...</span></div>
+    <div class="segments" role="group" aria-label="Print layout">
+      <button type="button" data-layout="tent" aria-pressed="true">Table tent</button>
+      <button type="button" data-layout="cards" aria-pressed="false">4 cards</button>
+      <button type="button" data-layout="poster" aria-pressed="false">Poster</button>
+      <button type="button" data-layout="stickers" aria-pressed="false">6 stickers</button>
+    </div>
+    <button class="print" type="button" onclick="window.print()">Print</button>
+  </div>
+</header>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+<main class="stage">
+  <section class="sheet" id="print-sheet" aria-label="Print preview">
+    <article class="piece poster stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+    <article class="piece stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+    <article class="piece stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+    <article class="piece stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+    <article class="piece stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+    <article class="piece stickers"><div class="piece-in"><img class="venue-logo" hidden alt=""><div class="eyebrow">Live tap list</div><div class="venue">Tapt venue</div><div class="place"></div><div class="qr" aria-label="QR code"></div><div class="scan">Scan what is pouring</div><div class="tagline">Current taps, prices, and events</div><div class="tapt">Tapt<span>.</span></div></div></article>
+  </section>
+</main>
+<script src="/vendor/qrcode.min.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const venueId = params.get('v') || '';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const menuUrl = `https://taptbeer.com/menu?v=${encodeURIComponent(venueId)}`;
+const status = document.getElementById('status');
+
+document.querySelectorAll('.segments button[data-layout]').forEach(button => {
+  button.addEventListener('click', () => {
+    document.body.dataset.layout = button.dataset.layout;
+    document.querySelectorAll('.segments button[data-layout]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+  });
+});
+
+function buildCodes() {
+  document.querySelectorAll('.qr').forEach(box => {
+    box.textContent = '';
+    new QRCode(box, { text: menuUrl, width: 256, height: 256, colorDark: '#1A1206', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H });
+  });
+}
+
+function populate(brand) {
+  const name = brand.name || 'Live tap list';
+  const place = [brand.city, brand.region, brand.country].filter(Boolean).join(', ');
+  document.title = `${name} print pack · Tapt`;
+  document.getElementById('toolbarVenue').textContent = name;
+  document.querySelectorAll('.venue').forEach(node => { node.textContent = name; });
+  document.querySelectorAll('.place').forEach(node => { node.textContent = place; });
+  if (brand.logo_url) {
+    document.querySelectorAll('.venue-logo').forEach(image => {
+      image.src = brand.logo_url;
+      image.alt = `${name} logo`;
+      image.hidden = false;
+    });
+  }
+  buildCodes();
+}
+
+async function load() {
+  if (!UUID.test(venueId)) {
+    status.textContent = 'This print-pack link is invalid.';
+    document.querySelector('.print').disabled = true;
+    return;
+  }
+  try {
+    const response = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/rest/v1/rpc/venue_brand', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF' },
+      body: JSON.stringify({ p_venue: venueId })
+    });
+    if (!response.ok) throw new Error('venue_brand failed');
+    const rows = await response.json();
+    if (!Array.isArray(rows) || !rows[0]) throw new Error('venue not found');
+    populate(rows[0]);
+  } catch {
+    status.textContent = 'This venue could not be loaded. Return to the partner portal and try again.';
+    document.querySelector('.print').disabled = true;
+  }
+}
+load();
+</script>
+</body>
+</html>
