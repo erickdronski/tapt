@@ -25,6 +25,7 @@ struct OnboardingView: View {
     @State private var newsletterOptIn = false
     @State private var saving = false
     @State private var saveError: String?
+    @State private var celebration: TaptCelebration?
 
     private let total = 5
 
@@ -46,6 +47,10 @@ struct OnboardingView: View {
             }
             .padding()
         }
+        // Crossing into the app is a celebrated threshold, not a silent swap:
+        // the welcome medallion plays, THEN we flip the flag that hands off to
+        // RootView (so this view stays mounted through the ~1.7s reward).
+        .taptCelebration($celebration) { finishOnboarding() }
     }
 
     private var progress: some View {
@@ -225,17 +230,27 @@ struct OnboardingView: View {
                 if newsletterOptIn, let email = session.user?.email, email.contains("@") {
                     try? await NewsletterService.subscribe(email: email, source: "onboarding")
                 }
-                var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
-                ids.insert(uid.uuidString)
-                onboardedUserIDs = ids.sorted().joined(separator: ",")
-                // Seed the passport badge tracker at this known-empty point so
-                // the very first badge (First Pour) still gets its celebration.
-                seenBadgesRaw = ""
-                badgesSeeded = true
+                saving = false
+                // Celebrate first; the flag that dismisses onboarding flips in
+                // finishOnboarding() once the medallion has played.
+                celebration = .badgeUnlocked(title: "Welcome to Tapt", symbol: "checkmark.seal.fill")
             } catch {
                 saveError = "Could not save your setup. Try again."
+                saving = false
             }
-            saving = false
         }
+    }
+
+    /// Runs after the welcome celebration finishes: writes the flag RootView
+    /// keys on (which swaps onboarding out) plus the badge-tracker seed.
+    private func finishOnboarding() {
+        guard let uid = session.user?.id else { return }
+        var ids = Set(onboardedUserIDs.split(separator: ",").map(String.init))
+        ids.insert(uid.uuidString)
+        // Seed the passport badge tracker at this known-empty point so the very
+        // first badge (First Pour) still gets its celebration.
+        seenBadgesRaw = ""
+        badgesSeeded = true
+        onboardedUserIDs = ids.sorted().joined(separator: ",")
     }
 }

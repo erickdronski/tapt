@@ -102,6 +102,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Make-it-alive round (Claude, 2026-07-13):** owner said the app felt flat /
+  not fun. A 10-lens energy audit (docs/23-MAKE-IT-ALIVE.md) found the delight
+  system (Celebrate.swift / Motion.swift / Haptic) was BUILT BUT HALF-WIRED.
+  Shipped + sim-verified: Explore fires the .voteCounted confetti+count-up on a
+  real up-vote (VERIFIED live: confetti burst + "2 vote counted" on tap) and
+  cascades its whole body in on appear; Cellar spins stat numbers up from zero
+  and shows a full trophy case (locked badges + progress bars); Beer of the
+  Week crown pulses + winner shimmers + .bowCrowned fires on a new champion
+  (seeded silently first sight); Market detail got Buy/Sell trade pills with
+  optimistic pressure-bar + celebration; Scan plays the .pourLogged glass/stamp
+  before the share card; landing killed both dead grey "release in progress"
+  CTAs for a live "Get launch access" email capture. Also 0092: Explore rows
+  use style_ref (no more "Lithuanian Beers"). **NEXT (docs/23 remaining):**
+  onboarding-complete .badgeUnlocked celebration; broad tactility pass
+  (.taptPress + Haptic on SignIn/Market/Catalog/NearYou/Leaderboards rows);
+  map life (NearYou opens dead/continental); games-hub energy.
 - **Fine-tooth-comb round 1 (Claude, 2026-07-13):** 14-lens fleet audit over
   repo + live DB -> docs/22-FINE-TOOTH-COMB.md (128 findings, statuses
   maintained there). Shipped 0081: anon lockdown (PUBLIC-grant gotcha, see
