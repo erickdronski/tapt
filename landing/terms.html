@@ -1,46 +1,102 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tapt · Terms of Service</title><style>
-:root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--copper:#B4531F;--slate:#6B6459}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.65}
-.wrap{max-width:760px;margin:0 auto;padding:48px 24px 80px}
-h1{font-family:'Poppins',system-ui,sans-serif;font-size:2.1rem;letter-spacing:-.02em;margin-bottom:6px}
-h2{font-family:'Poppins',system-ui,sans-serif;font-size:1.25rem;margin:32px 0 10px}
-p,li{font-size:.98rem;color:#3d3423;margin-bottom:10px}
-ul{padding-left:22px;margin-bottom:14px}
-a{color:var(--copper)}
-.banner{background:#FFF3D6;border:1px solid rgba(180,83,31,.35);border-radius:14px;padding:14px 18px;font-size:.9rem;margin:18px 0 26px;color:#7a4a1d;font-weight:600}
-.back{display:inline-block;margin-bottom:28px;font-weight:700;text-decoration:none;color:var(--copper)}
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet"></head><body><div class="wrap">
-<a class="back" href="index.html">← Back to Tapt</a>
-<div class="banner">Draft for counsel review, this document is pending attorney review before final publication.</div>
-<h1>Tapt Terms of Service</h1>
-<p><b>Draft for counsel review. Not legal advice.</b> Complete the `<em>[, to be completed]</em>` placeholders and have a qualified attorney review before publishing.</p>
-<p><b>Last updated:</b> <em>[DATE, to be completed]</em></p>
-<h2>1. Acceptance</h2>
-<p>By using the Tapt app and services (the &quot;App&quot;), you agree to these Terms and to our Privacy Policy. If you do not agree, do not use the App.</p>
-<h2>2. Eligibility</h2>
-<p>You must be of <b>legal drinking age</b> in your location to use Tapt (21+ in the United States; 18+ or the applicable age elsewhere). By using the App you confirm that you meet this requirement.</p>
-<h2>3. Drink responsibly</h2>
-<p>Tapt is for informational and social purposes. Tapt does not sell alcohol. <b>Please drink responsibly and never drink and drive.</b> Do not use the App while operating a vehicle or machinery. Know your limits, look out for your friends, and follow all local laws about alcohol. If you or someone you know needs help, contact a local support resource such as, in the U.S., SAMHSA&#x27;s National Helpline at 1-800-662-4357.</p>
-<h2>4. Your account and content</h2>
-<p>You are responsible for your account and for the ratings, photos, and other content you post. Do not post unlawful, infringing, harassing, or misleading content. We may remove content and suspend accounts that violate these Terms, and we provide tools to report and block content and users.</p>
-<h2>5. License</h2>
-<p>We grant you a limited, personal, non-transferable license to use the App. You may not copy, scrape, reverse engineer, or build a competing dataset from the App except as permitted by law.</p>
-<h2>6. Ratings and data</h2>
-<p>Ratings and community content reflect users&#x27; opinions, not Tapt&#x27;s. We may use, reproduce, and create aggregated, de-identified insights from activity in the App as described in the Privacy Policy.</p>
-<h2>7. Assignment</h2>
-<p>We may assign these Terms and our rights and obligations, including in connection with a merger, acquisition, financing, or sale of assets, without your consent. You may not assign your rights without our consent.</p>
-<h2>8. Disclaimers</h2>
-<p>The App is provided &quot;as is&quot; without warranties of any kind. Beer information, availability, and locations may be inaccurate or out of date. We are not responsible for the conduct of any user or third party, on or off the App.</p>
-<h2>9. Limitation of liability</h2>
-<p>To the fullest extent permitted by law, Tapt is not liable for indirect, incidental, or consequential damages, or for any conduct related to alcohol consumption. Our total liability is limited to the greater of the amount you paid us (if any) or <em>[LIABILITY_CAP, to be completed]</em>.</p>
-<h2>10. Governing law &amp; disputes</h2>
-<p>These Terms are governed by the laws of <em>[GOVERNING_LAW, to be completed]</em>, without regard to conflict-of-laws rules. <em>[DISPUTE_RESOLUTION, to be completed]</em></p>
-<h2>11. Changes</h2>
-<p>We may update these Terms and will post the new version with an updated date. Continued use means you accept the changes.</p>
-<h2>12. Contact</h2>
-<p><em>[COMPANY_LEGAL_NAME, to be completed]</em> · <em>[ADDRESS, to be completed]</em> · <em>[LEGAL_EMAIL, to be completed]</em></p>
-</div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tapt Terms of Service</title>
+  <meta name="description" content="Terms for using the Tapt mobile app, partner portal, and related beer services.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--gold:#f2a900;--malt:#1a1206;--foam:#fbf6ec;--copper:#a9491c;--muted:#665f54;--line:rgba(26,18,6,.14)}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--foam);color:var(--malt);font-family:Inter,system-ui,sans-serif;line-height:1.7}
+    a{color:var(--copper)}
+    a:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:12px;background:var(--malt);color:white;padding:10px 14px;z-index:10}
+    .skip:focus{left:12px}
+    header{border-bottom:1px solid var(--line)}
+    .nav{max-width:800px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{font:800 1.35rem Poppins,system-ui;text-decoration:none;color:var(--malt)}
+    .brand span{color:var(--gold)}
+    .navlinks{display:flex;gap:18px;font-weight:600;font-size:.9rem}
+    main{max-width:800px;margin:auto;padding:54px 24px 80px}
+    h1,h2{font-family:Poppins,system-ui;line-height:1.15}
+    h1{font-size:clamp(2.2rem,7vw,3.5rem);margin:0 0 8px}
+    h2{font-size:1.25rem;margin:36px 0 10px}
+    p,li{color:#3f382e}
+    .date{color:var(--muted);font-size:.92rem;margin-bottom:32px}
+    .summary{border-left:4px solid var(--gold);padding:4px 0 4px 18px;font-size:1.05rem;max-width:65ch}
+    .contact{margin-top:42px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:8px}
+    footer{border-top:1px solid var(--line);padding:28px 24px;color:var(--muted);font-size:.85rem;text-align:center}
+    @media(max-width:560px){.navlinks{gap:12px}.navlinks a:first-child{display:none}}
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to terms</a>
+  <header>
+    <nav class="nav" aria-label="Tapt">
+      <a class="brand" href="index.html">Tapt<span>.</span></a>
+      <div class="navlinks"><a href="support.html">Support</a><a href="privacy.html">Privacy</a></div>
+    </nav>
+  </header>
+  <main id="main">
+    <h1>Terms of service</h1>
+    <p class="date"><strong>Effective and last updated:</strong> July 11, 2026</p>
+    <p class="summary">These terms cover the Tapt mobile app, Tapt for Business, hosted menus, and related services. By creating an account or using the service, you agree to them.</p>
+
+    <h2>1. Eligibility</h2>
+    <p>You must be of legal drinking age where you live to use Tapt. In the United States, you must be at least 21. You may not use Tapt where doing so is prohibited by law.</p>
+
+    <h2>2. Responsible use</h2>
+    <p>Tapt is an informational, social, and entertainment service. Tapt does not sell or deliver alcohol. Never drink and drive, use Tapt while operating a vehicle, pressure anyone to drink, or treat game results as drinking instructions. Follow local alcohol laws and your own health guidance.</p>
+
+    <h2>3. Accounts</h2>
+    <p>Provide accurate information, protect access to your account, and tell us promptly about suspected unauthorized use. You are responsible for activity under your account. We may limit or suspend access when reasonably necessary to protect users, investigate abuse, or enforce these terms.</p>
+
+    <h2>4. Community content and conduct</h2>
+    <p>You remain responsible for ratings, notes, profile information, venue content, and other material you submit. Do not post content that is unlawful, threatening, harassing, hateful, sexually explicit, deceptive, infringing, spam, or invasive of another person's privacy.</p>
+    <p>You grant Tapt a worldwide, non-exclusive, royalty-free license to host, reproduce, format, display, and distribute submitted content only as needed to operate, improve, promote, and protect Tapt. This license ends when the content is deleted, except for reasonable backups, legal retention, and content already incorporated into privacy-preserving aggregate statistics.</p>
+    <p>Use the in-app report and block controls for community safety issues. We may remove content or accounts that violate these terms.</p>
+
+    <h2>5. Beer, venue, and market information</h2>
+    <p>Beer details, prices, availability, awards, nutrition, venue hours, tap lists, maps, and community scores can be incomplete or change without notice. Verify important information with the brewer or venue. Beer Market rankings reflect eligible community activity and are not financial products, odds, or investment advice.</p>
+
+    <h2>6. Tapt for Business</h2>
+    <p>Venue representatives must have authority to claim and manage a venue. You are responsible for keeping menus, event details, prices, logos, and other business content accurate and lawful. Tapt may request verification, deny or transfer a claim, remove stale or disputed content, and preserve records needed to resolve ownership disputes.</p>
+    <p>Core menu hosting and claim tools may be offered free. Optional promotion or analytics services, if offered, will show their price and additional terms before purchase. Tapt does not guarantee impressions, visits, sales, or revenue.</p>
+
+    <h2>7. Tapt intellectual property</h2>
+    <p>Tapt, its visual identity, software, original editorial material, and service design are protected by intellectual-property laws. Except where law permits otherwise, do not copy, scrape, reverse engineer, resell, interfere with, or build a competing dataset from the service. Third-party names, labels, and source data remain the property of their respective owners and are used under applicable licenses or permissions.</p>
+
+    <h2>8. Privacy</h2>
+    <p>Our <a href="privacy.html">Privacy Policy</a> explains how Tapt handles personal information and is part of these terms.</p>
+
+    <h2>9. Service changes and termination</h2>
+    <p>Features may change, pause, or end. You can stop using Tapt and delete your account in the app. We may suspend or terminate access for a material violation, safety risk, legal requirement, or threat to the service. Sections that by their nature should survive termination will survive.</p>
+
+    <h2>10. Disclaimers</h2>
+    <p>To the fullest extent permitted by law, Tapt is provided "as is" and "as available." We disclaim implied warranties of merchantability, fitness for a particular purpose, non-infringement, and uninterrupted or error-free operation. Some jurisdictions do not allow certain disclaimers, so they may not apply to you.</p>
+
+    <h2>11. Limitation of liability</h2>
+    <p>To the fullest extent permitted by law, Tapt will not be liable for indirect, incidental, special, consequential, exemplary, or punitive damages, lost profits, lost data, or harm arising from alcohol consumption, venue conduct, community content, or reliance on service information. Any liability that cannot legally be excluded remains limited to the amount allowed by applicable law. These limits do not exclude rights that cannot be waived.</p>
+
+    <h2>12. Applicable law</h2>
+    <p>Applicable law governs these terms and any dispute. Nothing in these terms removes mandatory consumer rights or requires a remedy that local law does not permit. Before filing a formal claim, contact us so we can try to resolve the issue directly.</p>
+
+    <h2>13. Changes</h2>
+    <p>We may update these terms as Tapt changes. We will post the new effective date and provide additional notice when required. Continuing to use Tapt after an update means you accept the updated terms.</p>
+
+    <div class="contact">
+      <h2>14. Contact</h2>
+      <p>Support or legal notices: <a href="mailto:esdronski@gmail.com?subject=Tapt%20legal">esdronski@gmail.com</a>.</p>
+    </div>
+  </main>
+  <footer>Tapt - THE Beer Superapp. For legal-drinking-age adults only.</footer>
+</body>
+</html>

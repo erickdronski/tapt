@@ -6,9 +6,13 @@ import AuthenticationServices
 @MainActor
 @Observable
 final class Session {
+    private static let pendingPartnerVenueKey = "pendingPartnerVenueId"
+    private static let pendingBeerDetailKey = "pendingBeerDetailId"
+
     var user: User?
     var isLoading = true
     var authError: String?
+    var isGuest = UserDefaults.standard.bool(forKey: "guestMode")
 
     /// Hydrate the current session, then follow auth changes for the app's lifetime.
     func start() async {
@@ -28,10 +32,51 @@ final class Session {
         } catch {
             user = Supa.client.auth.currentSession?.user
         }
+        if user != nil { setGuest(false) }
         isLoading = false
         for await change in Supa.client.auth.authStateChanges {
             user = change.session?.user
+            if user != nil { setGuest(false) }
         }
+    }
+
+    /// Public catalog, map, education, and games work without an account. Writes
+    /// remain guarded by the existing authenticated RLS policies.
+    func continueAsGuest() {
+        authError = nil
+        setGuest(true)
+    }
+
+    func endGuestSession() {
+        setGuest(false)
+    }
+
+    /// Keep a scanned partner menu intact while a guest signs in. Only a valid
+    /// UUID is persisted, and it is consumed once the authenticated shell opens.
+    func deferPartnerMenu(venueId: String) {
+        guard UUID(uuidString: venueId) != nil else { return }
+        UserDefaults.standard.set(venueId, forKey: Self.pendingPartnerVenueKey)
+    }
+
+    func consumePendingPartnerMenu() -> String? {
+        guard let venueId = UserDefaults.standard.string(forKey: Self.pendingPartnerVenueKey) else {
+            return nil
+        }
+        UserDefaults.standard.removeObject(forKey: Self.pendingPartnerVenueKey)
+        return UUID(uuidString: venueId) == nil ? nil : venueId
+    }
+
+    func deferBeerDetail(beerId: String) {
+        guard UUID(uuidString: beerId) != nil else { return }
+        UserDefaults.standard.set(beerId, forKey: Self.pendingBeerDetailKey)
+    }
+
+    func consumePendingBeerDetail() -> String? {
+        guard let beerId = UserDefaults.standard.string(forKey: Self.pendingBeerDetailKey) else {
+            return nil
+        }
+        UserDefaults.standard.removeObject(forKey: Self.pendingBeerDetailKey)
+        return UUID(uuidString: beerId) == nil ? nil : beerId
     }
 
     func signInWithOAuth(_ provider: Provider) async {
@@ -112,5 +157,11 @@ final class Session {
 
     func signOut() async {
         try? await Supa.client.auth.signOut()
+        setGuest(false)
+    }
+
+    private func setGuest(_ enabled: Bool) {
+        isGuest = enabled
+        UserDefaults.standard.set(enabled, forKey: "guestMode")
     }
 }

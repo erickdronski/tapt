@@ -6,7 +6,7 @@
 <title>Tapt — THE Beer Superapp</title>
 <meta name="description" content="THE Beer Superapp. A massive beer catalog, live rankings, trending and seasonal beers by state and country, games, and a passport for every pour. Free for drinkers. Free tools for breweries, bars, pubs, and taprooms.">
 <meta property="og:title" content="Tapt — THE Beer Superapp">
-<meta property="og:description" content="THE Beer Superapp. Every beer in one app: the catalog, live rankings, trending and seasonal by state and country, games, and a passport for every pour. Free for drinkers, free tools for the bars and breweries who pour.">
+<meta property="og:description" content="THE Beer Superapp. All things beer in one app: the catalog, live rankings, trending and seasonal by state and country, games, and a passport for every pour. Free for drinkers, free tools for the bars and breweries who pour.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://taptbeer.com/og.png">
 <meta property="og:url" content="https://taptbeer.com/">
@@ -28,18 +28,20 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .skip{position:fixed;left:12px;top:10px;z-index:1000;transform:translateY(-180%);background:var(--malt);color:var(--foam);padding:10px 14px;border-radius:6px}
+  .skip:focus{transform:none}
   h1,h2,h3,.wordmark{font-family:'Poppins',system-ui,sans-serif;line-height:1.05}
   a{color:inherit}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
   section{padding:96px 0}
   .sec-kicker{display:inline-block;color:var(--copper);font-weight:700;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase}
-  h2{font-size:clamp(2rem,4.4vw,3.1rem);font-weight:800;letter-spacing:-.02em;margin:12px 0}
+  h2{font-size:clamp(2rem,4.4vw,3.1rem);font-weight:800;letter-spacing:0;margin:12px 0}
   .sec-lede{color:var(--slate);max-width:44rem;font-size:1.08rem}
 
   /* nav */
   nav{position:sticky;top:0;z-index:50;background:rgba(251,246,236,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
   .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
-  .wordmark{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+  .wordmark{font-size:1.5rem;font-weight:800;letter-spacing:0}
   .wordmark span{color:var(--gold)}
   .nav-links{display:flex;align-items:center;gap:28px}
   .nav-links a{text-decoration:none;color:var(--slate);font-weight:600;font-size:.94rem;transition:color .2s}
@@ -51,12 +53,13 @@
   .btn-dark{background:var(--malt);color:var(--foam)}
   .btn-ghost{border:2px solid rgba(26,18,6,.16);color:var(--malt);background:transparent}
   .btn-ghost:hover{border-color:var(--malt)}
+  .btn[aria-disabled="true"]{opacity:.72;cursor:default;box-shadow:none}
   @media(max-width:820px){.nav-links a:not(.btn){display:none}}
 
   /* hero */
   .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding-top:72px;padding-bottom:40px}
   .kicker{display:inline-block;background:var(--malt);color:var(--gold);font-weight:700;font-size:.76rem;letter-spacing:.14em;text-transform:uppercase;padding:7px 14px;border-radius:999px;margin-bottom:22px}
-  .hero h1{font-size:clamp(2.3rem,4vw,3.05rem);font-weight:800;letter-spacing:-.035em}
+  .hero h1{font-size:clamp(2.3rem,4vw,3.05rem);font-weight:800;letter-spacing:0}
   /* Each statement gets its own line and never breaks mid-phrase, so no orphan tail words. */
   .hero h1 span{display:block;white-space:nowrap}
   .hero h1 em{font-style:normal;color:var(--gold)}
@@ -67,7 +70,7 @@
 
   /* hero market visual */
   .market{background:var(--malt);border-radius:26px;padding:22px;color:var(--foam);box-shadow:0 30px 70px rgba(26,18,6,.32);position:relative;overflow:hidden}
-  .market::after{content:"LIVE BETA";position:absolute;top:16px;right:-30px;background:var(--copper);color:var(--foam);font-family:'Poppins';font-weight:800;font-size:.66rem;letter-spacing:.14em;padding:6px 40px;transform:rotate(38deg)}
+  .market::after{content:"FEATURE PREVIEW";position:absolute;top:16px;right:-42px;background:var(--copper);color:var(--foam);font-family:'Poppins';font-weight:800;font-size:.62rem;letter-spacing:.1em;padding:6px 44px;transform:rotate(38deg)}
   .market h4{font-family:'Poppins';font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
   .market .sub{font-size:.78rem;color:rgba(251,246,236,.6);margin-bottom:16px}
   .row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;background:rgba(251,246,236,.05);margin-bottom:9px}
@@ -95,7 +98,7 @@
   .stats{background:var(--malt);color:var(--foam)}
   .stats .wrap{padding:44px 24px}
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;text-align:center}
-  .stat b{display:block;font-family:'Poppins';font-size:1.9rem;line-height:1.12;font-weight:800;color:var(--gold);letter-spacing:-.02em}
+  .stat b{display:block;font-family:'Poppins';font-size:1.9rem;line-height:1.12;font-weight:800;color:var(--gold);letter-spacing:0}
   .stat span{font-size:.86rem;color:rgba(251,246,236,.72)}
   @media(max-width:720px){.stats-grid{grid-template-columns:repeat(2,1fr);gap:28px}}
 
@@ -103,7 +106,7 @@
   .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:44px}
   .tile{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;position:relative;overflow:hidden}
   .tile .ic{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:1.4rem;margin-bottom:16px}
-  .tile h3{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+  .tile h3{font-size:1.35rem;font-weight:700;letter-spacing:0}
   .tile p{color:var(--slate);font-size:.97rem;margin-top:8px}
   .tile.big{grid-column:span 4}
   .tile.small{grid-column:span 2}
@@ -131,7 +134,7 @@
   .plan.them{background:#fff;border:1px solid var(--line);color:var(--slate)}
   .plan.us{background:var(--malt);color:var(--foam);box-shadow:0 28px 66px rgba(26,18,6,.3)}
   .plan h3{font-size:1.2rem;font-weight:700}
-  .plan .price{font-family:'Poppins';font-weight:800;font-size:2.1rem;margin:6px 0 20px;letter-spacing:-.02em}
+  .plan .price{font-family:'Poppins';font-weight:800;font-size:2.1rem;margin:6px 0 20px;letter-spacing:0}
   .plan.us .price{color:var(--gold)}
   .plan ul{list-style:none}
   .plan li{padding:8px 0;font-size:.98rem;display:flex;gap:10px}
@@ -198,6 +201,7 @@
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <nav>
   <div class="nav-in">
@@ -212,14 +216,15 @@
   </div>
 </nav>
 
+<main id="main">
 <div class="wrap">
   <div class="hero">
     <div>
-      <span class="kicker">THE Beer Superapp</span>
-      <h1><span>All of beer.</span><span>One <em>app</em>.</span></h1>
-      <p class="lede">The catalog, the rankings, what's trending and in season by state and country, games, and a passport for every pour. For drinkers, and for the bars and breweries who pour.</p>
+      <span class="kicker">FOR DRINKERS + BEER BUSINESSES</span>
+      <h1><span>The Beer</span><span><em>Superapp</em>.</span></h1>
+      <p class="lede">All of beer, one app: discover, rank, learn, play, find local pours, and build your Beer Passport.</p>
       <div class="hero-ctas" id="get">
-        <a class="btn btn-dark" href="#get">Download for iOS</a>
+        <span class="btn btn-dark" aria-disabled="true">App Store release in progress</span>
         <a class="btn btn-ghost" href="#business">For breweries &amp; bars</a>
       </div>
       <p class="fineprint"><b>Free for drinkers, always.</b> No ads that bury the honest boards.</p>
@@ -231,7 +236,7 @@
       <div class="row"><span class="rank">2</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#E3A72B"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#FBF6EC" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Pilsner Urquell</b><span>Czech Pilsner · Czechia</span></div><span class="mv up">▲</span></div>
       <div class="row"><span class="rank">3</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#3A2414"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#EFE6D2" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Guinness Draught</b><span>Irish Stout · Ireland</span></div><span class="mv down">▼</span></div>
       <div class="row"><span class="rank">4</span><span class="mark"><svg viewBox="68 54 264 442" aria-hidden="true"><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#C9812B"/><path d="M88 152 C78 118 96 96 120 92 C118 74 150 66 176 76 C190 60 220 62 234 78 C258 66 288 76 300 98 C318 100 316 128 312 152 C260 158 140 158 88 152 Z" fill="#FBF6EC" stroke="#130A02" stroke-width="16" stroke-linejoin="round"/><path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="18" stroke-linejoin="round"/></svg></span><div class="nm"><b>Sierra Nevada Pale Ale</b><span>American Pale Ale · USA</span></div><span class="mv up">▲</span></div>
-      <p class="foot">Boards stay honestly empty until the community votes. This is the shape of the feature, not invented activity.</p>
+      <p class="foot">Illustrative feature preview. In-app standing uses real season, award, catalog, vote, and pour signals.</p>
     </div>
   </div>
 </div>
@@ -239,7 +244,7 @@
 <div class="stats">
   <div class="wrap">
     <div class="stats-grid">
-      <div class="stat reveal"><b>Every beer</b><span>scan it, score it</span></div>
+      <div class="stat reveal"><b>9.5K+ beers</b><span>normalized catalog</span></div>
       <div class="stat reveal d1"><b>Worldwide</b><span>breweries and beers</span></div>
       <div class="stat reveal d2"><b>On the map</b><span>taprooms and bars</span></div>
       <div class="stat reveal d3"><b>Cited</b><span>real BJCP style science</span></div>
@@ -274,7 +279,7 @@
       <div class="phone"><img src="img/screens/02-analysis.png" alt="Beer momentum analysis" loading="lazy"><div class="cap"><b>Why it's moving</b><span>Momentum, at a glance</span></div></div>
       <div class="phone"><img src="img/screens/03-home.png" alt="Tapt home" loading="lazy"><div class="cap"><b>Explore</b><span>Your home for beer</span></div></div>
       <div class="phone"><img src="img/screens/04-taste.png" alt="Taste and feel breakdown" loading="lazy"><div class="cap"><b>Taste &amp; Feel</b><span>What's in your glass</span></div></div>
-      <div class="phone"><img src="img/screens/05-discover.png" alt="Discover beers" loading="lazy"><div class="cap"><b>Discover</b><span>Browse every beer</span></div></div>
+      <div class="phone"><img src="img/screens/05-discover.png" alt="Discover beers" loading="lazy"><div class="cap"><b>Discover</b><span>Browse the catalog</span></div></div>
     </div>
     <p class="screens-hint">Swipe to look around &rarr;</p>
   </div>
@@ -290,7 +295,7 @@
       <div class="tile big dark reveal">
         <div class="ic" style="background:var(--gold);color:var(--malt)">📈</div>
         <h3>The Beer Market</h3>
-        <p>Every beer is a ticker. Upvote what deserves it, downvote what does not, and watch the rankings move with real votes and check-ins from drinkers worldwide. Beer of the Week gets crowned every Monday. No pay to bury, no fake hype, ever.</p>
+        <p>Catalog beers move like tickers. Upvote what deserves it, downvote what does not, and watch the rankings move with real votes and check-ins from drinkers worldwide. Beer of the Week gets crowned every Monday. No pay to bury, no fake hype, ever.</p>
       </div>
       <div class="tile small gold reveal d1">
         <div class="ic" style="background:var(--malt);color:var(--gold)">📷</div>
@@ -415,11 +420,12 @@
   <div class="wrap">
     <h2>Pour with us.</h2>
     <p>Drinkers download free. Breweries, bars, pubs, and taprooms claim a venue in minutes. Distributors and press, come say hello.</p>
-    <a class="btn btn-dark" href="#get">Download for iOS</a>
-    <a class="btn btn-dark" href="mailto:hello@taptbeer.com?subject=Tapt%20partnership">Talk partnerships</a>
+    <span class="btn btn-dark" aria-disabled="true">App Store release in progress</span>
+    <a class="btn btn-dark" href="mailto:esdronski@gmail.com?subject=Tapt%20partnership">Talk partnerships</a>
   </div>
 </section>
 
+</main>
 <footer>
   <div class="wrap">
     <div class="foot-grid">
@@ -432,7 +438,7 @@
         <a href="portal.html">For business</a>
         <a href="privacy.html">Privacy Policy</a>
         <a href="terms.html">Terms of Service</a>
-        <a href="mailto:hello@taptbeer.com?subject=Tapt%20support">Contact &amp; support</a>
+        <a href="support.html">Contact &amp; support</a>
       </div>
     </div>
     <p class="age">Tapt is for people of legal drinking age. Enjoy responsibly, never drink and drive. Tapt does not sell alcohol. © Tapt 2026.</p>

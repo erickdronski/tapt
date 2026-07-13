@@ -8,6 +8,8 @@ struct TonightBeer: Identifiable, Decodable, Sendable {
     let beerName: String
     let breweryName: String?
     let style: String?
+    let imageUrl: String?
+    let isNaLow: Bool
     let sourceLabel: String
     let heatScore: Int
     let updatedAt: String?
@@ -22,6 +24,8 @@ struct TonightBeer: Identifiable, Decodable, Sendable {
         case beerId = "beer_id"
         case beerName = "beer_name"
         case breweryName = "brewery_name"
+        case imageUrl = "image_url"
+        case isNaLow = "is_na_low"
         case style
         case sourceLabel = "source_label"
         case heatScore = "heat_score"
@@ -73,14 +77,52 @@ struct TasteProfilePoint: Identifiable, Decodable, Sendable {
 }
 
 enum LiveBeerService {
-    static func tonight(region: String? = nil, limit: Int = 20) async throws -> [TonightBeer] {
+    static func tonight(
+        region: String? = nil,
+        limit: Int = 20,
+        naOnly: Bool = false
+    ) async throws -> [TonightBeer] {
         struct Params: Encodable {
             let p_geo_bucket: String?
             let p_limit: Int
+            let p_na_only: Bool
         }
 
         return try await Supa.client
-            .rpc("tonight_feed", params: Params(p_geo_bucket: region, p_limit: limit))
+            .rpc(
+                "tonight_feed_v2",
+                params: Params(p_geo_bucket: region, p_limit: limit, p_na_only: naOnly)
+            )
+            .execute()
+            .value
+    }
+
+    static func tonightNear(
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Int = 40_000,
+        limit: Int = 20,
+        naOnly: Bool = false
+    ) async throws -> [TonightBeer] {
+        struct Params: Encodable {
+            let p_lat: Double
+            let p_lon: Double
+            let p_radius_m: Int
+            let p_limit: Int
+            let p_na_only: Bool
+        }
+
+        return try await Supa.client
+            .rpc(
+                "tonight_feed_near",
+                params: Params(
+                    p_lat: latitude,
+                    p_lon: longitude,
+                    p_radius_m: radiusMeters,
+                    p_limit: limit,
+                    p_na_only: naOnly
+                )
+            )
             .execute()
             .value
     }

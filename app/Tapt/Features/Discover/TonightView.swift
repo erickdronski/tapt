@@ -3,7 +3,10 @@ import SwiftUI
 
 struct TonightView: View {
     @Environment(Session.self) private var session
+    @AppStorage("locationConsent") private var locationConsent = false
+    @AppStorage("noLowDefault") private var noLowDefault = false
     @State private var selectedTab = TonightTab.tonight
+    @State private var location = LocationManager()
     @State private var tonight: [TonightBeer] = []
     @State private var pours: [SocialPour] = []
     @State private var tasteProfile: [TasteProfilePoint] = []
@@ -12,6 +15,8 @@ struct TonightView: View {
     @State private var reportedCheckins: Set<String> = []
     @State private var blockedActors: Set<String> = []
     @State private var openProfile: ProfileRef?
+    @State private var openMenuVenueId: String?
+    @State private var localSignal = false
 
     private var topBeer: TonightBeer? { tonight.first }
     private var maxTasteCount: Int { max(tasteProfile.map(\.pourCount).max() ?? 1, 1) }
@@ -38,11 +43,34 @@ struct TonightView: View {
         .background(Brand.background)
         .navigationTitle("Tonight")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await loadAll() }
+        .task {
+            if locationConsent { location.request() }
+            await loadAll()
+        }
         .refreshable { await loadAll() }
         .sheet(item: $openProfile) { ref in
             PublicProfileView(userId: ref.id, initialName: ref.name)
                 .presentationDetents([.medium, .large])
+        }
+        .sheet(item: $openMenuVenueId) { venueId in
+            PartnerMenuSheet(venueId: venueId)
+                .presentationDetents([.medium, .large])
+        }
+        .onChange(of: location.location) { _, newLocation in
+            guard newLocation != nil else { return }
+            Task { await loadTonight() }
+        }
+        .onChange(of: locationConsent) { _, enabled in
+            if enabled {
+                location.request()
+            } else {
+                location.stop()
+                localSignal = false
+            }
+            Task { await loadTonight() }
+        }
+        .onChange(of: noLowDefault) { _, _ in
+            Task { await loadTonight() }
         }
         .overlay {
             if loading && tonight.isEmpty && pours.isEmpty {
@@ -57,11 +85,11 @@ struct TonightView: View {
         TaptHeroPanel(
             title: topBeer?.beerName ?? "What is good tonight",
             subtitle: topBeer.map { beer in
-                let place = beer.venueName?.isEmpty == false ? beer.venueName! : "the live board"
-                return "\(beer.breweryName ?? "A brewery") is showing heat from \(place)."
+                let place = beer.venueName?.isEmpty == false ? beer.venueName! : "the global Beer Market"
+                return "\(beer.breweryName ?? "A brewery") is showing signal from \(place)."
             } ?? "Live tap-list scans, market heat, and your circle's pours come together here.",
             metric: topBeer.map { "\($0.heatScore)" } ?? "LIVE",
-            caption: topBeer?.sourceLabel.capitalized ?? "Tonight feed",
+            caption: localSignal ? "Nearby live signal" : "Global market signal",
             icon: "sparkles",
             tint: Brand.gold
         )
@@ -93,12 +121,17 @@ struct TonightView: View {
 
     private var tonightSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader("What is good here", "Tap-list intelligence plus market heat")
+            sectionHeader(
+                localSignal ? "What is pouring nearby" : "Across Tapt tonight",
+                localSignal
+                    ? "Fresh partner tap lists near you"
+                    : "Global Beer Market signal; local taps appear as partners publish"
+            )
             if tonight.isEmpty {
                 TaptEmptyState(
                     icon: "mug.fill",
                     title: "No live beer heat yet",
-                    message: "As tap lists and check-ins build up, this becomes the quick answer for what to order tonight.",
+                    message: "No current partner tap lists or Beer Market signal could be loaded.",
                     actionTitle: nil
                 )
             } else {
@@ -171,12 +204,30 @@ struct TonightView: View {
         }
     }
 
+    @ViewBuilder
     private func tonightRow(rank: Int, beer: TonightBeer) -> some View {
+        if let beerId = beer.beerId {
+            NavigationLink { BeerDetailView(beerId: beerId) } label: {
+                tonightRowContent(rank: rank, beer: beer)
+            }
+            .buttonStyle(.plain)
+        } else if let venueId = beer.venueId {
+            Button { openMenuVenueId = venueId } label: {
+                tonightRowContent(rank: rank, beer: beer)
+            }
+            .buttonStyle(.plain)
+        } else {
+            tonightRowContent(rank: rank, beer: beer)
+        }
+    }
+
+    private func tonightRowContent(rank: Int, beer: TonightBeer) -> some View {
         HStack(spacing: 12) {
             Text("\(rank)")
                 .font(.system(.headline, design: .monospaced).weight(.bold))
                 .foregroundStyle(Brand.muted)
                 .frame(width: 26)
+            BeerThumb(imageUrl: beer.imageUrl, size: 46)
             VStack(alignment: .leading, spacing: 4) {
                 Text(beer.beerName)
                     .font(.system(.headline, design: .rounded).weight(.bold))
@@ -199,6 +250,9 @@ struct TonightView: View {
                 Text(beer.sourceLabel)
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(Brand.muted)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(Brand.muted.opacity(0.6))
             }
         }
         .padding(13)
@@ -320,12 +374,13 @@ struct TonightView: View {
     }
 
     private func status(_ text: String) -> some View {
-        Label(text, systemImage: "checkmark.seal.fill")
+        let failed = text.localizedCaseInsensitiveContains("could not")
+        return Label(text, systemImage: failed ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
             .font(.caption.weight(.semibold))
-            .foregroundStyle(Brand.hop)
+            .foregroundStyle(failed ? Brand.copper : Brand.hop)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
-            .background(Brand.hop.opacity(0.12), in: Capsule())
+            .background((failed ? Brand.copper : Brand.hop).opacity(0.12), in: Capsule())
             .padding(.horizontal)
     }
 
@@ -346,7 +401,27 @@ struct TonightView: View {
     }
 
     private func loadTonight() async {
-        tonight = (try? await LiveBeerService.tonight(limit: 24)) ?? []
+        do {
+            if locationConsent, let coordinate = location.location?.coordinate {
+                let nearby = try await LiveBeerService.tonightNear(
+                    latitude: coordinate.latitude,
+                    longitude: coordinate.longitude,
+                    limit: 24,
+                    naOnly: noLowDefault
+                )
+                if !nearby.isEmpty {
+                    tonight = nearby
+                    localSignal = true
+                    return
+                }
+            }
+            tonight = try await LiveBeerService.tonight(limit: 24, naOnly: noLowDefault)
+            localSignal = false
+        } catch {
+            tonight = []
+            localSignal = false
+            message = "Tonight's beer signal could not be loaded."
+        }
     }
 
     private func loadSocial() async {
@@ -354,7 +429,12 @@ struct TonightView: View {
             pours = []
             return
         }
-        pours = (try? await LiveBeerService.socialPours(limit: 30)) ?? []
+        do {
+            pours = try await LiveBeerService.socialPours(limit: 30)
+        } catch {
+            pours = []
+            message = "Your social feed could not be loaded."
+        }
     }
 
     private func loadTaste() async {
@@ -362,7 +442,12 @@ struct TonightView: View {
             tasteProfile = []
             return
         }
-        tasteProfile = (try? await LiveBeerService.tasteProfile(userId: userId)) ?? []
+        do {
+            tasteProfile = try await LiveBeerService.tasteProfile(userId: userId)
+        } catch {
+            tasteProfile = []
+            message = "Your taste graph could not be loaded."
+        }
     }
 
     private func openActor(_ pour: SocialPour) {

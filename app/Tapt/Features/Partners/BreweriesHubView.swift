@@ -120,7 +120,7 @@ struct BreweriesHubView: View {
                     title: "For breweries & bars",
                     subtitle: "Free menu, QR, map profile, and local analytics. Pay only to reach more drinkers nearby.",
                     metric: "FREE",
-                    caption: "Breweries fund the party, drinkers never pay",
+                    caption: "Local businesses fund reach, drinkers never pay",
                     icon: "storefront.fill",
                     tint: Brand.copper
                 )
@@ -158,7 +158,7 @@ struct BreweriesHubView: View {
 
                 FeaturedPartnersRail()
 
-                Text("Menus stay honest: tap lists expire after 14 days so a stale list never masquerades as live. Every edit is gated by an approved claim, so nobody can touch a venue they don't own.")
+                Text("Partner menus stay live until the venue replaces them. Crowd sightings expire quickly. Every edit requires an approved claim, so nobody can change a venue they do not own.")
                     .font(.footnote)
                     .foregroundStyle(Brand.muted)
                     .padding(.horizontal)
@@ -277,7 +277,7 @@ struct ClaimVenueView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Search for your venue by name or city. We've already mapped 8,700+ breweries, bars, and taprooms.")
+                Text("Search for your venue by name or city. We've already mapped 8,600+ breweries, bars, and taprooms.")
                     .font(.subheadline).foregroundStyle(Brand.muted)
 
                 HStack(spacing: 10) {

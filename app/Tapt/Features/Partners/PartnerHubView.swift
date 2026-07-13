@@ -8,6 +8,8 @@ import SwiftUI
 struct FeaturedPartnersRail: View {
     @State private var partners: [FeaturedPartner] = []
     @State private var loaded = false
+    @State private var loadError: String?
+    @State private var impressedPartnerIDs: Set<String> = []
     @AppStorage("homeRegion") private var homeRegion = "Global"
 
     var body: some View {
@@ -24,7 +26,23 @@ struct FeaturedPartnersRail: View {
             }
             .padding(.horizontal)
 
-            if partners.isEmpty {
+            if !loaded {
+                TaptSkeletonList(rows: 1)
+                    .frame(height: 168)
+                    .padding(.horizontal)
+            } else if let loadError {
+                HStack(spacing: 12) {
+                    Image(systemName: "wifi.exclamationmark").foregroundStyle(Brand.copper)
+                    Text(loadError).font(.caption).foregroundStyle(Brand.muted)
+                    Spacer(minLength: 0)
+                    Button("Retry") { Task { await load() } }
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Brand.malt)
+                }
+                .padding(14)
+                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                .padding(.horizontal)
+            } else if partners.isEmpty {
                 // No partners yet (pre-launch) -- show one intentional, full-width
                 // invite instead of a lone placeholder card floating in a scroll.
                 NavigationLink { PartnerInquiryView() } label: { emptyInvite }
@@ -47,13 +65,7 @@ struct FeaturedPartnersRail: View {
         }
         .task {
             guard !loaded else { return }
-            loaded = true
-            let region = homeRegion.isEmpty ? nil : homeRegion
-            partners = (try? await PartnerService.featured(region: region)) ?? []
-            // Log an impression per card shown so a partner can measure their reach.
-            for p in partners {
-                await PartnerService.logFeatured(id: p.id, event: "impression", region: region)
-            }
+            await load()
         }
     }
 
@@ -103,6 +115,28 @@ struct FeaturedPartnersRail: View {
         .frame(width: 220, height: 168, alignment: .topLeading)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.gold.opacity(0.3)))
+        .onAppear { recordImpression(partner) }
+    }
+
+    @MainActor
+    private func load() async {
+        loaded = false
+        loadError = nil
+        let region = homeRegion.isEmpty ? nil : homeRegion
+        do {
+            partners = try await PartnerService.featured(region: region)
+            loadError = nil
+        } catch {
+            partners = []
+            loadError = "Featured spots could not be loaded."
+        }
+        loaded = true
+    }
+
+    private func recordImpression(_ partner: FeaturedPartner) {
+        guard impressedPartnerIDs.insert(partner.id).inserted else { return }
+        let region = homeRegion.isEmpty ? nil : homeRegion
+        Task { await PartnerService.logFeatured(id: partner.id, event: "impression", region: region) }
     }
 
     private var inviteCard: some View {
@@ -184,7 +218,7 @@ struct PartnerInquiryView: View {
                     title: "Partner with Tapt",
                     subtitle: "Free profile. Featured placement puts your taps and events in front of nearby drinkers.",
                     metric: "🤝",
-                    caption: "Breweries fund the party, drinkers never pay",
+                    caption: "Local businesses fund reach, drinkers never pay",
                     icon: "storefront.fill",
                     tint: Brand.hop
                 )

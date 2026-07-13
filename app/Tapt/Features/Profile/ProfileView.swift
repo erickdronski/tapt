@@ -22,7 +22,7 @@ struct ProfileView: View {
 
     private var displayName: String {
         if let name = session.user?.userMetadata["full_name"]?.stringValue, !name.isEmpty { return name }
-        return session.user?.email ?? "Beer fan"
+        return session.user?.email ?? "Guest explorer"
     }
     private var email: String { session.user?.email ?? "" }
     private var initial: String { String(displayName.first ?? "T").uppercased() }
@@ -46,6 +46,20 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.vertical, 6)
+                }
+
+                if session.user == nil {
+                    Section {
+                        Button {
+                            session.endGuestSession()
+                        } label: {
+                            Label("Sign in or create an account", systemImage: "person.crop.circle.badge.plus")
+                                .font(.headline)
+                                .foregroundStyle(Brand.malt)
+                        }
+                    } footer: {
+                        Text("Sign in to log pours, vote, follow friends, save privacy choices, and build your Passport.")
+                    }
                 }
 
                 if !myActivity.isEmpty {
@@ -111,20 +125,30 @@ struct ProfileView: View {
                     Text("Beer-geek mode swaps in the lexicon: Cellar, Tick a Pour, Whales, Haul.")
                 }
 
-                Section {
-                    Toggle("Nearby beer spots", isOn: $locationConsent)
-                    Toggle("Anonymous trend reports", isOn: $aggregateConsent)
-                    Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
-                    Toggle("Public social passport", isOn: $socialVisible)
-                    if let privacyError {
-                        Label(privacyError, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
+                if session.user != nil {
+                    Section {
+                        Toggle("Nearby beer spots", isOn: $locationConsent)
+                        Toggle("Anonymous trend reports", isOn: $aggregateConsent)
+                        Toggle("Partner insight aggregates", isOn: $dataSaleConsent)
+                        Toggle("Public social passport", isOn: $socialVisible)
+                        if let privacyError {
+                            Label(privacyError, systemImage: "exclamationmark.triangle.fill")
+                                .font(.footnote)
+                                .foregroundStyle(.red)
+                        }
+                    } header: {
+                        Text("Privacy Choices")
+                    } footer: {
+                        Text("Optional sharing starts off. These choices are saved to your account and can be changed any time.")
                     }
-                } header: {
-                    Text("Privacy Choices")
-                } footer: {
-                    Text("Optional sharing starts off. These choices are saved to your account and can be changed any time.")
+                } else {
+                    Section {
+                        Toggle("Nearby beer spots", isOn: $locationConsent)
+                    } header: {
+                        Text("Location")
+                    } footer: {
+                        Text("Location stays optional and is used to find real beer spots near you.")
+                    }
                 }
 
                 Section {
@@ -159,20 +183,23 @@ struct ProfileView: View {
 
                 Section("About") {
                     LabeledContent("Version", value: AppInfo.version)
+                    Link("Support", destination: URL(string: AppLinks.support)!)
                     Link("Privacy Policy", destination: URL(string: AppLinks.privacy)!)
                     Link("Terms of Service", destination: URL(string: AppLinks.terms)!)
                 }
 
-                Section {
-                    Button("Sign out", role: .destructive) {
-                        Task { await session.signOut() }
+                if session.user != nil {
+                    Section {
+                        Button("Sign out", role: .destructive) {
+                            Task { await session.signOut() }
+                        }
+                        Button(role: .destructive) {
+                            showDeleteConfirmation = true
+                        } label: {
+                            Label(deleting ? "Deleting account..." : "Delete account", systemImage: "trash.fill")
+                        }
+                        .disabled(deleting)
                     }
-                    Button(role: .destructive) {
-                        showDeleteConfirmation = true
-                    } label: {
-                        Label(deleting ? "Deleting account..." : "Delete account", systemImage: "trash.fill")
-                    }
-                    .disabled(deleting)
                 }
 
                 if deletionError != nil {

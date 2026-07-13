@@ -99,6 +99,24 @@ private struct GameTile: View {
     }
 }
 
+private struct SeededRandomNumberGenerator: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: String) {
+        var hash: UInt64 = 1_469_598_103_934_665_603
+        for byte in seed.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 1_099_511_628_211
+        }
+        state = hash
+    }
+
+    mutating func next() -> UInt64 {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return state
+    }
+}
+
 // MARK: - Trivia (playable, mixed topics)
 struct TriviaGame: View {
     let title: String
@@ -119,7 +137,11 @@ struct TriviaGame: View {
         self.questionLimit = questionLimit
         _category = State(initialValue: category)
         if let category {
-            _order = State(initialValue: Self.pickQuestions(limit: questionLimit, category: category))
+            _order = State(initialValue: Self.pickQuestions(
+                limit: questionLimit,
+                category: category,
+                seed: title == "Daily 5" ? Self.dailySeed(category: category) : nil
+            ))
         }
     }
 
@@ -281,33 +303,35 @@ struct TriviaGame: View {
     }
 
     private func restart() {
-        order = Self.pickQuestions(limit: questionLimit, category: category ?? .mixed)
+        let selectedCategory = category ?? .mixed
+        order = Self.pickQuestions(
+            limit: questionLimit,
+            category: selectedCategory,
+            seed: title == "Daily 5" ? Self.dailySeed(category: selectedCategory) : nil
+        )
         index = 0; selected = nil; score = 0; streak = 0; finished = false
     }
 
-    private static func pickQuestions(limit: Int?, category: TriviaCategory) -> [TriviaQuestion] {
-        guard let limit else { return TriviaData.pool(category).shuffled() }
-        // "Daily 5" must actually be daily: seed the pick from the UTC date so
-        // everyone gets the SAME five questions each day (honest name, shared
-        // water-cooler set), rolling over at midnight UTC.
-        var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC") ?? .current
-        let c = cal.dateComponents([.year, .month, .day], from: Date())
-        var rng = SplitMix64(seed: UInt64((c.year ?? 0) * 10_000 + (c.month ?? 0) * 100 + (c.day ?? 0)))
-        let shuffled = TriviaData.pool(category).shuffled(using: &rng)
+    private static func pickQuestions(
+        limit: Int?,
+        category: TriviaCategory,
+        seed: String? = nil
+    ) -> [TriviaQuestion] {
+        let shuffled: [TriviaQuestion]
+        if let seed {
+            var generator = SeededRandomNumberGenerator(seed: seed)
+            shuffled = TriviaData.pool(category).shuffled(using: &generator)
+        } else {
+            shuffled = TriviaData.pool(category).shuffled()
+        }
+        guard let limit else { return shuffled }
         return Array(shuffled.prefix(max(1, min(limit, shuffled.count))))
     }
-}
 
-/// Tiny deterministic RNG for the daily-question seed.
-private struct SplitMix64: RandomNumberGenerator {
-    private var state: UInt64
-    init(seed: UInt64) { state = seed &+ 0x9E3779B97F4A7C15 }
-    mutating func next() -> UInt64 {
-        state = state &+ 0x9E3779B97F4A7C15
-        var z = state
-        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
-        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
-        return z ^ (z >> 31)
+    private static func dailySeed(category: TriviaCategory) -> String {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+        let components = calendar.dateComponents([.year, .month, .day], from: Date())
+        return "\(components.year ?? 0)-\(components.month ?? 0)-\(components.day ?? 0)-\(category.rawValue)"
     }
 }

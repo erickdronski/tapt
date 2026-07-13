@@ -22,12 +22,7 @@ struct ExploreView: View {
 
     private var visibleBeers: [TrendedBeer] {
         let base: [TrendedBeer] = noLowDefault
-            ? beers.filter { beer in
-                beer.style.localizedCaseInsensitiveContains("low")
-                || beer.style.localizedCaseInsensitiveContains("non")
-                || beer.name.localizedCaseInsensitiveContains("low")
-                || beer.name.localizedCaseInsensitiveContains("non")
-            }
+            ? beers.filter(\.isNaLow)
             : beers
         // The catalog has multiple SKUs per beer -- collapse to one row per name.
         var seen = Set<String>()
@@ -76,7 +71,13 @@ struct ExploreView: View {
             .task(id: region) { await load() }
             .task { await loadGuides() }
             .task { await detectHomeState() }
-            .task { ticker = (try? await MarketService.feed(sort: .active, limit: 18)) ?? [] }
+            .task(id: noLowDefault) {
+                ticker = (try? await MarketService.feed(
+                    sort: .active,
+                    limit: 18,
+                    naOnly: noLowDefault
+                )) ?? []
+            }
             .sheet(item: $tickerBeer) { b in
                 NavigationStack { BeerDetailView(beerId: b.beerId) }
             }
@@ -147,7 +148,7 @@ struct ExploreView: View {
         NavigationLink { CatalogView() } label: {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Brand.muted)
-                Text("Search every beer, brewery, style").foregroundStyle(Brand.muted)
+                Text("Search beers, breweries, and styles").foregroundStyle(Brand.muted)
                 Spacer(minLength: 0)
                 Image(systemName: "books.vertical.fill").foregroundStyle(Brand.gold)
             }
@@ -468,21 +469,25 @@ struct ExploreView: View {
 
     private func vote(_ b: TrendedBeer, _ v: Int) {
         Haptic.tap()
-        let newValue = (myVotes[b.id] == v) ? nil : v
+        let previousValue = myVotes[b.id]
+        let newValue = (previousValue == v) ? nil : v
         myVotes[b.id] = newValue
         guard let uid = session.user?.id else {
-            feedNote = "Sign-in expired, vote not saved. Sign out and back in."
+            feedNote = "Sign in from You to cast a Beer Market vote."
             myVotes[b.id] = nil
             return
         }
-        guard let value = newValue else { return }
         Task {
             do {
-                try await BeerService.vote(beerId: b.id, userId: uid, value: value)
+                if let value = newValue {
+                    try await BeerService.vote(beerId: b.id, userId: uid, value: value)
+                } else {
+                    try await BeerService.unvote(beerId: b.id, userId: uid)
+                }
                 await load()   // pull the recomputed market so the vote visibly counts
             } catch {
                 await MainActor.run {
-                    myVotes[b.id] = nil
+                    myVotes[b.id] = previousValue
                     feedNote = "Vote didn't save: \(error.localizedDescription)"
                 }
             }

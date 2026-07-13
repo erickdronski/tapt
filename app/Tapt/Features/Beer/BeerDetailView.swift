@@ -15,6 +15,7 @@ struct BeerDetailView: View {
     @State private var note = ""
     @State private var savedNote = ""
     @State private var savingNote = false
+    @State private var showLogPour = false
 
     var body: some View {
         ScrollView {
@@ -22,7 +23,12 @@ struct BeerDetailView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     header(d)
                     communityBar(d)
-                    noteCard(d)
+                    logPourButton(d)
+                    if session.user != nil {
+                        noteCard(d)
+                    } else {
+                        signInCard
+                    }
                     if !d.awards.isEmpty { awardsCard(d.awards) }
                     if d.styleName != nil { styleScience(d) }
                     if !d.sensory.isEmpty || d.styleFlavorNotes != nil { tasteCard(d) }
@@ -54,6 +60,11 @@ struct BeerDetailView: View {
         .navigationTitle(detail?.name ?? "Beer")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
+        .sheet(isPresented: $showLogPour) {
+            if let detail {
+                LogPourView(initialBeer: beerPick(detail))
+            }
+        }
     }
 
     // MARK: - Header
@@ -153,10 +164,43 @@ struct BeerDetailView: View {
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
     }
 
+    private func logPourButton(_ d: BeerDetail) -> some View {
+        Button {
+            guard session.user != nil else {
+                session.deferBeerDetail(beerId: d.id)
+                session.endGuestSession()
+                return
+            }
+            showLogPour = true
+        } label: {
+            Label("Log this pour", systemImage: "plus.circle.fill")
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(Brand.malt)
+        }
+        .buttonStyle(.taptPress)
+    }
+
+    private func beerPick(_ d: BeerDetail) -> BeerPick {
+        BeerPick(
+            id: d.id,
+            name: d.name,
+            style: d.style,
+            abv: d.abv,
+            breweryName: d.breweryName ?? "",
+            country: d.breweryCountry ?? ""
+        )
+    }
+
     private func voteButton(_ d: BeerDetail, _ value: Int, _ icon: String, _ color: Color, count: Int) -> some View {
         let active = myVote == value
         return Button {
-            guard let uid = session.user?.id else { return }
+            guard let uid = session.user?.id else {
+                session.endGuestSession()
+                return
+            }
             let previous = myVote
             let newValue = active ? nil : value
             if newValue != nil { Haptic.firm() } else { Haptic.tap() }
@@ -190,6 +234,34 @@ struct BeerDetailView: View {
         .buttonStyle(.plain)
         .scaleEffect(active ? 1.06 : 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.55), value: active)
+    }
+
+    private var signInCard: some View {
+        Button {
+            session.endGuestSession()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.title2)
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 46, height: 46)
+                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Save your take")
+                        .font(.system(.headline, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                    Text("Sign in to vote, add a private note, and build your Cellar.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
+            }
+            .padding(14)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Awards (verified, cited)
@@ -519,9 +591,9 @@ struct BeerDetailView: View {
                             .frame(width: 42, height: 42)
                             .background(Brand.hop, in: RoundedRectangle(cornerRadius: 11))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Where you'll find it")
+                            Text("Explore its home region")
                                 .font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
-                            Text("Home turf \(country), \(d.venuesInCountry) beer spots there on the Tapt map")
+                            Text("\(d.venuesInCountry) beer spots across \(country) are mapped in Tapt")
                                 .font(.caption).foregroundStyle(Brand.muted)
                         }
                         Spacer()

@@ -2,7 +2,10 @@ import SwiftUI
 
 /// The tab shell. Beer-culture labels, brand tint.
 struct RootView: View {
+    @Environment(Session.self) private var session
     @State private var selection = 0
+    @State private var pendingPartnerVenueId: String?
+    @State private var pendingBeerDetailId: String?
 
     var body: some View {
         TabView(selection: $selection) {
@@ -28,7 +31,22 @@ struct RootView: View {
             if ProcessInfo.processInfo.environment["TAPT_SHARE_PREVIEW"] == "1" { showSharePreview = true }
             if ProcessInfo.processInfo.environment["TAPT_BEER_PREVIEW"] == "1" { showBeerPreview = true }
             if ProcessInfo.processInfo.environment["TAPT_GAME_PREVIEW"] == "1" { showGamePreview = true }
+            if ProcessInfo.processInfo.environment["TAPT_CATALOG_PREVIEW"] == "1" { showCatalogPreview = true }
+            if ProcessInfo.processInfo.environment["TAPT_MAP_PREVIEW"] == "1" { showMapPreview = true }
+            if ProcessInfo.processInfo.environment["TAPT_GAMES_PREVIEW"] == "1" { showGamesPreview = true }
             #endif
+            if pendingPartnerVenueId == nil {
+                pendingPartnerVenueId = session.consumePendingPartnerMenu()
+            }
+            if pendingBeerDetailId == nil {
+                pendingBeerDetailId = session.consumePendingBeerDetail()
+            }
+        }
+        .sheet(item: $pendingPartnerVenueId) { venueId in
+            PartnerMenuSheet(venueId: venueId)
+        }
+        .sheet(item: $pendingBeerDetailId) { beerId in
+            NavigationStack { BeerDetailView(beerId: beerId) }
         }
         .sheet(isPresented: $showBeerPreview) {
             NavigationStack { BeerDetailView(beerId: "5f176aee-a946-4c4c-9d0f-daed02e10f62") }
@@ -38,6 +56,15 @@ struct RootView: View {
                 BeerPongGame()
                     .toolbar { ToolbarItem(placement: .topBarLeading) { Button("Done") { showGamePreview = false } } }
             }
+        }
+        .sheet(isPresented: $showCatalogPreview) {
+            NavigationStack { CatalogView() }
+        }
+        .sheet(isPresented: $showMapPreview) {
+            NavigationStack { NearYouView() }
+        }
+        .sheet(isPresented: $showGamesPreview) {
+            NavigationStack { GamesView() }
         }
         .sheet(isPresented: $showSharePreview) {
             NavigationStack {
@@ -58,6 +85,9 @@ struct RootView: View {
     @State private var showSharePreview = false
     @State private var showBeerPreview = false
     @State private var showGamePreview = false
+    @State private var showCatalogPreview = false
+    @State private var showMapPreview = false
+    @State private var showGamesPreview = false
 }
 
 #Preview { RootView().tint(Brand.accent) }

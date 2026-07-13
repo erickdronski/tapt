@@ -45,8 +45,18 @@ def norm(s):
 
 
 def fetch_catalog():
-    url = f"{SUPA}/rest/v1/beer_catalog?select=id,name,label_image_url,brewery(name)&limit=500"
-    return json.loads(http_get(url, {"apikey": KEY}))
+    beers = []
+    page_size = 1000
+    offset = 0
+    while True:
+        url = (f"{SUPA}/rest/v1/beer_catalog?"
+               "select=id,name,label_image_url,brewery(name)&order=id.asc"
+               f"&limit={page_size}&offset={offset}")
+        page = json.loads(http_get(url, {"apikey": KEY}))
+        beers.extend(page)
+        if len(page) < page_size:
+            return beers
+        offset += page_size
 
 
 def off_search(term):

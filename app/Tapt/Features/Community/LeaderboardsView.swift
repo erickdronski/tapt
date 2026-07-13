@@ -8,7 +8,7 @@ struct LeaderboardsView: View {
     @State private var tasters: [LeaderTaster] = []
     @State private var styles: [LeaderStyle] = []
     @State private var loading = false
-    @State private var naOnly = false
+    @AppStorage("noLowDefault") private var naOnly = false
 
     var body: some View {
         ScrollView {

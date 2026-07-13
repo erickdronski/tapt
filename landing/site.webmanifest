@@ -1,7 +1,7 @@
 {
   "name": "Tapt — THE Beer Superapp",
   "short_name": "Tapt",
-  "description": "Scan any beer on Earth. Stamp your Passport. Free menu hosting for bars.",
+  "description": "Scan beer labels and barcodes. Stamp your Passport. Free menu hosting for bars.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0E0802",

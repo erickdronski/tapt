@@ -17,6 +17,7 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     let style: String?
     let country: String?
     let imageUrl: String?
+    let isNaLow: Bool
     let net: Int
     let votes: Int
     let change: Int
@@ -50,6 +51,7 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
         case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark, reason, heat
         case beerId = "beer_id"
         case imageUrl = "image_url"
+        case isNaLow = "is_na_low"
         case seasonFit = "season_fit"
     }
 }
@@ -84,10 +86,27 @@ enum MarketService {
     // (0058+) the board is always populated with REAL data, so there is
     // nothing to fake and nothing to label. p_demo remains in the RPC
     // signature for wire compatibility only; the server ignores it.
-    static func feed(sort: MarketSort = .movers, limit: Int = 40) async throws -> [MarketBeer] {
-        struct Params: Encodable { let p_sort: String; let p_limit: Int; let p_demo: Bool }
-        // authedRPC: beer_market is authenticated-only; never let the SDK's
+    static func feed(
+        sort: MarketSort = .movers,
+        limit: Int = 40,
+        naOnly: Bool = false
+    ) async throws -> [MarketBeer] {
+        struct Params: Encodable {
+            let p_sort: String
+            let p_limit: Int
+            let p_demo: Bool
+            let p_na_only: Bool
+        }
+        // authedRPC: the market is authenticated-only; never let the SDK's
         // silent anon fallback turn an auth blip into an "empty board".
-        return try await Supa.authedRPC("beer_market", params: Params(p_sort: sort.rawValue, p_limit: limit, p_demo: false))
+        return try await Supa.authedRPC(
+            "beer_market_v2",
+            params: Params(
+                p_sort: sort.rawValue,
+                p_limit: limit,
+                p_demo: false,
+                p_na_only: naOnly
+            )
+        )
     }
 }

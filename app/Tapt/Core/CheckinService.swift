@@ -6,12 +6,22 @@ struct CatalogBeer: Identifiable, Decodable {
     let name: String
     let style: String?
     let abv: Double?
-    let brewery: Brewery?
-    struct Brewery: Decodable { let name: String?; let country: String? }
-    var breweryName: String { brewery?.name ?? "" }
-    var country: String { brewery?.country ?? "" }
+    let rawBreweryName: String?
+    let rawCountry: String?
+    let imageUrl: String?
+    let total: Int?
+
+    var breweryName: String { rawBreweryName ?? "" }
+    var country: String { rawCountry ?? "" }
     var pick: BeerPick {
         BeerPick(id: id, name: name, style: style, abv: abv, breweryName: breweryName, country: country)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, style, abv, total
+        case rawBreweryName = "brewery_name"
+        case rawCountry = "country"
+        case imageUrl = "image_url"
     }
 }
 
@@ -102,11 +112,24 @@ struct MyCheckin: Identifiable, Decodable {
 }
 
 enum CheckinService {
-    static func catalog() async throws -> [CatalogBeer] {
-        try await Supa.client.from("beer_catalog")
-            .select("id,name,style,abv,brewery(name,country)")
-            .order("name").limit(200)
-            .execute().value
+    static func catalog(query: String = "", limit: Int = 60, offset: Int = 0) async throws -> [CatalogBeer] {
+        struct Params: Encodable {
+            let p_query: String?
+            let p_style: String?
+            let p_na_only: Bool
+            let p_limit: Int
+            let p_offset: Int
+        }
+        return try await Supa.client.rpc(
+            "catalog_search",
+            params: Params(
+                p_query: query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : query,
+                p_style: nil,
+                p_na_only: false,
+                p_limit: limit,
+                p_offset: offset
+            )
+        ).execute().value
     }
 
     static func matchScan(_ raw: String) async throws -> [ScannedBeer] {
@@ -126,7 +149,9 @@ enum CheckinService {
         flavorTags: [String] = [],
         glassware: String? = nil,
         occasion: String? = nil,
-        venue: BreweryMapVenue? = nil
+        venue: BreweryMapVenue? = nil,
+        venueId: String? = nil,
+        source: String? = nil
     ) async throws {
         struct Params: Encodable {
             let p_beer_id: String
@@ -152,24 +177,35 @@ enum CheckinService {
                 p_flavor_tags: flavorTags,
                 p_glassware: glassware,
                 p_occasion: occasion,
-                p_venue_id: venue?.venueId,
+                p_venue_id: venueId ?? venue?.venueId,
                 p_on_off_premise: nil,
                 p_geo_bucket_h3: nil,
                 p_photo_url: nil,
                 p_price_paid: nil,
                 p_price_tier: nil,
                 p_purchase_intent_flags: [:],
-                p_source: venue == nil ? "manual" : "manual_with_venue"
+                p_source: source ?? ((venueId ?? venue?.venueId) == nil ? "manual" : "manual_with_venue")
             )
         )
             .execute()
     }
 
     static func mine(userId: UUID) async throws -> [MyCheckin] {
-        try await Supa.client.from("checkin_event")
-            .select("id,beer_id,rating,style,event_ts,beer_catalog(name,brewery(name,country)),venue(name,external_ids)")
-            .eq("user_id", value: userId.uuidString)
-            .order("event_ts", ascending: false).limit(100)
-            .execute().value
+        struct Params: Encodable {
+            let p_limit: Int
+            let p_offset: Int
+        }
+
+        _ = userId
+        let pageSize = 250
+        var rows: [MyCheckin] = []
+        while true {
+            let page: [MyCheckin] = try await Supa.client.rpc(
+                "my_checkins",
+                params: Params(p_limit: pageSize, p_offset: rows.count)
+            ).execute().value
+            rows.append(contentsOf: page)
+            if page.count < pageSize { return rows }
+        }
     }
 }

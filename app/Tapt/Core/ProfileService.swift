@@ -137,6 +137,7 @@ enum ProfileService {
 
     static func completeOnboarding(
         userId: UUID,
+        ageConfirmed: Bool,
         region: String,
         topStyles: [String],
         locationConsent: Bool,
@@ -144,6 +145,7 @@ enum ProfileService {
         dataSaleConsent: Bool
     ) async throws {
         struct Params: Encodable {
+            let p_age_confirmed: Bool
             let p_region_code: String
             let p_top_styles: [String]
             let p_location_consent: Bool
@@ -153,6 +155,7 @@ enum ProfileService {
         try await Supa.client.rpc(
             "complete_profile_onboarding",
             params: Params(
+                p_age_confirmed: ageConfirmed,
                 p_region_code: region,
                 p_top_styles: topStyles,
                 p_location_consent: locationConsent,

@@ -1,0 +1,74 @@
+name: Build real beer product cutouts
+
+on:
+  schedule:
+    - cron: "43 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: "Real product photos to process (1-300)"
+        required: false
+        default: "100"
+      model:
+        description: "rembg segmentation model"
+        required: false
+        default: "isnet-general-use"
+      retry_rejected:
+        description: "Retry previously rejected photos"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: beer-product-cutouts
+  cancel-in-progress: false
+
+jobs:
+  cutouts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.u2net
+          key: rembg-${{ inputs.model || 'isnet-general-use' }}-v1
+
+      - name: Install pinned image pipeline
+        run: >-
+          python -m pip install
+          "rembg[cpu]==2.0.76"
+          "onnxruntime==1.27.0"
+          "Pillow==12.3.0"
+          "requests==2.34.2"
+
+      - name: Build and publish licensed cutouts
+        env:
+          SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BATCH: ${{ inputs.batch || '100' }}
+          MODEL: ${{ inputs.model || 'isnet-general-use' }}
+          RETRY_REJECTED: ${{ inputs.retry_rejected || 'false' }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is required."
+            exit 1
+          fi
+          args=(--batch "$BATCH" --model "$MODEL")
+          if [ "$RETRY_REJECTED" = "true" ]; then args+=(--retry-rejected); fi
+          python scripts/build_beer_cutouts.py "${args[@]}"
+
+      - name: Publish run summary
+        if: always()
+        run: |
+          echo "### Real product cutout pipeline" >> "$GITHUB_STEP_SUMMARY"
+          echo "Source photos remain attributed; only validated transparent PNGs are published." >> "$GITHUB_STEP_SUMMARY"

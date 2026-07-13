@@ -22,6 +22,22 @@ enum NewsletterService {
     }
 
     static func subscribe(email: String, source: String) async throws {
+        if (try? await Supa.client.auth.session.user) == nil {
+            var request = URLRequest(url: Supa.url.appendingPathComponent("functions/v1/dispatch-signup"))
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: [
+                "email": email,
+                "website": "",
+                "source": source
+            ])
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
+                throw URLError(.badServerResponse)
+            }
+            return
+        }
+
         struct Params: Encodable {
             let p_email: String
             let p_source: String
@@ -271,6 +287,7 @@ struct ProfileCard: Decodable, Sendable {
     let followers: Int
     let following: Int
     let pours: Int?
+    let beersCount: Int?
     let stylesCount: Int?
     let countries: Int?
     let states: Int?
@@ -286,6 +303,12 @@ struct ProfileCard: Decodable, Sendable {
         let name: String
         let brewery: String?
         let pours: Int
+        let imageUrl: String?
+
+        enum CodingKeys: String, CodingKey {
+            case name, brewery, pours
+            case imageUrl = "image_url"
+        }
     }
 
     enum CodingKeys: String, CodingKey {
@@ -296,6 +319,7 @@ struct ProfileCard: Decodable, Sendable {
         case memberSince = "member_since"
         case isSelf = "is_self"
         case isFollowing = "is_following"
+        case beersCount = "beers_count"
         case stylesCount = "styles_count"
         case topStyles = "top_styles"
         case favoriteBeer = "favorite_beer"
@@ -425,21 +449,42 @@ enum BarcodeCatalogService {
 // MARK: - Partner live menus (QR -> in-app)
 
 struct VenueMenuRow: Identifiable, Decodable, Sendable {
+    let tapItemId: String
     let venueName: String
     let city: String?
+    let region: String?
+    let country: String?
+    let beerId: String?
     let beerName: String
     let breweryName: String?
     let style: String?
+    let abv: Double?
+    let beerCountry: String?
     let priceText: String?
 
-    var id: String { beerName + (breweryName ?? "") }
+    var id: String { tapItemId }
+
+    var beerPick: BeerPick? {
+        guard let beerId else { return nil }
+        return BeerPick(
+            id: beerId,
+            name: beerName,
+            style: style,
+            abv: abv,
+            breweryName: breweryName ?? "",
+            country: beerCountry ?? ""
+        )
+    }
 
     enum CodingKeys: String, CodingKey {
+        case tapItemId = "tap_item_id"
         case venueName = "venue_name"
-        case city
+        case city, region, country
+        case beerId = "beer_id"
         case beerName = "beer_name"
         case breweryName = "brewery_name"
-        case style
+        case style, abv
+        case beerCountry = "beer_country"
         case priceText = "price_text"
     }
 }
@@ -448,11 +493,30 @@ struct VenueEvent: Identifiable, Decodable, Sendable {
     let kind: String
     let title: String
     let details: String?
+    let startsAt: String?
+    let endsAt: String?
 
-    var id: String { kind + title }
+    var id: String { [kind, title, startsAt ?? ""].joined(separator: "|") }
     var kindLabel: String { kind.replacingOccurrences(of: "_", with: " ").capitalized }
+    var scheduleLabel: String? {
+        guard let start = Self.date(from: startsAt) else { return nil }
+        let startText = start.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().hour().minute())
+        guard let end = Self.date(from: endsAt) else { return startText }
+        return "\(startText) - \(end.formatted(.dateTime.hour().minute()))"
+    }
 
-    enum CodingKeys: String, CodingKey { case kind, title, details }
+    enum CodingKeys: String, CodingKey {
+        case kind, title, details
+        case startsAt = "starts_at"
+        case endsAt = "ends_at"
+    }
+
+    private static func date(from value: String?) -> Date? {
+        guard let value else { return nil }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: value) ?? ISO8601DateFormatter().date(from: value)
+    }
 }
 
 enum VenueMenuService {

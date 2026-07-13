@@ -148,7 +148,7 @@ struct PublicProfileView: View {
 
     private func statStrip(_ card: ProfileCard) -> some View {
         HStack(spacing: 10) {
-            stat("\(card.pours ?? 0)", "Pours", "drop.fill", Brand.gold)
+            stat("\(card.beersCount ?? card.pours ?? 0)", "Beers", "mug.fill", Brand.gold)
             stat("\(card.stylesCount ?? 0)", "Styles", "square.grid.2x2.fill", Brand.hop)
             stat("\(card.countries ?? 0)", "Countries", "globe", Brand.copper)
             stat("\(card.states ?? 0)", "States", "map.fill", Brand.malt)
@@ -171,19 +171,22 @@ struct PublicProfileView: View {
     // MARK: favorite beer
 
     private func favoriteCard(_ fav: ProfileCard.FavoriteBeer) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Label("Favorite pour", systemImage: "heart.fill")
-                .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
-            Text(fav.name)
-                .font(.system(.headline, design: .rounded).weight(.bold))
-                .foregroundStyle(Brand.text).lineLimit(2)
-            HStack(spacing: 6) {
-                if let brewery = fav.brewery, !brewery.isEmpty {
-                    Text(brewery).font(.subheadline).foregroundStyle(Brand.muted)
+        HStack(spacing: 12) {
+            BeerThumb(imageUrl: fav.imageUrl, size: 58)
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Favorite pour", systemImage: "heart.fill")
+                    .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
+                Text(fav.name)
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text).lineLimit(2)
+                HStack(spacing: 6) {
+                    if let brewery = fav.brewery, !brewery.isEmpty {
+                        Text(brewery).font(.subheadline).foregroundStyle(Brand.muted)
+                    }
+                    Spacer()
+                    Text(fav.pours == 1 ? "Logged once" : "Logged \(fav.pours) times")
+                        .font(.caption.weight(.semibold)).foregroundStyle(Brand.gold)
                 }
-                Spacer()
-                Text(fav.pours == 1 ? "Logged once" : "Logged \(fav.pours) times")
-                    .font(.caption.weight(.semibold)).foregroundStyle(Brand.gold)
             }
         }
         .padding(14)
@@ -206,6 +209,7 @@ struct PublicProfileView: View {
     private func badges(_ card: ProfileCard) -> some View {
         let stats = PassportStats(
             pours: card.pours ?? 0,
+            beers: card.beersCount,
             styles: card.stylesCount ?? 0,
             states: card.states ?? 0,
             countries: card.countries ?? 0

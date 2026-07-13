@@ -22,20 +22,18 @@ BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
 
 BETA_DESCRIPTION = (
-    "Tapt - THE Beer Superapp. Free, global, scan-first: scan any label or "
-    "barcode on Earth, log the pour to your Cellar, stamp your Passport "
-    "(50 states + 47 countries), ride the live beer market, vote on Beer of "
-    "the Week, climb leaderboards, play beer-night games, and find what's "
-    "pouring at breweries, pubs, bars, taprooms, and beer gardens near you. "
-    "Free to drinkers forever."
+    "Tapt - THE Beer Superapp. Scan beer labels and barcodes, explore sourced "
+    "product details, log distinct beers to your Cellar, build a state-and-world "
+    "Passport, vote on real community rankings, learn beer styles, play skill "
+    "and table games with zero-proof play built in, and find breweries, pubs, "
+    "bars, taprooms, and beer gardens near you. Free for drinkers."
 )
 
 WHATS_NEW = (
-    "The Superapp update: global brewery radar (8,700+ real venues, 25 "
-    "countries), scan-to-catalog for any barcode on Earth, beer detail pages "
-    "with style science and real label photos, Beer of the Week voting, "
-    "leaderboards, friends, The Tapt Dispatch newsletter, and partner "
-    "onboarding for breweries and bars."
+    "A fuller Beer Superapp: 8,600+ mapped beer spots, label and barcode "
+    "scanning, real product photos, sourced beer details, Cellar and Passport "
+    "progress, Beer Market voting, Beer of the Week, learning, skill games, "
+    "friends, and free partner menus and QR tools for breweries and bars."
 )
 
 

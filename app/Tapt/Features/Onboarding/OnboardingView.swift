@@ -14,11 +14,11 @@ struct OnboardingView: View {
     @AppStorage("locationConsent") private var savedLocationConsent = false
     @AppStorage("aggregateConsent") private var savedAggregateConsent = false
     @AppStorage("dataSaleConsent") private var savedDataSaleConsent = false
+    @AppStorage("legalAgeConfirmed") private var legalAgeConfirmed = false
 
     @State private var step = 0
     @State private var styles: Set<String> = []
     @State private var region = "Global"
-    @State private var legalAgeConfirmed = false
     @State private var locationConsent = false
     @State private var aggregateConsent = false
     @State private var dataSaleConsent = false
@@ -84,9 +84,8 @@ struct OnboardingView: View {
 
     private var legalStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            stepTitle("Before the first pour", "Tapt is for adults. Your privacy choices stay attached to your account.")
+            stepTitle("Your privacy choices", "Optional data choices stay attached to your account and can change any time.")
             VStack(spacing: 12) {
-                Toggle("I am of legal drinking age where I live.", isOn: $legalAgeConfirmed)
                 Toggle("Use my location for nearby pubs, bars, breweries, taprooms, and beer gardens.", isOn: $locationConsent)
                 Toggle("Use my check-ins for anonymous aggregate trend reports.", isOn: $aggregateConsent)
                 Toggle("Include my anonymous aggregate data in partner insights.", isOn: $dataSaleConsent)
@@ -96,7 +95,7 @@ struct OnboardingView: View {
             .foregroundStyle(Brand.text)
             .padding(16)
             .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
-            Text("We store only the age confirmation, not your date of birth. You can change optional data choices later.")
+            Text("Age was confirmed before sign-in. Tapt stores only that confirmation, not your date of birth.")
                 .font(.footnote)
                 .foregroundStyle(Brand.muted)
             Spacer()
@@ -133,7 +132,7 @@ struct OnboardingView: View {
             BeerGlassView(pour: 0.82).frame(width: 132)
             Text("You are all set\(firstName)")
                 .font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text).multilineTextAlignment(.center)
-            Text("\(styles.count) styles picked, home base \(region). Scan any beer on Earth, log the pour, stamp the Passport.")
+            Text("\(styles.count) styles picked, home base \(region). Scan a label or barcode, log the pour, and stamp the Passport.")
                 .font(.body).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal, 24)
 
             Toggle(isOn: $newsletterOptIn) {
@@ -167,8 +166,8 @@ struct OnboardingView: View {
             .font(.system(.headline, design: .rounded))
             .padding(.horizontal, 26).padding(.vertical, 14)
             .background(Brand.gold, in: Capsule()).foregroundStyle(Brand.malt)
-            .disabled((step == 1 && !legalAgeConfirmed) || saving)
-            .opacity((step == 1 && !legalAgeConfirmed) || saving ? 0.45 : 1)
+            .disabled(saving)
+            .opacity(saving ? 0.45 : 1)
         }
         .overlay(alignment: .top) {
             if saving {
@@ -201,7 +200,10 @@ struct OnboardingView: View {
     }
 
     private func complete() {
-        guard let uid = session.user?.id else { return }
+        guard legalAgeConfirmed, let uid = session.user?.id else {
+            saveError = "Confirm legal drinking age before continuing."
+            return
+        }
         favoriteStyles = styles.sorted().joined(separator: ",")
         homeRegion = region
         noLowDefault = styles.contains("No / Low")
@@ -215,6 +217,7 @@ struct OnboardingView: View {
             do {
                 try await ProfileService.completeOnboarding(
                     userId: uid,
+                    ageConfirmed: legalAgeConfirmed,
                     region: region,
                     topStyles: picked,
                     locationConsent: locationConsent,

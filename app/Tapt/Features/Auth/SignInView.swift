@@ -57,6 +57,22 @@ struct SignInView: View {
 
                     emailSection.padding(.horizontal, 36)
 
+                    if !session.isGuest {
+                        Button {
+                            session.continueAsGuest()
+                        } label: {
+                            Label("Explore without an account", systemImage: "safari.fill")
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .foregroundStyle(Brand.text)
+                                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 36)
+                    }
+
                     if let errorText = errorText ?? session.authError {
                         Text(errorText)
                             .font(.footnote).foregroundStyle(.red)
@@ -276,6 +292,7 @@ struct SignInView: View {
                     try await Supa.client.auth.signInWithIdToken(
                         credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
                     )
+                    await saveAppleName(cred.fullName)
                 } catch {
                     errorText = error.localizedDescription
                 }
@@ -285,6 +302,25 @@ struct SignInView: View {
             if (err as? ASAuthorizationError)?.code != .canceled {
                 errorText = err.localizedDescription
             }
+        }
+    }
+
+    /// Apple provides the person's name only on the first authorization and does
+    /// not include it in the identity token, so preserve it immediately.
+    private func saveAppleName(_ components: PersonNameComponents?) async {
+        guard let components else { return }
+        let fullName = PersonNameComponentsFormatter().string(from: components)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        var metadata: [String: AnyJSON] = [:]
+        if !fullName.isEmpty { metadata["full_name"] = .string(fullName) }
+        if let given = components.givenName, !given.isEmpty {
+            metadata["given_name"] = .string(given)
+        }
+        if let family = components.familyName, !family.isEmpty {
+            metadata["family_name"] = .string(family)
+        }
+        if !metadata.isEmpty {
+            try? await Supa.client.auth.update(user: UserAttributes(data: metadata))
         }
     }
 

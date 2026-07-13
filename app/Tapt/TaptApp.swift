@@ -6,14 +6,21 @@ struct TaptApp: App {
     @State private var serverOnboarded: [String: Bool] = [:]
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("onboardedUserIDs") private var onboardedUserIDs = ""
+    @AppStorage("legalAgeConfirmed") private var legalAgeConfirmed = false
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if session.isLoading {
+                if !legalAgeConfirmed && !Self.screenshotMode {
+                    AgeGateView { legalAgeConfirmed = true }
+                } else if Self.screenshotMode {
+                    RootView()
+                } else if session.isLoading {
                     ProgressView().tint(Brand.accent)
-                } else if session.user == nil {
+                } else if session.user == nil && !session.isGuest {
                     SignInView()
+                } else if session.isGuest {
+                    RootView()
                 } else if let id = session.user?.id.uuidString {
                     if localOnboarded(id) {
                         RootView()
@@ -30,7 +37,9 @@ struct TaptApp: App {
             .tint(Brand.accent)
             .environment(session)
             .preferredColorScheme(Appearance(rawValue: appearanceRaw)?.colorScheme ?? nil)
-            .task { await session.start() }
+            .task {
+                if !Self.screenshotMode { await session.start() }
+            }
             .onOpenURL { url in
                 session.handleOAuthCallback(url)
             }
@@ -69,5 +78,13 @@ struct TaptApp: App {
         ids.insert(id)
         onboardedUserIDs = ids.sorted().joined(separator: ",")
         serverOnboarded[id] = true
+    }
+
+    private static var screenshotMode: Bool {
+        #if targetEnvironment(simulator)
+        ProcessInfo.processInfo.environment["TAPT_SCREENSHOT_MODE"] == "1"
+        #else
+        false
+        #endif
     }
 }

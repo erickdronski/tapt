@@ -8,6 +8,7 @@ struct FindFriendsView: View {
     @State private var searching = false
     @State private var searchTask: Task<Void, Never>?
     @State private var openProfile: ProfileRef?
+    @State private var searchError: String?
 
     var body: some View {
         ScrollView {
@@ -24,8 +25,29 @@ struct FindFriendsView: View {
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.1)))
                 .padding(.horizontal)
 
+                ShareLink(
+                    item: URL(string: AppLinks.webBase)!,
+                    subject: Text("Join me on Tapt"),
+                    message: Text("Join my beer circle on Tapt, THE Beer Superapp.")
+                ) {
+                    Label("Invite your crew", systemImage: "square.and.arrow.up")
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 13))
+                        .foregroundStyle(Brand.malt)
+                }
+                .padding(.horizontal)
+
                 if searching {
                     ProgressView().tint(Brand.gold).frame(maxWidth: .infinity).padding(.top, 20)
+                } else if let searchError {
+                    TaptEmptyState(
+                        icon: "wifi.exclamationmark",
+                        title: "Friend search unavailable",
+                        message: searchError,
+                        actionTitle: nil
+                    )
                 } else if query.trimmingCharacters(in: .whitespaces).count < 2 {
                     TaptEmptyState(
                         icon: "person.2.fill",
@@ -67,17 +89,29 @@ struct FindFriendsView: View {
             let term = newValue.trimmingCharacters(in: .whitespaces)
             guard term.count >= 2 else {
                 results = []
+                searching = false
+                searchError = nil
                 return
             }
             searchTask = Task {
                 try? await Task.sleep(for: .milliseconds(350))
                 guard !Task.isCancelled else { return }
                 searching = true
-                let found = (try? await SocialGraphService.search(term)) ?? []
-                // Don't let a superseded search overwrite newer results.
-                guard !Task.isCancelled, term == query.trimmingCharacters(in: .whitespaces) else { return }
-                results = found
-                searching = false
+                searchError = nil
+                do {
+                    let found = try await SocialGraphService.search(term)
+                    // Don't let a superseded search overwrite newer results.
+                    guard !Task.isCancelled, term == query.trimmingCharacters(in: .whitespaces) else { return }
+                    results = found
+                    searching = false
+                } catch is CancellationError {
+                    return
+                } catch {
+                    guard term == query.trimmingCharacters(in: .whitespaces) else { return }
+                    results = []
+                    searching = false
+                    searchError = "Check your connection and try again."
+                }
             }
         }
     }

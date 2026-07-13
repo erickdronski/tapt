@@ -56,3 +56,42 @@ jobs:
             exit 1
           fi
           tail -25 "$RUNNER_TEMP/xcodebuild.log"
+
+      - name: Test (iOS Simulator)
+        working-directory: app
+        run: |
+          DEVICE_TYPE=$(xcrun simctl list devicetypes -j | python3 -c '
+          import json, sys
+          items=json.load(sys.stdin)["devicetypes"]
+          preferred=("iPhone 17 Pro", "iPhone 16 Pro", "iPhone 15 Pro")
+          match=next((d for name in preferred for d in items if d["name"] == name), None)
+          if not match: match=next((d for d in items if d["name"].startswith("iPhone")), None)
+          if not match: raise SystemExit("No supported iPhone simulator device type")
+          print(match["identifier"])
+          ')
+          RUNTIME=$(xcrun simctl list runtimes -j | python3 -c '
+          import json, sys
+          items=[r for r in json.load(sys.stdin)["runtimes"] if r.get("isAvailable") and r["identifier"].startswith("com.apple.CoreSimulator.SimRuntime.iOS-")]
+          if not items: raise SystemExit("No available iOS simulator runtime")
+          items.sort(key=lambda r: tuple(int(x) for x in r["version"].split(".")), reverse=True)
+          print(items[0]["identifier"])
+          ')
+          UDID=$(xcrun simctl create "Tapt Tests" "$DEVICE_TYPE" "$RUNTIME")
+          trap 'xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true; xcrun simctl delete "$UDID" >/dev/null 2>&1 || true' EXIT
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+
+          if ! xcodebuild test \
+            -project Tapt.xcodeproj \
+            -scheme Tapt \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+            > "$RUNNER_TEMP/xctest.log" 2>&1; then
+            echo "---- test errors ----"
+            grep -E "error:|failed|FAIL" "$RUNNER_TEMP/xctest.log" | head -40
+            echo "---- log tail ----"
+            tail -50 "$RUNNER_TEMP/xctest.log"
+            exit 1
+          fi
+          tail -30 "$RUNNER_TEMP/xctest.log"
