@@ -17,16 +17,19 @@ struct ExploreView: View {
     @State private var myVotes: [String: Int] = [:]
     @State private var appeared = false
     @State private var feedNote: String?
+    @State private var voteError: String?
     @State private var ticker: [MarketBeer] = []
     @State private var tickerBeer: MarketBeer?
 
     private var visibleBeers: [TrendedBeer] {
+        // No/Low must mean no/low: explicit phrasing only, never bare substrings
+        // ("Cannonball" matched "non"; "Flower Lager" matched "low").
         let base: [TrendedBeer] = noLowDefault
             ? beers.filter { beer in
-                beer.style.localizedCaseInsensitiveContains("low")
-                || beer.style.localizedCaseInsensitiveContains("non")
-                || beer.name.localizedCaseInsensitiveContains("low")
-                || beer.name.localizedCaseInsensitiveContains("non")
+                "\(beer.style) \(beer.name)".range(
+                    of: #"(?i)non[- ]?alcoholic|alcohol[- ]?free|0[.,]0\s*%|low[- ]alcohol|alkoholfrei|sans alcool|sin alcohol"#,
+                    options: .regularExpression
+                ) != nil
             }
             : beers
         // The catalog has multiple SKUs per beer -- collapse to one row per name.
@@ -68,6 +71,7 @@ struct ExploreView: View {
                 .padding(.vertical)
             }
             .background(Brand.background)
+            .overlay(alignment: .bottom) { voteToast }
             .navigationTitle("Explore")
             .onAppear {
                 if region.isEmpty { region = homeRegion }
@@ -80,6 +84,31 @@ struct ExploreView: View {
             .sheet(item: $tickerBeer) { b in
                 NavigationStack { BeerDetailView(beerId: b.beerId) }
             }
+        }
+    }
+
+    /// Bottom-anchored transient toast: vote failures were landing in the hero
+    /// caption at the top of the scroll view, off-screen from where the user
+    /// actually tapped. Auto-dismisses.
+    @ViewBuilder private var voteToast: some View {
+        if let message = voteError {
+            Text(message)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Brand.text)
+                .lineLimit(3)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 16).padding(.vertical, 11)
+                .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.copper.opacity(0.55)))
+                .shadow(color: .black.opacity(0.22), radius: 12, y: 4)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 10)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .id(message)
+                .task {
+                    try? await Task.sleep(for: .seconds(4))
+                    withAnimation(.easeOut(duration: 0.25)) { voteError = nil }
+                }
         }
     }
 
@@ -468,25 +497,46 @@ struct ExploreView: View {
 
     private func vote(_ b: TrendedBeer, _ v: Int) {
         Haptic.tap()
-        let newValue = (myVotes[b.id] == v) ? nil : v
+        let previous = myVotes[b.id]
+        let newValue = (previous == v) ? nil : v
         myVotes[b.id] = newValue
         guard let uid = session.user?.id else {
-            feedNote = "Sign-in expired, vote not saved. Sign out and back in."
-            myVotes[b.id] = nil
+            myVotes[b.id] = previous
+            showVoteError("Sign-in expired, vote not saved. Sign out and back in.")
             return
         }
-        guard let value = newValue else { return }
+        // Write the real change (vote, flip, or un-vote), then nudge just this
+        // row's numbers. No full-feed refetch that reshuffles the list under
+        // the user's thumb; errors surface in a visible toast, not the hero.
+        let delta = (newValue ?? 0) - (previous ?? 0)
         Task {
             do {
-                try await BeerService.vote(beerId: b.id, userId: uid, value: value)
-                await load()   // pull the recomputed market so the vote visibly counts
+                if let value = newValue {
+                    try await BeerService.vote(beerId: b.id, userId: uid, value: value)
+                } else {
+                    try await BeerService.unvote(beerId: b.id, userId: uid)
+                }
+                await MainActor.run { applyVoteDelta(b.id, delta) }
             } catch {
                 await MainActor.run {
-                    myVotes[b.id] = nil
-                    feedNote = "Vote didn't save: \(error.localizedDescription)"
+                    myVotes[b.id] = previous
+                    showVoteError("Vote didn't save: \(error.localizedDescription)")
                 }
             }
         }
+    }
+
+    /// Reflect a saved vote in the one row it touched.
+    private func applyVoteDelta(_ id: String, _ delta: Int) {
+        guard delta != 0, let i = beers.firstIndex(where: { $0.id == id }) else { return }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            beers[i].popularity += delta
+            beers[i].momentum += delta
+        }
+    }
+
+    private func showVoteError(_ message: String) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { voteError = message }
     }
 }
 

@@ -82,11 +82,21 @@ struct SignInView: View {
                     }
                     #endif
 
-                    Text("By continuing you confirm you are of legal drinking age.")
-                        .font(.caption2)
-                        .foregroundStyle(Brand.muted)
-                        .padding(.top, 8)
-                        .padding(.bottom, 24)
+                    VStack(spacing: 6) {
+                        Text("By continuing you confirm you are of legal drinking age and agree to the Tapt Terms of Service and Privacy Policy.")
+                            .font(.caption2)
+                            .foregroundStyle(Brand.muted)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 36)
+                        HStack(spacing: 14) {
+                            Link("Terms of Service", destination: URL(string: "https://taptbeer.com/terms")!)
+                            Link("Privacy Policy", destination: URL(string: "https://taptbeer.com/privacy")!)
+                        }
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(Brand.gold)
+                    }
+                    .padding(.top, 8)
+                    .padding(.bottom, 24)
                 }
             }
         }

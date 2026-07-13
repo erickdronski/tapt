@@ -28,8 +28,9 @@ struct TrendedBeer: Identifiable {
     let country: String
     let style: String
     let abv: Double?
-    let popularity: Int
-    let momentum: Int
+    // var: a saved vote nudges these in place so the feed doesn't refetch-reshuffle.
+    var popularity: Int
+    var momentum: Int
     let avgRating: Double?
 
     init(_ r: TrendRow) {

@@ -30,6 +30,11 @@ final class Session {
         }
         isLoading = false
         for await change in Supa.client.auth.authStateChanges {
+            // Account deletion ends the session through this stream (not
+            // signOut()), so per-account defaults are cleared here too.
+            if change.event == .signedOut || change.event == .userDeleted {
+                Self.clearPerAccountDefaults()
+            }
             user = change.session?.user
         }
     }
@@ -112,5 +117,21 @@ final class Session {
 
     func signOut() async {
         try? await Supa.client.auth.signOut()
+        // Belt and braces: even if the network revoke failed before the
+        // .signedOut event fired, this device must not carry the account's
+        // choices forward.
+        Self.clearPerAccountDefaults()
+    }
+
+    /// Per-account preferences must not leak to the next account on this
+    /// device (privacy consents especially). Server copies rehydrate on the
+    /// next sign-in; `onboardedUserIDs` stays, it is already user-namespaced.
+    static func clearPerAccountDefaults() {
+        let keys = [
+            "locationConsent", "aggregateConsent", "dataSaleConsent",
+            "socialVisible", "beerGeekMode", "noLowDefault",
+            "homeRegion", "homeRegionGeocoded"
+        ]
+        for key in keys { UserDefaults.standard.removeObject(forKey: key) }
     }
 }
