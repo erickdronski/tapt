@@ -123,6 +123,24 @@ promptly (small commits, don't sit on local state another agent can't see).
   than fake zeroes. Transactional and unsubscribe links use `taptbeer.com`.
   App Store capture now presents Beer Radar full-screen and rejects nearly
   black screenshot edge bands that can hide the status bar.
+- **Radar locality truth (Codex, 2026-07-13):** the featured radar row appears
+  only for venues returned near an authorized device location. Global and
+  home-region loads cannot claim locality, and the row no longer invents
+  taps/events or uses an unsupported paid-placement badge. The default Global
+  region keeps the continental map instead of geocoding the word or choosing
+  an arbitrary venue.
+- **Product cutout CI (Codex, 2026-07-13):** the cutout workflow keeps pinned
+  Python dependencies and model caching, but no longer requests pip caching
+  without a requirements file. That setup error previously stopped every run
+  before the image pipeline could install or process a photo.
+- **Name helper hardening (Codex, 2026-07-13):** 0084 restores
+  `search_path=pg_catalog` on `tapt_display_name` and `tapt_name_ok`; 0083 had
+  recreated both helpers after the prior advisor cleanup and cleared that
+  function setting.
+- **Email auth recovery (Codex, 2026-07-13):** a failed resend no longer hides
+  a still-valid six-digit code field. The app retains the address that received
+  the last successful code and verifies against that address even if the email
+  text field is edited later.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in

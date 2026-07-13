@@ -16,6 +16,7 @@ struct SignInView: View {
     @State private var code = ""
     @State private var isSendingEmail = false
     @State private var emailLinkSent = false
+    @State private var codeEmail = ""
     @State private var verifyingCode = false
     @State private var currentNonce: String?
     @State private var errorText: String?
@@ -182,7 +183,7 @@ struct SignInView: View {
 
             if emailLinkSent {
                 VStack(spacing: 8) {
-                    Text("Check your email, tap the link, or type the 6-digit code from the same email here:")
+                    Text("Check \(codeEmail), tap the link, or type the 6-digit code here:")
                         .font(.caption)
                         .foregroundStyle(Brand.muted)
                         .multilineTextAlignment(.center)
@@ -238,15 +239,20 @@ struct SignInView: View {
     private func sendEmailLink() async {
         isSendingEmail = true
         errorText = nil
-        code = ""
-        emailLinkSent = await session.sendEmailSignInLink(to: email)
+        let target = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let sent = await session.sendEmailSignInLink(to: target)
+        if sent {
+            codeEmail = target
+            code = ""
+            emailLinkSent = true
+        }
         isSendingEmail = false
     }
 
     private func verifyCode() async {
         verifyingCode = true
         errorText = nil
-        _ = await session.verifyEmailCode(email: email, code: code)
+        _ = await session.verifyEmailCode(email: codeEmail, code: code)
         verifyingCode = false
     }
 

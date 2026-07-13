@@ -718,7 +718,7 @@ The styles step tells every new user 'Pick your go-to styles. We will tune your 
 
 **Fix:** Either wire the promise or soften it. Cheapest honest wiring: use taste_vector.top_styles to order the Explore board / catalog browse (boost matching styles) or preselect the style filter — a single ORDER BY boost in the existing read RPC. If that is post-launch, change the subtitle to what is true today, e.g. 'Pick your go-to styles. No / Low sets your lens.' or simply 'Pick your go-to styles.' — blank beats invented promises, same as data.
 
-### [OPEN] One flaky first launch permanently skips onboarding — the code contradicts its own 'next launch re-checks' comment
+### [FIXED this round] One flaky first launch permanently skips onboarding — the code contradicts its own 'next launch re-checks' comment
 *Surface:* Onboarding gate (TaptApp launch flow)  ·  *Anchor:* `app/Tapt/TaptApp.swift:63`  ·  *Found by:* fleet
 
 When a signed-in user is not locally onboarded and the server check fails twice (isOnboarded returns nil on any network/server error), checkServerOnboarded's nil branch calls markLocallyOnboarded(id), which persists the user id into the onboardedUserIDs AppStorage set. The in-code comment says 'the next launch re-checks' — it never will: localOnboarded(id) is now true forever, so checkServerOnboarded is never called again for that account on that device. A brand-new user who signs in on a flaky connection permanently skips the legal-age step, all three consent captures, region, and styles: birth_verified stays false, consent_ledger gets zero rows, region_code stays null server-side. The sign-in caption's age attestation partially covers the age claim, but the account has no recorded consents and the profile shows all sharing off while the user was never asked.
@@ -726,6 +726,11 @@ When a signed-in user is not locally onboarded and the server check fails twice 
 **Evidence:** TaptApp.swift:58-64 — 'case nil: // Still unknown ... the next launch re-checks. markLocallyOnboarded(id)'; markLocallyOnboarded (lines 67-72) writes to the persistent @AppStorage("onboardedUserIDs") set that localOnboarded() (line 40) checks before ever reaching checkServerOnboarded.
 
 **Fix:** In the nil case, set only the in-memory session flag (serverOnboarded[id] = true) instead of calling markLocallyOnboarded — that lets the user into the app for this launch exactly as intended while leaving the persistent flag unset, so the next cold launch genuinely re-checks the server and routes them into onboarding once the network is back. Keep markLocallyOnboarded for the confirmed true case only.
+
+**Resolution (verified 2026-07-13):** Current `TaptApp` never persists an
+onboarding marker after an unknown server result. It shows a recoverable retry
+state after two failed checks; "Continue for now" adds only an in-memory
+session bypass, so a future cold launch checks the server again.
 
 ### [FIXED this round] 49 venues exist twice — identical name, city, and often identical coordinates — producing double pins and ambiguous claim targets
 *Surface:* Near You map, radar list, and venue claim search  ·  *Anchor:* `app/Tapt/Features/Partners/BreweriesHubView.swift:310`  ·  *Found by:* fleet
@@ -736,7 +741,7 @@ When a signed-in user is not locally onboarded and the server check fails twice 
 
 **Fix:** Dedupe migration: for each duplicate group keep the row with the richer external_ids (website, OBDB id) and no dependent claims/snapshots/checkins on the loser (there are currently 0 claims and 0 snapshots, so this is the cheapest it will ever be), repoint any stray FKs, delete the loser, and add a unique index on the OBDB external id (and a soft uniqueness check on lower(name)+city+country in the ingest upsert) so the planned monthly OBDB refresh can't reintroduce them.
 
-### [OPEN] 'Local beer spotlight' promotes a venue that is usually not local — by default it is a rotating world-wide seed venue
+### [FIXED this round] 'Local beer spotlight' promotes a venue that is usually not local — by default it is a rotating world-wide seed venue
 *Surface:* Near You map spotlight card (NearYouView)  ·  *Anchor:* `app/Tapt/Features/NearYou/NearYouView.swift:55`  ·  *Found by:* fleet
 
 The spotlight card is just visibleTaptVenues.first ?? taptVenues.first. locationConsent defaults to false, so out of the box the feed is the global brewery_map_feed ordering: heat desc, then a daily md5 rotation. With 0 check-ins and 0 live taps in prod, the top heat tier is exactly the 28 tapt_seed venues, which are spread across Bavaria, Brussels, Jalisco (Mexico), Ibaraki (Japan), Plzen, Dublin, Scotland and assorted US states. So a first-run user in New Jersey with location off sees 'Local beer spotlight' + a 'SPOT' badge on, say, a Guadalajara brewery — a wrong 'local' claim dressed in featured-placement styling while zero paid/featured partners exist. The fallback subtitle 'Fresh taps, events, and game nights nearby' additionally asserts taps and events for a venue with none on record (venue_event and venue_tap_snapshot are both empty).
@@ -744,6 +749,14 @@ The spotlight card is just visibleTaptVenues.first ?? taptVenues.first. location
 **Evidence:** NearYouView.swift:55-57 spotlightVenue = visibleTaptVenues.first ?? taptVenues.first; :208 Text("Local beer spotlight"); :215 fallback 'Fresh taps, events, and game nights nearby'; :221 'SPOT' badge. Live SQL: 28 venues with external_ids ? 'tapt_seed' spanning 'Bavaria, Brussels, California, ... Ibaraki, Jalisco, ... Plzen, Scotland'; checkin_event count = 0; venue_event = 0; venue_tap_snapshot = 0. brewery_map_feed orders by heat desc (tapt_seed = 2, others = 1) then daily md5.
 
 **Fix:** Only render the spotlight card when the venue is provably near the user: gate it on the brewery_map_feed_near result (or venue.region == homeRegion) and hide it otherwise, instead of falling back to the global list head. Retitle honestly if a non-near fallback is ever wanted ('From the Tapt map', no SPOT badge), and delete the fabricated 'Fresh taps, events, and game nights nearby' fallback line — show the real place line or nothing.
+
+**Resolution (2026-07-13):** The card now renders only when an authorized
+device location produces the venue through `brewery_map_feed_near`; home-region
+and global catalog loads cannot qualify it. It is labeled "Nearby beer spot,"
+shows only the venue's real place line, and uses a disclosure chevron instead
+of the unsupported `SPOT` placement badge. The default `Global` region also
+keeps the stable continental map instead of geocoding that label or centering
+on an arbitrary first U.S. venue.
 
 ### [FIXED this round] Both deployed email functions hardcode tapt-landing-three.vercel.app instead of taptbeer.com
 *Surface:* Live edge functions resend-send and newsletter-unsubscribe (partner emails + unsubscribe redirect)  ·  *Anchor:* `supabase/functions/resend-send/index.ts:17`  ·  *Found by:* fleet
@@ -1074,7 +1087,7 @@ record_privacy_choice defaults p_policy_version to '2026-07-08' and the app neve
 
 **Fix:** Single source of truth: store the current policy version in one place (a config table or a SQL constant function) and have both record_privacy_choice and complete_profile_onboarding read it; update it in the same migration that changes the legal pages. Immediate patch: alter record_privacy_choice's default to '2026-07-12' so new profile-toggle rows match the published policy date.
 
-### [OPEN] A failed 'Send a new email' hides the 6-digit code field even though the user may hold a valid code
+### [FIXED this round] A failed 'Send a new email' hides the 6-digit code field even though the user may hold a valid code
 *Surface:* Sign-in (email code entry)  ·  *Anchor:* `app/Tapt/Features/Auth/SignInView.swift:216`  ·  *Found by:* fleet
 
 After the first successful send, the code-entry field is shown (gated on emailLinkSent). Tapping 'Send a new email' assigns emailLinkSent directly from the new attempt's result, so a failure — most commonly the OTP rate limit that this exact flow is known to hit — flips emailLinkSent back to false and removes the code field. The user sees the rate-limit error telling them to wait, is still holding a perfectly valid 6-digit code from the first email, and now has no field to type it into.
@@ -1082,6 +1095,11 @@ After the first successful send, the code-entry field is shown (gated on emailLi
 **Evidence:** SignInView.swift:216 'emailLinkSent = await session.sendEmailSignInLink(to: email)' unconditionally overwrites the previous true state; Session.sendEmailSignInLink returns false on any error including the 429 path it specifically formats ('Too many sign-in emails were requested...'). The code field at SignInView.swift:157 renders only 'if emailLinkSent'.
 
 **Fix:** Make the flag sticky: 'let sent = await session.sendEmailSignInLink(to: email); if sent { emailLinkSent = true }' — a failed resend keeps the existing code field and shows the error above it. Optionally reset emailLinkSent only when the email address text changes, since a code for a different address would be misleading.
+
+**Resolution (2026-07-13):** A successful send records the normalized address
+that received the code and resets the input. A failed resend leaves that
+address, input, and code field intact; verification uses the recorded address
+instead of any later edit in the email field.
 
 ### [OPEN] State typo 'MIssouri' on a live venue row
 *Surface:* Near You radar rows + venue detail sheet (state hygiene)  ·  *Anchor:* `app/Tapt/Features/NearYou/NearYouView.swift:241`  ·  *Found by:* fleet

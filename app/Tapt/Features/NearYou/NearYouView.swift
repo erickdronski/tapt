@@ -21,6 +21,7 @@ struct NearYouView: View {
     @State private var radarFilter: RadarFilter = .all
     @State private var searchText = ""
     @State private var nearLoaded = false
+    @State private var nearbyVenueIds = Set<String>()
     @State private var selectedVenue: BreweryMapVenue?
     @State private var radarError: String?
 
@@ -73,7 +74,8 @@ struct NearYouView: View {
     }
 
     private var spotlightVenue: BreweryMapVenue? {
-        visibleTaptVenues.first
+        guard locationConsent, location.authorized else { return nil }
+        return visibleTaptVenues.first { nearbyVenueIds.contains($0.venueId) }
     }
 
     var body: some View {
@@ -212,7 +214,9 @@ struct NearYouView: View {
                         camera = .region(MKCoordinateRegion(center: loc.coordinate,
                                                             latitudinalMeters: 24_000, longitudinalMeters: 24_000))
                     }
-                    Task { await loadNearbyRadar(loc.coordinate) }
+                    Task {
+                        await loadNearbyRadar(loc.coordinate, establishesLocalContext: true)
+                    }
                 }
             }
             .onChange(of: locationConsent) { _, enabled in
@@ -222,6 +226,7 @@ struct NearYouView: View {
                     location.stop()
                     breweries = []
                     nearLoaded = false
+                    nearbyVenueIds = []
                 }
             }
             .sheet(item: $selectedVenue) { venue in
@@ -252,30 +257,29 @@ struct NearYouView: View {
     private func spotlight(_ venue: BreweryMapVenue) -> some View {
         Button { focus(venue) } label: {
             HStack(spacing: 12) {
-                Image(systemName: "megaphone.fill")
+                Image(systemName: "location.fill")
                     .foregroundStyle(Brand.malt)
                     .frame(width: 42, height: 42)
                     .background(Brand.gold, in: RoundedRectangle(cornerRadius: 11))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Local beer spotlight")
+                    Text("Nearby beer spot")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Brand.copper)
                     Text(venue.name)
                         .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundStyle(Brand.text)
                         .lineLimit(1)
-                    Text(venue.subtitle.isEmpty ? "Fresh taps, events, and game nights nearby" : venue.subtitle)
-                        .font(.caption)
-                        .foregroundStyle(Brand.muted)
-                        .lineLimit(1)
+                    if !venue.subtitle.isEmpty {
+                        Text(venue.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(Brand.muted)
+                            .lineLimit(1)
+                    }
                 }
                 Spacer(minLength: 0)
-                Text("SPOT")
-                    .font(.system(.caption2, design: .rounded).weight(.heavy))
-                    .foregroundStyle(Brand.malt)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background(Brand.hop.opacity(0.75), in: Capsule())
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Brand.muted)
             }
             .padding(.vertical, 4)
         }
@@ -342,18 +346,23 @@ struct NearYouView: View {
     /// Center the map on the stored home region when GPS isn't available yet.
     private func centerOnHomeRegion(fallback venues: [BreweryMapVenue]) async {
         let region = homeRegion.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !region.isEmpty,
-           let placemarks = try? await CLGeocoder().geocodeAddressString(region),
+        guard !region.isEmpty,
+              region.localizedCaseInsensitiveCompare("Global") != .orderedSame else {
+            return
+        }
+
+        if let placemarks = try? await CLGeocoder().geocodeAddressString(region),
            let coord = placemarks.first?.location?.coordinate {
             camera = .region(MKCoordinateRegion(center: coord,
                                                 latitudinalMeters: 60_000, longitudinalMeters: 60_000))
-            await loadNearbyRadar(coord)
+            await loadNearbyRadar(coord, establishesLocalContext: false)
             return
         }
-        // Geocode failed: prefer a venue in the home region, then any US venue,
-        // rather than the first (often foreign) global venue.
-        if let home = venues.first(where: { $0.region == homeRegion })
-            ?? venues.first(where: { $0.country == "United States" }) {
+        // Geocode failed: use only a venue that actually matches the saved
+        // region. Otherwise keep the stable continental default.
+        if let home = venues.first(where: {
+            $0.region?.localizedCaseInsensitiveCompare(region) == .orderedSame
+        }) {
             camera = .region(MKCoordinateRegion(center: home.coordinate,
                                                 latitudinalMeters: 200_000, longitudinalMeters: 200_000))
         }
@@ -361,11 +370,18 @@ struct NearYouView: View {
 
     /// Once we know where the user is, swap the global sample for a
     /// distance-ordered radar around them (keeps a global tail for browsing).
-    private func loadNearbyRadar(_ coord: CLLocationCoordinate2D) async {
+    private func loadNearbyRadar(
+        _ coord: CLLocationCoordinate2D,
+        establishesLocalContext: Bool
+    ) async {
         guard let nearby = try? await WorldBeerService.breweryMapNear(
             latitude: coord.latitude, longitude: coord.longitude, km: 80, limit: 250
-        ), !nearby.isEmpty else { return }
+        ), !nearby.isEmpty else {
+            if establishesLocalContext { nearbyVenueIds = [] }
+            return
+        }
         let nearbyIds = Set(nearby.map(\.venueId))
+        if establishesLocalContext { nearbyVenueIds = nearbyIds }
         let globalTail = taptVenues.filter { !nearbyIds.contains($0.venueId) }.prefix(350)
         taptVenues = nearby + Array(globalTail)
     }
