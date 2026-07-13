@@ -84,6 +84,10 @@ struct ScanView: View {
             }
             .onChange(of: scanned) { _, value in
                 guard let value else { return }
+                // A new barcode drifting into frame must not hijack an open
+                // result sheet or an in-progress menu match (real menus often
+                // have a barcode at the bottom).
+                guard !showResult, !menuMatching, partnerVenueId == nil else { return }
                 // Partner QR: route straight to the venue's live menu in-app.
                 if value.contains("menu?v="),
                    let venueId = value.components(separatedBy: "menu?v=").last?
@@ -148,7 +152,7 @@ struct ScanView: View {
     }
 
     private var hint: some View {
-        Text("Point at a can, bottle barcode, or tap list")
+        Text("Point at a barcode, a printed tap list, or a venue QR")
             .font(.system(.subheadline, design: .rounded).weight(.semibold))
             .foregroundStyle(Brand.foam)
             .padding(.horizontal, 16).padding(.vertical, 10)
@@ -163,7 +167,7 @@ struct ScanView: View {
                 Image(systemName: "viewfinder").font(.system(size: 46)).foregroundStyle(Brand.accent)
                 Text("Scanning needs a device camera")
                     .font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                Text("Run Tapt on your iPhone to scan labels and barcodes.")
+                Text("Run Tapt on your iPhone to scan barcodes and tap lists.")
                     .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal, 40)
             }
         }
@@ -173,7 +177,7 @@ struct ScanView: View {
         scannerRecovery(
             icon: "camera.fill",
             title: "Allow camera access",
-            message: "Tapt uses the camera only when you scan a beer label, barcode, tap list, or venue QR.",
+            message: "Tapt uses the camera only when you scan a barcode, tap list, or venue QR.",
             actionTitle: "Continue",
             action: { Task { await requestCameraAccess() } }
         )

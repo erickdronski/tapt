@@ -102,6 +102,30 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Perfection push (Claude, 2026-07-13 pm):** fleet spec in
+  docs/24-PERFECTION-PLAN.md. Shipped: (a) GLOBAL MAP - applied the 119K staged
+  Overture places (0094 batched apply per country); venue 8,645->128,043,
+  countries 25->219 (79.8K bars / 29.5K pubs / 13.5K breweries / 3.6K taprooms /
+  1.6K beer gardens). (b) FAST IMAGES - TaptImageCache (mem+disk+downsample);
+  BeerThumb loads each OFF image once ever (was re-downloading off a 7s CDN on
+  every scroll). (c) recommend_beer (0093) taste-fit "Picked for you" card on
+  Explore. (d) SCANNER - match_beers now returns cleaned display_name +
+  style_ref via tapt_scan_name (barcode of Corona shows "Corona", was "Biere
+  corona"); honest scanner copy (dropped un-built label auto-scan promise);
+  onChange guard stops a stray barcode hijacking the result/menu sheet.
+  **HANDOFF TO CODEX (name pipeline is your lane):** the app-wide fix for
+  "Biere corona"/"bere Peroni" is a leading-locale-noun strip in
+  tapt_display_name (Bi[eè]re/Bier/Cerveza/Birra/Alus/Olut/Piwo/Beer/bere +
+  title-case), which needs the display_name/name_ok generated-column drop+readd
+  per your 0083 pattern. I scoped it to the scanner only (tapt_scan_name) to
+  avoid colliding with your generated columns.
+  **APP STORE 4.8 BLOCKER (owner + either agent):** Sign in with Apple is
+  disabled while Google is enabled -> guaranteed rejection. Must enable SIWA
+  (Apple Developer Service ID + Supabase Apple provider + app entitlement +
+  SignInView Apple button) before submit. Full checklist in docs/24.
+  **STILL OPEN (docs/24):** App Store promotional screenshots + submission;
+  image CDN mirror (durable image fix); social batch: swap Apple 3D emoji hero
+  art for the canonical glass mark; scanner label-OCR + menu-accumulation feature.
 - **Make-it-alive round (Claude, 2026-07-13):** owner said the app felt flat /
   not fun. A 10-lens energy audit (docs/23-MAKE-IT-ALIVE.md) found the delight
   system (Celebrate.swift / Motion.swift / Haptic) was BUILT BUT HALF-WIRED.
