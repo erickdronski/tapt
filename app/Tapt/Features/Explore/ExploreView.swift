@@ -23,6 +23,7 @@ struct ExploreView: View {
     @State private var appeared = false
     @State private var feedNote: String?
     @State private var voteError: String?
+    @State private var celebration: TaptCelebration?
     @State private var ticker: [MarketBeer] = []
     @State private var tickerBeer: MarketBeer?
 
@@ -66,28 +67,29 @@ struct ExploreView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    marketTickerBar
-                    hero
-                    scanTile
-                    catalogBar
-                    quickDuo
-                    if !personalizedBeers.isEmpty { tasteSection }
-                    BeerOfWeekCard().padding(.horizontal)
+                    marketTickerBar.reveal(appeared, 0)
+                    hero.reveal(appeared, 1)
+                    scanTile.reveal(appeared, 2)
+                    catalogBar.reveal(appeared, 3)
+                    quickDuo.reveal(appeared, 4)
+                    if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 5) }
+                    BeerOfWeekCard().padding(.horizontal).reveal(appeared, 6)
                     // The thin regional "beer guide" was wasted space; a real local-scene
                     // module returns with the venue/local-data ingestion.
-                    regionPicker
+                    regionPicker.reveal(appeared, 7)
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
                     } else {
-                        if hasMarketActivity { moversSection }
-                        topSection
+                        if hasMarketActivity { moversSection.reveal(appeared, 8) }
+                        topSection.reveal(appeared, 9)
                     }
-                    FeaturedPartnersRail()
+                    FeaturedPartnersRail().reveal(appeared, 10)
                 }
                 .padding(.vertical)
             }
             .background(Brand.background)
             .overlay(alignment: .bottom) { voteToast }
+            .taptCelebration($celebration)
             .navigationTitle("Explore")
             .onAppear {
                 if region.isEmpty { region = homeRegion }
@@ -156,8 +158,6 @@ struct ExploreView: View {
             }
         }
         .padding(.horizontal)
-        .opacity(appeared ? 1 : 0)
-        .offset(y: appeared ? 0 : 18)
     }
 
     /// Live beer ticker pinned at the top of the home page — beers trending up or
@@ -600,7 +600,15 @@ struct ExploreView: View {
                 } else {
                     try await BeerService.unvote(beerId: b.id, userId: uid)
                 }
-                await MainActor.run { applyVoteDelta(b.id, delta) }
+                await MainActor.run {
+                    applyVoteDelta(b.id, delta)
+                    // Only a real thumbs-up gets the count-up + confetti payoff.
+                    // Flips and un-votes stay quiet.
+                    if newValue == 1 {
+                        let count = beers.first(where: { $0.id == b.id })?.popularity ?? b.popularity
+                        celebration = .voteCounted(beer: b.name, count: count)
+                    }
+                }
             } catch {
                 await MainActor.run {
                     myVotes[b.id] = previous
@@ -621,6 +629,20 @@ struct ExploreView: View {
 
     private func showVoteError(_ message: String) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { voteError = message }
+    }
+}
+
+private extension View {
+    /// The home screen assembles top-to-bottom on appear: each child fades and
+    /// rises in on a short stagger so the page pours itself onto the screen
+    /// instead of popping in flat. `index` sets the child's place in the cascade.
+    func reveal(_ appeared: Bool, _ index: Int) -> some View {
+        opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 16)
+            .animation(
+                .spring(response: 0.55, dampingFraction: 0.85).delay(Double(index) * 0.06),
+                value: appeared
+            )
     }
 }
 

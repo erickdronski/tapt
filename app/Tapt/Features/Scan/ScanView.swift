@@ -15,6 +15,8 @@ struct ScanView: View {
     @State private var rating: Double?
     @State private var saving = false
     @State private var loggedPour: PourCard?
+    @State private var pendingPour: PourCard?
+    @State private var celebration: TaptCelebration?
     @State private var offBeer: OFFBeer?
     @State private var addingOFF = false
     @State private var visibleLines: [String] = []
@@ -98,6 +100,12 @@ struct ScanView: View {
                 PartnerMenuSheet(venueId: venueId)
             }
             .sheet(isPresented: $showResult, onDismiss: { scanned = nil }) { resultSheet }
+            // The pour "glass fills and stamps" celebration plays first, then the
+            // share card opens once it finishes. This is the app's most shareable
+            // moment; it should feel like a moment, not a jump cut.
+            .taptCelebration($celebration) {
+                if let p = pendingPour { loggedPour = p; pendingPour = nil }
+            }
             .sheet(item: $loggedPour) { pour in
                 NavigationStack {
                     ScrollView {
@@ -420,10 +428,8 @@ struct ScanView: View {
                     )
                     addingOFF = false
                     showResult = false
-                    Haptic.celebrate()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                        loggedPour = pour
-                    }
+                    pendingPour = pour
+                    celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating ?? 0), place: nil)
                 } else {
                     addingOFF = false
                 }
@@ -490,10 +496,8 @@ struct ScanView: View {
                 )
                 saving = false
                 showResult = false
-                Haptic.celebrate()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                    loggedPour = pour
-                }
+                pendingPour = pour
+                celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating ?? 0), place: nil)
             } catch {
                 // Never fail silently: the user believes the pour logged.
                 saving = false

@@ -6,6 +6,16 @@ import SwiftUI
 struct MarketBeerDetailView: View {
     let beer: MarketBeer
     @Environment(\.dismiss) private var dismiss
+    @Environment(Session.self) private var session
+    // The trading floor is live: a Buy/Sell moves the pressure bar in place and
+    // pays out the same count-up + confetti as the rest of the app.
+    @State private var myVote: Int?
+    @State private var liveUps: Int?
+    @State private var liveDowns: Int?
+    @State private var celebration: TaptCelebration?
+
+    private var ups: Int { liveUps ?? beer.ups }
+    private var downs: Int { liveDowns ?? beer.downs }
 
     private var movementColor: Color {
         beer.isFlat ? Brand.muted : (beer.isUp ? Brand.hop : Brand.copper)
@@ -26,6 +36,7 @@ struct MarketBeerDetailView: View {
                     reasonCard
                     chartCard
                     sentimentCard
+                    tradeButtons
                     statsGrid
                     contextCard
                     Text("Standing blends what's in season, real awards, and community votes. It goes fully community-driven as people vote. Nothing invented.")
@@ -37,6 +48,7 @@ struct MarketBeerDetailView: View {
                 .padding()
             }
             .background(Brand.background)
+            .taptCelebration($celebration)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
@@ -44,6 +56,66 @@ struct MarketBeerDetailView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }.foregroundStyle(Brand.gold)
+                }
+            }
+            .task {
+                guard let uid = session.user?.id else { return }
+                myVote = try? await BeerService.currentVote(beerId: beer.beerId, userId: uid)
+            }
+        }
+    }
+
+    /// The one action that turns passive analysis into a trade. Buy = thumbs up,
+    /// Sell = thumbs down; the pressure bar above springs the instant you tap.
+    private var tradeButtons: some View {
+        HStack(spacing: 10) {
+            tradeButton(side: 1, label: "Buy", icon: "hand.thumbsup.fill", tint: Brand.hop)
+            tradeButton(side: -1, label: "Sell", icon: "hand.thumbsdown.fill", tint: Brand.copper)
+        }
+    }
+
+    private func tradeButton(side: Int, label: String, icon: String, tint: Color) -> some View {
+        let active = myVote == side
+        return Button { trade(side) } label: {
+            Label(active ? "\(label)ing" : label, systemImage: icon)
+                .font(.system(.subheadline, design: .rounded).weight(.heavy))
+                .frame(maxWidth: .infinity).padding(.vertical, 13)
+                .foregroundStyle(active ? Brand.malt : tint)
+                .background(active ? tint : tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(tint.opacity(0.5)))
+        }
+        .buttonStyle(.taptPress)
+        .disabled(session.user == nil)
+    }
+
+    private func trade(_ side: Int) {
+        guard let uid = session.user?.id else { return }
+        Haptic.firm()
+        let previous = myVote
+        let newValue: Int? = (previous == side) ? nil : side
+        // Optimistic: move the pressure bar now.
+        var u = ups, d = downs
+        if previous == 1 { u -= 1 } else if previous == -1 { d -= 1 }
+        if newValue == 1 { u += 1 } else if newValue == -1 { d += 1 }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            myVote = newValue; liveUps = max(0, u); liveDowns = max(0, d)
+        }
+        Task {
+            do {
+                if let v = newValue {
+                    try await BeerService.vote(beerId: beer.beerId, userId: uid, value: v)
+                    if v == 1 {
+                        await MainActor.run { celebration = .voteCounted(beer: beer.name, count: ups) }
+                    }
+                } else {
+                    try await BeerService.unvote(beerId: beer.beerId, userId: uid)
+                }
+            } catch {
+                // Roll the optimistic move back on failure.
+                await MainActor.run {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        myVote = previous; liveUps = beer.ups; liveDowns = beer.downs
+                    }
                 }
             }
         }
@@ -126,13 +198,13 @@ struct MarketBeerDetailView: View {
     }
 
     private var sentimentCard: some View {
-        let cast = beer.ups + beer.downs
-        let upFrac = Double(beer.ups) / Double(max(cast, 1))
+        let cast = ups + downs
+        let upFrac = Double(ups) / Double(max(cast, 1))
         return VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Label("Buy \(beer.ups)", systemImage: "hand.thumbsup.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
+                Label("Buy \(ups)", systemImage: "hand.thumbsup.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.hop)
                 Spacer()
-                Label("Sell \(beer.downs)", systemImage: "hand.thumbsdown.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
+                Label("Sell \(downs)", systemImage: "hand.thumbsdown.fill").font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
             }
             if cast > 0 {
                 GeometryReader { g in

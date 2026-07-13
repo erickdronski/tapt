@@ -10,6 +10,7 @@ struct CellarView: View {
     @State private var guides: [RegionBeerGuide] = []
     @State private var showLog = false
     @State private var appeared = false
+    @State private var countsRolled = false
     @State private var loading = false
     @State private var loadError: String?
 
@@ -138,7 +139,7 @@ struct CellarView: View {
 
                 statGrid
                 worldStrip
-                if !earnedBadges.isEmpty { milestones }
+                trophyShelf
                 collectionShelf
                 regionalShelves
                 pourHistory
@@ -148,11 +149,13 @@ struct CellarView: View {
     }
 
     private var statGrid: some View {
+        // The numbers spin up from zero the moment the Cellar lands
+        // (contentTransition(.numericText) only plays when the value changes).
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            stat("\(checkins.count)", "pours", "drop.fill", Brand.gold)
-            stat("\(styleCount)", "styles", "square.grid.2x2.fill", Brand.hop)
-            stat("\(stateCount)", "states", "map.fill", Brand.copper)
-            stat("\(countryCount)", "countries", "globe", Brand.copper)
+            stat(countsRolled ? "\(checkins.count)" : "0", "pours", "drop.fill", Brand.gold)
+            stat(countsRolled ? "\(styleCount)" : "0", "styles", "square.grid.2x2.fill", Brand.hop)
+            stat(countsRolled ? "\(stateCount)" : "0", "states", "map.fill", Brand.copper)
+            stat(countsRolled ? "\(countryCount)" : "0", "countries", "globe", Brand.copper)
         }
         .padding(.horizontal)
     }
@@ -207,24 +210,66 @@ struct CellarView: View {
         }
     }
 
-    private var milestones: some View {
+    private func currentValue(for metric: BadgeMetric) -> Int {
+        switch metric {
+        case .pours: checkins.count
+        case .beers: uniqueBeerCount
+        case .styles: styleCount
+        case .states: stateCount
+        case .countries: countryCount
+        }
+    }
+
+    /// A trophy case, not a highlight reel: EVERY badge shows, so a new user
+    /// sees the full shelf to fill. Earned ones shine gold; locked ones stay
+    /// dim with an honest progress bar toward the threshold.
+    private var trophyShelf: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Earned milestones").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).padding(.horizontal)
+            HStack {
+                Text("Trophy shelf").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                Spacer()
+                Text("\(earnedBadges.count) of \(PassportData.badges.count)")
+                    .font(.caption.weight(.bold)).foregroundStyle(Brand.gold)
+            }
+            .padding(.horizontal)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(earnedBadges) { b in
-                        VStack(spacing: 6) {
-                            Image(systemName: b.icon).font(.title2).foregroundStyle(Brand.malt)
-                                .frame(width: 52, height: 52).background(Brand.gold, in: Circle())
-                                .overlay(Circle().stroke(Brand.malt.opacity(0.3), lineWidth: 1.5))
-                            Text(b.title).font(.caption2.weight(.bold)).foregroundStyle(Brand.text).lineLimit(1)
-                        }
-                        .frame(width: 96)
-                    }
+                    ForEach(PassportData.badges) { b in trophy(b) }
                 }
                 .padding(.horizontal)
             }
         }
+    }
+
+    private func trophy(_ b: Badge) -> some View {
+        let earned = b.earned(stats)
+        let have = min(currentValue(for: b.metric), b.threshold)
+        return VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .fill(earned ? Brand.gold : Brand.haze.opacity(0.5))
+                    .frame(width: 52, height: 52)
+                    .overlay(Circle().stroke((earned ? Brand.malt : Brand.muted).opacity(0.3), lineWidth: 1.5))
+                Image(systemName: earned ? b.icon : "lock.fill")
+                    .font(earned ? .title2 : .body)
+                    .foregroundStyle(earned ? Brand.malt : Brand.muted)
+            }
+            .modifier(ShimmerIf(earned))
+            Text(b.title).font(.caption2.weight(.bold))
+                .foregroundStyle(earned ? Brand.text : Brand.muted).lineLimit(1)
+            if earned {
+                Text("Earned").font(.system(size: 9, weight: .heavy)).foregroundStyle(Brand.hop)
+            } else {
+                // honest progress toward the threshold
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Brand.malt.opacity(0.1)).frame(height: 4)
+                    Capsule().fill(Brand.gold).frame(width: 44 * CGFloat(have) / CGFloat(b.threshold), height: 4)
+                }
+                .frame(width: 44)
+                Text("\(have)/\(b.threshold)").font(.system(size: 9, weight: .bold)).foregroundStyle(Brand.muted)
+            }
+        }
+        .frame(width: 96)
     }
 
     /// The visual heart of the Cellar: a shelf of every distinct beer poured,
@@ -410,6 +455,10 @@ struct CellarView: View {
             loadError = "Your pours could not be loaded. Check your connection and try again."
         }
         guides = (try? await WorldBeerService.regionGuides()) ?? []
+        // Spin the stat numbers up from zero once the real data is in.
+        if !countsRolled {
+            withAnimation(.easeOut(duration: 0.6)) { countsRolled = true }
+        }
     }
 }
 
@@ -421,4 +470,13 @@ private struct CollectionBeer: Identifiable {
     let style: String?
     let imageUrl: String?
     let rating: Double?
+}
+
+/// Applies the gold Shimmer sweep only when a trophy is earned.
+private struct ShimmerIf: ViewModifier {
+    let on: Bool
+    init(_ on: Bool) { self.on = on }
+    func body(content: Content) -> some View {
+        if on { content.modifier(Shimmer()) } else { content }
+    }
 }

@@ -8,13 +8,22 @@ struct BeerOfWeekCard: View {
     @State private var winner: BeerOfWeekEntry?
     @State private var loaded = false
     @State private var loadError: String?
+    @State private var celebration: TaptCelebration?
+    // Fire the crowning once per new weekly winner, never on every open.
+    @AppStorage("bow.lastCelebratedWinner") private var lastCelebratedWinner = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Beer of the Week", systemImage: "crown.fill")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
-                    .foregroundStyle(Brand.text)
+                Label {
+                    Text("Beer of the Week")
+                } icon: {
+                    // The crown breathes so the card reads as a live trophy, not a static header.
+                    Image(systemName: "crown.fill")
+                        .symbolEffect(.pulse, options: .repeating.speed(0.4))
+                }
+                .font(.system(.title3, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.text)
                 Spacer()
                 Text(weekLabel)
                     .font(.caption.weight(.semibold))
@@ -39,6 +48,7 @@ struct BeerOfWeekCard: View {
                     }
                     .padding(10)
                     .background(Brand.gold.opacity(0.14), in: RoundedRectangle(cornerRadius: 13))
+                    .modifier(Shimmer())
                 }
                 .buttonStyle(.plain)
             }
@@ -102,6 +112,7 @@ struct BeerOfWeekCard: View {
         .padding(16)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.3)))
+        .taptCelebration($celebration)
         .task {
             guard !loaded else { return }
             loaded = true
@@ -132,6 +143,18 @@ struct BeerOfWeekCard: View {
             standings = try await standingsRequest
             winner = try await winnerRequest
             loadError = nil
+            // Crown a genuinely new weekly winner, once. First ever sight is
+            // seeded silently (no confetti on a first app open), so only a
+            // real new champion after that gets the crowning moment.
+            if let w = winner {
+                let key = "\(w.beerId)-\(w.weekVotes)"
+                if lastCelebratedWinner.isEmpty {
+                    lastCelebratedWinner = key
+                } else if lastCelebratedWinner != key {
+                    lastCelebratedWinner = key
+                    celebration = .bowCrowned(beer: w.name)
+                }
+            }
         } catch {
             loadError = "This week's race could not refresh. Tap to try again."
         }

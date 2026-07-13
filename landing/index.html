@@ -213,6 +213,13 @@
   .signup input::placeholder{color:rgba(251,246,236,.5)}
   .signup input:focus{outline:none;border-color:var(--gold)}
   .hp{position:absolute;left:-9999px}
+  /* Hero sits on the cream background, so its input needs dark-on-light styling
+     (the base .signup input is built for the dark newsletter section). */
+  .hero-signup{max-width:460px}
+  .hero-signup input[type=email]{border:2px solid rgba(26,18,6,.18);background:#fff;color:var(--malt)}
+  .hero-signup input::placeholder{color:rgba(26,18,6,.4)}
+  .hero-signup input:focus{border-color:var(--gold)}
+  #hero-msg{margin-top:12px;font-weight:600;font-size:.94rem;min-height:1.2em}
   #dispatch-msg{margin-top:12px;font-weight:600;font-size:.94rem;min-height:1.2em}
   @media(max-width:820px){.dispatch-grid{grid-template-columns:1fr}}
 
@@ -270,11 +277,16 @@
       <span class="kicker">FOR DRINKERS + BEER BUSINESSES</span>
       <h1><span>THE Beer</span><span><em>Superapp</em>.</span></h1>
       <p class="lede">All of beer, one app: discover, rank, learn, play, find local pours, and build your Beer Passport.</p>
+      <form class="signup hero-signup" id="hero-form" novalidate>
+        <input type="email" name="email" placeholder="you@example.com" required maxlength="320" autocomplete="email" aria-label="Email for launch access">
+        <input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <button class="btn btn-gold" type="submit">Get launch access</button>
+      </form>
+      <div class="msg" id="hero-msg" role="status"></div>
       <div class="hero-ctas" id="get">
-        <span class="btn btn-dark" aria-disabled="true">App Store release in progress</span>
         <a class="btn btn-ghost" href="#business">For breweries &amp; bars</a>
       </div>
-      <p class="fineprint"><b>Free for drinkers, always.</b> No ads that bury the honest boards.</p>
+      <p class="fineprint"><b>iOS, launching soon.</b> Free for drinkers, always. No ads that bury the honest boards.</p>
     </div>
     <div class="market" id="market-card">
       <h4>The Beer Market</h4>
@@ -499,8 +511,8 @@
   <div class="wrap">
     <h2>Pour with us.</h2>
     <p>Drinkers download free. Breweries, bars, pubs, and taprooms claim a venue in minutes. Distributors and press, come say hello.</p>
-    <span class="btn btn-dark" aria-disabled="true">App Store release in progress</span>
-    <a class="btn btn-dark" href="mailto:esdronski@gmail.com?subject=Tapt%20partnership">Talk partnerships</a>
+    <a class="btn btn-gold" href="#get">Get launch access</a>
+    <a class="btn btn-dark" href="mailto:hello@taptbeer.com?subject=Tapt%20partnership">Talk partnerships</a>
   </div>
 </section>
 
@@ -547,35 +559,41 @@
     });
   })();
 
-  document.getElementById('dispatch-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const msg = document.getElementById('dispatch-msg');
+  function wireSignup(formId, msgId, sendingLabel, doneLabel, successText) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+    const msg = document.getElementById(msgId);
     const btn = form.querySelector('button');
-    btn.disabled = true; btn.textContent = 'Signing up…';
-    try {
-      const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/dispatch-signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email.value, website: form.website.value })
-      });
-      const data = await res.json();
-      if (res.ok && data.ok) {
-        msg.textContent = 'Welcome aboard, first issue lands soon. 🍻';
-        msg.style.color = '#7FD49B';
-        form.reset();
-      } else {
-        msg.textContent = data.error === 'try again later'
-          ? 'Too many tries, give it an hour.'
-          : 'That email did not look right, double-check it.';
+    const idle = btn.textContent;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.disabled = true; btn.textContent = sendingLabel;
+      try {
+        const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/dispatch-signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: form.email.value, website: form.website.value })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          msg.textContent = successText;
+          msg.style.color = '#7FD49B';
+          form.reset();
+        } else {
+          msg.textContent = data.error === 'try again later'
+            ? 'Too many tries, give it an hour.'
+            : 'That email did not look right, double-check it.';
+          msg.style.color = '#F2A900';
+        }
+      } catch {
+        msg.textContent = 'Network hiccup, try again in a moment.';
         msg.style.color = '#F2A900';
       }
-    } catch {
-      msg.textContent = 'Network hiccup, try again in a moment.';
-      msg.style.color = '#F2A900';
-    }
-    btn.disabled = false; btn.textContent = 'Sign me up';
-  });
+      btn.disabled = false; btn.textContent = doneLabel || idle;
+    });
+  }
+  wireSignup('dispatch-form', 'dispatch-msg', 'Signing up…', 'Sign me up', 'Welcome aboard, first issue lands soon. 🍻');
+  wireSignup('hero-form', 'hero-msg', 'Saving…', 'Get launch access', "You're on the list. We'll email you the moment Tapt lands. 🍻");
 </script>
 <script>
   (function(){
