@@ -92,6 +92,9 @@ jobs:
 
           sips -g pixelWidth -g pixelHeight "$RUNNER_TEMP"/tapt-screenshots/*.png
 
+      - name: Validate screenshot content
+        run: swift scripts/validate_app_store_screenshots.swift "$RUNNER_TEMP"/tapt-screenshots/*.png
+
       - name: Upload screenshots
         uses: actions/upload-artifact@v4
         with:
