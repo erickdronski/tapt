@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Cellar: your logged pours + a Passport strip (pours, styles, countries). Log flow wired in.
+/// Cellar: your growing beer collection. A visual shelf of every distinct beer
+/// you have poured, a world-progress strip, earned milestones, and the full
+/// pour history. Built to feel like a passport that grows with you.
 struct CellarView: View {
     @Environment(Session.self) private var session
     @AppStorage("beerGeekMode") private var beerGeekMode = false
@@ -12,25 +14,50 @@ struct CellarView: View {
     @State private var loadError: String?
 
     private var logVerb: String { beerGeekMode ? "Tick a pour" : "Log a pour" }
+    private var collectionWord: String { beerGeekMode ? "Cellar" : "Collection" }
 
     private var styleCount: Int {
-        Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil }).count
+        Set(checkins.compactMap { c in
+            let s = c.displayStyle ?? c.style
+            return (s?.isEmpty == false) ? s : nil
+        }).count
     }
-    private var uniqueBeerCount: Int {
-        PassportProgress.uniqueBeerCount(in: checkins)
-    }
+    private var uniqueBeerCount: Int { PassportProgress.uniqueBeerCount(in: checkins) }
     private var visitedCountries: Set<String> {
         Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
     }
     private var visitedStates: Set<String> {
         Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
     }
-    private var countryCount: Int {
-        visitedCountries.count
+    private var countryCount: Int { visitedCountries.count }
+    private var stateCount: Int { visitedStates.count }
+
+    /// One card per distinct beer, most recent pour first, image-bearing beers
+    /// leading so the shelf reads as a real collection.
+    private var collection: [CollectionBeer] {
+        var seen = Set<String>()
+        var out: [CollectionBeer] = []
+        for c in checkins {
+            let key = PassportProgress.collectionKey(c)
+            guard seen.insert(key).inserted, let beerId = c.beerId else { continue }
+            out.append(CollectionBeer(
+                id: beerId,
+                name: c.beerName,
+                brewery: c.breweryName,
+                style: c.displayStyle,
+                imageUrl: c.imageUrl,
+                rating: c.rating
+            ))
+        }
+        // Imaged first, then by recency (already time-desc from the query).
+        return out.sorted { ($0.imageUrl != nil ? 0 : 1) < ($1.imageUrl != nil ? 0 : 1) }
     }
-    private var stateCount: Int {
-        visitedStates.count
+
+    private var stats: PassportStats {
+        PassportStats(pours: checkins.count, beers: uniqueBeerCount,
+                      styles: styleCount, states: stateCount, countries: countryCount)
     }
+    private var earnedBadges: [Badge] { PassportData.badges.filter { $0.earned(stats) } }
 
     var body: some View {
         NavigationStack {
@@ -78,7 +105,7 @@ struct CellarView: View {
         TaptEmptyState(
             icon: "square.stack.3d.up.fill",
             title: "Your Cellar is thirsty",
-            message: "Log your first pour to start your Cellar, unlock Passport stamps, and build your beer taste graph.",
+            message: "Log your first pour to start your collection, unlock Passport stamps, and build your beer taste graph.",
             actionTitle: logVerb,
             action: { showLog = true }
         )
@@ -98,7 +125,7 @@ struct CellarView: View {
 
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 TaptHeroPanel(
                     title: "Passport progress",
                     subtitle: "\(uniqueBeerCount) distinct beers across \(styleCount) styles, \(stateCount) states, and \(countryCount) countries.",
@@ -109,31 +136,25 @@ struct CellarView: View {
                 )
                 .padding(.horizontal)
 
-                NavigationLink { PassportView(checkins: checkins, guides: guides) } label: {
-                    HStack(spacing: 6) {
-                        Text("Passport").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                        Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Brand.muted)
-                    }
-                }
-                .buttonStyle(.plain).padding(.horizontal)
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    stat("\(checkins.count)", "pours", "drop.fill", Brand.gold)
-                    stat("\(styleCount)", "styles", "square.grid.2x2.fill", Brand.hop)
-                    stat("\(stateCount)", "states", "map.fill", Brand.copper)
-                    stat("\(countryCount)", "countries", "globe", Brand.copper)
-                }
-                .padding(.horizontal)
-
+                statGrid
+                worldStrip
+                if !earnedBadges.isEmpty { milestones }
+                collectionShelf
                 regionalShelves
-
-                Text("Your pours").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).padding(.horizontal).padding(.top, 4)
-                VStack(spacing: 10) {
-                    ForEach(checkins) { row($0) }
-                }
-                .padding(.horizontal)
+                pourHistory
             }
             .padding(.vertical)
         }
+    }
+
+    private var statGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+            stat("\(checkins.count)", "pours", "drop.fill", Brand.gold)
+            stat("\(styleCount)", "styles", "square.grid.2x2.fill", Brand.hop)
+            stat("\(stateCount)", "states", "map.fill", Brand.copper)
+            stat("\(countryCount)", "countries", "globe", Brand.copper)
+        }
+        .padding(.horizontal)
     }
 
     private func stat(_ n: String, _ label: String, _ icon: String, _ tint: Color) -> some View {
@@ -148,21 +169,142 @@ struct CellarView: View {
         .contentTransition(.numericText())
     }
 
+    /// The world you have tasted: visited flags glow, the rest of the beer
+    /// world stays dim. It grows as you travel. Honest to real venue/brewery
+    /// countries only, never fabricated.
+    private var worldStrip: some View {
+        let visited = visitedCountries
+        let ordered = PassportData.countries.sorted { a, b in
+            let av = visited.contains(a.name), bv = visited.contains(b.name)
+            if av != bv { return av }   // visited first
+            return false
+        }
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Your beer world").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                Spacer()
+                Text("\(countryCount) of \(PassportData.countries.count)")
+                    .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
+            }
+            .padding(.horizontal)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(ordered, id: \.name) { c in
+                        let on = visited.contains(c.name)
+                        VStack(spacing: 4) {
+                            Text(c.flag).font(.title3).grayscale(on ? 0 : 1).opacity(on ? 1 : 0.45)
+                            Text(c.name).font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(on ? Brand.text : Brand.muted)
+                                .lineLimit(1)
+                        }
+                        .frame(width: 58, height: 52)
+                        .background((on ? Brand.gold.opacity(0.14) : Brand.surface), in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke((on ? Brand.gold : Brand.malt).opacity(on ? 0.5 : 0.08)))
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private var milestones: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Earned milestones").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text).padding(.horizontal)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(earnedBadges) { b in
+                        VStack(spacing: 6) {
+                            Image(systemName: b.icon).font(.title2).foregroundStyle(Brand.malt)
+                                .frame(width: 52, height: 52).background(Brand.gold, in: Circle())
+                                .overlay(Circle().stroke(Brand.malt.opacity(0.3), lineWidth: 1.5))
+                            Text(b.title).font(.caption2.weight(.bold)).foregroundStyle(Brand.text).lineLimit(1)
+                        }
+                        .frame(width: 96)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    /// The visual heart of the Cellar: a shelf of every distinct beer poured,
+    /// real label/cutout imagery, most collectible first.
+    private var collectionShelf: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Your \(collectionWord.lowercased())").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                Spacer()
+                Text("\(collection.count) beers").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
+            }
+            .padding(.horizontal)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(collection.prefix(24)) { beer in
+                    NavigationLink { BeerDetailView(beerId: beer.id) } label: { collectionCard(beer) }
+                        .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private func collectionCard(_ beer: CollectionBeer) -> some View {
+        VStack(spacing: 6) {
+            ZStack(alignment: .topTrailing) {
+                BeerThumb(imageUrl: beer.imageUrl, size: 96, corner: 14)
+                if let r = beer.rating {
+                    HStack(spacing: 1) {
+                        Image(systemName: "star.fill").font(.system(size: 8))
+                        Text(String(format: "%.0f", r)).font(.system(size: 10, weight: .heavy, design: .rounded))
+                    }
+                    .foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 5).padding(.vertical, 2)
+                    .background(Brand.gold, in: Capsule())
+                    .padding(5)
+                }
+            }
+            Text(beer.name).font(.system(.caption, design: .rounded).weight(.bold))
+                .foregroundStyle(Brand.text).lineLimit(1).minimumScaleFactor(0.8)
+            Text(beer.style ?? beer.brewery).font(.system(size: 9))
+                .foregroundStyle(Brand.muted).lineLimit(1)
+        }
+    }
+
+    private var pourHistory: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Pour history").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
+                Spacer()
+                NavigationLink { PassportView(checkins: checkins, guides: guides) } label: {
+                    HStack(spacing: 3) {
+                        Text("Passport").font(.caption.weight(.bold))
+                        Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
+                    }
+                    .foregroundStyle(Brand.copper)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            VStack(spacing: 10) {
+                ForEach(checkins.prefix(40)) { row($0) }
+            }
+            .padding(.horizontal)
+            if checkins.count > 40 {
+                Text("Showing your 40 most recent pours.")
+                    .font(.caption).foregroundStyle(Brand.muted)
+                    .frame(maxWidth: .infinity).padding(.top, 2)
+            }
+        }
+    }
+
     private var regionalShelves: some View {
         let unlockedGuides = guides.filter { guide in
-            if guide.scope == "state" {
-                return visitedStates.contains(guide.name)
-            }
-            if guide.scope == "country" {
-                return visitedCountries.contains(guide.name)
-            }
+            if guide.scope == "state" { return visitedStates.contains(guide.name) }
+            if guide.scope == "country" { return visitedCountries.contains(guide.name) }
             return false
         }
         let suggestions = guides.filter { guide in
             guard !unlockedGuides.contains(guide) else { return false }
-            if guide.scope == "state" {
-                return guide.country == "United States"
-            }
+            if guide.scope == "state" { return guide.country == "United States" }
             return guide.scope == "country"
         }.prefix(5)
         let shelves = unlockedGuides + Array(suggestions)
@@ -216,11 +358,10 @@ struct CellarView: View {
 
     private func row(_ c: MyCheckin) -> some View {
         let content = HStack(spacing: 12) {
-            Image(systemName: "mug.fill").foregroundStyle(Brand.malt)
-                .frame(width: 40, height: 40).background(Brand.gold, in: RoundedRectangle(cornerRadius: 10))
+            BeerThumb(imageUrl: c.imageUrl, size: 44, corner: 10)
             VStack(alignment: .leading, spacing: 2) {
                 Text(c.beerName).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
-                Text("\(c.breweryName)  \(c.style ?? "")").font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
+                Text([c.breweryName, c.displayStyle ?? ""].filter { !$0.isEmpty }.joined(separator: "  ")).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
                 if !c.venueName.isEmpty {
                     Text([c.venueName, c.placeSubtitle].filter { !$0.isEmpty }.joined(separator: " - "))
                         .font(.caption2.weight(.semibold))
@@ -254,7 +395,8 @@ struct CellarView: View {
         if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
         if stateCount < 5 { return "\(5 - stateCount) states to tap trail" }
         if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
-        return "Passport is warming up"
+        if uniqueBeerCount < 100 { return "\(100 - uniqueBeerCount) beers to Century Cellar" }
+        return "Century Cellar reached. Keep pouring."
     }
 
     private func load() async {
@@ -269,4 +411,14 @@ struct CellarView: View {
         }
         guides = (try? await WorldBeerService.regionGuides()) ?? []
     }
+}
+
+/// One distinct beer on the collection shelf.
+private struct CollectionBeer: Identifiable {
+    let id: String
+    let name: String
+    let brewery: String
+    let style: String?
+    let imageUrl: String?
+    let rating: Double?
 }

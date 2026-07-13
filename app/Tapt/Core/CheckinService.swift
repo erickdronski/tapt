@@ -75,6 +75,15 @@ struct MyCheckin: Identifiable, Decodable {
     struct BeerJoin: Decodable {
         let name: String
         let brewery: BreweryJoin?
+        // 0083: the Cellar is a visual collection now (cutout-preferred image,
+        // BJCP-resolved style; raw checkin styles can be retail categories).
+        let image: String?
+        let styleRef: String?
+
+        enum CodingKeys: String, CodingKey {
+            case name, brewery, image
+            case styleRef = "style_ref"
+        }
     }
     struct BreweryJoin: Decodable { let name: String?; let country: String? }
     struct VenueJoin: Decodable {
@@ -100,6 +109,9 @@ struct MyCheckin: Identifiable, Decodable {
 
     var beerName: String { beer?.name ?? "Logged pour" }
     var breweryName: String { beer?.brewery?.name ?? "" }
+    var imageUrl: String? { beer?.image }
+    /// Resolved BJCP style only; raw checkin styles can be retail junk.
+    var displayStyle: String? { beer?.styleRef }
     var country: String { beer?.brewery?.country ?? "" }
     var venueName: String { venue?.name ?? "" }
     var venueCity: String { venue?.externalIds?.city ?? "" }

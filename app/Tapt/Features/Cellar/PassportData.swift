@@ -33,13 +33,17 @@ enum CountryFlag {
 
 enum PassportProgress {
     static func uniqueBeerCount(in checkins: [MyCheckin]) -> Int {
-        Set(checkins.map { checkin in
-            let brewery = normalized(checkin.breweryName)
-            let beer = normalized(checkin.beerName)
-            if !brewery.isEmpty { return "name:\(brewery)|\(beer)" }
-            if let beerId = checkin.beerId { return "id:\(beerId)" }
-            return "name:|\(beer)"
-        }).count
+        Set(checkins.map(collectionKey)).count
+    }
+
+    /// Stable identity for one distinct beer (same rule the count uses, so the
+    /// collection shelf and the "distinct beers" stat never disagree).
+    static func collectionKey(_ checkin: MyCheckin) -> String {
+        let brewery = normalized(checkin.breweryName)
+        let beer = normalized(checkin.beerName)
+        if !brewery.isEmpty { return "name:\(brewery)|\(beer)" }
+        if let beerId = checkin.beerId { return "id:\(beerId)" }
+        return "name:|\(beer)"
     }
 
     private static func normalized(_ value: String) -> String {
