@@ -74,6 +74,12 @@ ALLOWED_SOURCE_LICENSES = {
     "cc0-1.0",
 }
 
+# Reserve a useful baseline for every represented country before distributing
+# the remaining global cap by the square root of each country's eligible rows.
+# This prevents alphabetical source ordering from excluding later countries,
+# while still giving larger markets more map density than smaller ones.
+COUNTRY_COVERAGE_FLOOR = 25
+
 COUNTRY_NAME_OVERRIDES = {
     "BO": "Bolivia",
     "BN": "Brunei",
@@ -171,11 +177,33 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
           and bbox.ymin between -90 and 90
           {country_filter}
       )
-      select * exclude(region_rank)
-      from filtered
-      where region_rank <= ?
-      order by country_code nulls last, region nulls last, locality nulls last,
-               confidence desc, id
+      , region_balanced as (
+        select
+          *,
+          row_number() over (
+            partition by coalesce(country_code, 'ZZ')
+            order by confidence desc, version desc nulls last, id
+          ) as country_rank,
+          count(*) over (
+            partition by coalesce(country_code, 'ZZ')
+          ) as country_total
+        from filtered
+        where region_rank <= ?
+      )
+      select * exclude(region_rank, country_rank, country_total)
+      from region_balanced
+      order by
+        case when country_rank <= {COUNTRY_COVERAGE_FLOOR} then 0 else 1 end,
+        case
+          when country_rank <= {COUNTRY_COVERAGE_FLOOR} then country_rank
+          else null
+        end,
+        case
+          when country_rank > {COUNTRY_COVERAGE_FLOOR}
+            then country_rank::double / sqrt(country_total::double)
+          else null
+        end,
+        country_code nulls last, confidence desc, id
       limit ?
     """
 
