@@ -24,6 +24,7 @@ struct ExploreView: View {
     @State private var feedNote: String?
     @State private var voteError: String?
     @State private var celebration: TaptCelebration?
+    @State private var recommendation: RecommendedBeer?
     @State private var ticker: [MarketBeer] = []
     @State private var tickerBeer: MarketBeer?
 
@@ -72,8 +73,9 @@ struct ExploreView: View {
                     scanTile.reveal(appeared, 2)
                     catalogBar.reveal(appeared, 3)
                     quickDuo.reveal(appeared, 4)
-                    if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 5) }
-                    BeerOfWeekCard().padding(.horizontal).reveal(appeared, 6)
+                    if let recommendation { PickedForYouCard(beer: recommendation).reveal(appeared, 5) }
+                    if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 6) }
+                    BeerOfWeekCard().padding(.horizontal).reveal(appeared, 7)
                     // The thin regional "beer guide" was wasted space; a real local-scene
                     // module returns with the venue/local-data ingestion.
                     regionPicker.reveal(appeared, 7)
@@ -100,9 +102,11 @@ struct ExploreView: View {
             .task { await hydrateTastePreferences() }
             .task { await detectHomeState() }
             .task(id: noLowDefault) { await loadTicker() }
+            .task { await loadRecommendation() }
             .refreshable {
                 await load()
                 await loadTicker()
+                await loadRecommendation()
             }
             .sheet(item: $tickerBeer) { b in
                 NavigationStack { BeerDetailView(beerId: b.beerId) }
@@ -518,6 +522,14 @@ struct ExploreView: View {
         } catch {
             feedNote = "Could not refresh. Pull to try again."
         }
+    }
+
+    /// One taste-matched beer the user hasn't had. Silent until there is real
+    /// signal (the SQL returns nothing), so the card only shows when it can be
+    /// genuinely personal.
+    private func loadRecommendation() async {
+        guard let uid = session.user?.id else { return }
+        recommendation = try? await RecommendationService.pick(userId: uid)
     }
 
     private func loadTicker() async {

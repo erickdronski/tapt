@@ -279,24 +279,14 @@ struct BeerThumb: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: corner).fill(Brand.surface)
-            if let imageUrl, !imageUrl.isEmpty, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .success(let img): img.resizable().scaledToFit().padding(size * 0.075)
-                    default: Self.fallback(size)
-                    }
-                }
-            } else {
-                Self.fallback(size)
-            }
+            // Cached + downsampled: each OFF thumbnail is fetched from the slow
+            // origin once, ever, then served from memory/disk. Was plain
+            // AsyncImage re-downloading full images on every scroll.
+            CachedBeerImage(url: imageUrl, targetPoints: size)
+                .padding(size * 0.075)
         }
         .frame(width: size, height: size)
+        .clipShape(RoundedRectangle(cornerRadius: corner))
         .overlay(RoundedRectangle(cornerRadius: corner).stroke(Brand.malt.opacity(0.08)))
-    }
-
-    private static func fallback(_ size: CGFloat) -> some View {
-        Image(systemName: "mug.fill")
-            .font(.system(size: size * 0.37))
-            .foregroundStyle(Brand.gold.opacity(0.7))
     }
 }
