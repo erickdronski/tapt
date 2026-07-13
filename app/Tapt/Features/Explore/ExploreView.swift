@@ -11,6 +11,10 @@ struct ExploreView: View {
     @AppStorage("homeRegionGeocoded") private var homeRegionGeocoded = false
     @State private var location = LocationManager()
     @State private var region = ""
+    // The region the rows on screen actually belong to. When a picked region
+    // has no data yet we fall back to the Global feed, and every label must
+    // say Global, never relabel worldwide rows as "Top in <state>".
+    @State private var dataRegion = "Global"
     @State private var beers: [TrendedBeer] = []
     @State private var guides: [RegionBeerGuide] = []
     @State private var loading = false
@@ -113,7 +117,7 @@ struct ExploreView: View {
     private var heroPanel: some View {
         TaptHeroPanel(
             title: heroBeer?.name ?? "Your beer radar",
-            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") in \(region.isEmpty ? homeRegion : region)." }
+            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") in \(dataRegion)." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
                 ?? "Browse real beers and cast the vote that starts the board.",
             metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "EXPLORE",
@@ -274,7 +278,7 @@ struct ExploreView: View {
 
     private var moversSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header("On the come-up", "Biggest movers in \(region)")
+            header("On the come-up", "Biggest movers in \(dataRegion)")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(movers.prefix(10))) { ticker($0) }
@@ -315,9 +319,13 @@ struct ExploreView: View {
         VStack(alignment: .leading, spacing: 10) {
             header(
                 hasMarketActivity
-                    ? (region == "Global" ? "Trending worldwide" : "Top in \(region)")
-                    : (region == "Global" ? "Explore worldwide beers" : "Explore beers from \(region)"),
-                hasMarketActivity ? "Tap to vote it up or down" : "Real catalog beers. Your vote can start the board."
+                    ? (dataRegion == "Global" ? "Trending worldwide" : "Trending in \(dataRegion)")
+                    // Catalog-shelf rows are grouped by where the beer was
+                    // recorded on shelves, so the honest verb is "found in".
+                    : (dataRegion == "Global" ? "Explore worldwide beers" : "Beers found in \(dataRegion)"),
+                dataRegion != region
+                    ? "No \(region) board yet. Log pours and vote there to start it."
+                    : (hasMarketActivity ? "Tap to vote it up or down" : "Real catalog beers. Your vote can start the board.")
             )
             if top.isEmpty && noLowDefault {
                 Text("No No / Low catalog picks are available here yet. Turn off the lens in You to see the full catalog.")
@@ -449,9 +457,11 @@ struct ExploreView: View {
             let regional = try await BeerService.trends(region: region)
             if regional.isEmpty && region != "Global" {
                 beers = try await BeerService.trends(region: "Global")
-                feedNote = "\(region) guide + Global radar"
+                dataRegion = "Global"
+                feedNote = "No \(region) board yet. Showing Global."
             } else {
                 beers = regional
+                dataRegion = region
                 feedNote = nil
             }
         } catch {

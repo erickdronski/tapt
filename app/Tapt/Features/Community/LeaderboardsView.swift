@@ -150,7 +150,9 @@ struct LeaderboardsView: View {
                 TaptEmptyState(
                     icon: "person.3.fill",
                     title: "No tasters ranked yet",
-                    message: "Log pours to claim the top spot. Styles and countries count more than volume.",
+                    // Matches how leaderboard_tasters actually ranks: pours
+                    // first, style breadth breaks ties.
+                    message: "Log pours to claim the top spot. Style breadth breaks ties.",
                     actionTitle: nil
                 )
             } else {

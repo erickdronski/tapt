@@ -3,7 +3,11 @@
 // returns it (mode=preview) or sends it to subscribed addresses via Resend
 // (mode=send, gated by the CRON_SECRET header). Gracefully no-ops when
 // RESEND_API_KEY is missing or there are no subscribers, so it never errors.
-// Owner secrets: RESEND_API_KEY (send), CRON_SECRET (authorize the weekly send).
+// CAN-SPAM: every send carries a per-recipient unsubscribe link, RFC 8058
+// one-click headers, and the postal address; sends refuse to run until
+// MAIL_POSTAL_ADDRESS is configured.
+// Owner secrets: RESEND_API_KEY (send), CRON_SECRET (authorize the weekly
+// send), MAIL_POSTAL_ADDRESS (required for send).
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const CORS = {
@@ -14,9 +18,11 @@ const CORS = {
 const FROM = Deno.env.get("RESEND_FROM") ?? "Tapt <onboarding@resend.dev>";
 const KEY = Deno.env.get("RESEND_API_KEY");
 const CRON_SECRET = Deno.env.get("CRON_SECRET");
+const POSTAL = Deno.env.get("MAIL_POSTAL_ADDRESS");
 const SUPA_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LANDING = "https://taptbeer.com";
+const UNSUB_FN = `${SUPA_URL}/functions/v1/newsletter-unsubscribe`;
 
 function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
@@ -28,10 +34,9 @@ function rangeText(min: unknown, max: unknown, unit: string): string {
   return `${min ?? max}${unit}`;
 }
 
-function issueHtml(c: any): string {
+function issueHtml(c: any, footerExtra = ""): string {
   const f = c.featured ?? {};
   const s = c.style ?? {};
-  const st = c.stats ?? {};
   const abvRange = rangeText(s.abv_min, s.abv_max, "% ABV");
   const ibuRange = rangeText(s.ibu_min, s.ibu_max, " IBU");
   return `<div style="font-family:-apple-system,Inter,Arial,sans-serif;max-width:560px;margin:0 auto;color:#1A1206;background:#FBF6EC;padding:8px">
@@ -56,21 +61,21 @@ function issueHtml(c: any): string {
 
   <div style="background:#fff;border-radius:16px;padding:18px;margin:14px 0;border:1px solid rgba(26,18,6,.08)">
     <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#B4531F;font-weight:700">What the world is pouring</div>
-    <div style="color:#6B6459;font-size:.95rem;margin-top:6px">Tapt now maps <b style="color:#1A1206">${Number(st.beers ?? 0).toLocaleString()}</b> beers from <b style="color:#1A1206">${Number(st.breweries ?? 0).toLocaleString()}</b> breweries and <b style="color:#1A1206">${Number(st.venues ?? 0).toLocaleString()}</b> venues across <b style="color:#1A1206">${Number(st.countries ?? 0)}</b> countries, with <b style="color:#1A1206">${Number(st.styles ?? 0)}</b> BJCP styles, all free to explore.</div>
+    <div style="color:#6B6459;font-size:.95rem;margin-top:6px">New beers, breweries, and venues land on the Tapt map every week, all free to explore.</div>
     <div style="margin-top:14px"><a href="${LANDING}" style="background:#F2A900;color:#1A1206;font-weight:700;padding:11px 22px;border-radius:999px;text-decoration:none;display:inline-block">Open Tapt</a></div>
   </div>
 
   <div style="font-size:12px;color:#6B6459;padding:8px 4px">Real data only: beers from Open Food Facts, styles from the BJCP 2021 guidelines, venues from Open Brewery DB. Blank beats invented.</div>
   <hr style="border:none;border-top:1px solid rgba(26,18,6,.1);margin:16px 4px">
-  <div style="font-size:12px;color:#6B6459;padding:0 4px">Tapt, THE Beer Superapp. Enjoy responsibly, 21+/legal drinking age. <a href="${LANDING}" style="color:#B4531F">taptbeer.com</a></div>
+  <div style="font-size:12px;color:#6B6459;padding:0 4px">Tapt, THE Beer Superapp. Enjoy responsibly, 21+/legal drinking age. <a href="${LANDING}" style="color:#B4531F">taptbeer.com</a>${footerExtra}</div>
 </div>`;
 }
 
-async function sendOne(to: string, subject: string, html: string) {
+async function sendOne(to: string, subject: string, html: string, headers?: Record<string, string>) {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { "Authorization": `Bearer ${KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to, subject, html }),
+    body: JSON.stringify({ from: FROM, to, subject, html, ...(headers ? { headers } : {}) }),
   });
   return r.ok;
 }
@@ -100,12 +105,28 @@ Deno.serve(async (req) => {
       return Response.json({ error: "forbidden: valid x-cron-secret required" }, { status: 403, headers: CORS });
     }
     if (!KEY) return Response.json({ sent: false, reason: "RESEND_API_KEY not configured" }, { headers: CORS });
-    const { data: subs } = await admin.from("newsletter_subscriber").select("email").eq("status", "subscribed");
-    const emails = (subs || []).map((x: any) => x.email);
-    if (!emails.length) return Response.json({ sent: false, reason: "no subscribers" }, { headers: CORS });
+    if (!POSTAL) {
+      return Response.json(
+        { sent: false, reason: "MAIL_POSTAL_ADDRESS not configured. CAN-SPAM requires a physical postal address in every newsletter; set the secret before sending." },
+        { status: 412, headers: CORS },
+      );
+    }
+    const { data: subs } = await admin.from("newsletter_subscriber")
+      .select("email, unsubscribe_token")
+      .eq("status", "subscribed");
+    const list = subs || [];
+    if (!list.length) return Response.json({ sent: false, reason: "no subscribers" }, { headers: CORS });
     let ok = 0;
-    for (const to of emails.slice(0, 100)) { if (await sendOne(to, subject, html)) ok++; }
-    return Response.json({ sent: true, delivered: ok, total: emails.length, week: content.week }, { headers: CORS });
+    for (const s of list.slice(0, 100)) {
+      const unsubUrl = `${UNSUB_FN}?t=${s.unsubscribe_token}`;
+      const footer = `<br><a href="${unsubUrl}" style="color:#B4531F">Unsubscribe</a> &middot; ${esc(POSTAL)}`;
+      const sent = await sendOne(s.email, subject, issueHtml(content, footer), {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      });
+      if (sent) ok++;
+    }
+    return Response.json({ sent: true, delivered: ok, total: list.length, week: content.week }, { headers: CORS });
   }
 
   return Response.json({ error: "unknown mode (use preview or send)" }, { status: 400, headers: CORS });

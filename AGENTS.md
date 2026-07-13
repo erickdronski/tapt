@@ -58,12 +58,18 @@ promptly (small commits, don't sit on local state another agent can't see).
   localStorage draft autosave, beforeunload guard, reorder, publish lifecycle,
   and an "add my venue" fallback (`submit_partner_inquiry`).
 - **Tapt-owned anon RPC surface is locked to:** `catalog_search`, `venue_brand`,
-  `venue_events`, `venue_menu` (the public web needs exactly these). Everything
-  else is `authenticated`-only. The PostGIS extension separately grants three
-  `st_estimatedextent` overloads through its extension owner; Tapt does not call
-  them and the project migration role cannot revoke those extension-owned ACLs.
-  If you add a public page that needs an RPC, grant it deliberately and note it
-  here.
+  `venue_events`, `venue_menu` (public web) plus `region_guide_feed` and
+  `match_beers` (guest browsing in-app), plus the pure formatter
+  `tapt_trusted_country` (used inside security_invoker views). Everything else
+  is `authenticated`-only.
+  **GOTCHA (0081):** Postgres grants EXECUTE to PUBLIC on every `create
+  function`, so `revoke ... from anon` alone is a NO-OP. 0081 revoked
+  PUBLIC+anon across all non-extension public functions, restored
+  authenticated exactly, and set `alter default privileges ... revoke execute
+  on functions from public` for the migration role. If you create a function
+  a client must call, GRANT it explicitly (anon and/or authenticated) and
+  note anon additions here. Extension-owned ACLs (PostGIS etc.) cannot be
+  revoked by the migration role; they are pure helpers with no table access.
 - **Content** `social-assets/` — brand master, IG launch kit, 30-day library
   (`social-assets/library/`, gallery.html to review). Real beers/facts only.
 - **CI** `.github/workflows/` — `build.yml` (push), `testflight.yml`
@@ -83,6 +89,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Fine-tooth-comb round 1 (Claude, 2026-07-13):** 14-lens fleet audit over
+  repo + live DB -> docs/22-FINE-TOOTH-COMB.md (128 findings, statuses
+  maintained there). Shipped 0081: anon lockdown (PUBLIC-grant gotcha, see
+  contract section), venue read policy (RLS had zero policies), honest
+  countries via tapt_trusted_country (OFF country = scan country, never
+  origin), leaderboard_beers dedupe/BJCP-style-only/positive-signal gate,
+  leaderboard_styles through the BJCP resolver, 13 venue geo repairs, 49 venue
+  dupes removed, 5 impossible ABVs quarantined. Also applied Codex's 0079/0080
+  to prod + deployed verify-barcode-beer; dispatch-weekly now CAN-SPAM
+  complete (per-recipient unsubscribe + RFC 8058 + postal gate) and de-flexed;
+  dispatch.html personalization claims rewritten honest; Explore state/country
+  labels honest ("Trending in X" only when X really has data, "Beers found in
+  X" for shelf rows, Global fallback labeled Global). NEXT OPEN P0 (either
+  agent): names v4 - keep the NA marker in display_name (sans-alcool masquerade),
+  tighten tapt_name_ok for deposit/barcode/placeholder strings beyond the
+  catalog_search-level filter 0079 added.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in
