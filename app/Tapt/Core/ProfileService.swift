@@ -40,10 +40,29 @@ enum ProfileService {
         )
     }
 
-    static func setTopStyles(_ styles: [String], userId: UUID) async {
+    static func topStyles(userId: UUID) async throws -> [String] {
+        struct Row: Decodable {
+            let topStyles: [String]
+            enum CodingKeys: String, CodingKey { case topStyles = "top_styles" }
+        }
+        _ = try await Supa.client.auth.session
+        let rows: [Row] = try await Supa.client.from("taste_vector")
+            .select("top_styles")
+            .eq("user_id", value: userId.uuidString)
+            .limit(1)
+            .execute().value
+        return rows.first?.topStyles ?? []
+    }
+
+    static func setTopStyles(_ styles: [String], userId: UUID) async throws {
         struct TV: Encodable { let user_id: String; let top_styles: [String] }
-        _ = try? await Supa.client.from("taste_vector")
-            .upsert(TV(user_id: userId.uuidString, top_styles: styles)).execute()
+        _ = try await Supa.client.auth.session
+        try await Supa.client.from("taste_vector")
+            .upsert(
+                TV(user_id: userId.uuidString, top_styles: styles),
+                returning: .minimal
+            )
+            .execute()
     }
 
     static func setPrivacyChoice(purpose: String, granted: Bool, uiText: String, userId: UUID) async throws {

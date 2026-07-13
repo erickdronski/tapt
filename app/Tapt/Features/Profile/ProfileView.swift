@@ -7,6 +7,7 @@ struct ProfileView: View {
     @AppStorage("appearance") private var appearanceRaw = Appearance.system.rawValue
     @AppStorage("beerGeekMode") private var beerGeekMode = false
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @AppStorage("favoriteStyles") private var favoriteStyles = ""
     @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("aggregateConsent") private var aggregateConsent = false
     @AppStorage("dataSaleConsent") private var dataSaleConsent = false
@@ -31,6 +32,10 @@ struct ProfileView: View {
     }
     private var email: String { session.user?.email ?? "" }
     private var initial: String { String(displayName.first ?? "T").uppercased() }
+    private var tasteSummary: String {
+        let count = TastePreferences.decode(favoriteStyles).count
+        return count == 0 ? "Choose" : "\(count) selected"
+    }
 
     var body: some View {
         NavigationStack {
@@ -135,6 +140,11 @@ struct ProfileView: View {
                 Section {
                     Toggle("Beer-geek mode", isOn: $beerGeekMode)
                     Toggle("No / Low lens by default", isOn: $noLowDefault)
+                    if session.user != nil {
+                        NavigationLink { TastePreferencesView() } label: {
+                            LabeledContent("Favorite styles", value: tasteSummary)
+                        }
+                    }
                 } header: {
                     Text("Preferences")
                 } footer: {

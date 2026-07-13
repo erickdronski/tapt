@@ -7,6 +7,7 @@ struct ExploreView: View {
     @Environment(Session.self) private var session
     @AppStorage("homeRegion") private var homeRegion = "Global"
     @AppStorage("noLowDefault") private var noLowDefault = false
+    @AppStorage("favoriteStyles") private var favoriteStyles = ""
     @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("homeRegionGeocoded") private var homeRegionGeocoded = false
     @State private var location = LocationManager()
@@ -36,6 +37,22 @@ struct ExploreView: View {
     }
     private var movers: [TrendedBeer] { visibleBeers.sorted { $0.momentum > $1.momentum } }
     private var top: [TrendedBeer] { visibleBeers.sorted { $0.popularity > $1.popularity } }
+    private var favoriteStyleNames: [String] { TastePreferences.decode(favoriteStyles) }
+    private var personalizedBeers: [TrendedBeer] {
+        visibleBeers
+            .filter {
+                TastePreferences.matches(
+                    style: $0.style,
+                    isNaLow: $0.isNaLow,
+                    selectedStyles: favoriteStyleNames
+                )
+            }
+            .sorted {
+                if $0.popularity != $1.popularity { return $0.popularity > $1.popularity }
+                if $0.momentum != $1.momentum { return $0.momentum > $1.momentum }
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+    }
     private var hasMarketActivity: Bool {
         visibleBeers.contains { $0.popularity != 0 || $0.momentum != 0 }
     }
@@ -54,6 +71,7 @@ struct ExploreView: View {
                     scanTile
                     catalogBar
                     quickDuo
+                    if !personalizedBeers.isEmpty { tasteSection }
                     BeerOfWeekCard().padding(.horizontal)
                     // The thin regional "beer guide" was wasted space; a real local-scene
                     // module returns with the venue/local-data ingestion.
@@ -77,6 +95,7 @@ struct ExploreView: View {
             }
             .task(id: region) { await load() }
             .task { await loadGuides() }
+            .task { await hydrateTastePreferences() }
             .task { await detectHomeState() }
             .task(id: noLowDefault) { await loadTicker() }
             .refreshable {
@@ -308,6 +327,37 @@ struct ExploreView: View {
         .buttonStyle(.plain)
     }
 
+    private var tasteSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            header("For your taste", "Your favorite beer styles")
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(Array(personalizedBeers.prefix(10))) { beer in
+                        NavigationLink { BeerDetailView(beerId: beer.id) } label: {
+                            VStack(alignment: .leading, spacing: 8) {
+                                BeerThumb(imageUrl: beer.imageUrl, size: 68, corner: 12)
+                                Text(beer.name)
+                                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                    .foregroundStyle(Brand.text)
+                                    .lineLimit(2)
+                                Text(beer.style.isEmpty ? beer.brewery : beer.style)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(Brand.muted)
+                                    .lineLimit(1)
+                            }
+                            .padding(12)
+                            .frame(width: 146, height: 168, alignment: .topLeading)
+                            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.gold.opacity(0.18)))
+                        }
+                        .buttonStyle(.taptPress)
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
     private func momentum(_ m: Int) -> some View {
         let up = m >= 0
         return Label("\(abs(m))", systemImage: up ? "arrow.up.right" : "arrow.down.right")
@@ -346,6 +396,7 @@ struct ExploreView: View {
             NavigationLink { BeerDetailView(beerId: b.id) } label: {
                 HStack(spacing: 12) {
                     Text("\(rank)").font(.system(.headline, design: .monospaced)).foregroundStyle(Brand.muted).frame(width: 22)
+                    BeerThumb(imageUrl: b.imageUrl, size: 44, corner: 10)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(b.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                         Text(rowSubtitle(b)).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)
@@ -479,6 +530,12 @@ struct ExploreView: View {
         } catch {
             // Keep the last good tape visible through a transient refresh failure.
         }
+    }
+
+    private func hydrateTastePreferences() async {
+        guard let userId = session.user?.id else { return }
+        guard let styles = try? await ProfileService.topStyles(userId: userId) else { return }
+        favoriteStyles = TastePreferences.encode(styles)
     }
 
     /// One-time: once location permission exists, default the dashboard to the

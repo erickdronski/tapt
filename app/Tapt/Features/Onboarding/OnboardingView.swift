@@ -26,8 +26,6 @@ struct OnboardingView: View {
     @State private var saving = false
     @State private var saveError: String?
 
-    private let allStyles = ["IPA", "Hazy IPA", "Pilsner", "Lager", "Stout", "Porter",
-                             "Sour", "Belgian", "Wheat", "Pale Ale", "No / Low"]
     private let total = 5
 
     var body: some View {
@@ -77,7 +75,7 @@ struct OnboardingView: View {
     private var stylesStep: some View {
         VStack(spacing: 18) {
             stepTitle("What do you love?", "Pick your go-to styles. We will tune your feed.")
-            ScrollView { FlowChips(items: allStyles, selection: $styles) }
+            ScrollView { TasteStylePicker(selection: $styles).padding(.horizontal) }
             Spacer(minLength: 0)
         }
     }
@@ -204,7 +202,7 @@ struct OnboardingView: View {
             saveError = "Confirm legal drinking age before continuing."
             return
         }
-        favoriteStyles = styles.sorted().joined(separator: ",")
+        favoriteStyles = TastePreferences.encode(styles)
         homeRegion = region
         noLowDefault = styles.contains("No / Low")
         savedLocationConsent = locationConsent
@@ -239,34 +237,5 @@ struct OnboardingView: View {
             }
             saving = false
         }
-    }
-}
-
-/// Wrapping selectable chips.
-private struct FlowChips: View {
-    let items: [String]
-    @Binding var selection: Set<String>
-    private let cols = [GridItem(.adaptive(minimum: 104), spacing: 10)]
-
-    var body: some View {
-        LazyVGrid(columns: cols, spacing: 10) {
-            ForEach(items, id: \.self) { item in
-                let on = selection.contains(item)
-                Button {
-                    if on { selection.remove(item) } else { selection.insert(item) }
-                } label: {
-                    Text(item)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .frame(maxWidth: .infinity).padding(.vertical, 12)
-                        .background(on ? Brand.gold : Brand.surface, in: Capsule())
-                        .foregroundStyle(on ? Brand.malt : Brand.text)
-                        .overlay(Capsule().stroke(on ? Brand.gold : Brand.malt.opacity(0.15)))
-                        .scaleEffect(on ? 1.04 : 1)
-                }
-                .buttonStyle(.plain)
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: on)
-            }
-        }
-        .padding(.horizontal)
     }
 }

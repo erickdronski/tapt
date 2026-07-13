@@ -4,7 +4,7 @@ import Supabase
 enum BeerService {
     /// Trending beers for a region (ordered by momentum; the caller can re-sort by popularity).
     static func trends(region: String) async throws -> [TrendedBeer] {
-        let columns = "beer_id,name,style,abv,brewery_name,country,popularity,momentum,avg_rating,is_na_low"
+        let columns = "beer_id,name,style,abv,brewery_name,country,popularity,momentum,avg_rating,is_na_low,image_url"
         let rows: [TrendRow]
         if region == "Global" {
             rows = try await Supa.client

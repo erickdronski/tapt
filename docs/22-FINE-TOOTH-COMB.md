@@ -727,7 +727,7 @@ unchanged and makes future Profile rows store the nonempty label supplied by
 the visible toggle. Onboarding's three server-owned sentences now exactly
 match the three toggles, including partner aggregate sharing.
 
-### [OPEN] Onboarding promises 'We will tune your feed' but the picked styles are read by nothing
+### [FIXED 2026-07-13] Onboarding promises 'We will tune your feed' but the picked styles are read by nothing
 *Surface:* Onboarding (styles step claim vs reality)  ·  *Anchor:* `app/Tapt/Features/Onboarding/OnboardingView.swift:79`  ·  *Found by:* fleet
 
 The styles step tells every new user 'Pick your go-to styles. We will tune your feed.' The picks are written two places and consumed by zero: (1) taste_vector.top_styles on the server — a live scan of pg_proc shows the only functions referencing taste_vector are complete_profile_onboarding (write) and delete_account_data (delete); no feed, market, explore, or recommendation function reads it; (2) the favoriteStyles AppStorage key in the app — written in OnboardingView.complete() and read nowhere else in the codebase. The only pick with any effect is 'No / Low' (it sets noLowDefault). A user who carefully selects styles gets an identical feed to one who selects none, so the onboarding sentence is an unfulfilled product promise on the first screen sequence every user sees.
@@ -735,6 +735,13 @@ The styles step tells every new user 'Pick your go-to styles. We will tune your 
 **Evidence:** Live query: select proname from pg_proc where prosrc ilike '%taste_vector%' returns only complete_profile_onboarding and delete_account_data. App grep: favoriteStyles appears only at OnboardingView.swift:11 (declaration) and :205 (write); no reader exists in app/Tapt.
 
 **Fix:** Either wire the promise or soften it. Cheapest honest wiring: use taste_vector.top_styles to order the Explore board / catalog browse (boost matching styles) or preselect the style filter — a single ORDER BY boost in the existing read RPC. If that is post-launch, change the subtitle to what is true today, e.g. 'Pick your go-to styles. No / Low sets your lens.' or simply 'Pick your go-to styles.' — blank beats invented promises, same as data.
+
+**Resolution (2026-07-13):** Explore now restores `taste_vector.top_styles`
+from the signed-in account and renders a separate `For your taste` rail without
+distorting community rankings. Favorite styles can be edited under You, and
+the shared matcher handles broader families such as Belgian, wheat, sour, and
+No / Low. Product images are carried into the trend feed for this rail and the
+main Explore rows.
 
 ### [FIXED this round] One flaky first launch permanently skips onboarding — the code contradicts its own 'next launch re-checks' comment
 *Surface:* Onboarding gate (TaptApp launch flow)  ·  *Anchor:* `app/Tapt/TaptApp.swift:63`  ·  *Found by:* fleet

@@ -8,6 +8,7 @@ struct TrendRow: Decodable {
     let abv: Double?
     let breweryName: String?
     let country: String?
+    let imageUrl: String?
     let isNaLow: Bool
     let popularity: Int
     let momentum: Int
@@ -18,6 +19,7 @@ struct TrendRow: Decodable {
         case isNaLow = "is_na_low"
         case beerId = "beer_id"
         case breweryName = "brewery_name"
+        case imageUrl = "image_url"
         case avgRating = "avg_rating"
     }
 }
@@ -29,6 +31,7 @@ struct TrendedBeer: Identifiable {
     let brewery: String
     let country: String
     let style: String
+    let imageUrl: String?
     let abv: Double?
     // var: a saved vote nudges these in place so the feed doesn't refetch-reshuffle.
     var popularity: Int
@@ -42,6 +45,7 @@ struct TrendedBeer: Identifiable {
         brewery = r.breweryName ?? ""
         country = r.country ?? ""
         style = r.style ?? ""
+        imageUrl = r.imageUrl
         abv = r.abv
         popularity = r.popularity
         momentum = r.momentum
