@@ -38,6 +38,16 @@ promptly (small commits, don't sit on local state another agent can't see).
 - **Backend** Supabase `qfwiizvqxrhjlthbjosz` — migrations live in
   `supabase/migrations/`, applied to prod via MCP/SQL **and mirrored here in
   the same commit**. Never let prod and the repo drift.
+- **Display fields are precomputed columns, not raw source — always read
+  these, never the raw column, for anything a user sees:**
+  `beer_catalog.display_name` (cleaned name), `beer_catalog.name_ok` (junk
+  gate), `beer_catalog.style_ref` (BJCP-resolved style; NULL for
+  geography/junk like "Lithuanian Beers" — blank beats junk), and country via
+  `tapt_trusted_country(brewery.country, brewery.external_ids)` (OFF country =
+  scan country, not origin). Readers already on style_ref: catalog_search,
+  refresh_beer_market_standing, leaderboard_beers, beer_detail,
+  beer_trend_feed (0092). If you touch any of these, keep style_ref, not
+  raw `style`.
 - **Web** `landing/` — static, deployed by Vercel (project `tapt-landing`,
   Root Directory = `landing`, git-connected to this repo, `cleanUrls: true`).
   Domain: **taptbeer.com** (apex serves; www 308s to apex).
