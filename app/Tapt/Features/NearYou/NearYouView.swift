@@ -5,7 +5,6 @@ import UIKit
 /// A local map of nearby beer spots from Tapt, Apple, and live local search.
 /// Includes breweries, pubs, bars, taprooms, beer gardens, and restaurants with beer energy.
 struct NearYouView: View {
-    @Environment(Session.self) private var session
     @AppStorage("locationConsent") private var locationConsent = false
     @AppStorage("homeRegion") private var homeRegion = "Global"
     @State private var location = LocationManager()
@@ -24,10 +23,6 @@ struct NearYouView: View {
     @State private var nearLoaded = false
     @State private var selectedVenue: BreweryMapVenue?
     @State private var radarError: String?
-
-    private var canLoadTaptRadar: Bool {
-        session.user != nil && !session.isGuest
-    }
 
     private var visibleTaptVenues: [BreweryMapVenue] {
         let filtered = taptVenues.filter { venue in
@@ -205,9 +200,7 @@ struct NearYouView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $searchText, prompt: "Search brewery, pub, city, state")
             .task {
-                if canLoadTaptRadar {
-                    await loadTaptRadar()
-                }
+                await loadTaptRadar()
                 if locationConsent { location.request() }
             }
             .onChange(of: location.location) { _, loc in
@@ -219,9 +212,7 @@ struct NearYouView: View {
                         camera = .region(MKCoordinateRegion(center: loc.coordinate,
                                                             latitudinalMeters: 24_000, longitudinalMeters: 24_000))
                     }
-                    if canLoadTaptRadar {
-                        Task { await loadNearbyRadar(loc.coordinate) }
-                    }
+                    Task { await loadNearbyRadar(loc.coordinate) }
                 }
             }
             .onChange(of: locationConsent) { _, enabled in
@@ -332,10 +323,6 @@ struct NearYouView: View {
     }
 
     private func loadTaptRadar() async {
-        guard canLoadTaptRadar else {
-            radarError = nil
-            return
-        }
         radarLoading = true
         defer { radarLoading = false }
         do {

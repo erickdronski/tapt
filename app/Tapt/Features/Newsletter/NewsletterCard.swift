@@ -28,7 +28,19 @@ struct NewsletterCard: View {
                 Spacer(minLength: 0)
             }
 
-            if subscribed == true {
+            if session.user == nil {
+                Button {
+                    session.endGuestSession()
+                } label: {
+                    Label("Sign in to subscribe", systemImage: "person.crop.circle.badge.plus")
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
+                        .foregroundStyle(Brand.malt)
+                }
+                .buttonStyle(.plain)
+            } else if subscribed == true {
                 HStack {
                     Label("You're on the list", systemImage: "checkmark.seal.fill")
                         .font(.subheadline.weight(.bold))
@@ -91,6 +103,10 @@ struct NewsletterCard: View {
     }
 
     private func subscribe() {
+        guard session.user != nil else {
+            session.endGuestSession()
+            return
+        }
         working = true
         note = nil
         Task {

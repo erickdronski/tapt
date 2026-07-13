@@ -142,10 +142,10 @@ struct BeerDetail: Decodable, Sendable {
 enum BeerDetailService {
     static func detail(beerId: String) async throws -> BeerDetail? {
         struct Params: Encodable { let p_beer_id: String }
-        let rows: [BeerDetail] = try await Supa.authedRPC(
-            "beer_detail",
-            params: Params(p_beer_id: beerId)
-        )
+        let rows: [BeerDetail] = try await Supa.client
+            .rpc("beer_detail", params: Params(p_beer_id: beerId))
+            .execute()
+            .value
         return rows.first
     }
 }
@@ -176,18 +176,18 @@ struct BeerOfWeekEntry: Identifiable, Decodable, Sendable {
 enum BeerOfWeekService {
     static func standings(limit: Int = 5) async throws -> [BeerOfWeekEntry] {
         struct Params: Encodable { let p_limit: Int }
-        return try await Supa.authedRPC(
-            "beer_of_week_standings",
-            params: Params(p_limit: limit)
-        )
+        return try await Supa.client
+            .rpc("beer_of_week_standings", params: Params(p_limit: limit))
+            .execute()
+            .value
     }
 
     static func latestWinner() async throws -> BeerOfWeekEntry? {
         struct Empty: Encodable {}
-        let rows: [BeerOfWeekEntry] = try await Supa.authedRPC(
-            "beer_of_week_latest_winner",
-            params: Empty()
-        )
+        let rows: [BeerOfWeekEntry] = try await Supa.client
+            .rpc("beer_of_week_latest_winner", params: Empty())
+            .execute()
+            .value
         return rows.first
     }
 }
