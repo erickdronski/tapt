@@ -40,6 +40,16 @@ final class PassportDataTests: XCTestCase {
         XCTAssertTrue(centuryCellar.earned(PassportStats(pours: 100, beers: 100, styles: 10, states: 5, countries: 3)))
     }
 
+    func testCountryFlagSupportsAnyISORegionCode() {
+        XCTAssertEqual(CountryFlag.symbol(for: "NZ"), "\u{1F1F3}\u{1F1FF}")
+        XCTAssertEqual(CountryFlag.symbol(for: " kr "), "\u{1F1F0}\u{1F1F7}")
+    }
+
+    func testCountryFlagFallsBackForInvalidCodes() {
+        XCTAssertEqual(CountryFlag.symbol(for: nil), "\u{1F37A}")
+        XCTAssertEqual(CountryFlag.symbol(for: "USA"), "\u{1F37A}")
+    }
+
     private func makeCheckin(
         id: String,
         beerId: String?,

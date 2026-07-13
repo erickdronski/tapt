@@ -100,52 +100,68 @@ class SupabaseAPI:
                     time.sleep(2 ** attempt)
         raise PipelineError("supabase_request", str(last_error))
 
-    def candidates(self, scan_limit: int, retry_rejected: bool) -> list[Candidate]:
-        response = self.request(
-            "GET",
-            "/rest/v1/beer_catalog",
-            params={
-                "select": "id,name,label_image_url,label_image_license,updated_at",
-                "label_image_url": "not.is.null",
-                "or": "(cutout_url.is.null,cutout_url.eq.)",
-                "order": "updated_at.asc,id.asc",
-                "limit": str(scan_limit),
-            },
-        )
-        rows = response.json()
-        statuses: dict[str, dict[str, Any]] = {}
-        for start in range(0, len(rows), 40):
-            ids = ",".join(row["id"] for row in rows[start:start + 40])
-            status_rows = self.request(
+    def candidates(self, target_count: int, retry_rejected: bool) -> list[Candidate]:
+        # Terminal failures keep cutout_url empty, so a fixed first-page query
+        # eventually stalls behind rows that are correctly skipped. Page through
+        # the catalog until this run has a full batch or reaches the real end.
+        page_size = 500
+        offset = 0
+        result: list[Candidate] = []
+        while len(result) < target_count:
+            rows = self.request(
                 "GET",
-                "/rest/v1/beer_media_processing",
+                "/rest/v1/beer_catalog",
                 params={
-                    "select": "beer_id,status,attempts,source_url",
-                    "beer_id": f"in.({ids})",
+                    "select": "id,name,label_image_url,label_image_license,updated_at",
+                    "label_image_url": "not.is.null",
+                    "or": "(cutout_url.is.null,cutout_url.eq.)",
+                    "order": "updated_at.asc,id.asc",
+                    "limit": str(page_size),
+                    "offset": str(offset),
                 },
             ).json()
-            statuses.update({row["beer_id"]: row for row in status_rows})
+            if not rows:
+                break
 
-        result: list[Candidate] = []
-        for row in rows:
-            source_url = (row.get("label_image_url") or "").strip()
-            if not source_url.startswith("https://"):
-                continue
-            status = statuses.get(row["id"], {})
-            attempts = int(status.get("attempts") or 0)
-            same_source = status.get("source_url") == source_url
-            terminal = status.get("status") in {"completed", "rejected"}
-            if same_source and terminal and not retry_rejected:
-                continue
-            if same_source and attempts >= MAX_ATTEMPTS and not retry_rejected:
-                continue
-            result.append(Candidate(
-                id=row["id"],
-                name=(row.get("name") or "Unnamed beer").strip(),
-                source_url=source_url,
-                license=row.get("label_image_license"),
-                attempts=attempts if same_source else 0,
-            ))
+            statuses: dict[str, dict[str, Any]] = {}
+            for start in range(0, len(rows), 40):
+                ids = ",".join(row["id"] for row in rows[start:start + 40])
+                status_rows = self.request(
+                    "GET",
+                    "/rest/v1/beer_media_processing",
+                    params={
+                        "select": "beer_id,status,attempts,source_url",
+                        "beer_id": f"in.({ids})",
+                    },
+                ).json()
+                statuses.update({row["beer_id"]: row for row in status_rows})
+
+            for row in rows:
+                source_url = (row.get("label_image_url") or "").strip()
+                if not source_url.startswith("https://"):
+                    continue
+                status = statuses.get(row["id"], {})
+                attempts = int(status.get("attempts") or 0)
+                same_source = status.get("source_url") == source_url
+                terminal = status.get("status") in {"completed", "rejected"}
+                if same_source and terminal and not retry_rejected:
+                    continue
+                if same_source and attempts >= MAX_ATTEMPTS and not retry_rejected:
+                    continue
+                result.append(Candidate(
+                    id=row["id"],
+                    name=(row.get("name") or "Unnamed beer").strip(),
+                    source_url=source_url,
+                    license=row.get("label_image_license"),
+                    attempts=attempts if same_source else 0,
+                ))
+                if len(result) >= target_count:
+                    break
+
+            offset += len(rows)
+            if len(rows) < page_size:
+                break
+        print(f"catalog scan: {offset} rows inspected for {len(result)} candidates")
         return result
 
     def mark(self, candidate: Candidate, status: str, **values: Any) -> None:
@@ -316,8 +332,7 @@ def main() -> int:
     from rembg import new_session
 
     api = SupabaseAPI(SUPABASE_URL, SERVICE_KEY, args.dry_run)
-    candidates = api.candidates(scan_limit=min(1500, max(300, batch * 5)), retry_rejected=args.retry_rejected)
-    candidates = candidates[:batch]
+    candidates = api.candidates(target_count=batch, retry_rejected=args.retry_rejected)
     print(f"cutout batch: {len(candidates)} candidates, model={args.model}, dry_run={args.dry_run}")
     if not candidates:
         return 0

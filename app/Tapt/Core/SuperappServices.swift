@@ -43,19 +43,19 @@ enum NewsletterService {
             let p_source: String
             let p_ui_text: String
         }
-        try await Supa.client.rpc(
+        try await Supa.authedRPCVoid(
             "subscribe_newsletter",
             params: Params(
                 p_email: email,
                 p_source: source,
                 p_ui_text: "Send me The Tapt Dispatch: beer trends, new spots, and what the world is pouring."
             )
-        ).execute()
+        )
     }
 
     static func unsubscribe() async throws {
         struct Empty: Encodable {}
-        try await Supa.client.rpc("unsubscribe_newsletter", params: Empty()).execute()
+        try await Supa.authedRPCVoid("unsubscribe_newsletter", params: Empty())
     }
 }
 
@@ -404,15 +404,6 @@ enum BarcodeCatalogService {
     /// Adds the looked-up product to the Tapt catalog (server dedups by GTIN)
     /// and returns a loggable pick.
     static func addToCatalog(_ off: OFFBeer) async throws -> BeerPick? {
-        struct Params: Encodable {
-            let p_gtin: String
-            let p_name: String
-            let p_brand: String?
-            let p_style: String?
-            let p_abv: Double?
-            let p_country: String?
-            let p_image_url: String?
-        }
         struct Row: Decodable {
             let id: String
             let name: String
@@ -425,19 +416,22 @@ enum BarcodeCatalogService {
                 case breweryName = "brewery_name"
             }
         }
-        let rows: [Row] = try await Supa.client.rpc(
-            "add_beer_from_barcode",
-            params: Params(
-                p_gtin: off.barcode,
-                p_name: off.name,
-                p_brand: off.brand,
-                p_style: nil,
-                p_abv: off.abv,
-                p_country: nil,
-                p_image_url: off.imageURL
-            )
-        ).execute().value
-        guard let row = rows.first else { return nil }
+        struct Body: Encodable { let barcode: String }
+        struct Payload: Decodable { let beer: Row? }
+
+        let session = try await Supa.client.auth.session
+        var request = URLRequest(url: Supa.url.appendingPathComponent("functions/v1/verify-barcode-beer"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(Supa.publishableKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+        request.httpBody = try JSONEncoder().encode(Body(barcode: off.barcode))
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
+            throw URLError(.badServerResponse)
+        }
+        guard let row = try JSONDecoder().decode(Payload.self, from: data).beer else { return nil }
         return BeerPick(
             id: row.id,
             name: row.name,

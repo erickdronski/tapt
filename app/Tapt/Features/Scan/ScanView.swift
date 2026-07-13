@@ -369,7 +369,7 @@ struct ScanView: View {
 
             Text(off.isBeerCategory
                  ? "Found in Open Food Facts, new to Tapt. Add it and be the first to log it worldwide."
-                 : "Found in Open Food Facts, but it may not be a beer. Add it only if it belongs in the Cellar.")
+                 : "Open Food Facts does not classify this product as beer, so it cannot be added to the Tapt catalog.")
                 .font(.caption)
                 .foregroundStyle(Brand.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -379,12 +379,14 @@ struct ScanView: View {
                     ratingButton(i)
                 }
                 Spacer()
-                Button(addingOFF ? "Adding..." : "Add to Tapt + log") { addAndLog(off) }
+                Button(addingOFF ? "Adding..." : off.isBeerCategory ? "Add to Tapt + log" : "Not classified as beer") { addAndLog(off) }
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Brand.hop, in: Capsule())
                     .foregroundStyle(Brand.malt)
-                    .disabled(addingOFF || rating == nil)
+                    .disabled(addingOFF || rating == nil || !off.isBeerCategory)
             }
         }
         .padding(14)

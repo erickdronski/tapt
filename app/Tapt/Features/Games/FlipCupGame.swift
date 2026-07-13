@@ -5,7 +5,7 @@ import SwiftUI
 /// flops short, too hard and it over-spins and tips. Chase your best streak.
 struct FlipCupGame: View {
     @State private var streak = 0
-    @State private var best = 0
+    @AppStorage("flipCupBestStreak") private var best = 0
     @State private var flips = 0                 // total successful flips
     @State private var attempts = 0
 
@@ -166,7 +166,7 @@ struct FlipCupGame: View {
                         result = nil
                     }
                     airborne = false
-                    if success && streak == best && best > 0 { message = "🔥 \(best) in a row!" }
+                    if success && streak == best && best > 0 { message = "Best streak: \(best)." }
                     else if !success { message = "Flick up to flip the cup." }
                 }
             }

@@ -50,6 +50,11 @@ struct VenueAnalytics: Decodable, Sendable {
     let uniqueDrinkers: Int
     let avgRating: Double?
     let topBeers: [TopBeer]
+    let privacyThresholdMet: Bool?
+    let weeklyThresholdMet: Bool?
+    let minimumDrinkers: Int?
+
+    var canShowActivity: Bool { privacyThresholdMet ?? true }
 
     struct TopBeer: Identifiable, Decodable, Sendable {
         let name: String
@@ -63,6 +68,9 @@ struct VenueAnalytics: Decodable, Sendable {
         case uniqueDrinkers = "unique_drinkers"
         case avgRating = "avg_rating"
         case topBeers = "top_beers"
+        case privacyThresholdMet = "privacy_threshold_met"
+        case weeklyThresholdMet = "weekly_threshold_met"
+        case minimumDrinkers = "minimum_drinkers"
     }
 }
 
@@ -116,6 +124,7 @@ struct BreweriesHubView: View {
     @Environment(Session.self) private var session
     @State private var claims: [VenueClaim] = []
     @State private var loaded = false
+    @State private var loadError: String?
 
     var body: some View {
         ScrollView {
@@ -129,6 +138,19 @@ struct BreweriesHubView: View {
                     tint: Brand.copper
                 )
 
+                if let loadError {
+                    HStack(spacing: 12) {
+                        Image(systemName: "wifi.exclamationmark").foregroundStyle(Brand.copper)
+                        Text(loadError).font(.footnote).foregroundStyle(Brand.text)
+                        Spacer(minLength: 0)
+                        Button("Retry") { Task { await load(force: true) } }
+                            .font(.footnote.weight(.bold))
+                    }
+                    .padding(14)
+                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal)
+                }
+
                 if !claims.isEmpty {
                     sectionTitle("Your venues")
                     ForEach(claims) { claim in
@@ -137,15 +159,27 @@ struct BreweriesHubView: View {
                 }
 
                 sectionTitle("Get on Tapt")
-                NavigationLink { ClaimVenueView(onClaimed: { Task { await load(force: true) } }) } label: {
-                    actionCard(
-                        icon: "checkmark.seal.fill",
-                        tint: Brand.hop,
-                        title: "Claim your venue",
-                        body: "Find your brewery, bar, pub, or taproom on the map and claim it. Publish a live tap list, get a printable QR, and see your local drinker activity."
-                    )
+                if session.user == nil {
+                    Button { session.endGuestSession() } label: {
+                        actionCard(
+                            icon: "person.crop.circle.badge.checkmark",
+                            tint: Brand.hop,
+                            title: "Sign in to claim your venue",
+                            body: "Claims stay attached to a verified account so only approved owners and staff can manage a venue."
+                        )
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    NavigationLink { ClaimVenueView(onClaimed: { Task { await load(force: true) } }) } label: {
+                        actionCard(
+                            icon: "checkmark.seal.fill",
+                            tint: Brand.hop,
+                            title: "Claim your venue",
+                            body: "Find your brewery, bar, pub, or taproom on the map and claim it. Publish a live tap list, get a printable QR, and see your local drinker activity."
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
 
                 NavigationLink { PartnerInquiryView() } label: {
                     actionCard(
@@ -177,8 +211,19 @@ struct BreweriesHubView: View {
 
     private func load(force: Bool) async {
         if loaded && !force { return }
+        guard session.user != nil else {
+            claims = []
+            loadError = nil
+            loaded = true
+            return
+        }
+        do {
+            claims = try await PartnerService.myClaims()
+            loadError = nil
+        } catch {
+            loadError = "Your venue claims could not be loaded. Check your connection and retry."
+        }
         loaded = true
-        claims = (try? await PartnerService.myClaims()) ?? []
     }
 
     private func sectionTitle(_ t: String) -> some View {
@@ -277,6 +322,7 @@ struct ClaimVenueView: View {
     @State private var results: [VenueSearchResult] = []
     @State private var searching = false
     @State private var selected: VenueSearchResult?
+    @State private var searchError: String?
 
     var body: some View {
         ScrollView {
@@ -306,7 +352,16 @@ struct ClaimVenueView: View {
                 .disabled(query.trimmingCharacters(in: .whitespaces).count < 2)
                 .opacity(query.trimmingCharacters(in: .whitespaces).count < 2 ? 0.5 : 1)
 
-                if results.isEmpty && !searching && query.count >= 2 {
+                if let searchError {
+                    HStack(spacing: 10) {
+                        Image(systemName: "wifi.exclamationmark").foregroundStyle(Brand.copper)
+                        Text(searchError).font(.footnote).foregroundStyle(Brand.text)
+                        Spacer(minLength: 0)
+                        Button("Retry") { runSearch() }.font(.footnote.weight(.bold))
+                    }
+                    .padding(12)
+                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 13))
+                } else if results.isEmpty && !searching && query.count >= 2 {
                     Text("No matches yet. Try a shorter name or your city. Not listed? Use “Get featured” to tell us and we'll add you.")
                         .font(.footnote).foregroundStyle(Brand.muted).padding(.top, 4)
                 }
@@ -353,8 +408,13 @@ struct ClaimVenueView: View {
         let q = query.trimmingCharacters(in: .whitespaces)
         guard q.count >= 2 else { return }
         searching = true
+        searchError = nil
         Task {
-            results = (try? await PartnerService.searchVenues(q)) ?? []
+            do {
+                results = try await PartnerService.searchVenues(q)
+            } catch {
+                searchError = "Search is unavailable right now."
+            }
             searching = false
         }
     }
@@ -498,6 +558,7 @@ struct VenueDashboardView: View {
     @State private var analytics: VenueAnalytics?
     @State private var loading = true
     @State private var showQR = false
+    @State private var analyticsError: String?
 
     private var menuURL: String { PartnerLinks.menuURL(venueId) }
 
@@ -506,11 +567,17 @@ struct VenueDashboardView: View {
             VStack(alignment: .leading, spacing: 18) {
                 if loading {
                     ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
+                } else if let analyticsError {
+                    analyticsErrorState(analyticsError)
                 } else if let a = analytics {
-                    statRow(a)
-                    if a.poursTotal == 0 {
-                        emptyState
+                    if !a.canShowActivity {
+                        privacyThresholdState(a)
                     } else {
+                        statRow(a)
+                    }
+                    if a.canShowActivity && a.poursTotal == 0 {
+                        emptyState
+                    } else if a.canShowActivity {
                         topBeers(a)
                     }
                 }
@@ -553,10 +620,7 @@ struct VenueDashboardView: View {
         .background(Brand.background)
         .navigationTitle(venueName)
         .navigationBarTitleDisplayMode(.inline)
-        .task {
-            analytics = try? await PartnerService.analytics(venueId: venueId)
-            loading = false
-        }
+        .task { await loadAnalytics() }
         .sheet(isPresented: $showQR) { QRSheet(url: menuURL, venueName: venueName) }
     }
 
@@ -567,10 +631,50 @@ struct VenueDashboardView: View {
     private func statRow(_ a: VenueAnalytics) -> some View {
         HStack(spacing: 12) {
             stat("\(a.poursTotal)", "pours all-time")
-            stat("\(a.pours7d)", "this week")
+            stat(a.weeklyThresholdMet == false ? "·" : "\(a.pours7d)", "this week")
             stat("\(a.uniqueDrinkers)", "drinkers")
             stat(a.avgRating.map { String(format: "%.1f", $0) } ?? "·", "avg rating")
         }
+        .padding(.horizontal)
+    }
+
+    private func loadAnalytics() async {
+        loading = true
+        analyticsError = nil
+        do {
+            analytics = try await PartnerService.analytics(venueId: venueId)
+        } catch {
+            analyticsError = "Venue analytics could not be loaded. Check your connection and retry."
+        }
+        loading = false
+    }
+
+    private func analyticsErrorState(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: "wifi.exclamationmark").font(.title).foregroundStyle(Brand.copper)
+            Text(message).font(.subheadline).foregroundStyle(Brand.text).multilineTextAlignment(.center)
+            Button("Retry") { Task { await loadAnalytics() } }
+                .font(.subheadline.weight(.bold))
+                .buttonStyle(.borderedProminent)
+                .tint(Brand.gold)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(20)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal)
+    }
+
+    private func privacyThresholdState(_ a: VenueAnalytics) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "person.3.sequence.fill").font(.system(size: 32)).foregroundStyle(Brand.hop)
+            Text("Activity stays private for now")
+                .font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
+            Text("Venue trends appear after at least \(a.minimumDrinkers ?? 10) opted-in drinkers contribute. Until then, individual activity remains hidden.")
+                .font(.caption).foregroundStyle(Brand.muted).multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(20)
+        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         .padding(.horizontal)
     }
 

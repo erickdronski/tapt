@@ -179,7 +179,7 @@ struct CellarView: View {
                         let unlocked = unlockedGuides.contains(guide)
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Text(flag(guide.flag)).font(.title2)
+                                Text(CountryFlag.symbol(for: guide.flag)).font(.title2)
                                 Spacer()
                                 Image(systemName: unlocked ? "checkmark.seal.fill" : "lock.fill")
                                     .foregroundStyle(unlocked ? Brand.hop : Brand.muted)
@@ -268,30 +268,5 @@ struct CellarView: View {
             loadError = "Your pours could not be loaded. Check your connection and try again."
         }
         guides = (try? await WorldBeerService.regionGuides()) ?? []
-    }
-
-    private func flag(_ code: String?) -> String {
-        switch code {
-        case "AT": return "🇦🇹"
-        case "AU": return "🇦🇺"
-        case "BE": return "🇧🇪"
-        case "BR": return "🇧🇷"
-        case "CA": return "🇨🇦"
-        case "CZ": return "🇨🇿"
-        case "DK": return "🇩🇰"
-        case "DE": return "🇩🇪"
-        case "ES": return "🇪🇸"
-        case "FR": return "🇫🇷"
-        case "GB": return "🇬🇧"
-        case "IE": return "🇮🇪"
-        case "IT": return "🇮🇹"
-        case "JP": return "🇯🇵"
-        case "KR": return "🇰🇷"
-        case "MX": return "🇲🇽"
-        case "NL": return "🇳🇱"
-        case "PL": return "🇵🇱"
-        case "US": return "🇺🇸"
-        default: return "🍺"
-        }
     }
 }

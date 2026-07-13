@@ -10,6 +10,27 @@ struct PassportStats {
 
 enum BadgeMetric { case pours, beers, styles, states, countries }
 
+enum CountryFlag {
+    static func symbol(for code: String?) -> String {
+        let normalized = code?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased() ?? ""
+        guard normalized.count == 2,
+              normalized.unicodeScalars.allSatisfy({ (65...90).contains(Int($0.value)) }) else {
+            return "🍺"
+        }
+
+        var flag = ""
+        for scalar in normalized.unicodeScalars {
+            guard let regionalIndicator = UnicodeScalar(127_397 + scalar.value) else {
+                return "🍺"
+            }
+            flag += String(regionalIndicator)
+        }
+        return flag
+    }
+}
+
 enum PassportProgress {
     static func uniqueBeerCount(in checkins: [MyCheckin]) -> Int {
         Set(checkins.map { checkin in

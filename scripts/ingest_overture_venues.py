@@ -74,6 +74,12 @@ ALLOWED_SOURCE_LICENSES = {
     "cc0-1.0",
 }
 
+# Reserve a useful baseline for every represented country before distributing
+# the remaining global cap by the square root of each country's eligible rows.
+# This prevents alphabetical source ordering from excluding later countries,
+# while still giving larger markets more map density than smaller ones.
+COUNTRY_COVERAGE_FLOOR = 25
+
 COUNTRY_NAME_OVERRIDES = {
     "BO": "Bolivia",
     "BN": "Brunei",
@@ -144,7 +150,7 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
           id,
           version,
           names.primary as name,
-          categories.primary as category,
+          coalesce(categories.primary, taxonomy.primary, basic_category) as category,
           bbox.ymin as latitude,
           bbox.xmin as longitude,
           addresses[1].freeform as address,
@@ -155,16 +161,15 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
           websites[1] as website_url,
           phones[1] as phone,
           confidence,
-          date_refreshed,
           cast(sources as json)::varchar as sources_json,
           row_number() over (
             partition by
               coalesce(upper(addresses[1].country), 'ZZ'),
               coalesce(addresses[1].region, addresses[1].locality, 'unknown')
-            order by confidence desc, date_refreshed desc nulls last, id
+            order by confidence desc, version desc nulls last, id
           ) as region_rank
         from read_parquet('{source_path(args.release)}', union_by_name=true)
-        where categories.primary in ({category_marks})
+        where coalesce(categories.primary, taxonomy.primary, basic_category) in ({category_marks})
           and confidence >= ?
           and (operating_status is null or operating_status = 'open')
           and names.primary is not null
@@ -172,11 +177,33 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
           and bbox.ymin between -90 and 90
           {country_filter}
       )
-      select * exclude(region_rank)
-      from filtered
-      where region_rank <= ?
-      order by country_code nulls last, region nulls last, locality nulls last,
-               confidence desc, id
+      , region_balanced as (
+        select
+          *,
+          row_number() over (
+            partition by coalesce(country_code, 'ZZ')
+            order by confidence desc, version desc nulls last, id
+          ) as country_rank,
+          count(*) over (
+            partition by coalesce(country_code, 'ZZ')
+          ) as country_total
+        from filtered
+        where region_rank <= ?
+      )
+      select * exclude(region_rank, country_rank, country_total)
+      from region_balanced
+      order by
+        case when country_rank <= {COUNTRY_COVERAGE_FLOOR} then 0 else 1 end,
+        case
+          when country_rank <= {COUNTRY_COVERAGE_FLOOR} then country_rank
+          else null
+        end,
+        case
+          when country_rank > {COUNTRY_COVERAGE_FLOOR}
+            then country_rank::double / sqrt(country_total::double)
+          else null
+        end,
+        country_code nulls last, confidence desc, id
       limit ?
     """
 
@@ -191,7 +218,9 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
     result: list[dict[str, Any]] = []
     for values in rows:
         raw = dict(zip(columns, values, strict=True))
-        source_dataset, source_license = first_source(raw.pop("sources_json", None))
+        source_dataset, source_license, source_refreshed = first_source(
+            raw.pop("sources_json", None)
+        )
         country_code = clean_text(raw["country_code"], 2)
         country = country_name(country_code)
         source_license = normalize_license(source_license)
@@ -220,9 +249,7 @@ def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
                 "confidence": round(float(raw["confidence"]), 3),
                 "source_dataset": clean_text(source_dataset, 120),
                 "source_license": source_license,
-                "date_refreshed": raw["date_refreshed"].isoformat()
-                if raw["date_refreshed"]
-                else None,
+                "date_refreshed": source_date(source_refreshed),
             }
         )
     return result
@@ -249,13 +276,13 @@ def country_name(code: str | None) -> str | None:
     return country.name if country else None
 
 
-def first_source(raw: str | None) -> tuple[str | None, str | None]:
+def first_source(raw: str | None) -> tuple[str | None, str | None, str | None]:
     try:
         sources = json.loads(raw or "[]")
     except (TypeError, ValueError):
-        return None, None
+        return None, None, None
     if not isinstance(sources, list):
-        return None, None
+        return None, None, None
     root = next(
         (
             item
@@ -265,7 +292,19 @@ def first_source(raw: str | None) -> tuple[str | None, str | None]:
         None,
     )
     source = root or next((item for item in sources if isinstance(item, dict)), {})
-    return source.get("dataset"), source.get("license")
+    return source.get("dataset"), source.get("license"), source.get("update_time")
+
+
+def source_date(value: Any) -> str | None:
+    text = clean_text(value, 64)
+    if not text or len(text) < 10:
+        return None
+    candidate = text[:10]
+    try:
+        dt.date.fromisoformat(candidate)
+    except ValueError:
+        return None
+    return candidate
 
 
 def request_json(

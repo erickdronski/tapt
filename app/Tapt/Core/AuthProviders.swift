@@ -1,7 +1,8 @@
 import Foundation
 
-/// Reads configured auth providers from Supabase. External providers also need
-/// a signed-device callback test before they are allowed into a release build.
+/// Reads configured auth providers from Supabase. External providers are
+/// release-gated until the live provider has created a Supabase identity and
+/// the app redirect wiring has been verified.
 struct AuthProviderFlags: Sendable {
     var apple = false
     var google = false
@@ -15,11 +16,12 @@ struct AuthProviderFlags: Sendable {
 }
 
 enum AuthProvidersService {
-    /// Change a provider to true only after its full TestFlight callback has
-    /// produced a Supabase session. Dashboard "enabled" state is not enough.
+    /// Dashboard "enabled" state is not enough. A provider is exposed only
+    /// after a real hosted callback has created a Supabase identity; the signed
+    /// device deep link remains part of TestFlight release validation.
     private static let deviceVerified = AuthProviderFlags(
         apple: false,
-        google: false,
+        google: true,
         facebook: false,
         twitter: false,
         email: true

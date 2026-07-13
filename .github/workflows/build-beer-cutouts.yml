@@ -63,6 +63,7 @@ jobs:
             echo "::error::SUPABASE_SERVICE_ROLE_KEY is required."
             exit 1
           fi
+          python -m unittest scripts.test_build_beer_cutouts
           args=(--batch "$BATCH" --model "$MODEL")
           if [ "$RETRY_REJECTED" = "true" ]; then args+=(--retry-rejected); fi
           python scripts/build_beer_cutouts.py "${args[@]}"
