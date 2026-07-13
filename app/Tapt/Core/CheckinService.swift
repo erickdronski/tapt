@@ -202,6 +202,22 @@ enum CheckinService {
         )
     }
 
+    /// Submit a beer we don't have yet (the data moat). Returns the new beer_id so
+    /// the caller can log against it immediately. The row is pending review
+    /// (name_ok=false server-side), so it stays out of public search and the Beer
+    /// Market until approved, but shows in the submitter's Cellar right away.
+    static func submitBeer(name: String, brewery: String?, style: String?, abv: Double?) async throws -> String {
+        struct Params: Encodable {
+            let p_name: String
+            let p_brewery_name: String?
+            let p_style: String?
+            let p_abv: Double?
+        }
+        return try await Supa.authedRPC(
+            "submit_beer",
+            params: Params(p_name: name, p_brewery_name: brewery, p_style: style, p_abv: abv))
+    }
+
     static func mine(userId: UUID) async throws -> [MyCheckin] {
         struct Params: Encodable {
             let p_limit: Int

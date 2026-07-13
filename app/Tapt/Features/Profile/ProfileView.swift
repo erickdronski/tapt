@@ -135,44 +135,23 @@ struct ProfileView: View {
                     }
                 }
 
-                if !myActivity.isEmpty {
+                // "Your beers" is its own page now, so it never buries the profile as
+                // the list grows. This row keeps a live count and pushes the full list.
+                if session.user != nil {
                     Section {
-                        ForEach(myActivity) { a in
-                            NavigationLink { BeerDetailView(beerId: a.beerId) } label: {
-                                HStack(spacing: 12) {
-                                    BeerThumb(imageUrl: a.imageUrl, size: 42)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(a.name).font(.system(.subheadline, design: .rounded).weight(.bold))
-                                            .foregroundStyle(Brand.text).lineLimit(1)
-                                        if let note = a.note, !note.isEmpty {
-                                            Label(note, systemImage: "square.and.pencil")
-                                                .font(.caption).foregroundStyle(Brand.muted)
-                                                .labelStyle(.titleAndIcon).lineLimit(1)
-                                        } else if let v = a.vote {
-                                            Label(v > 0 ? "You liked this" : "You passed on this",
-                                                  systemImage: v > 0 ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
-                                                .font(.caption.weight(.semibold))
-                                                .foregroundStyle(v > 0 ? Brand.hop : Brand.copper)
-                                        }
-                                    }
+                        NavigationLink { MyBeersView() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "mug.fill").foregroundStyle(Brand.gold)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Your beers").font(.system(.subheadline, design: .rounded).weight(.bold))
+                                    Text(myActivity.isEmpty ? "Beers you have rated or noted"
+                                                            : "\(myActivity.count) rated or noted")
+                                        .font(.caption).foregroundStyle(Brand.muted)
                                 }
                             }
                         }
-                    } header: {
-                        Text("Your beers")
                     } footer: {
                         Text("Your votes count on the Beer Market. Your notes are private to you.")
-                    }
-                }
-
-                if let activityError {
-                    Section {
-                        Button {
-                            Task { await loadActivity() }
-                        } label: {
-                            Label(activityError, systemImage: "arrow.clockwise")
-                                .foregroundStyle(Brand.copper)
-                        }
                     }
                 }
 

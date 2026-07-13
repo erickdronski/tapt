@@ -24,6 +24,83 @@ private struct TaptTimeoutError: LocalizedError {
     var errorDescription: String? { "Timed out. Check your connection and try again." }
 }
 
+/// Add a beer Tapt doesn't have yet. It goes to our reviewers and lands in your
+/// Cellar immediately; it joins the public catalog and Beer Market once approved.
+/// Only what you type is saved, nothing is invented. This is how the catalog grows.
+struct AddBeerView: View {
+    let prefillName: String
+    var onAdded: (BeerPick) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var name = ""
+    @State private var brewery = ""
+    @State private var style = ""
+    @State private var abv = ""
+    @State private var saving = false
+    @State private var error: String?
+
+    private var canSubmit: Bool { name.trimmingCharacters(in: .whitespaces).count >= 2 && !saving }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Beer") {
+                    TextField("Name", text: $name).textInputAutocapitalization(.words)
+                    TextField("Brewery (optional)", text: $brewery).textInputAutocapitalization(.words)
+                }
+                Section("Details (optional)") {
+                    TextField("Style, e.g. IPA", text: $style).textInputAutocapitalization(.words)
+                    TextField("ABV %", text: $abv).keyboardType(.decimalPad)
+                }
+                if let error {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.red).font(.footnote)
+                    }
+                }
+                Section {} footer: {
+                    Text("New beers go to our reviewers. It is in your Cellar right away and joins the public catalog once approved. Only what you type is saved, nothing is invented.")
+                }
+            }
+            .navigationTitle("Add a beer")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(saving ? "Adding" : "Add") { add() }.disabled(!canSubmit)
+                }
+            }
+            .onAppear { if name.isEmpty { name = prefillName } }
+        }
+    }
+
+    private func add() {
+        saving = true; error = nil
+        let nm = name.trimmingCharacters(in: .whitespaces)
+        let bw = brewery.trimmingCharacters(in: .whitespaces)
+        let st = style.trimmingCharacters(in: .whitespaces)
+        let abvVal = Double(abv.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: "."))
+        Task {
+            do {
+                let id = try await CheckinService.submitBeer(
+                    name: nm, brewery: bw.isEmpty ? nil : bw,
+                    style: st.isEmpty ? nil : st, abv: abvVal)
+                let pick = BeerPick(id: id, name: nm, style: st.isEmpty ? nil : st,
+                                    abv: abvVal, breweryName: bw, country: "")
+                await MainActor.run { onAdded(pick) }
+            } catch {
+                await MainActor.run {
+                    let d = error.localizedDescription
+                    if d.contains("2 to 80") { self.error = "Beer name must be 2 to 80 characters." }
+                    else if d.contains("too many") { self.error = "You have added a lot today. Try again tomorrow." }
+                    else if d.contains("abv out of range") { self.error = "Enter an ABV between 0 and 100." }
+                    else { self.error = "Could not add the beer. Check your connection and try again." }
+                    saving = false
+                }
+            }
+        }
+    }
+}
+
 /// Log a Pour: pick a beer, rate it, save the check-in, then share the card.
 struct LogPourView: View {
     @Environment(Session.self) private var session
@@ -47,6 +124,7 @@ struct LogPourView: View {
     @State private var pendingShare: PourCard?
     @State private var errorMessage: String?
     @State private var loadingCatalog = false
+    @State private var showAddBeer = false
     @State private var catalogError: String?
     @State private var loadingVenues = false
     @State private var venueError: String?
@@ -122,12 +200,28 @@ struct LogPourView: View {
                     action: { Task { await loadCatalog() } }
                 )
             } else if beers.isEmpty {
-                TaptEmptyState(
-                    icon: "magnifyingglass",
-                    title: "No beer found",
-                    message: "Try a beer name or brewery, or scan the label from the Scan tab.",
-                    actionTitle: nil
-                )
+                VStack(spacing: 14) {
+                    TaptEmptyState(
+                        icon: "magnifyingglass",
+                        title: "No beer found",
+                        message: "We may not have this one yet. Add it to log it now and help build the catalog.",
+                        actionTitle: nil
+                    )
+                    Button { showAddBeer = true } label: {
+                        Label(search.trimmingCharacters(in: .whitespaces).isEmpty ? "Add a new beer" : "Add \"\(search)\"",
+                              systemImage: "plus.circle.fill")
+                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .frame(maxWidth: .infinity).padding(.vertical, 14)
+                            .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(Brand.malt)
+                    }
+                    .buttonStyle(.taptPress)
+                    .padding(.horizontal)
+                    .disabled(session.user == nil)
+                    if session.user == nil {
+                        Text("Sign in to add a beer.").font(.caption).foregroundStyle(Brand.muted)
+                    }
+                }
             } else {
                 List {
                     if let catalogError {
@@ -165,6 +259,15 @@ struct LogPourView: View {
             }
         }
         .searchable(text: $search, prompt: "Search beers")
+        .sheet(isPresented: $showAddBeer) {
+            AddBeerView(prefillName: search.trimmingCharacters(in: .whitespaces)) { pick in
+                showAddBeer = false
+                selected = pick
+                rating = nil; flavorTags = []; glassware = nil; occasion = nil
+                selectedVenue = nil
+                venueSearch = pick.breweryName
+            }
+        }
     }
 
     private func rate(_ beer: BeerPick) -> some View {
