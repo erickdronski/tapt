@@ -130,4 +130,5 @@ jobs:
     uses: ./.github/workflows/asc-admin.yml
     with:
       build_number: ${{ needs.build.outputs.build_number }}
+      wait_for_processing: true
     secrets: inherit
