@@ -17,7 +17,7 @@ Env:
 Real data only. OFF's own (sometimes messy) category tags flow through as-is;
 a later style_alias pass normalizes them. Blank beats invented.
 """
-import json, os, ssl, sys, time, urllib.request, urllib.error
+import json, os, ssl, time, urllib.request, urllib.error
 
 SUPA = os.environ.get("SUPABASE_URL", "https://qfwiizvqxrhjlthbjosz.supabase.co")
 KEY  = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
@@ -26,12 +26,10 @@ PAGE_SIZE = min(int(os.environ.get("PAGE_SIZE", "100")), 100)
 STATE_FILE = os.environ.get("STATE_FILE", os.path.join(os.path.dirname(__file__), ".off_ingest_state.json"))
 UA = {"User-Agent": "TaptBeerApp/1.0 (esdronski@gmail.com) beer-catalog-ingest"}
 CTX = ssl.create_default_context()
-CTX.check_hostname = False
-CTX.verify_mode = ssl.CERT_NONE  # macOS python lacks SSL roots; OFF/Supabase are known hosts
 
 OFF = ("https://world.openfoodfacts.org/cgi/search.pl?action=process"
        "&tagtype_0=categories&tag_contains_0=contains&tag_0=beers&json=1"
-       "&fields=code,product_name,brands,categories_tags,countries_tags,image_front_url,nutriments")
+       "&fields=code,product_name,brands,categories_tags,image_front_url,nutriments")
 
 SKIP_TAGS = {
     "en:beverages-and-beverages-preparations", "en:beverages",
@@ -63,13 +61,6 @@ def style_from(tags):
     return subs[-1] if subs else None
 
 
-def country_from(tags):
-    for t in (tags or []):
-        if t.startswith("en:"):
-            return t.split(":", 1)[-1].replace("-", " ").title()
-    return None
-
-
 def to_row(p):
     code = (p.get("code") or "").strip()
     name = (p.get("product_name") or "").strip()
@@ -83,7 +74,6 @@ def to_row(p):
         "gtin": code,
         "name": name[:160],
         "brand": brand,
-        "country": country_from(p.get("countries_tags")),
         "style": style_from(p.get("categories_tags")),
         "image_url": p.get("image_front_url") or None,
     }
@@ -135,15 +125,12 @@ def main():
             page = 1  # wrap around to re-scan (catches updates + new products)
         d = get_json(f"{OFF}&page_size={PAGE_SIZE}&page={page}")
         if d is None:
-            # OFF is throttling this request; skip the page, keep going, but
-            # bail gracefully if it's clearly down (several misses in a row).
+            # Retry the same page so a green workflow can never hide a gap.
             misses += 1
             if misses >= 4:
-                print("OFF throttling several pages in a row; stopping this run "
-                      "(cursor saved, a later run resumes here).")
-                break
-            page += 1
-            save_state({"next_page": page, "last_page": last_page})
+                raise RuntimeError(
+                    "OFF was unavailable for four attempts; cursor was not advanced"
+                )
             time.sleep(12)
             continue
         misses = 0
@@ -163,7 +150,9 @@ def main():
                 print(f"page {page}: +{res.get('inserted',0)} new, "
                       f"{res.get('updated',0)} refreshed, {res.get('skipped',0)} skipped")
             except Exception as e:
-                print(f"page {page}: RPC error, skipping ({e})")
+                raise RuntimeError(
+                    f"page {page}: Supabase ingest failed; cursor was not advanced"
+                ) from e
         page += 1
         save_state({"next_page": page, "last_page": last_page})
         time.sleep(9)  # be a good OFF citizen (search rate limits)

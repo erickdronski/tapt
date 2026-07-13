@@ -63,7 +63,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   `beer_of_week_latest_winner`, `brewery_map_feed`, `brewery_map_feed_near`
   (guest browsing in-app, per 0081_public_guest_read_contract), plus the pure
   formatter `tapt_trusted_country` (used inside security_invoker views).
-  Everything else is `authenticated`-only.
+  Everything else is `authenticated`-only. Public activity aggregates must
+  include only visible rows with current `aggregate_analytics` consent.
   **GOTCHA (0081):** Postgres grants EXECUTE to PUBLIC on every `create
   function`, so `revoke ... from anon` alone is a NO-OP. 0081 revoked
   PUBLIC+anon across all non-extension public functions, restored
@@ -107,6 +108,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   agent): names v4 - keep the NA marker in display_name (sans-alcool masquerade),
   tighten tapt_name_ok for deposit/barcode/placeholder strings beyond the
   catalog_search-level filter 0079 added.
+- **Guest release contract (Codex, 2026-07-13):** PR #46 restored public beer
+  detail, Beer of the Week, and radar reads promised by guest mode. 0082 makes
+  activity-derived fields consent-safe, removes invented baseline heat, and
+  asserts the exact 12-function anon surface. OFF ingesters now verify TLS,
+  fail closed without dropping or advancing failed batches, and never treat a
+  scan country as brewery origin.
 - Claude: scale/security audit round 1 DONE (market read 422→10ms, anon
   surface 21→4, RLS + FK indexes, menu expiry fix, portal hardening, HQ page).
   Swift audit DONE; P0s fixed by Claude (authedRPC anti-anon-fallback helper in

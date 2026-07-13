@@ -39,8 +39,9 @@ def rpc_ingest(payload, tries=3):
                 return json.loads(r.read().decode())
         except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
             if i == tries - 1:
-                print(f"  RPC error (batch dropped): {e}")
-                return {}
+                raise RuntimeError(
+                    "Supabase ingest failed after three attempts; batch retained"
+                ) from e
             time.sleep(3 * (i + 1))
 
 
@@ -48,13 +49,6 @@ def style_from(tags):
     subs = [t.split(":", 1)[-1].replace("-", " ").title()
             for t in tags if t.startswith("en:") and t not in SKIP_TAGS]
     return subs[-1] if subs else None
-
-
-def country_from(tags):
-    for t in tags:
-        if t.startswith("en:"):
-            return t.split(":", 1)[-1].replace("-", " ").title()
-    return None
 
 
 def main():
@@ -68,7 +62,7 @@ def main():
     header = gz.readline().decode("utf-8", "replace").rstrip("\n").split("\t")
     col = {name: header.index(name) for name in
            ("code", "product_name", "brands", "categories_tags",
-            "countries_tags", "image_front_url", "image_url", "alcohol_100g") if name in header}
+            "image_front_url", "image_url", "alcohol_100g") if name in header}
 
     def field(parts, name):
         i = col.get(name)
@@ -95,7 +89,6 @@ def main():
             "gtin": code,
             "name": name[:160],
             "brand": (field(parts, "brands").split(",")[0].strip() or None),
-            "country": country_from([c for c in field(parts, "countries_tags").split(",") if c]),
             "style": style_from(cats),
             "image_url": field(parts, "image_front_url") or field(parts, "image_url") or None,
         }
