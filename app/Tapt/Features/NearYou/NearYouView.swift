@@ -120,7 +120,6 @@ struct NearYouView: View {
                 }
                 .mapStyle(.standard(pointsOfInterest: .including([.brewery, .nightlife, .restaurant, .winery])))
                 .mapControls {
-                    MapUserLocationButton()
                     MapCompass()
                 }
                 .ignoresSafeArea(edges: .top)
@@ -129,11 +128,21 @@ struct NearYouView: View {
                     radarList
                 }
             }
+            .overlay(alignment: .topTrailing) { locateButton }
             .navigationTitle("Beer Near You")
             .navigationBarTitleDisplayMode(.inline)
             .task {
+                // Ask for location up front (before the network load) so the
+                // system prompt appears immediately on arrival. Once granted, the
+                // map centers on the user and pulls up the closest spots. If it
+                // was already denied we skip the ask and just load the radar.
+                if !location.deniedOrRestricted { location.request() }
                 await loadTaptRadar()
-                if locationConsent { location.request() }
+            }
+            .onChange(of: location.authorized) { _, ok in
+                // Mirror a granted OS permission into the in-app choice so the
+                // spotlight and radar copy reflect that location is live.
+                if ok { locationConsent = true }
             }
             .onChange(of: location.location) { _, loc in
                 guard let loc else { return }
@@ -386,6 +395,50 @@ struct NearYouView: View {
         mapRegion = region
         withAnimation {
             camera = .region(region)
+        }
+    }
+
+    /// A reliably tappable "center on me" control. It lives in the safe area so
+    /// the status bar never covers it, even though the map runs full-bleed under
+    /// the bar. Tapping asks for permission when needed, then recenters.
+    private var locateButton: some View {
+        Button { centerOnUser() } label: {
+            Image(systemName: location.authorized ? "location.fill" : "location")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(location.deniedOrRestricted ? Brand.muted : Brand.hop)
+                .frame(width: 44, height: 44)
+                .background(.regularMaterial, in: Circle())
+                .overlay(Circle().strokeBorder(Color.black.opacity(0.06)))
+                .shadow(color: .black.opacity(0.18), radius: 5, y: 2)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 14)
+        .padding(.top, 10)
+        .accessibilityLabel("Center the map on my location")
+    }
+
+    /// Recenter on the user. Requests permission first when it has not been
+    /// asked, routes to Settings if it was denied, and otherwise flies to the
+    /// last known location (or kicks off an update if we do not have one yet).
+    private func centerOnUser() {
+        Haptic.tap()
+        switch location.authorizationStatus {
+        case .notDetermined:
+            location.request()
+        case .denied, .restricted:
+            if let settings = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settings)
+            }
+        default:
+            if let loc = location.location {
+                moveCamera(to: MKCoordinateRegion(
+                    center: loc.coordinate,
+                    latitudinalMeters: 24_000,
+                    longitudinalMeters: 24_000
+                ))
+            } else {
+                location.request()
+            }
         }
     }
 
