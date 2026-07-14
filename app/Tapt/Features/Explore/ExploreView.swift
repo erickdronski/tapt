@@ -70,8 +70,9 @@ struct ExploreView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
+                VStack(alignment: .leading, spacing: 18) {
                     marketTickerBar.reveal(appeared, 0)
+                    exploreHeader.reveal(appeared, 0)
                     hero.reveal(appeared, 1)
                     scanTile.reveal(appeared, 2)
                     catalogBar.reveal(appeared, 3)
@@ -91,12 +92,12 @@ struct ExploreView: View {
                     }
                     FeaturedPartnersRail().reveal(appeared, 10)
                 }
-                .padding(.vertical)
+                .padding(.bottom)
             }
             .background(Brand.background)
             .overlay(alignment: .bottom) { voteToast }
             .taptCelebration($celebration)
-            .navigationTitle("Explore")
+            .toolbar(.hidden, for: .navigationBar)
             .onAppear {
                 if region.isEmpty { region = homeRegion }
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
@@ -167,6 +168,16 @@ struct ExploreView: View {
             }
         }
         .padding(.horizontal)
+    }
+
+    /// Screen title, now BELOW the live ticker tape (the ticker leads the page so
+    /// the app opens on motion, not on empty large-title chrome).
+    private var exploreHeader: some View {
+        Text("Explore")
+            .font(.system(size: 34, weight: .bold))
+            .foregroundStyle(Brand.text)
+            .padding(.horizontal)
+            .padding(.top, 2)
     }
 
     /// Live beer ticker pinned at the top of the home page — beers trending up or
