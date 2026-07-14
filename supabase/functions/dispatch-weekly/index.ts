@@ -37,6 +37,8 @@ function rangeText(min: unknown, max: unknown, unit: string): string {
 function issueHtml(c: any, footerExtra = ""): string {
   const f = c.featured ?? {};
   const s = c.style ?? {};
+  const h = c.history ?? {};
+  const v = c.venue ?? {};
   const abvRange = rangeText(s.abv_min, s.abv_max, "% ABV");
   const ibuRange = rangeText(s.ibu_min, s.ibu_max, " IBU");
   return `<div style="font-family:-apple-system,Inter,Arial,sans-serif;max-width:560px;margin:0 auto;color:#1A1206;background:#FBF6EC;padding:8px">
@@ -59,13 +61,27 @@ function issueHtml(c: any, footerExtra = ""): string {
     <div style="color:rgba(251,246,236,.6);font-size:.82rem;margin-top:8px">${esc(s.style_family)}${abvRange ? " &middot; " + abvRange : ""}${ibuRange ? " &middot; " + ibuRange : ""}</div>
   </div>
 
+  ${h.title ? `<div style="background:#FFF7E6;border:1px solid rgba(180,83,31,.18);border-radius:16px;padding:18px;margin:14px 0">
+    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#B4531F;font-weight:700">From the archives</div>
+    <div style="font-family:Poppins,-apple-system,Arial;font-size:1.15rem;font-weight:800;margin:4px 0;color:#1A1206">${esc(h.title)}</div>
+    <div style="color:#3d362c;font-size:.95rem">${esc(h.body)}</div>
+    ${h.meta ? `<div style="color:#B4531F;font-size:.8rem;font-weight:700;margin-top:8px">${esc(h.meta)}</div>` : ""}
+  </div>` : ""}
+
+  ${v.title ? `<div style="background:#2a1d0c;color:#FBF6EC;border-radius:16px;padding:18px;margin:14px 0">
+    <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#F2A900;font-weight:700">A legendary pour</div>
+    <div style="font-family:Poppins,-apple-system,Arial;font-size:1.2rem;font-weight:800;margin:4px 0">${esc(v.title)}</div>
+    ${v.meta ? `<div style="color:rgba(251,246,236,.6);font-size:.82rem;margin-bottom:6px">${esc(v.meta)}</div>` : ""}
+    <div style="color:rgba(251,246,236,.85);font-size:.95rem">${esc(v.body)}</div>
+  </div>` : ""}
+
   <div style="background:#fff;border-radius:16px;padding:18px;margin:14px 0;border:1px solid rgba(26,18,6,.08)">
     <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#B4531F;font-weight:700">What the world is pouring</div>
     <div style="color:#6B6459;font-size:.95rem;margin-top:6px">New beers, breweries, and venues land on the Tapt map every week, all free to explore.</div>
     <div style="margin-top:14px"><a href="${LANDING}" style="background:#F2A900;color:#1A1206;font-weight:700;padding:11px 22px;border-radius:999px;text-decoration:none;display:inline-block">Open Tapt</a></div>
   </div>
 
-  <div style="font-size:12px;color:#6B6459;padding:8px 4px">Real data only: beers from Open Food Facts, styles from the BJCP 2021 guidelines, venues from Open Brewery DB. Blank beats invented.</div>
+  <div style="font-size:12px;color:#6B6459;padding:8px 4px">Real data only: beers from Open Food Facts and Wikidata, style science from the BJCP 2021 guidelines, map venues from Open Brewery DB. The history and legendary pours are curated real facts. Blank beats invented.</div>
   <hr style="border:none;border-top:1px solid rgba(26,18,6,.1);margin:16px 4px">
   <div style="font-size:12px;color:#6B6459;padding:0 4px">Tapt, THE Beer Superapp. Enjoy responsibly, 21+/legal drinking age. <a href="${LANDING}" style="color:#B4531F">taptbeer.com</a>${footerExtra}</div>
 </div>`;
