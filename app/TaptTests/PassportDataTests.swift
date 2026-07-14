@@ -31,13 +31,13 @@ final class PassportDataTests: XCTestCase {
     }
 
     func testExplorationBadgesUseDistinctBeers() throws {
-        let firstFlight = try XCTUnwrap(PassportData.badges.first { $0.id == "flight" })
-        let centuryCellar = try XCTUnwrap(PassportData.badges.first { $0.id == "century" })
+        let sampler = try XCTUnwrap(PassportData.badges.first { $0.id == "sampler" })
+        let palateOfLegend = try XCTUnwrap(PassportData.badges.first { $0.id == "legend" })
 
-        XCTAssertFalse(firstFlight.earned(PassportStats(pours: 20, beers: 4, styles: 1, states: 0, countries: 0)))
-        XCTAssertTrue(firstFlight.earned(PassportStats(pours: 5, beers: 5, styles: 1, states: 0, countries: 0)))
-        XCTAssertFalse(centuryCellar.earned(PassportStats(pours: 150, beers: 99, styles: 10, states: 5, countries: 3)))
-        XCTAssertTrue(centuryCellar.earned(PassportStats(pours: 100, beers: 100, styles: 10, states: 5, countries: 3)))
+        XCTAssertFalse(sampler.earned(PassportStats(pours: 20, beers: 4, styles: 1, states: 0, countries: 0)))
+        XCTAssertTrue(sampler.earned(PassportStats(pours: 5, beers: 5, styles: 1, states: 0, countries: 0)))
+        XCTAssertFalse(palateOfLegend.earned(PassportStats(pours: 150, beers: 119, styles: 10, states: 5, countries: 3)))
+        XCTAssertTrue(palateOfLegend.earned(PassportStats(pours: 120, beers: 120, styles: 10, states: 5, countries: 3)))
     }
 
     func testCountryFlagSupportsAnyISORegionCode() {
