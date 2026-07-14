@@ -102,6 +102,20 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Final App Store hardening (Codex, 2026-07-14):** release branch adds the
+  resolved operator/address and canonical `taptbeer.com` legal pages; native
+  Apple authorization-code capture, Vault token storage, revocation-first
+  account deletion, physical avatar Storage API cleanup, filtered profile UGC,
+  retryable avatar/report operations, and scanner generation/reset guards.
+  Production migrations through `20260714175819` and Edge Functions
+  `apple-token`, `delete-account`, `moderate-avatar`, and `moderate-content` are
+  deployed. Release automation now prepares exact-build metadata/screenshots,
+  records contests as frequent, audits API-visible fields, and refuses
+  submission without physical auth, App Privacy, legal/compliance, and current
+  Social Media age-rating attestations. **Still manual:** create/configure the
+  dedicated Sign in with Apple key secrets, verify email/Google/Apple on the
+  exact TestFlight build, complete App Store Connect UI-only answers, then run
+  the protected submit workflow.
 - **Beer image backfill (Claude, 2026-07-13 pm):** filled the remaining missing
   `label_image_url`s from Open Food Facts (ODbL). Listable image coverage
   94.98% -> **95.31%** (9749 -> 9783 / 10264 name_ok beers); 34 real front

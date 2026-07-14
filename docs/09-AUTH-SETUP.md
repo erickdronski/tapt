@@ -1,13 +1,13 @@
 # Tapt — Auth setup (owner runbook)
 
 The app detects enabled providers at runtime (`/auth/v1/settings`) and only
-shows working buttons. Current production state (checked 2026-07-13):
+shows release-approved buttons. Current production state (checked 2026-07-14):
 
 | Provider | Supabase | What's needed |
 |---|---|---|
 | Email magic link + 6-digit code | On, production-verified | See "email hardening" below |
-| Google | On | Owner account linked; signed-device TestFlight callback proof remains |
-| **Apple** | **Off** | Configure and enable before App Review while Google login is offered |
+| Google | On | Hosted callback succeeded; repeat on the exact release-candidate TestFlight build |
+| **Apple** | **On** | Configure the account-deletion token-exchange secrets below, then verify the exact TestFlight build |
 | Facebook | Off | Leave hidden until Meta credentials and callback are tested |
 | X / Twitter | Off | Leave hidden until X credentials and callback are tested |
 | Phone | Off | Leave hidden until SMS delivery, abuse controls, and cost are approved |
@@ -27,24 +27,42 @@ return email links to the production partner and admin surfaces. Keep all exact 
 **Dashboard → Authentication → URL Configuration → Additional Redirect URLs**.
 Do not add wildcard production callbacks.
 
-## 2. Enable Apple (native Sign in with Apple)
-Dashboard → Authentication → Providers → Apple → Enable, then in
-**Client IDs** add the app's bundle id:
+## 2. Apple (native Sign in with Apple)
+The Supabase Apple provider is enabled and **Client IDs** contains the app's
+bundle id:
 
 ```
 app.tapt.tapt
 ```
 
-**"Secret key should be a JWT" error:** do not paste a raw `.p8` key into the
-Secret Key field. Web OAuth uses a signed JWT generated from the Apple key.
-The native app uses `signInWithIdToken`; configure the native Client ID and
-enable the provider only after a physical-device test succeeds. The capability
-is already on the App ID and in `Tapt.entitlements`; the app's Apple button
-appears automatically once the provider is enabled (runtime detection).
+The native app uses `signInWithIdToken`; the capability is on the App ID and in
+`Tapt.entitlements`. For App Store account-deletion compliance, the app also
+sends Apple's one-time authorization code to the authenticated `apple-token`
+Edge Function. That function exchanges the code and stores the refresh token in
+Supabase Vault. `delete-account` revokes that token before deleting the account.
 
-When the landing page later needs web Sign in with Apple: create a
-"Sign in with Apple" key at developer.apple.com (NOT the ASC API key), then
-generate the 6-month JWT with `scripts/apple_oauth_secret.py` and paste that.
+Create a dedicated **Sign in with Apple** key at developer.apple.com (not an App
+Store Connect API key) and set these production Edge Function secrets:
+
+```
+APPLE_TEAM_ID=J9DMDH4S58
+APPLE_CLIENT_ID=app.tapt.tapt
+APPLE_SIGN_IN_KEY_ID=<the Sign in with Apple key id>
+APPLE_SIGN_IN_KEY=<the complete .p8 private key>
+```
+
+This key remains a release blocker until all four values are configured. Tapt
+fails Apple sign-in closed when the authorization code cannot be exchanged and
+stored, because shipping an account that cannot later revoke Apple authorization
+would make in-app deletion incomplete.
+
+Do not paste the raw `.p8` key into Supabase Auth's web OAuth Secret Key field;
+that field expects a signed client-secret JWT. The native provider does not need
+that web client secret.
+
+When the landing page later needs web Sign in with Apple, generate the 6-month
+JWT with `scripts/apple_oauth_secret.py` from the dedicated key and configure the
+web Services ID separately.
 
 ## 3. Enable Facebook or X (optional)
 Facebook needs a Meta app with the Supabase callback in **Facebook Login →

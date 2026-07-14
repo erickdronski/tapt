@@ -1,0 +1,76 @@
+name: Release Integrity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - 'scripts/**'
+      - 'landing/admin.html'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'scripts/**'
+      - 'landing/admin.html'
+      - '.github/workflows/**'
+
+concurrency:
+  group: release-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Python and workflows
+        run: |
+          python -m pip install --disable-pip-version-check \
+            "PyYAML==6.0.3" \
+            "numpy==2.5.1" \
+            "Pillow==12.3.0" \
+            "requests==2.34.2"
+          python -m compileall -q scripts
+          python -m unittest discover -s scripts -p 'test_*.py'
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for path in Path('.github/workflows').glob('*.yml'):
+              yaml.safe_load(path.read_text())
+          PY
+
+      - name: Validate admin module
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          page = Path('landing/admin.html').read_text()
+          module = page.split('<script type="module">', 1)[1].split('</script>', 1)[0]
+          lines = [line for line in module.splitlines() if not line.lstrip().startswith('import ')]
+          Path('/tmp/tapt-admin.mjs').write_text('\n'.join(lines))
+          PY
+          node --check /tmp/tapt-admin.mjs
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check release Edge Functions
+        run: |
+          deno check supabase/functions/apple-token/index.ts
+          deno check supabase/functions/delete-account/index.ts
+          deno check supabase/functions/moderate-avatar/index.ts
+          deno check supabase/functions/moderate-content/index.ts
+
+      - name: Enforce Storage API deletion boundary
+        run: |
+          if grep -Eiq 'delete[[:space:]]+from[[:space:]]+storage\.objects' supabase/migrations/20260714173947_release_blocker_hardening.sql; then
+            echo 'Physical Storage objects must be deleted through the Storage API.'
+            exit 1
+          fi

@@ -69,16 +69,18 @@ PUBLIC REVIEW PATH
 - Account-only actions clearly return the reviewer to sign-in.
 
 ACCOUNT REVIEW PATH
-- Enter an App Review email address, request a sign-in email, and type the six-digit code from that email. New accounts complete the short age and preference onboarding. External providers are not shown until they pass a signed-device callback test.
-- Delete account: You tab > Delete account > confirm. This deletes the auth identity and personal-plane rows.
+- Enter an App Review email address, request a sign-in email, and type the six-digit code from that email. New accounts complete the short age and preference onboarding.
+- Sign in with Apple and Google are also available. Both complete inside the signed app and return to Tapt.
+- Delete account: You tab > Delete account > confirm. This revokes stored Sign in with Apple authorization, deletes avatar objects, the auth identity, and all personal-plane rows.
 - Privacy controls: You tab > Privacy Choices. Optional aggregate and partner-insight sharing default off.
-- UGC safety: report/block actions are available from social feed items and public profiles.
+- UGC safety: profile text is filtered before publication; avatar uploads wait for approval; report/block actions are available from social feed items and public profiles; reports enter an authenticated admin moderation queue.
+- Age rating: Tapt includes social-media capability through profile search, follows, and the Tonight feed, and includes frequent contests through trivia/rankings. We do not claim the under-13 social-media mitigation because Tapt does not use Apple's Declared Age Range API.
 - Responsible play: games are skill, trivia, and scorekeeping experiences. They never require alcohol, include zero-proof play, and contain no volume or speed-drinking prompts.
 - Passport badges reward distinct beers, styles, and places rather than repeat consumption volume.
 
 LOCATION AND CAMERA
 - Both permissions are optional and requested in context. The public catalog, learning, and games remain usable without either permission.
-- The camera supports beer barcode, label, tap-list, and partner QR scanning.
+- The camera supports beer barcodes, printed label/tap-list text, and partner QR scanning.
 
 DATA INTEGRITY
 - Beer, brewery, and venue records are source-attributed. Community boards remain empty until real eligible activity exists; the production app contains no fabricated votes or check-ins."""
@@ -143,6 +145,7 @@ def validate_public_legal_pages() -> None:
         "[company_legal_name",
         "[address",
         "to be completed",
+        "tapt.app",
     )
     for label, url in (
         ("privacy policy", "https://taptbeer.com/privacy"),
@@ -224,7 +227,7 @@ def main() -> int:
         "advertising": True,
         "ageAssurance": True,
         "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT",
-        "contests": "NONE",
+        "contests": "FREQUENT",
         "gambling": False,
         "gamblingSimulated": "NONE",
         "gunsOrOtherWeapons": "NONE",
@@ -312,7 +315,7 @@ def main() -> int:
                 "type": "appStoreVersions",
                 "id": version_id,
                 "attributes": {
-                    "copyright": "2026 Tapt",
+                    "copyright": "2026 Erick Dronski",
                     "releaseType": "AFTER_APPROVAL",
                     "usesIdfa": False,
                 },

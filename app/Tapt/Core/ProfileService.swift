@@ -125,15 +125,23 @@ enum ProfileService {
         )
     }
 
-    /// Real, immediate account deletion (App Store 5.1.1(v) + GDPR/CCPA): the
-    /// delete_my_account RPC wipes the caller's entire personal plane (votes,
-    /// check-ins, profile, follows, claims, consent, ...) and their auth identity;
-    /// the k-anon aggregate plane is retained per the two-plane design. Then sign out.
-    static func requestAccountDeletion(userId: UUID, reason: String? = nil) async throws {
-        _ = reason // kept for call-site compatibility; deletion is immediate, not queued
-        struct Empty: Encodable {}
-        try await Supa.authedRPCVoid("delete_my_account", params: Empty())
+    /// The server revokes any stored Sign in with Apple authorization first,
+    /// then removes the personal plane, avatar objects, and auth identity.
+    static func requestAccountDeletion(userId: UUID, reason: String? = nil) async throws -> Bool {
+        _ = userId
+        struct DeleteBody: Encodable, Sendable { let reason: String? }
+        struct DeleteResponse: Decodable {
+            let deleted: Bool
+            let manualAppleRevocationRequired: Bool
+        }
+        _ = try await Supa.client.auth.session
+        let response: DeleteResponse = try await Supa.client.functions.invoke(
+            "delete-account",
+            options: FunctionInvokeOptions(body: DeleteBody(reason: reason))
+        )
+        guard response.deleted else { throw ProfileServiceError.deletionIncomplete }
         try? await Supa.client.auth.signOut()
+        return response.manualAppleRevocationRequired
     }
 
     /// Whether this user already finished onboarding on the server (region set).
@@ -184,17 +192,36 @@ enum ProfileService {
         )
     }
 
-    struct MyProfile: Sendable { let displayName: String?; let handle: String?; let avatarUrl: String? }
+    struct MyProfile: Sendable {
+        let displayName: String?
+        let handle: String?
+        let avatarUrl: String?
+        let pendingAvatarUrl: String?
+        let avatarModerationStatus: String
+    }
 
     /// The caller's own editable identity row.
     static func myProfile(userId: UUID) async throws -> MyProfile {
-        struct Row: Decodable { let display_name: String?; let handle: String?; let avatar_url: String? }
+        struct Row: Decodable {
+            let display_name: String?
+            let handle: String?
+            let avatar_url: String?
+            let pending_avatar_url: String?
+            let avatar_moderation_status: String
+        }
         _ = try await Supa.client.auth.session
         let rows: [Row] = try await Supa.client.from("user_profile")
-            .select("display_name,handle,avatar_url").eq("id", value: userId.uuidString)
+            .select("display_name,handle,avatar_url,pending_avatar_url,avatar_moderation_status")
+            .eq("id", value: userId.uuidString)
             .limit(1).execute().value
         let r = rows.first
-        return MyProfile(displayName: r?.display_name, handle: r?.handle, avatarUrl: r?.avatar_url)
+        return MyProfile(
+            displayName: r?.display_name,
+            handle: r?.handle,
+            avatarUrl: r?.avatar_url,
+            pendingAvatarUrl: r?.pending_avatar_url,
+            avatarModerationStatus: r?.avatar_moderation_status ?? "none"
+        )
     }
 
     /// Save display name and/or handle. nil leaves a field unchanged; "" clears the handle.
@@ -209,16 +236,41 @@ enum ProfileService {
         try await Supa.authedRPCVoid("set_avatar_url", params: Params(p_url: url))
     }
 
-    /// Upload a JPEG to avatars/{uid}/avatar.jpg, record the public URL on the
-    /// profile, and return it cache-busted so AsyncImage reloads.
+    /// Upload each candidate to a unique object so an unreviewed image cannot
+    /// overwrite the bytes behind the currently approved public avatar.
     static func uploadAvatar(_ jpeg: Data, userId: UUID) async throws -> String {
-        let path = "\(userId.uuidString)/avatar.jpg"
+        let previousProfile = try? await myProfile(userId: userId)
+        let previousPath = previousProfile?.pendingAvatarUrl
+            .flatMap { avatarStoragePath(from: $0, userId: userId) }
+        let path = "\(userId.uuidString)/\(UUID().uuidString.lowercased()).jpg"
         _ = try await Supa.client.storage.from("avatars").upload(
             path: path, file: jpeg,
             options: FileOptions(cacheControl: "3600", contentType: "image/jpeg", upsert: true))
         let base = try Supa.client.storage.from("avatars").getPublicURL(path: path).absoluteString
         let busted = base + "?v=\(Int(Date().timeIntervalSince1970))"
-        try await setAvatarURL(busted)
+        do {
+            try await setAvatarURL(busted)
+        } catch {
+            try? await Supa.client.storage.from("avatars").remove(paths: [path])
+            throw error
+        }
+        if let previousPath, previousPath != path {
+            try? await Supa.client.storage.from("avatars").remove(paths: [previousPath])
+        }
         return busted
     }
+
+    private static func avatarStoragePath(from value: String, userId: UUID) -> String? {
+        guard let url = URL(string: value) else { return nil }
+        let marker = "/storage/v1/object/public/avatars/"
+        guard let range = url.path.range(of: marker) else { return nil }
+        let encoded = String(url.path[range.upperBound...])
+        let path = encoded.removingPercentEncoding ?? encoded
+        guard path.hasPrefix("\(userId.uuidString)/") else { return nil }
+        return path
+    }
+}
+
+private enum ProfileServiceError: Error {
+    case deletionIncomplete
 }

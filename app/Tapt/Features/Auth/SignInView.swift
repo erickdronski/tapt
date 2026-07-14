@@ -308,6 +308,8 @@ struct SignInView: View {
                 let cred = auth.credential as? ASAuthorizationAppleIDCredential,
                 let tokenData = cred.identityToken,
                 let idToken = String(data: tokenData, encoding: .utf8),
+                let codeData = cred.authorizationCode,
+                let authorizationCode = String(data: codeData, encoding: .utf8),
                 let nonce = currentNonce
             else {
                 errorText = "Could not read the Apple credential."
@@ -318,9 +320,23 @@ struct SignInView: View {
                     try await Supa.client.auth.signInWithIdToken(
                         credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
                     )
+                    // Apple normally returns the person's name once. Persist it
+                    // before token-vault work so a transient Edge failure cannot
+                    // permanently discard that first-authorization value.
                     await saveAppleName(cred.fullName)
+                    struct AppleTokenResponse: Decodable { let stored: Bool }
+                    let response: AppleTokenResponse = try await Supa.client.functions.invoke(
+                        "apple-token",
+                        options: FunctionInvokeOptions(
+                            body: ["authorizationCode": authorizationCode]
+                        )
+                    )
+                    guard response.stored else { throw AppleSignInError.tokenNotStored }
+                    currentNonce = nil
                 } catch {
-                    errorText = error.localizedDescription
+                    try? await Supa.client.auth.signOut()
+                    currentNonce = nil
+                    errorText = "Apple sign-in could not finish securely. Try again."
                 }
             }
         case .failure(let err):
@@ -348,6 +364,9 @@ struct SignInView: View {
         if !metadata.isEmpty {
             try? await Supa.client.auth.update(user: UserAttributes(data: metadata))
         }
+        if !fullName.isEmpty {
+            try? await ProfileService.setIdentity(displayName: fullName, handle: nil)
+        }
     }
 
     // MARK: - Nonce helpers (Apple requires a hashed nonce; Supabase needs the raw one)
@@ -369,4 +388,8 @@ struct SignInView: View {
     static func sha256(_ input: String) -> String {
         SHA256.hash(data: Data(input.utf8)).map { String(format: "%02x", $0) }.joined()
     }
+}
+
+private enum AppleSignInError: Error {
+    case tokenNotStored
 }

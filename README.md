@@ -27,13 +27,16 @@ Nothing in Tapt is fabricated. Every venue has real coordinates and provenance (
 
 ## CI
 - `build.yml` - compile and unit-test on app-touching pull requests and `main` pushes (simulator, unsigned)
+- `release-integrity.yml` - Python/workflow/admin-module validation plus Deno checks for release Edge Functions
 - `testflight.yml` - manual signed archive and TestFlight upload
+- `asc-release-prepare.yml` - exact-build metadata, screenshot upload, and read-only ASC audit
+- `asc-release-submit.yml` - protected, attested zero-blocker audit and explicit App Review submission
 
 ## Status
 - [x] Research + synthesis · name locked (**Tapt**) · Supabase project + repo
 - [x] Email magic link and six-digit email-code auth, scan loop, map, check-ins, and Passport
 - [x] Superapp layer: licensed content ingest, honest market engine, leaderboards, newsletter signup, partner tools, and friends
-- [ ] Release gate: enable and verify Sign in with Apple in Supabase and the Apple developer configuration
+- [ ] Release gate: configure Apple token-exchange secrets and physically verify email, Google, and Apple on the exact TestFlight candidate
 - [ ] Release gate: finish Google consent-screen configuration and verify the signed-device OAuth callback
 - [ ] Release gate: run the TestFlight auth matrix for email and every external provider intended for that build
 - [ ] Owner: first real featured partners (`featured_partner` rows) once inquiries land

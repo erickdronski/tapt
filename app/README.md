@@ -23,8 +23,9 @@ Set the Signing Team (`J9DMDH4S58`) and run on an iOS 18+ device or simulator.
 
 ## Auth and release gates
 - Email magic-link and six-digit code sign-in are implemented and enabled.
-- Google and Facebook are configured in Supabase but are hidden from release builds until each completes a successful signed-device callback test.
-- Apple is implemented in the app but remains disabled in Supabase until its service credentials are configured.
+- Google is enabled and has completed the hosted callback; each release candidate still requires a signed-device TestFlight callback test.
+- Apple is enabled and the native flow is implemented. It intentionally fails closed until the four token-exchange Edge secrets are configured; after that, the server stores the refresh token in Vault so in-app deletion can revoke Apple authorization.
+- Facebook is disabled and hidden until Meta credentials and a signed-device callback test are complete.
 - X and phone sign-in are not enabled and must not be presented as available.
 
 ## Core surfaces

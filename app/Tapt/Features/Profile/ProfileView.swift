@@ -52,7 +52,8 @@ struct ProfileView: View {
     @ViewBuilder private var avatarView: some View {
         ZStack(alignment: .bottomTrailing) {
             Group {
-                if let u = myProfile?.avatarUrl, let url = URL(string: u) {
+                if let u = myProfile?.pendingAvatarUrl ?? myProfile?.avatarUrl,
+                   let url = URL(string: u) {
                     AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { initialAvatar }
                 } else { initialAvatar }
             }
@@ -102,6 +103,12 @@ struct ProfileView: View {
                     .padding(.vertical, 6)
                     if let identityError {
                         Text(identityError).font(.caption).foregroundStyle(Brand.copper)
+                    }
+                    if let status = myProfile?.avatarModerationStatus,
+                       ["pending", "processing"].contains(status) {
+                        Label("Photo awaiting review", systemImage: "clock.badge.checkmark")
+                            .font(.caption)
+                            .foregroundStyle(Brand.muted)
                     }
                 }
 
@@ -352,8 +359,13 @@ struct ProfileView: View {
                 return
             }
             let url = try await ProfileService.uploadAvatar(jpeg, userId: id)
-            myProfile = ProfileService.MyProfile(displayName: myProfile?.displayName,
-                                                 handle: myProfile?.handle, avatarUrl: url)
+            myProfile = ProfileService.MyProfile(
+                displayName: myProfile?.displayName,
+                handle: myProfile?.handle,
+                avatarUrl: myProfile?.avatarUrl,
+                pendingAvatarUrl: url,
+                avatarModerationStatus: "pending"
+            )
         } catch {
             identityError = "Your photo did not upload. Check your connection and try again."
         }
@@ -459,7 +471,7 @@ struct ProfileView: View {
         deleting = true
         Task {
             do {
-                try await ProfileService.requestAccountDeletion(userId: id)
+                let requiresManualAppleRevocation = try await ProfileService.requestAccountDeletion(userId: id)
                 locationConsent = false
                 aggregateConsent = false
                 dataSaleConsent = false
@@ -468,6 +480,10 @@ struct ProfileView: View {
                 myActivity = []
                 activityError = nil
                 await session.signOut()
+                if requiresManualAppleRevocation,
+                   let url = URL(string: "https://account.apple.com/account/manage") {
+                    await UIApplication.shared.open(url)
+                }
             } catch {
                 deletionError = "Account deletion did not complete. Check your connection and try again, or contact support."
             }

@@ -12,9 +12,15 @@ in the same commit — the repo is the source of truth for takeover/audit.
 | `newsletter-unsubscribe` | false | Token-gated unsubscribe (the token is the secret). GET redirects humans to `/unsubscribe`; POST is the one-click/page action. Generic responses, never confirms address existence. |
 | `obdb-sync` | true | Retired (410). One-shot Open Brewery DB import, completed 2026-07-09. |
 | `verify-barcode-beer` | true | Re-fetches the barcode from Open Food Facts, requires a beer category, sanitizes source fields, and calls the service-role-only catalog insert. Client payloads cannot write canonical product metadata. |
+| `apple-token` | true | Exchanges a native Sign in with Apple authorization code, verifies the Apple subject/audience against the authenticated Supabase user, and stores the refresh token encrypted in Vault. |
+| `delete-account` | true | Revokes the caller's stored Apple refresh token, physically removes avatar objects through the Storage API, deletes personal data through the service-only deletion RPC, then removes the Auth user. Legacy Apple accounts without a stored token are still deleted and return the manual-revocation flag. |
+| `moderate-avatar` | true | Admin-only, retryable avatar approval/rejection. Claims the review row, removes replaced/rejected bytes through the Storage API, then commits moderation state. |
+| `moderate-content` | true | Admin-only report operation. Rejects unsupported removal targets, physically removes suspended-user avatars, and atomically records the moderation action. |
 
 Secrets the functions read (owner-set in Supabase dashboard, never in repo):
 `RESEND_API_KEY`, `RESEND_FROM` (optional), `MAIL_POSTAL_ADDRESS` (CAN-SPAM
-postal address, required before any newsletter blast), `CRON_SECRET`.
+postal address, required before any newsletter blast), `CRON_SECRET`,
+`APPLE_TEAM_ID`, `APPLE_CLIENT_ID`, `APPLE_SIGN_IN_KEY_ID`, and
+`APPLE_SIGN_IN_KEY` (complete dedicated Sign in with Apple `.p8` contents).
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are injected
 by the platform.
