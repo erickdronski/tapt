@@ -23,3 +23,5 @@ beer_image_backfill.json
 app/*.xcodeproj/
 app/*.xcworkspace/
 .build/
+
+scripts/.wikidata_ingest_state.json
