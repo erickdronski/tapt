@@ -27,6 +27,7 @@ KEY_PATH = os.environ["ASC_KEY_PATH"]
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
 EXPECTED_BUILD_NUMBER = os.environ.get("EXPECTED_BUILD_NUMBER", "").strip()
+REQUIRE_MANUAL_ATTESTATIONS = os.environ.get("REQUIRE_MANUAL_ATTESTATIONS") == "true"
 
 
 def token() -> str:
@@ -75,6 +76,34 @@ def api_error(label: str, status: int, body: dict) -> None:
     print(f"  {label}: HTTP {status}{suffix}")
 
 
+def audit_public_legal_pages(blockers: list[str]) -> None:
+    forbidden = (
+        "draft for counsel review",
+        "[company_legal_name",
+        "[address",
+        "to be completed",
+        "tapt.app",
+    )
+    for label, url in (
+        ("privacy policy", "https://taptbeer.com/privacy"),
+        ("terms", "https://taptbeer.com/terms"),
+    ):
+        request = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Tapt release readiness audit"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                page = response.read().decode("utf-8", errors="replace").lower()
+        except urllib.error.URLError as error:
+            blockers.append(f"Public {label} could not be read: {error.reason}.")
+            continue
+        marker = next((value for value in forbidden if value in page), None)
+        print(f"  {label}: {'clean' if marker is None else f'contains {marker}'}")
+        if marker:
+            blockers.append(f"Public {label} contains unresolved or parked-domain text ({marker}).")
+
+
 def main() -> int:
     blockers: list[str] = []
     manual: list[str] = []
@@ -98,6 +127,11 @@ def main() -> int:
         f"made_for_kids={app_attrs.get('isOrEverWasMadeForKids')} "
         f"content_rights={app_attrs.get('contentRightsDeclaration')}"
     )
+    if app_attrs.get("contentRightsDeclaration") != "USES_THIRD_PARTY_CONTENT":
+        blockers.append("Content-rights declaration must be USES_THIRD_PARTY_CONTENT.")
+
+    print("\nPUBLIC LEGAL PAGES")
+    audit_public_legal_pages(blockers)
 
     print("\nAPP INFORMATION")
     status, body = api(f"/v1/apps/{app_id}/appInfos?limit=20")
@@ -127,6 +161,8 @@ def main() -> int:
             print(f"  {label}: {rel_value or 'MISSING'}")
             if relationship == "primaryCategory" and not rel_value:
                 blockers.append("Primary App Store category is missing.")
+            if relationship == "primaryCategory" and rel_value not in (None, "FOOD_AND_DRINK"):
+                blockers.append(f"Primary App Store category is {rel_value}, expected FOOD_AND_DRINK.")
 
         loc_status, loc_body = api(
             f"/v1/appInfos/{info_id}/appInfoLocalizations?limit=50"
@@ -151,6 +187,12 @@ def main() -> int:
                 blockers.append(
                     f"Privacy policy URL is missing for {loc.get('locale')}."
                 )
+            for field, value in (
+                ("privacy policy", privacy_url),
+                ("privacy choices", loc.get("privacyChoicesUrl")),
+            ):
+                if is_present(value) and "tapt.app" in str(value).lower():
+                    blockers.append(f"{field.title()} URL still uses parked tapt.app for {loc.get('locale')}.")
 
         rating_status, rating_body = api(
             f"/v1/appInfos/{info_id}/ageRatingDeclaration"
@@ -167,6 +209,35 @@ def main() -> int:
                 f"simulated_gambling={rating.get('gamblingSimulated')} "
                 f"gambling={rating.get('gambling')}"
             )
+            expected_rating = {
+                "advertising": True,
+                "ageAssurance": True,
+                "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT",
+                "contests": "FREQUENT",
+                "gambling": False,
+                "gamblingSimulated": "NONE",
+                "gunsOrOtherWeapons": "NONE",
+                "healthOrWellnessTopics": False,
+                "horrorOrFearThemes": "NONE",
+                "lootBox": False,
+                "matureOrSuggestiveThemes": "NONE",
+                "medicalOrTreatmentInformation": "NONE",
+                "messagingAndChat": False,
+                "parentalControls": False,
+                "profanityOrCrudeHumor": "NONE",
+                "sexualContentGraphicAndNudity": "NONE",
+                "sexualContentOrNudity": "NONE",
+                "unrestrictedWebAccess": False,
+                "userGeneratedContent": True,
+                "violenceCartoonOrFantasy": "NONE",
+                "violenceRealistic": "NONE",
+                "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+            }
+            for field, expected in expected_rating.items():
+                if rating.get(field) != expected:
+                    blockers.append(
+                        f"Age-rating {field} is {rating.get(field)!r}, expected {expected!r}."
+                    )
         else:
             api_error("age declaration", rating_status, rating_body)
             blockers.append("Age-rating declaration could not be read.")
@@ -273,6 +344,12 @@ def main() -> int:
                 blockers.append(
                     f"Version {version_label} {loc.get('locale')} is missing {field}."
                 )
+            for field in ("supportUrl", "marketingUrl"):
+                value = loc.get(field)
+                if is_present(value) and "tapt.app" in str(value).lower():
+                    blockers.append(
+                        f"Version {version_label} {loc.get('locale')} {field} still uses parked tapt.app."
+                    )
 
             set_status, set_body = api(
                 f"/v1/appStoreVersionLocalizations/{loc_id}/appScreenshotSets?limit=50"
@@ -308,6 +385,10 @@ def main() -> int:
                     blockers.append(
                         f"Screenshot set {set_attrs.get('screenshotDisplayType')} is empty."
                     )
+                elif ready != len(shots):
+                    blockers.append(
+                        f"Screenshot set {set_attrs.get('screenshotDisplayType')} has incomplete uploads."
+                    )
 
         review_status, review_body = api(
             f"/v1/appStoreVersions/{version_id}/appStoreReviewDetail"
@@ -340,6 +421,8 @@ def main() -> int:
                 )
             if demo_required and not demo_complete:
                 blockers.append("App Review demo credentials are incomplete.")
+            if not is_present(attrs.get("notes")):
+                blockers.append("App Review notes are missing.")
         else:
             if review_status not in (200, 404):
                 api_error("review detail", review_status, review_body)
@@ -383,14 +466,29 @@ def main() -> int:
     else:
         api_error("builds", status, body)
 
-    manual.extend(
-        [
-            "App Privacy data-use answers and their published state (not exposed by the public API).",
-            "Agreements, tax, banking, DSA trader status, and territory availability.",
-            "The public legal pages contain no draft text or unresolved placeholders.",
-            "Every login shown in the selected build works on a signed device; Sign in with Apple is also required when another third-party login is shown.",
-        ]
+    manual_attestations = (
+        (
+            "ASC_ATTEST_APP_PRIVACY",
+            "App Privacy data-use answers are complete and published (not exposed by the public API).",
+        ),
+        (
+            "ASC_ATTEST_LEGAL_COMPLIANCE",
+            "Agreements, tax, banking, DSA trader status, legal entity, and territory availability are complete.",
+        ),
+        (
+            "ASC_ATTEST_PHYSICAL_AUTH",
+            "Email, Google, and Apple sign-in were physically verified on the exact selected build.",
+        ),
+        (
+            "ASC_ATTEST_SOCIAL_MEDIA_RATING",
+            "The current age-rating Social Media question is answered Yes; no under-13 mitigation is claimed.",
+        ),
     )
+    for key, description in manual_attestations:
+        attested = os.environ.get(key) == "true"
+        manual.append(f"{description} status={'ATTESTED' if attested else 'NOT ATTESTED'}")
+        if REQUIRE_MANUAL_ATTESTATIONS and not attested:
+            blockers.append(f"Required manual attestation is missing: {key}.")
 
     print("\nAUTOMATED BLOCKERS")
     if blockers:
@@ -408,7 +506,11 @@ def main() -> int:
         + (
             f"NOT READY ({len(dict.fromkeys(blockers))} automated blockers)"
             if blockers
-            else "API METADATA READY; manual gates remain"
+            else (
+                "READY (0 blockers; required manual gates attested)"
+                if REQUIRE_MANUAL_ATTESTATIONS
+                else "API METADATA READY; manual gates remain"
+            )
         )
     )
     return 1 if blockers else 0

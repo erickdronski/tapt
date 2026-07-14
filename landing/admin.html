@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Tapt Admin · Claims</title>
+<title>Tapt Admin · Operations</title>
 <meta name="theme-color" content="#1A1206">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <style>
 :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -27,6 +27,7 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
 .tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}.tag.rejected{background:#F3E0DA;color:var(--copper)}
 .msg{font-weight:600;font-size:.9rem;margin-top:8px}
 .actions{display:flex;gap:8px;margin-top:8px}
+.avatar-preview{width:72px;height:72px;object-fit:cover;border-radius:50%;border:2px solid var(--gold)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
 .stat{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:14px;padding:14px;text-align:center}
 .stat b{display:block;font-family:'Poppins';font-size:1.6rem;color:var(--malt)}
@@ -41,7 +42,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
 <body>
 <div class="wrap">
   <div class="brand">Tapt<span>.</span> <span style="font-size:.85rem;color:var(--slate);font-weight:600">admin</span></div>
-  <h1>Venue claim queue</h1>
+  <h1>Operations queue</h1>
 
   <div id="authBox">
     <input type="email" id="email" placeholder="Admin email">
@@ -62,6 +63,14 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
     <button class="btn" onclick="sendDispatch()" style="margin-top:8px">Send to all subscribers</button>
     <div class="msg" id="dmsg"></div>
   </div>
+
+  <h2 id="modHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Content reports</h2>
+  <div class="msg" id="modMsg" aria-live="polite"></div>
+  <div id="reports"></div>
+
+  <h2 id="avatarHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Avatar review</h2>
+  <div class="msg" id="avatarMsg" aria-live="polite"></div>
+  <div id="avatars"></div>
 
   <h2 id="inqHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Partner inquiries</h2>
   <div id="inquiries"></div>
@@ -105,19 +114,63 @@ async function callFn(payload) {
   return result;
 }
 
+async function callNamedFn(name, payload) {
+  const { data, error } = await supa.functions.invoke(name, { body: payload });
+  if (error) throw new Error(error.message || `${name} failed.`);
+  return data;
+}
+
 async function load() {
   const { data: isAdmin } = await supa.rpc('is_admin');
   if (!isAdmin) { $('queue').innerHTML = '<p style="color:var(--copper)">This account is not an admin.</p>'; return; }
   $('authBox').style.display = 'none';
   $('stats').hidden = false; $('dispatchBox').hidden = false; $('qHead').hidden = false; $('inqHead').hidden = false;
+  $('modHead').hidden = false; $('avatarHead').hidden = false;
 
   // Ops dashboard
   const { data: s } = await supa.rpc('admin_stats');
   if (s) $('stats').innerHTML = [
     ['users','Drinkers',false],['venues_claimed','Venues claimed',false],['claims_pending','Claims pending',true],
     ['menus_live','Live menus',false],['pours','Pours logged',false],['votes','Votes',false],
-    ['subscribers','Dispatch subs',false],['inquiries_new','New inquiries',true],['beers','Beers',false]
+    ['subscribers','Dispatch subs',false],['inquiries_new','New inquiries',true],['reports_open','Open reports',true],
+    ['avatars_pending','Avatars pending',true],['beers','Beers',false]
   ].map(([k,l,hot]) => `<div class="stat ${hot&&s[k]>0?'hot':''}"><b>${s[k]??0}</b><span>${l}</span></div>`).join('');
+
+  // UGC reports stay in a first-party, admin-only queue until explicitly resolved.
+  const { data: reports, error: reportsError } = await supa.rpc('admin_content_reports');
+  if (reportsError) {
+    $('reports').innerHTML = `<p style="color:var(--copper)">${esc(reportsError.message)}</p>`;
+  } else {
+    $('reports').innerHTML = (reports && reports.length) ? reports.map(r => `
+      <div class="claim ${['open','reviewing'].includes(r.status)?'pending':''}">
+        <div style="display:flex;justify-content:space-between;gap:10px"><h3>${esc(r.target_label)}</h3><span class="tag ${r.status==='actioned'?'approved':r.status==='dismissed'?'rejected':'pending'}">${esc(r.status)}</span></div>
+        <div class="meta">${esc(r.target_type)} · ${esc(r.reason)} · ${new Date(r.created_at).toLocaleString()}</div>
+        ${r.details?`<div style="font-size:.9rem">${esc(r.details)}</div>`:''}
+        ${['open','reviewing'].includes(r.status)?`<div class="actions">
+          <button class="btn r" onclick="moderateReport('${r.report_id}','remove')">Remove</button>
+          <button class="btn" onclick="moderateReport('${r.report_id}','dismiss')">Dismiss</button>
+        </div>`:''}
+      </div>`).join('') : '<p style="color:var(--slate)">No content reports.</p>';
+  }
+
+  // Uploaded avatars are not surfaced publicly until an admin approves them.
+  const { data: avatars, error: avatarsError } = await supa.rpc('admin_pending_avatars');
+  if (avatarsError) {
+    $('avatars').innerHTML = `<p style="color:var(--copper)">${esc(avatarsError.message)}</p>`;
+  } else {
+    $('avatars').innerHTML = (avatars && avatars.length) ? avatars.map(a => `
+      <div class="claim pending" style="display:flex;gap:14px;align-items:center">
+        <img class="avatar-preview" src="${esc(a.pending_avatar_url)}" alt="Avatar awaiting review">
+        <div style="flex:1;min-width:0">
+          <h3>${esc(a.display_name || a.handle || a.user_id)}</h3>
+          <div class="meta">${new Date(a.submitted_at).toLocaleString()}</div>
+          <div class="actions">
+            <button class="btn g" onclick="moderateAvatar('${a.user_id}','approve')">Approve</button>
+            <button class="btn r" onclick="moderateAvatar('${a.user_id}','reject')">Reject</button>
+          </div>
+        </div>
+      </div>`).join('') : '<p style="color:var(--slate)">No avatars awaiting review.</p>';
+  }
 
   // Inquiries
   const { data: inq } = await supa.rpc('admin_inquiries');
@@ -168,6 +221,28 @@ async function setStatus(id, status, venueId) {
   }
   await load();
 }
+
+window.moderateReport = async (id, decision) => {
+  $('modMsg').textContent = decision === 'remove' ? 'Removing reported content...' : 'Dismissing report...';
+  try {
+    await callNamedFn('moderate-content', { reportId: id, decision, note: null });
+    $('modMsg').textContent = `Report ${decision === 'remove' ? 'actioned' : 'dismissed'}.`;
+    await load();
+  } catch (error) {
+    $('modMsg').textContent = error.message;
+  }
+};
+
+window.moderateAvatar = async (userId, decision) => {
+  $('avatarMsg').textContent = decision === 'approve' ? 'Publishing avatar...' : 'Rejecting avatar...';
+  try {
+    await callNamedFn('moderate-avatar', { userId, decision });
+    $('avatarMsg').textContent = `Avatar ${decision === 'approve' ? 'approved' : 'rejected'}.`;
+    await load();
+  } catch (error) {
+    $('avatarMsg').textContent = error.message;
+  }
+};
 
 window.sendDispatch = async () => {
   const subject = $('dsubject').value.trim(), html = $('dbody').value.trim();

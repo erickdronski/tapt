@@ -25,6 +25,9 @@ struct ScanView: View {
     @State private var partnerVenueId: String?
     @State private var errorMessage: String?
     @State private var scannerStartError: String?
+    @State private var scannerResetToken = 0
+    @State private var scanGeneration = UUID()
+    @State private var matchTask: Task<Void, Never>?
     @State private var cameraAuthorization = AVCaptureDevice.authorizationStatus(for: .video)
 
     private var scannerAvailable: Bool {
@@ -48,7 +51,8 @@ struct ScanView: View {
                     DataScannerView(
                         scanned: $scanned,
                         visibleLines: $visibleLines,
-                        startError: $scannerStartError
+                        startError: $scannerStartError,
+                        resetToken: scannerResetToken
                     )
                         .ignoresSafeArea(edges: .bottom)
                         .overlay(alignment: .bottom) { hint }
@@ -99,12 +103,13 @@ struct ScanView: View {
                 }
                 scanLabel = value
                 showResult = true
-                Task { await loadMatches(value) }
+                startMatching(value)
             }
-            .sheet(item: $partnerVenueId) { venueId in
+            .sheet(item: $partnerVenueId, onDismiss: resetScanner) { venueId in
                 PartnerMenuSheet(venueId: venueId)
             }
-            .sheet(isPresented: $showResult, onDismiss: { scanned = nil }) { resultSheet }
+            .sheet(isPresented: $showResult, onDismiss: resetScanner) { resultSheet }
+            .onDisappear { cancelMatching() }
             // The pour "glass fills and stamps" celebration plays first, then the
             // share card opens once it finishes. This is the app's most shareable
             // moment; it should feel like a moment, not a jump cut.
@@ -476,6 +481,34 @@ struct ScanView: View {
         }
     }
 
+    private func resetScanner() {
+        cancelMatching()
+        scanGeneration = UUID()
+        scanned = nil
+        scanLabel = ""
+        visibleLines = []
+        matches = []
+        offBeer = nil
+        selected = nil
+        rating = nil
+        loadingMatches = false
+        menuMatching = false
+        menuPick = nil
+        scannerResetToken &+= 1
+    }
+
+    private func cancelMatching() {
+        matchTask?.cancel()
+        matchTask = nil
+    }
+
+    private func startMatching(_ raw: String) {
+        cancelMatching()
+        let generation = UUID()
+        scanGeneration = generation
+        matchTask = Task { await loadMatches(raw, generation: generation) }
+    }
+
     /// "Your pick on this menu" -- the taste-matched highlight above the list.
     private func menuPickCard(_ pick: RecommendedBeer) -> some View {
         Button {
@@ -506,19 +539,25 @@ struct ScanView: View {
         .padding(.horizontal)
     }
 
-    private func loadMatches(_ raw: String) async {
+    private func loadMatches(_ raw: String, generation: UUID) async {
         loadingMatches = true
         selected = nil
         rating = nil
         offBeer = nil
-        defer { loadingMatches = false }
-        matches = (try? await CheckinService.matchScan(raw)) ?? []
+        let catalogMatches = (try? await CheckinService.matchScan(raw)) ?? []
+        guard !Task.isCancelled, generation == scanGeneration else { return }
+        matches = catalogMatches
 
         // Barcode with no catalog hit -> ask Open Food Facts (free, open data).
         let digits = raw.filter(\.isNumber)
         if matches.isEmpty, digits.count >= 8, digits.count <= 14, digits.count == raw.trimmingCharacters(in: .whitespaces).count {
-            offBeer = try? await BarcodeCatalogService.lookup(barcode: digits)
+            let fallback = try? await BarcodeCatalogService.lookup(barcode: digits)
+            guard !Task.isCancelled, generation == scanGeneration else { return }
+            offBeer = fallback
         }
+        guard generation == scanGeneration else { return }
+        loadingMatches = false
+        matchTask = nil
     }
 
     private func save(_ beer: BeerPick) {

@@ -7,6 +7,7 @@ struct DataScannerView: UIViewControllerRepresentable {
     @Binding var scanned: String?
     @Binding var visibleLines: [String]
     @Binding var startError: String?
+    let resetToken: Int
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let vc = DataScannerViewController(
@@ -20,6 +21,10 @@ struct DataScannerView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ vc: DataScannerViewController, context: Context) {
+        if context.coordinator.lastResetToken != resetToken {
+            context.coordinator.lastResetToken = resetToken
+            context.coordinator.reset()
+        }
         guard !vc.isScanning else { return }
         do {
             try vc.startScanning()
@@ -39,6 +44,7 @@ struct DataScannerView: UIViewControllerRepresentable {
         @Binding var scanned: String?
         @Binding var visibleLines: [String]
         @Binding var startError: String?
+        var lastResetToken: Int
         // Menu lines ACCUMULATE across frames (keyed by normalized text) so a
         // user can pan across a whole tap list and capture every beer, instead
         // of only what fits in one viewfinder. Bounded so it can't grow forever.
@@ -54,6 +60,12 @@ struct DataScannerView: UIViewControllerRepresentable {
             _scanned = scanned
             _visibleLines = visibleLines
             _startError = startError
+            lastResetToken = 0
+        }
+
+        func reset() {
+            accumulated.removeAll(keepingCapacity: true)
+            order.removeAll(keepingCapacity: true)
         }
 
         func reportStartError(_ message: String?) {

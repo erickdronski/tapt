@@ -56,13 +56,20 @@ struct EditIdentityView: View {
                 try await ProfileService.setIdentity(
                     displayName: name.trimmingCharacters(in: .whitespaces),
                     handle: handle.trimmingCharacters(in: .whitespaces))
-                onSaved(ProfileService.MyProfile(displayName: name, handle: handle.lowercased(), avatarUrl: initial?.avatarUrl))
+                onSaved(ProfileService.MyProfile(
+                    displayName: name,
+                    handle: handle.lowercased(),
+                    avatarUrl: initial?.avatarUrl,
+                    pendingAvatarUrl: initial?.pendingAvatarUrl,
+                    avatarModerationStatus: initial?.avatarModerationStatus ?? "none"
+                ))
                 dismiss()
             } catch {
                 let d = error.localizedDescription
                 if d.contains("handle_taken") { self.error = "That handle is taken. Try another." }
                 else if d.contains("handle_format") { self.error = "Handles are 3 to 20 characters: letters, numbers, underscore." }
                 else if d.contains("display_name_length") { self.error = "Names are 2 to 40 characters." }
+                else if d.contains("not_allowed") { self.error = "Choose a name and handle that follow the community rules." }
                 else { self.error = "That did not save. Check your connection and try again." }
             }
             saving = false

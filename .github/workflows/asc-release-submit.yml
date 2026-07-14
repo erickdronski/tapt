@@ -1,0 +1,77 @@
+name: ASC Release Submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Exact audited VALID build number
+        required: true
+        type: string
+      confirmation:
+        description: Type SUBMIT TAPT 1.0 after physical auth verification
+        required: true
+        type: string
+      physical_auth_verified:
+        description: Email, Google, and Apple passed on this exact build
+        required: true
+        type: boolean
+        default: false
+      app_privacy_complete:
+        description: App Privacy answers are complete and published
+        required: true
+        type: boolean
+        default: false
+      legal_compliance_complete:
+        description: Agreements, DSA, entity, tax/banking, and territories are complete
+        required: true
+        type: boolean
+        default: false
+      social_media_rating_complete:
+        description: Current Social Media age-rating answer is Yes
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: app-store-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify main branch
+        run: test "$GITHUB_REF" = "refs/heads/main"
+
+      - name: Verify explicit confirmation
+        run: test "${{ inputs.confirmation }}" = "SUBMIT TAPT 1.0"
+
+      - name: Write ASC API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Install dependencies
+        run: pip install pyjwt cryptography
+
+      - name: Require zero automated blockers
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          EXPECTED_BUILD_NUMBER: ${{ inputs.build_number }}
+          REQUIRE_MANUAL_ATTESTATIONS: "true"
+          ASC_ATTEST_PHYSICAL_AUTH: ${{ inputs.physical_auth_verified }}
+          ASC_ATTEST_APP_PRIVACY: ${{ inputs.app_privacy_complete }}
+          ASC_ATTEST_LEGAL_COMPLIANCE: ${{ inputs.legal_compliance_complete }}
+          ASC_ATTEST_SOCIAL_MEDIA_RATING: ${{ inputs.social_media_rating_complete }}
+        run: python scripts/asc_release_audit.py
+
+      - name: Submit Tapt 1.0 to App Review
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          EXPECTED_BUILD_NUMBER: ${{ inputs.build_number }}
+          CONFIRM_SUBMIT: ${{ inputs.confirmation }}
+        run: python scripts/asc_release_submit.py

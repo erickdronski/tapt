@@ -109,7 +109,12 @@ final class PassportDataTests: XCTestCase {
             rating: 4,
             style: "Lager",
             eventTs: "2026-07-12T12:00:00Z",
-            beer: .init(name: name, brewery: .init(name: brewery, country: "United States")),
+            beer: .init(
+                name: name,
+                image: nil,
+                styleRef: nil,
+                brewery: .init(name: brewery, country: "United States")
+            ),
             venue: nil
         )
     }

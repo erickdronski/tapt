@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Verify main branch
+        run: test "$GITHUB_REF" = "refs/heads/main"
+
       - uses: actions/checkout@v4
 
       - name: Write ASC API key
@@ -34,6 +37,13 @@ jobs:
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
           TARGET_BUILD_NUMBER: ${{ inputs.build_number }}
         run: python scripts/asc_release_prepare.py
+
+      - name: Upload App Store screenshots
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+        run: python scripts/asc_upload_screenshots.py
 
       - name: Audit prepared record
         if: always()
