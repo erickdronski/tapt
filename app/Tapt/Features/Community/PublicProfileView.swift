@@ -16,6 +16,9 @@ struct PublicProfileView: View {
     @State private var loading = true
     @State private var loadFailed = false
     @State private var working = false
+    @State private var showReport = false
+    @State private var confirmBlock = false
+    @State private var safetyMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -55,7 +58,44 @@ struct PublicProfileView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { dismiss() }.foregroundStyle(Brand.gold)
                 }
+                // Safety controls (App Store UGC guideline 1.2): report or block
+                // anyone but yourself.
+                if let card, !card.isSelf {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Menu {
+                            Button {
+                                showReport = true
+                            } label: { Label("Report \(firstName)", systemImage: "flag") }
+                            Button(role: .destructive) {
+                                confirmBlock = true
+                            } label: { Label("Block \(firstName)", systemImage: "hand.raised") }
+                        } label: {
+                            Image(systemName: "ellipsis.circle").foregroundStyle(Brand.muted)
+                        }
+                        .disabled(working)
+                        .accessibilityLabel("Report or block")
+                        .id(card.userId)
+                    }
+                }
             }
+            .confirmationDialog("Report \(firstName)?", isPresented: $showReport, titleVisibility: .visible) {
+                Button("Spam or scam") { report("spam") }
+                Button("Harassment or bullying") { report("harassment") }
+                Button("Inappropriate content") { report("inappropriate") }
+                Button("Something else") { report("other") }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Reports go to our moderation team. Thanks for keeping Tapt safe.")
+            }
+            .confirmationDialog("Block \(firstName)?", isPresented: $confirmBlock, titleVisibility: .visible) {
+                Button("Block", role: .destructive) { block() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("You won't see each other's profiles or activity. You can undo this in your device settings by contacting support.")
+            }
+            .alert("Thanks", isPresented: Binding(get: { safetyMessage != nil }, set: { if !$0 { safetyMessage = nil } })) {
+                Button("OK") { safetyMessage = nil }
+            } message: { Text(safetyMessage ?? "") }
             .overlay {
                 if loading && card == nil {
                     ProgressView().tint(Brand.gold)
@@ -63,6 +103,33 @@ struct PublicProfileView: View {
             }
         }
         .task { await load() }
+    }
+
+    private func report(_ reason: String) {
+        working = true
+        Task {
+            defer { working = false }
+            do {
+                try await SocialGraphService.reportUser(userId, reason: reason)
+                safetyMessage = "Report received. Our team will take a look."
+            } catch {
+                safetyMessage = "Couldn't send the report. Please try again."
+            }
+        }
+    }
+
+    private func block() {
+        working = true
+        Task {
+            defer { working = false }
+            do {
+                try await SocialGraphService.blockUser(userId)
+                onFollowChange(false)
+                dismiss()
+            } catch {
+                safetyMessage = "Couldn't block right now. Please try again."
+            }
+        }
     }
 
     // MARK: header

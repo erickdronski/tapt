@@ -305,6 +305,27 @@ enum SocialGraphService {
         try await Supa.authedRPCVoid("unfollow_user", params: Params(p_followee: userId))
     }
 
+    /// Block a person: hides them from you and you from them everywhere the
+    /// public_profile / feed RPCs run. Required for App Store UGC safety (1.2).
+    static func blockUser(_ userId: String) async throws {
+        struct Params: Encodable { let p_blocked_id: String }
+        try await Supa.authedRPCVoid("block_user", params: Params(p_blocked_id: userId))
+    }
+
+    /// Report a person's profile to moderation. Server dedupes per reporter and
+    /// re-opens the case; owner reviews via the moderation queue.
+    static func reportUser(_ userId: String, reason: String) async throws {
+        struct Params: Encodable {
+            let p_target_type: String
+            let p_target_id: String
+            let p_reason: String
+        }
+        try await Supa.authedRPCVoid(
+            "report_content",
+            params: Params(p_target_type: "user", p_target_id: userId, p_reason: reason)
+        )
+    }
+
     /// The public passport card shown when you tap a person you follow (or found
     /// in search / the Tonight feed). Coarse aggregates only -- the server never
     /// returns venues, timestamps, or geo. Honors blocks + the social_visible switch.
