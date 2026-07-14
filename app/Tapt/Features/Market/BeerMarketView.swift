@@ -307,6 +307,7 @@ struct MarketTicker: View {
         } else {
             pulse = 1
         }
+        let moveColor = b.isUp ? Brand.hop : Brand.copper
         return HStack(spacing: 5) {
             if b.isHot {
                 Image(systemName: "flame.fill")
@@ -315,13 +316,19 @@ struct MarketTicker: View {
             Text(b.symbol).font(.system(.caption, design: .rounded).weight(.heavy))
                 .foregroundStyle(b.isHot ? Brand.gold : Brand.foam)
                 .shadow(color: Brand.gold.opacity(b.isHot ? pulse * 0.6 : 0), radius: 5)
-            Text(b.netText).font(.system(.caption2, design: .monospaced)).foregroundStyle(Brand.foam.opacity(0.7))
+            Text(b.netText).font(.system(.caption2, design: .monospaced).weight(.semibold))
+                .foregroundStyle(Brand.foam.opacity(0.82))
             if !b.isFlat {
-                // Arrows and deltas appear only for REAL movement.
-                Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                    .font(.system(size: 8)).foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
-                Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.bold))
-                    .foregroundStyle(b.isUp ? Brand.hop : Brand.copper)
+                // Real movement rides in a colored pill so gainers and sliders pop.
+                HStack(spacing: 2) {
+                    Image(systemName: b.isUp ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                        .font(.system(size: 7, weight: .black))
+                    Text(b.changeText).font(.system(.caption2, design: .rounded).weight(.heavy))
+                }
+                .foregroundStyle(moveColor)
+                .padding(.horizontal, 5).padding(.vertical, 1.5)
+                .background(moveColor.opacity(0.18), in: Capsule())
+                .overlay(Capsule().stroke(moveColor.opacity(0.32), lineWidth: 0.5))
             }
             Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.25)).padding(.horizontal, 7)
         }
