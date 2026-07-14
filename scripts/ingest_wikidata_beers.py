@@ -88,15 +88,23 @@ def to_row(b):
     return row
 
 
-def rpc_ingest(payload):
+def rpc_ingest(payload, tries=5):
     url = f"{SUPA}/rest/v1/rpc/admin_ingest_wikidata_beers"
     body = json.dumps({"p_payload": payload}).encode()
-    req = urllib.request.Request(url, data=body, method="POST", headers={
-        **UA, "Content-Type": "application/json",
-        "apikey": KEY, "Authorization": f"Bearer {KEY}",
-    })
-    with urllib.request.urlopen(req, context=CTX, timeout=120) as r:
-        return json.loads(r.read().decode())
+    last = None
+    for i in range(tries):
+        try:
+            req = urllib.request.Request(url, data=body, method="POST", headers={
+                **UA, "Content-Type": "application/json",
+                "apikey": KEY, "Authorization": f"Bearer {KEY}",
+            })
+            with urllib.request.urlopen(req, context=CTX, timeout=120) as r:
+                return json.loads(r.read().decode())
+        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as e:
+            last = e  # transient 500s / timeouts: back off and retry so one blip can't halt the run
+            if i < tries - 1:
+                time.sleep(6 + 6 * i)
+    raise RuntimeError(f"rpc_ingest failed after {tries} tries: {last}")
 
 
 def load_state():
