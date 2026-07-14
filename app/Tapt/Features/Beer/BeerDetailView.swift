@@ -160,26 +160,33 @@ struct BeerDetailView: View {
     // MARK: - Community
 
     private func communityBar(_ d: BeerDetail) -> some View {
-        HStack(spacing: 12) {
-            voteButton(d, 1, "hand.thumbsup.fill", Brand.hop, count: max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + (myVote == 1 ? 1 : 0))
-            voteButton(d, -1, "hand.thumbsdown.fill", Brand.copper, count: max(0, d.downs - (loadedVote == -1 ? 1 : 0)) + (myVote == -1 ? 1 : 0))
-            Spacer()
-            if d.checkinCount > 0 {
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text("\(d.checkinCount) pours")
-                        .font(.system(.subheadline, design: .rounded).weight(.bold))
-                        .foregroundStyle(Brand.text)
-                    if let avg = d.avgRating {
-                        Label(String(format: "%.1f", avg), systemImage: "star.fill")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(Brand.gold)
+        VStack(alignment: .leading, spacing: 9) {
+            Text("YOUR TAKE")
+                .font(.caption2.weight(.heavy)).tracking(0.6)
+                .foregroundStyle(Brand.muted)
+            HStack(spacing: 12) {
+                voteButton(d, 1, "hand.thumbsup.fill", Brand.hop, count: max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + (myVote == 1 ? 1 : 0))
+                voteButton(d, -1, "hand.thumbsdown.fill", Brand.copper, count: max(0, d.downs - (loadedVote == -1 ? 1 : 0)) + (myVote == -1 ? 1 : 0))
+                Spacer()
+                if d.checkinCount > 0 {
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text("\(d.checkinCount) pours")
+                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                            .foregroundStyle(Brand.text)
+                        if let avg = d.avgRating {
+                            Label(String(format: "%.1f", avg), systemImage: "star.fill")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Brand.gold)
+                        }
                     }
+                } else {
+                    Text("Be the first to log it")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Brand.muted)
                 }
-            } else {
-                Text("Be the first to log it")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Brand.muted)
             }
+            Text("Saved to your beers. Fresh likes and pours are what move the board each week.")
+                .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(14)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
@@ -224,7 +231,7 @@ struct BeerDetailView: View {
                 marketStat("Total votes", "\(m.votes)")
                 marketStat("Votes 24h", "\(m.volume)")
             }
-            Text("Standing blends season fit, real awards, and community votes. Votes only. No money, no trading, not a financial product.")
+            Text("Moves on what people are drinking and rating lately, plus real awards and what's in season. No money, no trading, not a financial product.")
                 .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)
