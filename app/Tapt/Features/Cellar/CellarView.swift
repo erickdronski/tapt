@@ -129,7 +129,7 @@ struct CellarView: View {
             VStack(alignment: .leading, spacing: 18) {
                 TaptHeroPanel(
                     title: "Passport progress",
-                    subtitle: "\(uniqueBeerCount) distinct beers across \(styleCount) styles, \(stateCount) states, and \(countryCount) countries.",
+                    subtitle: "\(uniqueBeerCount) distinct \(pl(uniqueBeerCount, "beer", "beers")) across \(styleCount) \(pl(styleCount, "style", "styles")), \(stateCount) \(pl(stateCount, "state", "states")), and \(countryCount) \(pl(countryCount, "country", "countries")).",
                     metric: "\(uniqueBeerCount)",
                     caption: nextMilestone,
                     icon: "seal.fill",
@@ -164,6 +164,9 @@ struct CellarView: View {
         }
         .padding(.horizontal)
     }
+
+    /// Grammatical singular/plural so the passport never reads "1 countries".
+    private func pl(_ n: Int, _ one: String, _ many: String) -> String { n == 1 ? one : many }
 
     private func stat(_ n: String, _ label: String, _ icon: String, _ tint: Color) -> some View {
         VStack(spacing: 4) {
@@ -215,15 +218,7 @@ struct CellarView: View {
         }
     }
 
-    private func currentValue(for metric: BadgeMetric) -> Int {
-        switch metric {
-        case .pours: checkins.count
-        case .beers: uniqueBeerCount
-        case .styles: styleCount
-        case .states: stateCount
-        case .countries: countryCount
-        }
-    }
+    private func currentValue(for metric: BadgeMetric) -> Int { stats.value(for: metric) }
 
     /// A trophy case, not a highlight reel: EVERY badge shows, so a new user
     /// sees the full shelf to fill. Earned ones shine gold; locked ones stay
@@ -415,12 +410,12 @@ struct CellarView: View {
     }
 
     private var nextMilestone: String {
-        if uniqueBeerCount < 5 { return "\(5 - uniqueBeerCount) beers to first flight" }
-        if styleCount < 5 { return "\(5 - styleCount) styles to style badge" }
-        if stateCount < 5 { return "\(5 - stateCount) states to tap trail" }
-        if countryCount < 3 { return "\(3 - countryCount) countries to explorer badge" }
-        if uniqueBeerCount < 100 { return "\(100 - uniqueBeerCount) beers to Century Cellar" }
-        return "Century Cellar reached. Keep pouring."
+        if uniqueBeerCount < 5 { let n = 5 - uniqueBeerCount; return "\(n) \(pl(n, "beer", "beers")) to first flight" }
+        if styleCount < 5 { let n = 5 - styleCount; return "\(n) \(pl(n, "style", "styles")) to Style Explorer" }
+        if stateCount < 5 { let n = 5 - stateCount; return "\(n) \(pl(n, "state", "states")) to Tap Trail" }
+        if countryCount < 3 { let n = 3 - countryCount; return "\(n) \(pl(n, "country", "countries")) to Border Hopper" }
+        if uniqueBeerCount < 120 { let n = 120 - uniqueBeerCount; return "\(n) \(pl(n, "beer", "beers")) to Palate of Legend" }
+        return "Palate of Legend reached. Keep exploring."
     }
 
     private func load() async {

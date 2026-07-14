@@ -24,6 +24,29 @@ struct PassportStats {
     var belgian: Int = 0
     var crisp: Int = 0
 
+    /// The user's value for a given badge metric. Single source of truth so any
+    /// view showing progress stays exhaustive when new metrics are added.
+    func value(for metric: BadgeMetric) -> Int {
+        switch metric {
+        case .pours: pours
+        case .beers: beers ?? 0
+        case .styles: styles
+        case .states: states
+        case .countries: countries
+        case .breweries: breweries
+        case .styleFamilies: styleFamilies
+        case .continents: continents
+        case .seasons: seasons
+        case .noLow: noLow
+        case .hoppy: hoppy
+        case .dark: dark
+        case .wheat: wheat
+        case .sour: sour
+        case .belgian: belgian
+        case .crisp: crisp
+        }
+    }
+
     /// Build the full stat set from a user's check-ins (own passport). Mirrors the
     /// server aggregation in public_profile() so the shareable card agrees.
     static func from(checkins: [MyCheckin], beers: Int, styles: Int, states: Int, countries: Int) -> PassportStats {
@@ -171,26 +194,7 @@ struct Badge: Identifiable {
     func earned(_ s: PassportStats) -> Bool { current(s) >= threshold }
 
     /// How far along the user is toward this badge (used for the locked progress ring).
-    func current(_ s: PassportStats) -> Int {
-        switch metric {
-        case .pours: s.pours
-        case .beers: s.beers ?? 0
-        case .styles: s.styles
-        case .states: s.states
-        case .countries: s.countries
-        case .breweries: s.breweries
-        case .styleFamilies: s.styleFamilies
-        case .continents: s.continents
-        case .seasons: s.seasons
-        case .noLow: s.noLow
-        case .hoppy: s.hoppy
-        case .dark: s.dark
-        case .wheat: s.wheat
-        case .sour: s.sour
-        case .belgian: s.belgian
-        case .crisp: s.crisp
-        }
-    }
+    func current(_ s: PassportStats) -> Int { s.value(for: metric) }
 
     func progress(_ s: PassportStats) -> Double {
         min(1, Double(current(s)) / Double(max(threshold, 1)))

@@ -370,6 +370,7 @@ struct ProfileCard: Decodable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case handle, region, visible, blocked, followers, following, pours, countries, states
+        case breweries, continents, seasons, hoppy, dark, wheat, sour, belgian, crisp
         case userId = "user_id"
         case displayName = "display_name"
         case avatarUrl = "avatar_url"
@@ -378,6 +379,8 @@ struct ProfileCard: Decodable, Sendable {
         case isFollowing = "is_following"
         case beersCount = "beers_count"
         case stylesCount = "styles_count"
+        case styleFamilies = "style_families"
+        case noLow = "no_low"
         case topStyles = "top_styles"
         case favoriteBeer = "favorite_beer"
     }
