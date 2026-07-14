@@ -559,6 +559,26 @@
     });
   }, { threshold: 0.4 });
   document.querySelectorAll('.palate').forEach((el) => barObs.observe(el));
+
+  // Archive: pull real published issues via the public RPC; keep the honest empty
+  // state until the first issue ships.
+  (async () => {
+    const PK = 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF';
+    const esc = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+    try {
+      const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/rest/v1/rpc/dispatch_archive', {
+        method: 'POST',
+        headers: { 'apikey': PK, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_limit: 12 })
+      });
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!Array.isArray(rows) || rows.length === 0) return;
+      document.getElementById('archive-mount').innerHTML = '<div class="arch-list">' + rows.map(r =>
+        `<a class="arch-item" href="issue.html?slug=${encodeURIComponent(r.slug)}"><span><span class="num">No. ${String(r.issue_number).padStart(3,'0')}</span> &nbsp; ${esc(r.subtitle || r.title || 'The Tapt Dispatch')}</span><span>Read &rarr;</span></a>`
+      ).join('') + '</div>';
+    } catch { /* keep the empty state */ }
+  })();
 </script>
 </body>
 </html>

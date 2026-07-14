@@ -101,7 +101,16 @@ Deno.serve(async (req) => {
 
   if (mode === "send") {
     const provided = req.headers.get("x-cron-secret") ?? "";
-    if (!CRON_SECRET || provided !== CRON_SECRET) {
+    // Authorize against the vault secret the weekly cron already sends
+    // (dispatch_cron_ok), with the CRON_SECRET env var kept as a fallback. Either
+    // path works, so there is no secret to keep in sync by hand.
+    let authorized = false;
+    try {
+      const { data: ok } = await admin.rpc("dispatch_cron_ok", { p_secret: provided });
+      authorized = ok === true;
+    } catch { /* fall through to env fallback */ }
+    if (!authorized && CRON_SECRET && provided === CRON_SECRET) authorized = true;
+    if (!authorized) {
       return Response.json({ error: "forbidden: valid x-cron-secret required" }, { status: 403, headers: CORS });
     }
     if (!KEY) return Response.json({ sent: false, reason: "RESEND_API_KEY not configured" }, { headers: CORS });
@@ -126,6 +135,13 @@ Deno.serve(async (req) => {
       });
       if (sent) ok++;
     }
+    // Archive the issue so it is hosted on the web and appears in the public archive.
+    await admin.rpc("dispatch_publish_issue", {
+      p_slug: `week-${content.week}`,
+      p_title: subject,
+      p_subtitle: content.featured?.name ?? null,
+      p_content: content,
+    });
     return Response.json({ sent: true, delivered: ok, total: list.length, week: content.week }, { headers: CORS });
   }
 

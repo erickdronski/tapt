@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tapt Dispatch: an issue</title>
+<meta name="description" content="Read an issue of The Tapt Dispatch: the Beer of the Week, the style to know, and what the world is pouring. Built from real votes and check-ins.">
+<link rel="canonical" href="https://taptbeer.com/issue.html">
+<meta property="og:title" content="The Tapt Dispatch">
+<meta property="og:description" content="An issue of The Tapt Dispatch, built from real community votes.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://taptbeer.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Libre+Franklin:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --gold:#F2A900; --malt:#1A1206; --foam:#FBF6EC; --hop:#3F8F5B;
+    --copper:#B4531F; --haze:#EFE7D6; --slate:#6B6459; --line:rgba(26,18,6,.09);
+    --ink:#2b241a; --maxw:760px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.wordmark{font-family:'Poppins',system-ui,sans-serif;line-height:1.1}
+  a{color:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  nav{position:sticky;top:0;z-index:50;background:rgba(251,246,236,.85);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;height:62px}
+  .wordmark{font-size:1.4rem;font-weight:800;text-decoration:none;color:var(--malt)}
+  .wordmark span{color:var(--gold)}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-family:'Poppins';font-weight:700;font-size:.92rem;padding:11px 20px;border-radius:999px;text-decoration:none;border:0;cursor:pointer;background:var(--gold);color:var(--malt);box-shadow:0 8px 22px rgba(242,169,0,.32);transition:box-shadow .2s ease,transform .15s ease}
+  .btn:active{transform:translateY(1px)}
+
+  .issue{margin:26px auto;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px rgba(26,18,6,.16);border:1px solid var(--line)}
+  .m-head{background:var(--malt);color:var(--foam);padding:22px 26px 18px}
+  .m-brand{font-family:'Libre Franklin','Poppins',serif;font-weight:900;font-size:1.8rem;letter-spacing:-.01em}
+  .m-brand span{color:var(--gold)}
+  .m-rule{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(251,246,236,.16);margin-top:12px;padding-top:10px;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(251,246,236,.66)}
+  .body{padding:26px}
+  .lab{font-family:'Poppins';font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--copper);margin-bottom:10px}
+  .botw{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .botw .photo{width:132px;height:168px;flex:none;border-radius:14px;background:radial-gradient(58% 58% at 50% 44%, rgba(242,169,0,.18), transparent 72%);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .botw .photo img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 12px 16px rgba(26,18,6,.28))}
+  .botw .info{flex:1;min-width:210px}
+  .botw h2{font-size:1.7rem;font-weight:800;letter-spacing:-.01em;margin:0}
+  .botw .brewery{color:var(--slate);font-size:.98rem;margin-top:3px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:.74rem;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--haze);color:var(--malt)}
+  .style-box{margin-top:24px;background:var(--malt);color:var(--foam);border-radius:16px;padding:20px 22px}
+  .style-box .lab{color:var(--gold)}
+  .style-box h3{font-size:1.25rem;font-weight:800}
+  .style-box p{color:rgba(251,246,236,.85);font-size:.96rem;margin-top:6px}
+  .style-box .meta{color:rgba(251,246,236,.6);font-size:.82rem;margin-top:10px}
+  .cta{margin-top:24px;text-align:center}
+  .foot{background:var(--haze);padding:16px 26px;text-align:center;font-size:.8rem;color:var(--slate)}
+  .backlink{display:block;text-align:center;margin:26px 0;color:var(--copper);font-weight:600;text-decoration:none}
+  .state{max-width:520px;margin:60px auto;text-align:center}
+  .state .e{font-size:2.4rem}
+  .state h1{font-size:1.6rem;margin:12px 0 6px}
+  .state p{color:var(--slate)}
+  footer{background:var(--malt);color:rgba(251,246,236,.7);padding:36px 0;margin-top:20px}
+  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;align-items:center}
+  .foot-links{display:flex;gap:18px;flex-wrap:wrap}
+  .foot-links a{color:rgba(251,246,236,.7);text-decoration:none;font-size:.88rem}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-in">
+    <a href="index.html" class="wordmark">Tapt<span>.</span></a>
+    <a class="btn" href="dispatch.html#subscribe">Get the Dispatch</a>
+  </div>
+</nav>
+
+<main id="mount" class="wrap">
+  <div class="state"><div class="e">📬</div><h1>Loading the issue…</h1><p>One moment.</p></div>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <a href="index.html" class="wordmark" style="font-size:1.2rem">Tapt<span>.</span></a>
+    <div class="foot-links">
+      <a href="dispatch.html">The Dispatch</a>
+      <a href="index.html">Home</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const SUPA = 'https://qfwiizvqxrhjlthbjosz.supabase.co';
+  const PK = 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF';
+  const esc = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+
+  function notFound(msg) {
+    document.getElementById('mount').innerHTML =
+      '<div class="state"><div class="e">🍺</div><h1>Issue not found</h1><p>' + esc(msg || 'That issue is not published yet.') +
+      '</p><a class="backlink" href="dispatch.html">Back to The Dispatch &rarr;</a></div>';
+  }
+
+  function render(row) {
+    const c = row.content || {};
+    const f = c.featured || {};
+    const s = c.style || {};
+    const num = String(row.issue_number || '').padStart(3, '0');
+    const date = row.published_at ? new Date(row.published_at).toLocaleDateString(undefined, {month:'long', day:'numeric', year:'numeric'}) : '';
+    const abvRange = (s.abv_min != null && s.abv_max != null) ? (s.abv_min + '-' + s.abv_max + '% ABV') : '';
+    const ibuRange = (s.ibu_min != null && s.ibu_max != null) ? (s.ibu_min + '-' + s.ibu_max + ' IBU') : '';
+    document.title = 'The Tapt Dispatch No. ' + num;
+    document.getElementById('mount').innerHTML = `
+      <div class="issue">
+        <div class="m-head">
+          <div class="m-brand">The Tapt Dispatch<span>.</span></div>
+          <div class="m-rule"><span>Issue No. ${num}</span><span>${esc(date)}</span><span>Real votes only</span></div>
+        </div>
+        <div class="body">
+          <div class="lab">🏆 Beer of the Week</div>
+          <div class="botw">
+            <div class="photo">${f.image ? `<img src="${esc(f.image)}" alt="${esc(f.name)}">` : '🍺'}</div>
+            <div class="info">
+              <h2>${esc(f.name)}</h2>
+              <div class="brewery">${esc(f.brewery)}${f.country ? ' / ' + esc(f.country) : ''}</div>
+              <div class="chips">
+                ${f.style ? `<span class="chip">${esc(f.style)}</span>` : ''}
+                ${f.abv ? `<span class="chip">${esc(f.abv)}% ABV</span>` : ''}
+                <span class="chip">Crowned by real votes</span>
+              </div>
+            </div>
+          </div>
+          ${s.style_name ? `
+          <div class="style-box">
+            <div class="lab">🧪 The style to know</div>
+            <h3>${esc(s.style_name)}</h3>
+            <p>${esc(s.description)}</p>
+            <div class="meta">${esc(s.style_family || '')}${abvRange ? ' · ' + abvRange : ''}${ibuRange ? ' · ' + ibuRange : ''}</div>
+          </div>` : ''}
+          <div class="cta"><a class="btn" href="index.html">Open Tapt</a></div>
+        </div>
+        <div class="foot">Built from the week's real community votes and check-ins. Enjoy responsibly, 21+.</div>
+      </div>
+      <a class="backlink" href="dispatch.html">All issues &rarr;</a>`;
+  }
+
+  (async () => {
+    const q = new URLSearchParams(location.search);
+    const slug = q.get('slug') || (q.get('w') ? 'week-' + q.get('w') : null);
+    const num = q.get('n');
+    if (!slug && !num) { notFound('No issue was requested.'); return; }
+    const payload = slug ? { p_slug: slug } : { p_number: parseInt(num, 10) };
+    try {
+      const res = await fetch(SUPA + '/rest/v1/rpc/dispatch_issue_public', {
+        method: 'POST',
+        headers: { 'apikey': PK, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) { notFound(); return; }
+      const rows = await res.json();
+      if (!Array.isArray(rows) || rows.length === 0) { notFound(); return; }
+      render(rows[0]);
+    } catch { notFound('Could not load this issue. Try again in a moment.'); }
+  })();
+</script>
+</body>
+</html>
