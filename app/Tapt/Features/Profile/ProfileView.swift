@@ -247,6 +247,8 @@ struct ProfileView: View {
                 Section {
                     Label("Drink responsibly. Never drink and drive.", systemImage: "hand.raised.fill")
                         .foregroundStyle(Brand.text)
+                    Label("Not while pregnant, or on medication that interacts with alcohol.", systemImage: "cross.case.fill")
+                        .foregroundStyle(Brand.text)
                     Link(destination: URL(string: "tel://18006624357")!) {
                         Label("Get support (SAMHSA, US)", systemImage: "phone.fill")
                     }
