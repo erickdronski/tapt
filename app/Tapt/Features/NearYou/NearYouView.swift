@@ -45,15 +45,18 @@ struct NearYouView: View {
             }
         }
 
-        guard !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return filtered
-        }
-
         let term = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        return filtered.filter { venue in
+        let matched = term.isEmpty ? filtered : filtered.filter { venue in
             [venue.name, venue.city, venue.region, venue.country, venue.breweryType]
                 .compactMap { $0 }
                 .contains { $0.localizedCaseInsensitiveContains(term) }
+        }
+        // Local-first: once we know where the user is, sort the whole radar by
+        // distance so their nearby spots lead and far-away global venues sink.
+        guard let here = location.location else { return matched }
+        return matched.sorted {
+            CLLocation(latitude: $0.latitude, longitude: $0.longitude).distance(from: here)
+                < CLLocation(latitude: $1.latitude, longitude: $1.longitude).distance(from: here)
         }
     }
 
@@ -138,6 +141,9 @@ struct NearYouView: View {
                 // was already denied we skip the ask and just load the radar.
                 if !location.deniedOrRestricted { location.request() }
                 await loadTaptRadar()
+                // If a GPS fix is already cached when we arrive, onChange never
+                // fires, so center + pull the local radar here too.
+                if let loc = location.location { await applyUserLocation(loc) }
             }
             .onChange(of: location.authorized) { _, ok in
                 // Mirror a granted OS permission into the in-app choice so the
@@ -146,18 +152,7 @@ struct NearYouView: View {
             }
             .onChange(of: location.location) { _, loc in
                 guard let loc else { return }
-                if breweries.isEmpty { search(near: loc.coordinate) }
-                if !nearLoaded {
-                    nearLoaded = true
-                    moveCamera(to: MKCoordinateRegion(
-                        center: loc.coordinate,
-                        latitudinalMeters: 24_000,
-                        longitudinalMeters: 24_000
-                    ))
-                    Task {
-                        await loadNearbyRadar(loc.coordinate, establishesLocalContext: true)
-                    }
-                }
+                Task { await applyUserLocation(loc) }
             }
             .onChange(of: locationConsent) { _, enabled in
                 if enabled {
@@ -488,6 +483,21 @@ struct NearYouView: View {
                 longitudinalMeters: 200_000
             ))
         }
+    }
+
+    /// Center on the user and pull in the dense local radar. Called from both the
+    /// location onChange AND on appear, because onChange alone misses an already
+    /// cached fix (which left the map continental and the list on far-away venues).
+    private func applyUserLocation(_ loc: CLLocation) async {
+        if breweries.isEmpty { search(near: loc.coordinate) }
+        guard !nearLoaded else { return }
+        nearLoaded = true
+        moveCamera(to: MKCoordinateRegion(
+            center: loc.coordinate,
+            latitudinalMeters: 24_000,
+            longitudinalMeters: 24_000
+        ))
+        await loadNearbyRadar(loc.coordinate, establishesLocalContext: true)
     }
 
     /// Once we know where the user is, swap the global sample for a
