@@ -19,14 +19,18 @@ function encodeJSON(value: unknown): string {
   return base64URL(encoder.encode(JSON.stringify(value)));
 }
 
-function privateKeyBytes(pem: string): Uint8Array {
+function privateKeyBytes(pem: string): ArrayBuffer {
   const base64 = pem
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/\s+/g, "");
   if (!base64) throw new Error("APPLE_SIGN_IN_KEY is empty");
   const binary = atob(base64);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes.buffer;
 }
 
 function required(name: string): string {
