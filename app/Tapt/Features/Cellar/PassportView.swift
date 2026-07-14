@@ -41,23 +41,9 @@ struct PassportView: View {
                 progressOverview
 
                 section("Badges", "\(earnedBadgeCount) / \(PassportData.badges.count)") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 158), spacing: 12)], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 92), spacing: 12)], spacing: 16) {
                         ForEach(PassportData.badges) { badge in
-                            let earned = badge.earned(stats)
-                            HStack(spacing: 10) {
-                                Image(systemName: earned ? badge.icon : "lock.fill")
-                                    .foregroundStyle(earned ? Brand.malt : Brand.muted)
-                                    .frame(width: 40, height: 40)
-                                    .background(earned ? Brand.gold : Brand.haze, in: Circle())
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(badge.title).font(.system(.subheadline, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                                    Text(badge.detail).font(.caption2).foregroundStyle(Brand.muted)
-                                }
-                                Spacer(minLength: 0)
-                            }
-                            .padding(10).frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-                            .opacity(earned ? 1 : 0.55)
+                            BadgeSticker(badge: badge, stats: stats)
                         }
                     }
                 }

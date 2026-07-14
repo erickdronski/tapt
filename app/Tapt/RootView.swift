@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The tab shell. Beer-culture labels, brand tint.
 struct RootView: View {
@@ -6,6 +7,16 @@ struct RootView: View {
     @State private var selection = 0
     @State private var pendingPartnerVenueId: String?
     @State private var pendingBeerDetailId: String?
+
+    init() {
+        // Opaque tab bar so full-bleed content (the map) never shows through behind
+        // the dock; it reads as a solid bar flush to the bottom in light and dark.
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Brand.background)
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
 
     var body: some View {
         tabShell

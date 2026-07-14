@@ -247,34 +247,8 @@ struct CellarView: View {
     }
 
     private func trophy(_ b: Badge) -> some View {
-        let earned = b.earned(stats)
-        let have = min(currentValue(for: b.metric), b.threshold)
-        return VStack(spacing: 6) {
-            ZStack {
-                Circle()
-                    .fill(earned ? Brand.gold : Brand.haze.opacity(0.5))
-                    .frame(width: 52, height: 52)
-                    .overlay(Circle().stroke((earned ? Brand.malt : Brand.muted).opacity(0.3), lineWidth: 1.5))
-                Image(systemName: earned ? b.icon : "lock.fill")
-                    .font(earned ? .title2 : .body)
-                    .foregroundStyle(earned ? Brand.malt : Brand.muted)
-            }
-            .modifier(ShimmerIf(earned))
-            Text(b.title).font(.caption2.weight(.bold))
-                .foregroundStyle(earned ? Brand.text : Brand.muted).lineLimit(1)
-            if earned {
-                Text("Earned").font(.system(size: 9, weight: .heavy)).foregroundStyle(Brand.hop)
-            } else {
-                // honest progress toward the threshold
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Brand.malt.opacity(0.1)).frame(height: 4)
-                    Capsule().fill(Brand.gold).frame(width: 44 * CGFloat(have) / CGFloat(b.threshold), height: 4)
-                }
-                .frame(width: 44)
-                Text("\(have)/\(b.threshold)").font(.system(size: 9, weight: .bold)).foregroundStyle(Brand.muted)
-            }
-        }
-        .frame(width: 96)
+        BadgeSticker(badge: b, stats: stats, size: 72)
+            .frame(width: 96)
     }
 
     /// The visual heart of the Cellar: a shelf of every distinct beer poured,

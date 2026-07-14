@@ -226,7 +226,7 @@ struct NearYouView: View {
                     }
 
                     ForEach(visibleTaptVenues.prefix(120)) { venue in
-                        Button { focus(venue) } label: { taptRow(venue) }
+                        Button { selectedVenue = venue } label: { taptRow(venue) }
                             .buttonStyle(.plain)
                     }
                 } header: {
@@ -614,6 +614,7 @@ private struct VenueDetailSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    venueMap
                     header
                     if let line = addressLine {
                         Label(line, systemImage: "mappin.and.ellipse").font(.subheadline).foregroundStyle(Brand.muted)
@@ -675,6 +676,23 @@ private struct VenueDetailSheet: View {
             }
             Spacer(minLength: 0)
         }
+    }
+
+    private var venueMap: some View {
+        Map(initialPosition: .region(MKCoordinateRegion(
+            center: venue.coordinate, latitudinalMeters: 500, longitudinalMeters: 500))) {
+            Annotation(venue.name, coordinate: venue.coordinate) {
+                Image(systemName: glyph)
+                    .font(.subheadline.weight(.bold)).foregroundStyle(Brand.malt)
+                    .padding(8).background(Brand.gold, in: Circle())
+                    .overlay(Circle().stroke(.white, lineWidth: 2))
+                    .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+            }
+            .annotationTitles(.hidden)
+        }
+        .frame(height: 152)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .allowsHitTesting(false)
     }
 
     private var actionRow: some View {

@@ -214,25 +214,17 @@ struct PublicProfileView: View {
             states: card.states ?? 0,
             countries: card.countries ?? 0
         )
-        let earned = PassportData.badges.filter { $0.earned(stats) }
-        return Group {
-            if !earned.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Badges").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {
-                        ForEach(earned) { badge in
-                            HStack(spacing: 8) {
-                                Image(systemName: badge.icon).foregroundStyle(Brand.gold)
-                                Text(badge.title)
-                                    .font(.caption.weight(.semibold)).foregroundStyle(Brand.text)
-                                    .lineLimit(1).minimumScaleFactor(0.8)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 9).padding(.horizontal, 11)
-                            .background(Brand.gold.opacity(0.12), in: Capsule())
-                            .overlay(Capsule().stroke(Brand.gold.opacity(0.35), lineWidth: 1))
-                        }
-                    }
+        let earnedCount = PassportData.badges.filter { $0.earned(stats) }.count
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Passport stamps").font(.caption.weight(.bold)).foregroundStyle(Brand.muted)
+                Spacer()
+                Text("\(earnedCount) of \(PassportData.badges.count)")
+                    .font(.caption.weight(.bold)).foregroundStyle(Brand.gold)
+            }
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 12)], spacing: 16) {
+                ForEach(PassportData.badges) { badge in
+                    BadgeSticker(badge: badge, stats: stats)
                 }
             }
         }
