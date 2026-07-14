@@ -13,6 +13,12 @@ DerivedData/
 __pycache__/
 *.pyc
 
+# Beer image backfill: resume cursor is a local/CI re-check aid, never committed
+# (a committed "all done" list would make every future run skip and never pick
+# up images OFF crowd-sources later). Match report is a run artifact.
+scripts/.image_backfill_state.json
+beer_image_backfill.json
+
 # XcodeGen output (regenerate with: cd app && xcodegen generate)
 app/*.xcodeproj/
 app/*.xcworkspace/

@@ -102,6 +102,20 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Beer image backfill (Claude, 2026-07-13 pm):** filled the remaining missing
+  `label_image_url`s from Open Food Facts (ODbL). Listable image coverage
+  94.98% -> **95.31%** (9749 -> 9783 / 10264 name_ok beers); 34 real front
+  photos added (7 by barcode, 27 by strict search — Sierra Nevada, Athletic Run
+  Wild IPA, Deschutes, Sculpin, Coors Banquet, Orval, Tripel Karmeliet…), each
+  HEAD-validated + brand-verified. The ~481 still-imageless listable beers have
+  NO free OFF source (barcode products with no front photo + craft that fails a
+  strict name match) — a source ceiling, blank is correct, do not re-attempt by
+  hand. Tool: `scripts/backfill_beer_images_off.py` (resumable, throttle-aware
+  backoff so a 429 never becomes a false blank; resolve-only without the service
+  key). Re-runnable as OFF gains photos via the new **`Backfill beer images`**
+  workflow (`.github/workflows/backfill-beer-images.yml`, dispatch-only to
+  respect rule 5; commented monthly cron inside). Write path = service_role
+  PATCH setting label_image_url + label_image_license='Open Food Facts (ODbL)'.
 - **Radar bottom sheet (Claude, 2026-07-13 pm):** NearYouView is now a full-bleed
   map with a draggable bottom sheet (Apple Maps / Uber style) instead of a map
   fixed at 320pt stacked over a list. New reusable `Design/BottomSheet.swift`

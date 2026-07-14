@@ -1,0 +1,94 @@
+name: Backfill beer images (Open Food Facts)
+
+# Fills the remaining missing beer LABEL images from Open Food Facts (ODbL).
+# The app renders image_url = COALESCE(cutout_url, label_image_url); this fills
+# the raw label_image_url column for listable beers (name_ok=true) that have
+# neither a cutout nor a label image. Two rate-limited phases:
+#   1. barcode rows  -> OFF /api/v2/product/<gtin> front image (exact product)
+#   2. no-barcode    -> OFF search, STRICT token match (a wrong image is worse
+#                       than none). US craft has a low OFF hit rate; blank wins.
+#
+# Idempotent (only ever touches imageless rows; a filled row drops out of the
+# worklist). Every accepted URL is HEAD-validated (200 + image/*). Runs
+# STATELESS in CI on purpose: the resume file is gitignored, so each run is a
+# fresh re-check that picks up images OFF has crowd-sourced since last time.
+#
+# workflow_dispatch ONLY (GitHub Actions minutes are budgeted, per AGENTS.md
+# rule 5 — same posture as the TestFlight job). To let it self-run once a month,
+# uncomment the `schedule:` block below.
+#
+# One owner action to enable: add the repo secret SUPABASE_SERVICE_ROLE_KEY
+# (Supabase dashboard -> Project Settings -> API -> service_role key). Without
+# it the job skips neutrally (green) instead of failing.
+
+on:
+  # schedule:
+  #   - cron: "37 7 1 * *"   # 1st of the month, 07:37 UTC (uncomment to auto-run)
+  workflow_dispatch:
+    inputs:
+      limit_barcode:
+        description: "Max barcode rows this run (0 = all; barcode phase is fast)"
+        required: false
+        default: "0"
+      limit_search:
+        description: "Max no-barcode search rows this run (0 = all; ~13s/row)"
+        required: false
+        default: "60"
+      skip_barcode:
+        description: "Skip the barcode phase"
+        type: boolean
+        required: false
+        default: false
+      skip_search:
+        description: "Skip the (slow) search phase"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backfill-beer-images
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Backfill missing label images from Open Food Facts
+        env:
+          SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          LIMIT_BARCODE: ${{ github.event.inputs.limit_barcode || '0' }}
+          LIMIT_SEARCH: ${{ github.event.inputs.limit_search || '60' }}
+          SKIP_BARCODE: ${{ github.event.inputs.skip_barcode || 'false' }}
+          SKIP_SEARCH: ${{ github.event.inputs.skip_search || 'false' }}
+          # OFF throttles the search API hard; keep the good-citizen cadence
+          # (the script also backs off on 429 so a throttle never becomes a
+          # false blank).
+          SLEEP_BARCODE: "3"
+          SLEEP_SEARCH: "13"
+        run: |
+          # A missing secret means the feature simply isn't enabled yet, and an
+          # OFF outage/throttle is not a real failure — the script exits 0 and
+          # the next run re-checks. So neither should send a red failure email.
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning title=Backfill skipped::SUPABASE_SERVICE_ROLE_KEY secret is not set — add it to enable the image backfill. Skipping (not a failure)."
+            echo "### ⏭️ Beer image backfill skipped — service-role secret not set (add it to enable)." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 scripts/backfill_beer_images_off.py | tee backfill.log
+          {
+            echo "### 🖼️ Beer image backfill (Open Food Facts, ODbL)"
+            echo '```'
+            grep -E "^(mode|before|worklist|resolved this run|throttled|written to DB|after):" backfill.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
