@@ -212,7 +212,18 @@ struct PublicProfileView: View {
             beers: card.beersCount,
             styles: card.stylesCount ?? 0,
             states: card.states ?? 0,
-            countries: card.countries ?? 0
+            countries: card.countries ?? 0,
+            breweries: card.breweries ?? 0,
+            styleFamilies: card.styleFamilies ?? 0,
+            continents: card.continents ?? 0,
+            seasons: card.seasons ?? 0,
+            noLow: card.noLow ?? 0,
+            hoppy: card.hoppy ?? 0,
+            dark: card.dark ?? 0,
+            wheat: card.wheat ?? 0,
+            sour: card.sour ?? 0,
+            belgian: card.belgian ?? 0,
+            crisp: card.crisp ?? 0
         )
         let earnedCount = PassportData.badges.filter { $0.earned(stats) }.count
         return VStack(alignment: .leading, spacing: 12) {

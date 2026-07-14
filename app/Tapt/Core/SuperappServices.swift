@@ -337,6 +337,17 @@ struct ProfileCard: Decodable, Sendable {
     let stylesCount: Int?
     let countries: Int?
     let states: Int?
+    let breweries: Int?
+    let styleFamilies: Int?
+    let continents: Int?
+    let seasons: Int?
+    let noLow: Int?
+    let hoppy: Int?
+    let dark: Int?
+    let wheat: Int?
+    let sour: Int?
+    let belgian: Int?
+    let crisp: Int?
     let topStyles: [StyleCount]?
     let favoriteBeer: FavoriteBeer?
 

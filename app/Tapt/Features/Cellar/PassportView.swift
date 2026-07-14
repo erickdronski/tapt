@@ -14,8 +14,8 @@ struct PassportView: View {
     @State private var showsAllCountries = false
 
     private var stats: PassportStats {
-        PassportStats(
-            pours: checkins.count,
+        PassportStats.from(
+            checkins: checkins,
             beers: uniqueBeerCount,
             styles: visitedStyles.count,
             states: visitedStates.count,

@@ -55,8 +55,8 @@ struct CellarView: View {
     }
 
     private var stats: PassportStats {
-        PassportStats(pours: checkins.count, beers: uniqueBeerCount,
-                      styles: styleCount, states: stateCount, countries: countryCount)
+        PassportStats.from(checkins: checkins, beers: uniqueBeerCount,
+                           styles: styleCount, states: stateCount, countries: countryCount)
     }
     private var earnedBadges: [Badge] { PassportData.badges.filter { $0.earned(stats) } }
 

@@ -19,8 +19,12 @@ enum AuthProvidersService {
     /// Dashboard "enabled" state is not enough. A provider is exposed only
     /// after a real hosted callback has created a Supabase identity; the signed
     /// device deep link remains part of TestFlight release validation.
+    // Sign in with Apple is ON so it appears alongside Google (App Store 4.8
+    // requires it whenever a third-party social login is offered). It is still
+    // ANDed with on("apple"), so it only renders once the Apple provider is
+    // actually enabled in Supabase - never a broken button before that.
     private static let deviceVerified = AuthProviderFlags(
-        apple: false,
+        apple: true,
         google: true,
         facebook: false,
         twitter: false,
