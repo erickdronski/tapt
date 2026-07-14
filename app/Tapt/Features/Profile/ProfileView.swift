@@ -94,7 +94,7 @@ struct ProfileView: View {
                             }
                             if session.user != nil {
                                 Button("Edit name and handle") { showEditIdentity = true }
-                                    .font(.footnote.weight(.semibold)).foregroundStyle(Brand.malt)
+                                    .font(.footnote.weight(.semibold)).foregroundStyle(Brand.gold)
                                     .padding(.top, 2)
                             }
                         }
