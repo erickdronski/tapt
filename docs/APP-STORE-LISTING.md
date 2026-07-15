@@ -85,12 +85,11 @@ stamps for exploring, and find breweries and bars near you.
 
 ## URLs
 - Marketing URL: `https://taptbeer.com`
-- Support URL: `https://taptbeer.com/support.html`
-- Privacy Policy URL: `https://taptbeer.com/privacy.html`
+- Support URL: `https://taptbeer.com/support`
+- Privacy Policy URL: `https://taptbeer.com/privacy`
 
-> Confirm each resolves before submitting. If the host serves extensionless
-> routes, `https://taptbeer.com/support` etc. also work; use whichever returns
-> 200. Terms live at `/terms.html`.
+> Confirm each resolves before submitting. Terms live at
+> `https://taptbeer.com/terms`.
 
 ---
 
@@ -98,9 +97,12 @@ stamps for exploring, and find breweries and bars near you.
 Answer the questionnaire so the app lands at **17+** (old system) / **18+**
 (new 2025 system), which is required for alcohol content.
 
-- Alcohol, Tobacco, or Drug Use or References: **Frequent/Intense**
-- Everything else (violence, sexual content, gambling, horror, mature/suggestive,
-  medical, profanity, contests): **None**
+- Alcohol, Tobacco, or Drug Use or References: **Frequent**
+- Contests: **Frequent** (trivia and community rankings)
+- Age Assurance, User-Generated Content, Social Media, Advertising: **Yes**
+- Social Media Disabled for Users Under 13: **No**
+- Everything else (violence, sexual content, gambling, simulated gambling,
+  horror, mature/suggestive, medical, profanity, messaging/chat): **None/No**
 - Unrestricted Web Access: **No**
 - Gambling: **No** (the Beer Market is a popularity board, not gambling — see
   review notes)
