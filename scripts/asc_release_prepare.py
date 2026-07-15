@@ -387,7 +387,7 @@ def main() -> int:
     )
 
     status, body = api("GET", f"/v1/appStoreVersions/{version_id}/appStoreReviewDetail")
-    if status == 404:
+    if status == 404 or (status == 200 and not body.get("data")):
         contact = contact_from_environment()
         beta_status, beta_body = api("GET", f"/v1/apps/{app_id}/betaAppReviewDetail")
         if beta_status == 200 and beta_body.get("data"):
