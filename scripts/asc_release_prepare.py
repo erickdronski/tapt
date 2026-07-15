@@ -226,8 +226,8 @@ def main() -> int:
     rating_attributes = {
         "advertising": True,
         "ageAssurance": True,
-        "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT",
-        "contests": "FREQUENT",
+        "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT_OR_INTENSE",
+        "contests": "FREQUENT_OR_INTENSE",
         "gambling": False,
         "gamblingSimulated": "NONE",
         "gunsOrOtherWeapons": "NONE",
@@ -278,7 +278,6 @@ def main() -> int:
                     "type": "appInfoLocalizations",
                     "id": loc_id,
                     "attributes": {
-                        "name": "Tapt",
                         "subtitle": "THE Beer Superapp",
                         "privacyPolicyUrl": "https://taptbeer.com/privacy",
                         "privacyChoicesUrl": "https://taptbeer.com/privacy#choices",
