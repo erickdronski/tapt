@@ -152,8 +152,9 @@ UGC SAFETY: Users can report and block other users and content. A EULA
 ACCOUNT DELETION: Users can delete their account in-app under You > Settings.
 
 Demo account:
-Email: [OWNER: create a review demo login and paste here]
-Password: [OWNER: paste]
+Stored only in App Store Connect and the protected GitHub Actions secrets
+`ASC_DEMO_ACCOUNT_NAME` and `ASC_DEMO_ACCOUNT_PASSWORD`. Never commit the
+credentials to this repository.
 ```
 
 ---
@@ -165,5 +166,7 @@ Password: [OWNER: paste]
 4. Upload the screenshot set (see social-assets / App Store carousel).
 5. Set age rating via the questionnaire above (lands at 17+/18+).
 6. Fill App Privacy to match this doc + PrivacyInfo.xcprivacy.
-7. Add the review demo account + notes.
+7. Create the review demo account and add its email/password to the protected
+   GitHub Actions secrets above; release preparation writes them to App Store
+   Connect without logging their values.
 8. Submit for review.

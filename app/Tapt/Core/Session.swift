@@ -177,6 +177,28 @@ final class Session {
         }
     }
 
+    func signInWithPassword(email: String, password: String) async -> Bool {
+        let normalizedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard normalizedEmail.contains("@"), !password.isEmpty else {
+            authError = "Enter your email address and password."
+            return false
+        }
+
+        authError = nil
+        do {
+            try await Supa.client.auth.signIn(email: normalizedEmail, password: password)
+            return true
+        } catch {
+            let detail = error.localizedDescription
+            if detail.localizedCaseInsensitiveContains("rate limit") || detail.contains("429") {
+                authError = "Too many sign-in attempts. Wait a few minutes, then try again."
+            } else {
+                authError = "Email or password didn't match."
+            }
+            return false
+        }
+    }
+
     /// Verify the 6-digit code from the sign-in email. Works even when the
     /// magic-link redirect can't (different device, link scanners, etc.).
     func verifyEmailCode(email: String, code: String) async -> Bool {

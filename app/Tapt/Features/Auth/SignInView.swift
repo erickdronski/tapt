@@ -13,11 +13,14 @@ struct SignInView: View {
     @State private var providers = AuthProviderFlags.fallback
     @State private var providersLoaded = false
     @State private var email = ""
+    @State private var password = ""
     @State private var code = ""
     @State private var isSendingEmail = false
     @State private var emailLinkSent = false
     @State private var codeEmail = ""
     @State private var verifyingCode = false
+    @State private var showsPasswordSignIn = false
+    @State private var signingInWithPassword = false
     @State private var currentNonce: String?
     @State private var errorText: String?
 
@@ -181,6 +184,51 @@ struct SignInView: View {
             .disabled(!canSendEmail || isSendingEmail)
             .opacity(canSendEmail && !isSendingEmail ? 1 : 0.55)
 
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    showsPasswordSignIn.toggle()
+                }
+            } label: {
+                Label(showsPasswordSignIn ? "Hide password sign-in" : "Sign in with password",
+                      systemImage: showsPasswordSignIn ? "key.slash.fill" : "key.fill")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                    .foregroundStyle(Brand.text)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+            }
+            .buttonStyle(.plain)
+
+            if showsPasswordSignIn {
+                VStack(spacing: 10) {
+                    SecureField("Password", text: $password)
+                        .textContentType(.password)
+                        .font(.system(.body, design: .rounded))
+                        .padding(.horizontal, 16)
+                        .frame(height: 52)
+                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(Brand.text)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+
+                    Button {
+                        Task { await signInWithPassword() }
+                    } label: {
+                        Label(signingInWithPassword ? "Signing in..." : "Sign in",
+                              systemImage: "arrow.right.circle.fill")
+                            .font(.system(.headline, design: .rounded))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Brand.malt, in: RoundedRectangle(cornerRadius: 14))
+                            .foregroundStyle(Brand.gold)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canSignInWithPassword || signingInWithPassword)
+                    .opacity(canSignInWithPassword && !signingInWithPassword ? 1 : 0.55)
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
             if emailLinkSent {
                 VStack(spacing: 8) {
                     Text("Check \(codeEmail), tap the link, or type the 6-digit code here:")
@@ -236,6 +284,10 @@ struct SignInView: View {
         email.trimmingCharacters(in: .whitespacesAndNewlines).contains("@")
     }
 
+    private var canSignInWithPassword: Bool {
+        canSendEmail && password.count >= 8
+    }
+
     private func sendEmailLink() async {
         isSendingEmail = true
         errorText = nil
@@ -254,6 +306,13 @@ struct SignInView: View {
         errorText = nil
         _ = await session.verifyEmailCode(email: codeEmail, code: code)
         verifyingCode = false
+    }
+
+    private func signInWithPassword() async {
+        signingInWithPassword = true
+        errorText = nil
+        _ = await session.signInWithPassword(email: email, password: password)
+        signingInWithPassword = false
     }
 
     #if targetEnvironment(simulator)
