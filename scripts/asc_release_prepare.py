@@ -5,9 +5,9 @@ The script is idempotent and deliberately stops short of creating a review
 submission. It may reuse an existing TestFlight review contact, but never logs
 contact values or demo credentials.
 
-Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH, TARGET_BUILD_NUMBER.
-Optional review-contact fallbacks: ASC_REVIEW_FIRST_NAME, ASC_REVIEW_LAST_NAME,
-ASC_REVIEW_EMAIL, ASC_REVIEW_PHONE.
+Env: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH, TARGET_BUILD_NUMBER,
+ASC_REVIEW_FIRST_NAME, ASC_REVIEW_LAST_NAME, ASC_REVIEW_EMAIL,
+ASC_REVIEW_PHONE, ASC_DEMO_ACCOUNT_NAME, ASC_DEMO_ACCOUNT_PASSWORD.
 """
 
 from __future__ import annotations
@@ -69,8 +69,8 @@ PUBLIC REVIEW PATH
 - Account-only actions clearly return the reviewer to sign-in.
 
 ACCOUNT REVIEW PATH
-- Enter an App Review email address, request a sign-in email, and type the six-digit code from that email. New accounts complete the short age and preference onboarding.
-- Sign in with Apple and Google are also available. Both complete inside the signed app and return to Tapt.
+- Tap "Sign in with password" and use the dedicated demo account supplied in the App Review fields. The account opens the full signed-in experience.
+- Email link/code, Sign in with Apple, and Google are also available. All complete inside the signed app and return to Tapt.
 - Delete account: You tab > Delete account > confirm. This revokes stored Sign in with Apple authorization, deletes avatar objects, the auth identity, and all personal-plane rows.
 - Privacy controls: You tab > Privacy Choices. Optional aggregate and partner-insight sharing default off.
 - UGC safety: profile text is filtered before publication; avatar uploads wait for approval; report/block actions are available from social feed items and public profiles; reports enter an authenticated admin moderation queue.
@@ -130,12 +130,24 @@ def first(items: list[dict], label: str) -> dict:
     return items[0]
 
 
-def contact_from_environment() -> dict:
+def review_attributes_from_environment() -> dict:
+    secret_fields = {
+        "ASC_REVIEW_FIRST_NAME": "contactFirstName",
+        "ASC_REVIEW_LAST_NAME": "contactLastName",
+        "ASC_REVIEW_EMAIL": "contactEmail",
+        "ASC_REVIEW_PHONE": "contactPhone",
+        "ASC_DEMO_ACCOUNT_NAME": "demoAccountName",
+        "ASC_DEMO_ACCOUNT_PASSWORD": "demoAccountPassword",
+    }
+    missing = [name for name in secret_fields if not os.environ.get(name)]
+    if missing:
+        raise RuntimeError(
+            "Required App Review secrets are missing: " + ", ".join(missing)
+        )
     return {
-        "contactFirstName": os.environ.get("ASC_REVIEW_FIRST_NAME"),
-        "contactLastName": os.environ.get("ASC_REVIEW_LAST_NAME"),
-        "contactEmail": os.environ.get("ASC_REVIEW_EMAIL"),
-        "contactPhone": os.environ.get("ASC_REVIEW_PHONE"),
+        **{field: os.environ[name] for name, field in secret_fields.items()},
+        "demoAccountRequired": True,
+        "notes": REVIEW_NOTES,
     }
 
 
@@ -174,6 +186,7 @@ def main() -> int:
         raise RuntimeError(
             "TARGET_BUILD_NUMBER is required; refusing to attach a build by recency"
         )
+    review_attributes = review_attributes_from_environment()
 
     validate_public_legal_pages()
 
@@ -388,44 +401,25 @@ def main() -> int:
 
     status, body = api("GET", f"/v1/appStoreVersions/{version_id}/appStoreReviewDetail")
     if status == 404 or (status == 200 and not body.get("data")):
-        contact = contact_from_environment()
-        beta_status, beta_body = api("GET", f"/v1/apps/{app_id}/betaAppReviewDetail")
-        if beta_status == 200 and beta_body.get("data"):
-            beta = beta_body["data"].get("attributes", {})
-            for key in contact:
-                if not contact[key]:
-                    contact[key] = beta.get(key)
-
-        if all(contact.values()):
-            attributes = {
-                **contact,
-                "demoAccountRequired": False,
-                "notes": REVIEW_NOTES,
-            }
-            status, body = api(
-                "POST",
-                "/v1/appStoreReviewDetails",
-                {
-                    "data": {
-                        "type": "appStoreReviewDetails",
-                        "attributes": attributes,
-                        "relationships": {
-                            "appStoreVersion": {
-                                "data": {
-                                    "type": "appStoreVersions",
-                                    "id": version_id,
-                                }
+        status, body = api(
+            "POST",
+            "/v1/appStoreReviewDetails",
+            {
+                "data": {
+                    "type": "appStoreReviewDetails",
+                    "attributes": review_attributes,
+                    "relationships": {
+                        "appStoreVersion": {
+                            "data": {
+                                "type": "appStoreVersions",
+                                "id": version_id,
                             }
-                        },
-                    }
-                },
-            )
-            require("create App Review detail", status, body, (201,))
-        else:
-            print(
-                "App Review detail: contact incomplete; add ASC_REVIEW_* secrets "
-                "or complete the TestFlight review contact."
-            )
+                        }
+                    },
+                }
+            },
+        )
+        require("create App Review detail", status, body, (201,))
     elif status == 200 and body.get("data"):
         review = body["data"]
         status, body = api(
@@ -435,10 +429,7 @@ def main() -> int:
                 "data": {
                     "type": "appStoreReviewDetails",
                     "id": review["id"],
-                    "attributes": {
-                        "demoAccountRequired": False,
-                        "notes": REVIEW_NOTES,
-                    },
+                    "attributes": review_attributes,
                 }
             },
         )

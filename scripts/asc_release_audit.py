@@ -419,7 +419,11 @@ def main() -> int:
                 blockers.append(
                     "App Review contact is incomplete: " + ", ".join(missing) + "."
                 )
-            if demo_required and not demo_complete:
+            if not demo_required:
+                blockers.append(
+                    "App Review must be configured with an active demo account for account-based features."
+                )
+            elif not demo_complete:
                 blockers.append("App Review demo credentials are incomplete.")
             if not is_present(attrs.get("notes")):
                 blockers.append("App Review notes are missing.")

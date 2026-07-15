@@ -35,6 +35,8 @@ jobs:
           ASC_REVIEW_LAST_NAME: ${{ secrets.ASC_REVIEW_LAST_NAME }}
           ASC_REVIEW_EMAIL: ${{ secrets.ASC_REVIEW_EMAIL }}
           ASC_REVIEW_PHONE: ${{ secrets.ASC_REVIEW_PHONE }}
+          ASC_DEMO_ACCOUNT_NAME: ${{ secrets.ASC_DEMO_ACCOUNT_NAME }}
+          ASC_DEMO_ACCOUNT_PASSWORD: ${{ secrets.ASC_DEMO_ACCOUNT_PASSWORD }}
           TARGET_BUILD_NUMBER: ${{ inputs.build_number }}
         run: python scripts/asc_release_prepare.py
 
