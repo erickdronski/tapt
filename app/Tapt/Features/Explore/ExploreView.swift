@@ -594,7 +594,7 @@ struct ExploreView: View {
     private func loadTicker() async {
         do {
             ticker = try await MarketService.feed(
-                sort: .active,
+                sort: .movers,
                 limit: 18,
                 naOnly: noLowDefault
             )

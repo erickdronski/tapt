@@ -242,7 +242,10 @@ enum ProfileService {
         let previousProfile = try? await myProfile(userId: userId)
         let previousPath = previousProfile?.pendingAvatarUrl
             .flatMap { avatarStoragePath(from: $0, userId: userId) }
-        let path = "\(userId.uuidString)/\(UUID().uuidString.lowercased()).jpg"
+        // Storage RLS matches the object path against auth.uid()::text, which
+        // renders LOWERCASE; Swift's uuidString is uppercase and Postgres LIKE
+        // is case-sensitive, so an uppercase folder 403s every upload.
+        let path = "\(userId.uuidString.lowercased())/\(UUID().uuidString.lowercased()).jpg"
         _ = try await Supa.client.storage.from("avatars").upload(
             path: path, file: jpeg,
             options: FileOptions(cacheControl: "3600", contentType: "image/jpeg", upsert: true))
@@ -266,7 +269,7 @@ enum ProfileService {
         guard let range = url.path.range(of: marker) else { return nil }
         let encoded = String(url.path[range.upperBound...])
         let path = encoded.removingPercentEncoding ?? encoded
-        guard path.hasPrefix("\(userId.uuidString)/") else { return nil }
+        guard path.lowercased().hasPrefix("\(userId.uuidString.lowercased())/") else { return nil }
         return path
     }
 }

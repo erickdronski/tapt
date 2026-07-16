@@ -127,7 +127,7 @@ struct BeerMarketView: View {
                 }
             }
             Spacer(minLength: 6)
-            Sparkline(values: b.spark, trend: windowTrend(b))
+            Sparkline(values: b.spark, trend: b.windowTrend)
                 .frame(width: 54, height: 30)
                 .accessibilityHidden(true)
             VStack(alignment: .trailing, spacing: 1) {
@@ -161,29 +161,19 @@ struct BeerMarketView: View {
 
     private func rowAccessibilityLabel(rank: Int, beer: MarketBeer) -> String {
         let brewery = beer.brewery.map { ", \($0)" } ?? ""
-        let wk = windowTrend(beer)
+        let wk = beer.windowTrend
         let movement = beer.isFlat
             ? (wk == 0 ? "steady" : "\(abs(wk)) points \(wk > 0 ? "up" : "down") this week")
             : "\(abs(beer.change)) points \(beer.isUp ? "up" : "down")"
         return "Rank \(rank), \(beer.name)\(brewery), standing \(beer.net), \(movement)"
     }
 
-    /// Trend across the whole visible spark window (what the line itself
-    /// shows), so the color matches the drawn shape. Falls back to the daily
-    /// change when there are not enough points to have a window.
-    private func windowTrend(_ b: MarketBeer) -> Int {
-        guard b.spark.count > 1, let first = b.spark.first, let last = b.spark.last else {
-            return b.change
-        }
-        return Int(last - first)
-    }
-
     @ViewBuilder
     private func changePill(_ b: MarketBeer) -> some View {
-        if b.isFlat, windowTrend(b) != 0 {
+        if b.isFlat, b.windowTrend != 0 {
             // Quiet today but the week genuinely moved: report the real
             // week-window movement instead of a dead "steady".
-            let wk = windowTrend(b)
+            let wk = b.windowTrend
             Label("\(abs(wk)) wk", systemImage: wk > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
                 .font(.system(.caption2, design: .rounded).weight(.heavy))
                 .labelStyle(.titleAndIcon)
@@ -220,7 +210,7 @@ struct BeerMarketView: View {
             loadFailed = true
         }
         if let updatedTicker = try? await MarketService.feed(
-            sort: .active,
+            sort: .movers,
             limit: 16,
             naOnly: naOnly
         ) {
@@ -350,6 +340,20 @@ struct MarketTicker: View {
                 .padding(.horizontal, 5).padding(.vertical, 1.5)
                 .background(moveColor.opacity(0.18), in: Capsule())
                 .overlay(Capsule().stroke(moveColor.opacity(0.32), lineWidth: 0.5))
+            } else if b.windowTrend != 0 {
+                // Quiet today, moving on the week: the tape tells the same
+                // story as the board rows instead of going grey.
+                let wk = b.windowTrend
+                let wkColor = wk > 0 ? Brand.hop : Brand.copper
+                HStack(spacing: 2) {
+                    Image(systemName: wk > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                        .font(.system(size: 7, weight: .black))
+                    Text("\(abs(wk)) wk").font(.system(.caption2, design: .rounded).weight(.heavy))
+                }
+                .foregroundStyle(wkColor.opacity(0.92))
+                .padding(.horizontal, 5).padding(.vertical, 1.5)
+                .background(wkColor.opacity(0.14), in: Capsule())
+                .overlay(Capsule().stroke(wkColor.opacity(0.26), lineWidth: 0.5))
             }
             Text("•").font(.caption2).foregroundStyle(Brand.foam.opacity(0.25)).padding(.horizontal, 7)
         }

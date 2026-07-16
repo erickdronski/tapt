@@ -33,6 +33,12 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
 
     var id: String { beerId }
     var isUp: Bool { change > 0 }
+    /// Trend across the whole visible spark window (what a drawn sparkline
+    /// shows). Falls back to the daily change when there is no window yet.
+    var windowTrend: Int {
+        guard spark.count > 1, let first = spark.first, let last = spark.last else { return change }
+        return Int(last - first)
+    }
     /// No movement yet. Rendered as a neutral state, never a green "+0" --
     /// the board must not signal gains that do not exist.
     var isFlat: Bool { change == 0 }
