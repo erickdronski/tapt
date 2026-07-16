@@ -104,7 +104,7 @@ struct RootView: View {
                     .tabItem { Label("Market", systemImage: "chart.line.uptrend.xyaxis") }
                 CellarView()
                     .tag(2)
-                    .tabItem { Label("Cellar", systemImage: "square.stack.3d.up") }
+                    .tabItem { Label("Passport", systemImage: "book.closed.fill") }
                 DiscoverView()
                     .tag(3)
                     .tabItem { Label("Discover", systemImage: "sparkles") }

@@ -1,0 +1,7 @@
+-- One-tap pour logging: log_checkin now accepts NULL rating (honest "logged,
+-- unrated" quick log; provided ratings still validated 0-5), and
+-- update_checkin_details(p_checkin_id, ...) lets the owner add rating/tags/
+-- glassware/occasion to that SAME check-in afterwards, so the fast path and
+-- the thoughtful path never double-count a pour. Grants: authenticated only.
+-- Mirrors the migration applied to prod 2026-07-16 (full function bodies in
+-- prod migration history under the same name).

@@ -70,7 +70,7 @@ struct CellarView: View {
                 else if checkins.isEmpty { empty }
                 else { content }
             }
-            .navigationTitle("Cellar")
+            .navigationTitle("Passport")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     if session.user != nil {

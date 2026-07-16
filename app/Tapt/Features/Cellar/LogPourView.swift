@@ -103,6 +103,8 @@ struct AddBeerView: View {
 
 /// Log a Pour: pick a beer, rate it, save the check-in, then share the card.
 struct LogPourView: View {
+    /// When set, submitting UPDATES this existing check-in instead of logging a new pour.
+    var updatingCheckinId: String? = nil
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
     var onLogged: () -> Void
@@ -133,8 +135,9 @@ struct LogPourView: View {
     private let glasswareOptions = ["Pint", "Can", "Bottle", "Tulip", "Snifter", "Flight"]
     private let occasionOptions = ["home", "bar", "restaurant", "event", "sports", "other"]
 
-    init(initialBeer: BeerPick? = nil, onLogged: @escaping () -> Void = {}) {
+    init(initialBeer: BeerPick? = nil, updatingCheckinId: String? = nil, onLogged: @escaping () -> Void = {}) {
         self.onLogged = onLogged
+        self.updatingCheckinId = updatingCheckinId
         _selected = State(initialValue: initialBeer)
         _venueSearch = State(initialValue: initialBeer?.breweryName ?? "")
     }
@@ -505,16 +508,29 @@ struct LogPourView: View {
         Task {
             do {
                 // Timeout-guarded so a hung write can never wedge "Saving…" silently.
+                // Coming from a one-tap log, this UPDATES that same check-in;
+                // a fresh entry logs a new pour.
+                let updatingId = updatingCheckinId
                 try await withTaptTimeout(seconds: 20) {
-                    try await CheckinService.log(
-                        beer: beer,
-                        userId: uid,
-                        rating: rating,
-                        flavorTags: tags,
-                        glassware: glass,
-                        occasion: occ,
-                        venueId: venueId
-                    )
+                    if let updatingId {
+                        try await CheckinService.updateDetails(
+                            checkinId: updatingId,
+                            rating: rating,
+                            flavorTags: tags,
+                            glassware: glass,
+                            occasion: occ
+                        )
+                    } else {
+                        _ = try await CheckinService.log(
+                            beer: beer,
+                            userId: uid,
+                            rating: rating,
+                            flavorTags: tags,
+                            glassware: glass,
+                            occasion: occ,
+                            venueId: venueId
+                        )
+                    }
                 }
                 await MainActor.run {
                     saving = false

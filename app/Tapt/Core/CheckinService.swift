@@ -154,20 +154,55 @@ enum CheckinService {
             .value
     }
 
+    /// One tap: record the pour NOW, unrated (rating stays honest-null).
+    /// Returns the check-in id so "Add details" can update the same row.
+    @discardableResult
+    static func quickLog(beer: BeerPick, userId: UUID, venueId: String? = nil) async throws -> String {
+        try await log(beer: beer, userId: userId, rating: nil, venueId: venueId, source: "quick")
+    }
+
+    /// Add or change details on an existing check-in (never double-logs).
+    static func updateDetails(
+        checkinId: String,
+        rating: Double?,
+        flavorTags: [String]? = nil,
+        glassware: String? = nil,
+        occasion: String? = nil
+    ) async throws {
+        struct Params: Encodable {
+            let p_checkin_id: String
+            let p_rating: Double?
+            let p_flavor_tags: [String]?
+            let p_glassware: String?
+            let p_occasion: String?
+        }
+        try await Supa.authedRPCVoid(
+            "update_checkin_details",
+            params: Params(
+                p_checkin_id: checkinId,
+                p_rating: rating,
+                p_flavor_tags: flavorTags,
+                p_glassware: glassware,
+                p_occasion: occasion
+            )
+        )
+    }
+
+    @discardableResult
     static func log(
         beer: BeerPick,
         userId: UUID,
-        rating: Double,
+        rating: Double?,
         flavorTags: [String] = [],
         glassware: String? = nil,
         occasion: String? = nil,
         venue: BreweryMapVenue? = nil,
         venueId: String? = nil,
         source: String? = nil
-    ) async throws {
+    ) async throws -> String {
         struct Params: Encodable {
             let p_beer_id: String
-            let p_rating: Double
+            let p_rating: Double?
             let p_flavor_tags: [String]
             let p_glassware: String?
             let p_occasion: String?
@@ -182,7 +217,7 @@ enum CheckinService {
         }
 
         _ = userId
-        try await Supa.authedRPCVoid(
+        return try await Supa.authedRPC(
             "log_checkin",
             params: Params(
                 p_beer_id: beer.id,

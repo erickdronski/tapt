@@ -61,6 +61,7 @@ PERMANENT_REJECTION_CODES = {
 SOURCE_HOSTS = {
     "images.openfoodfacts.org",
     "qfwiizvqxrhjlthbjosz.supabase.co",
+    "upload.wikimedia.org",
 }
 CUTOUT_PATH_PATTERN = re.compile(
     r"^/storage/v1/object/public/beer-cutouts/(?:v2/)?"

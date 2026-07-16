@@ -16,6 +16,9 @@ struct BeerDetailView: View {
     @State private var savedNote = ""
     @State private var savingNote = false
     @State private var showLogPour = false
+    @State private var quickLogging = false
+    @State private var quickLoggedId: String?
+    @State private var quickLogError: String?
     @State private var loadError: String?
     @State private var voteMessage: String?
     @State private var voteMessageIsError = false
@@ -83,7 +86,7 @@ struct BeerDetailView: View {
         .task { await load() }
         .sheet(isPresented: $showLogPour) {
             if let detail {
-                LogPourView(initialBeer: beerPick(detail))
+                LogPourView(initialBeer: beerPick(detail), updatingCheckinId: quickLoggedId)
             }
         }
     }
@@ -133,18 +136,11 @@ struct BeerDetailView: View {
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.malt.opacity(0.1)))
     }
 
-    /// When there's no real photo, render a glass tinted by the style's SRM
-    /// color range, reference rendering, not a fake product shot.
+    /// When there's no real photo, render the canonical glass tinted by the
+    /// style's real color family, branded illustration, never a fake photo.
     private func srmGlass(_ d: BeerDetail) -> some View {
-        VStack(spacing: 0) {
-            Rectangle().fill(Brand.foam).frame(height: 14)
-            Rectangle().fill(srmColor(d))
-        }
-        .overlay(
-            Image(systemName: "mug.fill")
-                .font(.system(size: 30))
-                .foregroundStyle(.white.opacity(0.35))
-        )
+        BeerGlassView(pour: 0.8, animatesPour: false, style: d.style)
+            .padding(10)
     }
 
     private func srmColor(_ d: BeerDetail) -> Color {
@@ -249,23 +245,61 @@ struct BeerDetailView: View {
         .background(Brand.background, in: RoundedRectangle(cornerRadius: 12))
     }
 
+    /// The core loop, one tap: "I'm drinking this" writes the pour instantly.
+    /// Rating, tags, and the rest are optional afterthoughts, never homework.
     private func logPourButton(_ d: BeerDetail) -> some View {
-        Button {
-            guard session.user != nil else {
-                session.deferBeerDetail(beerId: d.id)
-                session.endGuestSession()
-                return
-            }
-            showLogPour = true
-        } label: {
-            Label("Log this pour", systemImage: "plus.circle.fill")
+        VStack(spacing: 8) {
+            Button {
+                guard let uid = session.user?.id else {
+                    session.deferBeerDetail(beerId: d.id)
+                    session.endGuestSession()
+                    return
+                }
+                guard !quickLogging else { return }
+                quickLogging = true
+                Haptic.firm()
+                Task {
+                    do {
+                        let id = try await CheckinService.quickLog(beer: beerPick(d), userId: uid)
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                            quickLoggedId = id
+                        }
+                        Haptic.firm()
+                    } catch {
+                        quickLogError = "Could not log that. Try again."
+                    }
+                    quickLogging = false
+                }
+            } label: {
+                Label(
+                    quickLoggedId != nil ? "Logged. Cheers!" : (quickLogging ? "Logging..." : "I'm drinking this"),
+                    systemImage: quickLoggedId != nil ? "checkmark.circle.fill" : "plus.circle.fill"
+                )
                 .font(.system(.headline, design: .rounded).weight(.bold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
-                .foregroundStyle(Brand.malt)
+                .background(quickLoggedId != nil ? Brand.hop : Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(quickLoggedId != nil ? .white : Brand.malt)
+            }
+            .buttonStyle(.taptPress)
+            .disabled(quickLogging)
+
+            if let error = quickLogError {
+                Text(error).font(.footnote).foregroundStyle(.red)
+            }
+
+            if quickLoggedId != nil {
+                Button {
+                    showLogPour = true
+                } label: {
+                    Text("Add a rating or details")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(Brand.gold)
+                }
+                .buttonStyle(.plain)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
-        .buttonStyle(.taptPress)
     }
 
     private func beerPick(_ d: BeerDetail) -> BeerPick {
