@@ -33,11 +33,7 @@ Nothing in Tapt is fabricated. Every venue has real coordinates and provenance (
 - `asc-release-submit.yml` - protected, attested zero-blocker audit and explicit App Review submission
 
 ## Status
-- [x] Research + synthesis · name locked (**Tapt**) · Supabase project + repo
-- [x] Email magic link and six-digit email-code auth, scan loop, map, check-ins, and Passport
-- [x] Superapp layer: licensed content ingest, honest market engine, leaderboards, newsletter signup, partner tools, and friends
-- [ ] Release gate: configure Apple token-exchange secrets and physically verify email, Google, and Apple on the exact TestFlight candidate
-- [ ] Release gate: finish Google consent-screen configuration and verify the signed-device OAuth callback
-- [ ] Release gate: run the TestFlight auth matrix for email and every external provider intended for that build
-- [ ] Owner: first real featured partners (`featured_partner` rows) once inquiries land
-- [ ] Verify and activate the deployed newsletter send pipeline; without its Resend and cron secrets, delivery remains inactive
+
+Tapt 1.0 is submitted to the App Store. The landing page is live at [taptbeer.com](https://taptbeer.com).
+
+Shipped: auth (email magic link and six-digit code), the scan loop, map, check-ins, the Passport, the honest market engine, leaderboards, newsletter signup, partner tools, and friends. Release-gate tracking lives in the internal docs.
