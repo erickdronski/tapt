@@ -30,7 +30,7 @@ struct SignInView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     Spacer(minLength: 28)
-                    BeerGlassView(pour: 0.82)
+                    BeerGlassView(pour: 1.0)
                         .frame(width: 92)
                     HStack(spacing: 0) {
                         Text("Tapt").foregroundStyle(Brand.text)

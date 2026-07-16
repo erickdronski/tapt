@@ -96,7 +96,7 @@ struct TaptHeroPanel: View {
             }
             .padding(18)
 
-            BeerGlassView(pour: 0.82)
+            BeerGlassView(pour: 1.0)
                 .frame(width: 74)
                 .rotationEffect(.degrees(4))
                 .offset(x: 2, y: 12)

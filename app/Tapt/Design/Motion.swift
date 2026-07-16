@@ -122,7 +122,11 @@ struct BeerGlassView: View {
         GeometryReader { proxy in
             let w = proxy.size.width
             let h = proxy.size.height
-            let glass = pintPath(w: w, h: h)
+            // Headroom above the rim so the canonical foam cloud can overflow it.
+            let rimY = h * 0.16
+            let glassH = h - rimY
+            let glass = pintPath(w: w, h: h, rimY: rimY)
+            let beerTopY = h - glassH * fill
 
             ZStack {
                 // Back of the glass
@@ -134,26 +138,26 @@ struct BeerGlassView: View {
                         )
                     )
 
-                // Beer body with depth + live bubbles, clipped to the glass
-                ZStack(alignment: .bottom) {
-                    beerBody(h: h)
-                    foam(w: w)
-                        .offset(y: -h * fill + 2)
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-                }
-                .frame(width: w, height: h, alignment: .bottom)
-                .clipShape(glass)
+                // Beer body, clipped to the glass
+                beerBody(height: glassH * fill)
+                    .frame(width: w, height: h, alignment: .bottom)
+                    .clipShape(glass)
 
                 // ONE soft highlight streak (the canonical mark's single shine, not a glossy sheen)
                 RoundedRectangle(cornerRadius: w * 0.06)
                     .fill(Color.white.opacity(0.18))
-                    .frame(width: w * 0.08, height: h * 0.55)
-                    .offset(x: -w * 0.24, y: -h * 0.02)
+                    .frame(width: w * 0.08, height: h * 0.5)
+                    .offset(x: -w * 0.24, y: h * 0.06)
                     .clipShape(glass)
 
                 // Heavy dark outline, matching the canonical mark's ink.
                 glass
                     .stroke(ink, style: StrokeStyle(lineWidth: max(4, w * 0.05), lineJoin: .round))
+
+                // Canonical foam cloud riding the beer line; at a full pour it
+                // overflows the rim exactly like brand/glass.svg. Drawn last,
+                // unclipped, with the mark's white gradient + ink outline.
+                foamCloud(w: w, baselineY: beerTopY)
             }
             .shadow(color: Brand.malt.opacity(0.22), radius: 16, y: 10)
         }
@@ -170,7 +174,7 @@ struct BeerGlassView: View {
         }
     }
 
-    private func beerBody(h: CGFloat) -> some View {
+    private func beerBody(height: CGFloat) -> some View {
         Rectangle()
             .fill(
                 LinearGradient(
@@ -182,24 +186,26 @@ struct BeerGlassView: View {
                     startPoint: .top, endPoint: .bottom
                 )
             )
-            .frame(height: h * fill)
+            .frame(height: height)
     }
 
     /// Shaker-pint silhouette matching the icon and landing hero: a nearly
     /// full-width rim, gentle taper, and a FLAT base with small rounded corners
-    /// (a real beer glass, not a tapered vial).
-    private func pintPath(w: CGFloat, h: CGFloat) -> Path {
+    /// (a real beer glass, not a tapered vial). The rim sits at `rimY` so the
+    /// canonical foam cloud has headroom to overflow it.
+    private func pintPath(w: CGFloat, h: CGFloat, rimY: CGFloat) -> Path {
         var p = Path()
         let lipInset = w * 0.02          // rim ~ full width
         let baseInset = w * 0.17         // base ~66% of the rim
         let corner = w * 0.05            // small rounded base corners
         let belly = w * 0.015            // barely-there outward curve on the sides
-        p.move(to: CGPoint(x: lipInset, y: 0))
-        p.addLine(to: CGPoint(x: w - lipInset, y: 0))
+        let midY = rimY + (h - rimY) * 0.52
+        p.move(to: CGPoint(x: lipInset, y: rimY))
+        p.addLine(to: CGPoint(x: w - lipInset, y: rimY))
         // right side down to the base
         p.addQuadCurve(
             to: CGPoint(x: w - baseInset, y: h - corner),
-            control: CGPoint(x: w - baseInset + belly, y: h * 0.52)
+            control: CGPoint(x: w - baseInset + belly, y: midY)
         )
         // rounded bottom-right corner
         p.addQuadCurve(
@@ -215,26 +221,54 @@ struct BeerGlassView: View {
         )
         // left side up to the rim
         p.addQuadCurve(
-            to: CGPoint(x: lipInset, y: 0),
-            control: CGPoint(x: baseInset - belly, y: h * 0.52)
+            to: CGPoint(x: lipInset, y: rimY),
+            control: CGPoint(x: baseInset - belly, y: midY)
         )
         p.closeSubpath()
         return p
     }
 
-    /// Solid foam cap outlined in ink, matching the canonical mark. No bubbles.
-    private func foam(w: CGFloat) -> some View {
-        Capsule()
-            .fill(Brand.foam)
-            .frame(width: w * 0.9, height: max(8, w * 0.17))
-            .overlay(Capsule().stroke(ink, lineWidth: max(2, w * 0.028)))
-            .compositingGroup()
-            .shadow(color: ink.opacity(0.10), radius: 3, y: 2)
+    /// The canonical foam cloud, traced from brand/glass.svg (bumpy crest,
+    /// slight overhang past both rim edges, gentle sag below the beer line).
+    /// `baselineY` is the beer surface it sits on.
+    private func foamPath(w: CGFloat, baselineY: CGFloat) -> Path {
+        let lip = w * 0.02
+        let u = w - lip * 2               // rim span; the SVG glass is 210 units wide
+        func pt(_ nx: CGFloat, _ ny: CGFloat) -> CGPoint {
+            CGPoint(x: lip + nx * u, y: baselineY + ny * u)
+        }
+        var p = Path()
+        p.move(to: pt(-0.033, 0.010))
+        p.addCurve(to: pt(0.119, -0.276), control1: pt(-0.081, -0.152), control2: pt(0.005, -0.257))
+        p.addCurve(to: pt(0.386, -0.352), control1: pt(0.110, -0.362), control2: pt(0.262, -0.400))
+        p.addCurve(to: pt(0.662, -0.343), control1: pt(0.452, -0.429), control2: pt(0.595, -0.419))
+        p.addCurve(to: pt(0.976, -0.248), control1: pt(0.776, -0.400), control2: pt(0.919, -0.352))
+        p.addCurve(to: pt(1.033, 0.010), control1: pt(1.062, -0.238), control2: pt(1.052, -0.105))
+        p.addCurve(to: pt(-0.033, 0.010), control1: pt(0.786, 0.038), control2: pt(0.214, 0.038))
+        p.closeSubpath()
+        return p
+    }
+
+    private func foamCloud(w: CGFloat, baselineY: CGFloat) -> some View {
+        let path = foamPath(w: w, baselineY: baselineY)
+        return path
+            .fill(
+                LinearGradient(
+                    colors: [.white, Color(hex: 0xF3E7CC)],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
+            .overlay(
+                path.stroke(
+                    ink,
+                    style: StrokeStyle(lineWidth: max(3, w * 0.045), lineJoin: .round)
+                )
+            )
     }
 }
 
 #Preview {
-    BeerGlassView(pour: 0.8)
+    BeerGlassView(pour: 1.0)
         .frame(width: 180)
         .padding(40)
         .background(Brand.background)

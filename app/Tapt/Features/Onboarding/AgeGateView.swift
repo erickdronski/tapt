@@ -11,7 +11,7 @@ struct AgeGateView: View {
             Brand.background.ignoresSafeArea()
             VStack(spacing: 22) {
                 Spacer()
-                BeerGlassView(pour: 0.72)
+                BeerGlassView(pour: 1.0)
                     .frame(width: 118)
 
                 Text(declined ? "Tapt is not available yet" : "Before the first pour")

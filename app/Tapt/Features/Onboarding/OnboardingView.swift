@@ -68,7 +68,7 @@ struct OnboardingView: View {
     private var welcome: some View {
         VStack(spacing: 22) {
             Spacer()
-            BeerGlassView(pour: 0.82).frame(width: 132)
+            BeerGlassView(pour: 1.0).frame(width: 132)
             Text("Welcome to Tapt")
                 .font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
             Text("The Beer Superapp in your pocket. Scan it, score it, play a round, and find local beer spots.")
@@ -132,7 +132,7 @@ struct OnboardingView: View {
     private var finishStep: some View {
         VStack(spacing: 18) {
             Spacer()
-            BeerGlassView(pour: 0.82).frame(width: 132)
+            BeerGlassView(pour: 1.0).frame(width: 132)
             Text("You are all set\(firstName)")
                 .font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text).multilineTextAlignment(.center)
             Text("\(styles.count) styles picked, home base \(region). Scan a label or barcode, log the pour, and stamp the Passport.")
