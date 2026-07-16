@@ -2,7 +2,8 @@ name: Build real beer product cutouts
 
 on:
   schedule:
-    - cron: "43 */6 * * *"
+    # Daily is enough: source photos arrive on a weekly-ish ingest cadence.
+    - cron: "43 8 * * *"
   workflow_dispatch:
     inputs:
       batch:
@@ -43,10 +44,12 @@ jobs:
           key: rembg-${{ inputs.model || 'isnet-general-use' }}-v1
 
       - name: Install pinned image pipeline
+        # numpy must stay <2.5 until numba (rembg -> pymatting -> numba) lifts
+        # its cap; a higher pin makes pip backtrack to unbuildable numba sdists.
         run: >-
           python -m pip install
           "rembg[cpu]==2.0.76"
-          "numpy==2.5.1"
+          "numpy==2.4.6"
           "onnxruntime==1.27.0"
           "Pillow==12.3.0"
           "requests==2.34.2"

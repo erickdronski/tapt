@@ -102,6 +102,14 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Cutout CI unbroken + daily (Claude, 2026-07-16):** every scheduled cutout
+  run was failing at pip install: the `numpy==2.5.1` pin conflicts with numba
+  (rembg -> pymatting -> numba caps numpy<2.5), so pip backtracked to ancient
+  numba sdists that can't build on Python 3.12. Pinned `numpy==2.4.6` (resolves
+  to numba 0.66 / llvmlite 0.48; verified via pip dry-run against linux/cp312
+  wheels) and cut the cron from every 6h to daily `43 8 * * *` — photos arrive
+  weekly-ish, 4 runs/day was waste. If you bump numpy here, check numba's cap
+  first.
 - **Final App Store hardening (Codex, 2026-07-14):** release branch adds the
   resolved operator/address and canonical `taptbeer.com` legal pages; native
   Apple authorization-code capture, Vault token storage, revocation-first
