@@ -47,7 +47,9 @@ class PagingAPI(SupabaseAPI):
 
     def request(self, method: str, path: str, **kwargs: Any) -> FakeResponse:
         params = kwargs["params"]
-        if path == "/rest/v1/beer_catalog":
+        if path == "/rest/v1/cutout_queue":
+            # candidates() reads the market-priority queue view; same row shape
+            # as beer_catalog plus market_standing, same paging contract.
             offset = int(params["offset"])
             self.catalog_offsets.append(offset)
             return FakeResponse(self.old_rows if offset == 0 else [self.new_row])
