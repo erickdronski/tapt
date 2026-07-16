@@ -30,11 +30,11 @@
 
   <g clip-path="url(#tile)">
     <!-- Glow riding behind the foam, upper right of the tilt -->
-    <ellipse cx="540" cy="540" rx="520" ry="480" fill="url(#glow)"/>
+    <ellipse cx="580" cy="500" rx="560" ry="520" fill="url(#glow)"/>
 
     <!-- The mascot pour: same canonical glass, zoomed + tilted for the cheers,
          base bleeding out of the bottom-left corner -->
-    <g transform="translate(140,-80) rotate(20) scale(2.7)">
+    <g transform="translate(64,-210) rotate(20) scale(3.72,3.35)">
       <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150 Z" fill="#FBF6EC" fill-opacity=".16"/>
       <g clip-path="url(#glassClip)">
         <rect x="80" y="140" width="245" height="345" fill="url(#beer)"/>
