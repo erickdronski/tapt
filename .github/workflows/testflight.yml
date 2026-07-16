@@ -95,13 +95,29 @@ jobs:
           xcrun simctl boot "$UDID"
           xcrun simctl bootstatus "$UDID" -b
 
-          if ! xcodebuild test \
-            -project Tapt.xcodeproj \
-            -scheme Tapt \
-            -destination "platform=iOS Simulator,id=$UDID" \
-            -parallel-testing-enabled NO \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
-            > "$RUNNER_TEMP/xctest.log" 2>&1; then
+          run_tests() {
+            xcodebuild test \
+              -project Tapt.xcodeproj \
+              -scheme Tapt \
+              -destination "platform=iOS Simulator,id=$UDID" \
+              -parallel-testing-enabled NO \
+              CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" \
+              > "$RUNNER_TEMP/xctest.log" 2>&1
+          }
+
+          if ! run_tests; then
+            if grep -qE 'Simulator device failed to launch|unknown to FrontBoard' "$RUNNER_TEMP/xctest.log"; then
+              cp "$RUNNER_TEMP/xctest.log" "$RUNNER_TEMP/xctest-attempt-1.log"
+              echo "::warning title=Simulator launch retry::The hosted simulator lost the app registration; erasing and retrying once."
+              xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
+              xcrun simctl erase "$UDID"
+              xcrun simctl boot "$UDID"
+              xcrun simctl bootstatus "$UDID" -b
+              if run_tests; then
+                tail -30 "$RUNNER_TEMP/xctest.log"
+                exit 0
+              fi
+            fi
             echo "---- test errors ----"
             grep -E "error:|failed|FAIL" "$RUNNER_TEMP/xctest.log" | head -40
             echo "---- log tail ----"
