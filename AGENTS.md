@@ -115,9 +115,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   automatically. `admin.html` has a paired source/candidate approve-or-reject
   queue. Verified with 25 Python contract tests, a transaction-wrapped live SQL
   dry run, post-apply count/privilege/constraint checks, and Chrome against the
-  live catalog. **NEXT:** after GitHub build/integrity checks pass, dispatch a
-  small candidate batch and approve only products that pass paired visual
-  review; continue in bounded reviewed batches, never bulk auto-approve.
+  live catalog. Exact-commit Build + Release Integrity passed; Vercel production
+  is `READY`. First production batch: 12 real sources, 11 automated quality
+  rejects, one paired visual reject for visible halo/ragged edges, zero retries,
+  zero publications, and an empty review queue. **NEXT:** continue in bounded
+  reviewed batches and publish only products that pass paired visual review;
+  never bulk auto-approve.
 - **Cutout CI unbroken + daily (Claude, 2026-07-16):** every scheduled cutout
   run was failing at pip install: the `numpy==2.5.1` pin conflicts with numba
   (rembg -> pymatting -> numba caps numpy<2.5), so pip backtracked to ancient
