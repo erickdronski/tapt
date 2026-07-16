@@ -130,7 +130,7 @@ def first(items: list[dict], label: str) -> dict:
     return items[0]
 
 
-def review_attributes_from_environment() -> dict:
+def review_attributes_from_environment() -> tuple[dict, list[str]]:
     secret_fields = {
         "ASC_REVIEW_FIRST_NAME": "contactFirstName",
         "ASC_REVIEW_LAST_NAME": "contactLastName",
@@ -139,16 +139,38 @@ def review_attributes_from_environment() -> dict:
         "ASC_DEMO_ACCOUNT_NAME": "demoAccountName",
         "ASC_DEMO_ACCOUNT_PASSWORD": "demoAccountPassword",
     }
-    missing = [name for name in secret_fields if not os.environ.get(name)]
-    if missing:
-        raise RuntimeError(
-            "Required App Review secrets are missing: " + ", ".join(missing)
-        )
-    return {
-        **{field: os.environ[name] for name, field in secret_fields.items()},
-        "demoAccountRequired": True,
-        "notes": REVIEW_NOTES,
+    attributes = {
+        field: os.environ[name]
+        for name, field in secret_fields.items()
+        if os.environ.get(name)
     }
+    missing = [
+        field for name, field in secret_fields.items() if not os.environ.get(name)
+    ]
+    return attributes, missing
+
+
+def fill_review_attributes_from_beta(
+    app_id: str, attributes: dict, missing: list[str]
+) -> list[str]:
+    """Fill review fields missing from secrets with the values already stored in
+    the app's TestFlight review detail. This is an in-account, API-to-API copy;
+    values are never printed or logged."""
+    if not missing:
+        return []
+    status, body = api("GET", f"/v1/apps/{app_id}/betaAppReviewDetail")
+    if status != 200 or not body.get("data"):
+        return missing
+    beta = body["data"].get("attributes", {})
+    still_missing: list[str] = []
+    for field in missing:
+        value = beta.get(field)
+        if value is not None and str(value).strip():
+            attributes[field] = value
+            print(f"review field {field}: reused from the TestFlight review detail")
+        else:
+            still_missing.append(field)
+    return still_missing
 
 
 def validate_public_legal_pages() -> None:
@@ -186,7 +208,7 @@ def main() -> int:
         raise RuntimeError(
             "TARGET_BUILD_NUMBER is required; refusing to attach a build by recency"
         )
-    review_attributes = review_attributes_from_environment()
+    review_attributes, review_missing = review_attributes_from_environment()
 
     validate_public_legal_pages()
 
@@ -195,6 +217,16 @@ def main() -> int:
     require("app lookup", status, body, (200,))
     app = first(body.get("data", []), "Tapt app")
     app_id = app["id"]
+
+    review_missing = fill_review_attributes_from_beta(
+        app_id, review_attributes, review_missing
+    )
+    if review_missing:
+        raise RuntimeError(
+            "App Review fields are missing from both secrets and the TestFlight "
+            "review detail: " + ", ".join(review_missing)
+        )
+    review_attributes.update({"demoAccountRequired": True, "notes": REVIEW_NOTES})
 
     status, body = api(
         "PATCH",

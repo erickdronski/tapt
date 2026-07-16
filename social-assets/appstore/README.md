@@ -11,7 +11,9 @@ from real in-app screenshots (iPhone 17 Pro sim). Order = the marketing story.
 
 _contact_sheet.png = all five at a glance.
 
-To regenerate after UI changes: recapture the five raw screens, then run
-`scratchpad/appstore/make_carousel.py`. Copy for each slide lives in that script.
+To regenerate after UI changes: recapture the five raw screens (1206x2622,
+`xcrun simctl status_bar ... --time "9:41"` first), then run `make_carousel.py`
+in this directory (RAW_DIR + FONT_DIR env vars; Poppins OFL). Copy for each
+slide lives in that script.
 Listing text (name, subtitle, description, keywords, age rating, privacy,
 review notes) is in `docs/APP-STORE-LISTING.md`.
