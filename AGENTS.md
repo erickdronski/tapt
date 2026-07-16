@@ -329,21 +329,30 @@ promptly (small commits, don't sit on local state another agent can't see).
   use the protected withdraw -> prepare -> audit -> submit workflows to replace
   it only after the build-52 manual gates pass.
 - **Auth truth (2026-07-16):** email, Google, and Apple are exposed by the
-  current signed app. Production contains successful email and Google
-  identities, but no Apple identity, and none of the three providers has the
-  required physical-device proof on exact TestFlight build 52. Facebook, X,
-  and phone remain disabled. Do not attest the release gate until email,
-  Google, Apple, callback handling, sign-out, relaunch, and deletion pass on 52.
+  current signed app and enabled in live Supabase. The site URL is
+  `https://taptbeer.com`; `tapt://auth-callback` is allowlisted; the Apple
+  client matches `app.tapt.tapt`; and a public Google OAuth preflight reaches
+  Google's consent endpoint with the Tapt callback. Apple uses the native
+  ID-token flow, so Supabase's missing web-OAuth secret response does not apply
+  to the app. Production contains successful email and Google identities, but
+  no Apple identity, and none of the three providers has the required physical
+  proof on exact TestFlight build 52. Facebook, X, and phone remain disabled.
+  Do not attest the release gate until email, Google, Apple, callback handling,
+  sign-out, relaunch, and deletion pass on 52.
 - **Legal truth (2026-07-16):** canonical `/privacy` and `/terms` pages are live
   on `taptbeer.com`, contain the named operator/address, and pass the release
-  audit with no placeholders or parked `tapt.app` links.
-- Owner queue: delete `simtest@tapt.app` when QA settles; Supabase dashboard
-  toggles (leaked-password protection ON; auth pool -> percentage); complete
-  Google consent and Apple provider credentials; verify email/Google/Apple on a
-  signed TestFlight device running build 52; attest App Privacy, legal/admin,
-  and Social Media age-rating UI gates; then replace build 50 with 52 and
-  resubmit. Resolve the outstanding Supabase invoice; RESEND_API_KEY/Stripe/FB
-  App ID when wanted.
+  audit with no placeholders or parked `tapt.app` links. App Privacy is
+  published; Social Media is Yes with under-13 mitigation No; and agreements,
+  banking, and tax are active. DSA status is still unset and requires the owner
+  to declare trader versus non-trader/no-EU before legal compliance can be
+  attested.
+- **Billing truth (2026-07-16):** leaked-password protection is enabled, but
+  Supabase shows a $40.96 outstanding invoice and warns of service disruption.
+  Do not treat auth availability as release-stable until the owner pays it.
+- Owner queue: delete `simtest@tapt.app` when QA settles; choose and complete the
+  App Store DSA declaration; pay the outstanding Supabase invoice; verify
+  email/Google/Apple on signed TestFlight build 52; then replace build 50 with
+  52 and resubmit. RESEND_API_KEY/Stripe/FB App ID remain optional future work.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).
