@@ -321,8 +321,10 @@ promptly (small commits, don't sit on local state another agent can't see).
   their GitHub Xcode builds passed. Production migrations through `0083` are
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
-  TestFlight feedback automation are on `main`. TestFlight build 52 is the exact
-  `main` commit `4124cde`, is Apple `VALID`, and is assigned to `Tapt Team`.
+  TestFlight feedback automation are on `main`. TestFlight build 52 was built
+  from app-bearing `main` commit `4124cde`, is Apple `VALID`, and is assigned to
+  `Tapt Team`; subsequent release-control/documentation commits do not alter the
+  app binary.
   The active App Store 1.0 submission remains build 50 in `WAITING_FOR_REVIEW`;
   use the protected withdraw -> prepare -> audit -> submit workflows to replace
   it only after the build-52 manual gates pass.
