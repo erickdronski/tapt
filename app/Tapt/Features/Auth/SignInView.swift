@@ -169,67 +169,64 @@ struct SignInView: View {
                 .foregroundStyle(Brand.text)
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
 
-            Button {
-                Task { await sendEmailLink() }
-            } label: {
-                Label(isSendingEmail ? "Sending..." : (emailLinkSent ? "Send a new email" : "Email me a sign-in link"),
-                      systemImage: "envelope.fill")
-                    .font(.system(.headline, design: .rounded))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(.black)
+            // One sign-in mode at a time: the single gold button always matches
+            // the fields on screen. A small text link switches modes.
+            if showsPasswordSignIn {
+                SecureField("Password", text: $password)
+                    .textContentType(.password)
+                    .font(.system(.body, design: .rounded))
+                    .padding(.horizontal, 16)
+                    .frame(height: 52)
+                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
+                    .foregroundStyle(Brand.text)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+
+                Button {
+                    Task { await signInWithPassword() }
+                } label: {
+                    Label(signingInWithPassword ? "Signing in..." : "Sign in",
+                          systemImage: "arrow.right.circle.fill")
+                        .font(.system(.headline, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(.black)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSignInWithPassword || signingInWithPassword)
+                .opacity(canSignInWithPassword && !signingInWithPassword ? 1 : 0.55)
+            } else {
+                Button {
+                    Task { await sendEmailLink() }
+                } label: {
+                    Label(isSendingEmail ? "Sending..." : (emailLinkSent ? "Send a new email" : "Email me a sign-in link"),
+                          systemImage: "envelope.fill")
+                        .font(.system(.headline, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                        .foregroundStyle(.black)
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSendEmail || isSendingEmail)
+                .opacity(canSendEmail && !isSendingEmail ? 1 : 0.55)
             }
-            .buttonStyle(.plain)
-            .disabled(!canSendEmail || isSendingEmail)
-            .opacity(canSendEmail && !isSendingEmail ? 1 : 0.55)
 
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     showsPasswordSignIn.toggle()
+                    errorText = nil
                 }
             } label: {
-                Label(showsPasswordSignIn ? "Hide password sign-in" : "Sign in with password",
-                      systemImage: showsPasswordSignIn ? "key.slash.fill" : "key.fill")
+                Text(showsPasswordSignIn ? "Email me a sign-in link instead" : "Sign in with a password instead")
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-                    .foregroundStyle(Brand.text)
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
+                    .foregroundStyle(Brand.gold)
+                    .padding(.vertical, 4)
             }
             .buttonStyle(.plain)
 
-            if showsPasswordSignIn {
-                VStack(spacing: 10) {
-                    SecureField("Password", text: $password)
-                        .textContentType(.password)
-                        .font(.system(.body, design: .rounded))
-                        .padding(.horizontal, 16)
-                        .frame(height: 52)
-                        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 14))
-                        .foregroundStyle(Brand.text)
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Brand.malt.opacity(0.14)))
-
-                    Button {
-                        Task { await signInWithPassword() }
-                    } label: {
-                        Label(signingInWithPassword ? "Signing in..." : "Sign in",
-                              systemImage: "arrow.right.circle.fill")
-                            .font(.system(.headline, design: .rounded))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Brand.malt, in: RoundedRectangle(cornerRadius: 14))
-                            .foregroundStyle(Brand.gold)
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(!canSignInWithPassword || signingInWithPassword)
-                    .opacity(canSignInWithPassword && !signingInWithPassword ? 1 : 0.55)
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-
-            if emailLinkSent {
+            if emailLinkSent && !showsPasswordSignIn {
                 VStack(spacing: 8) {
                     Text("Check \(codeEmail), tap the link, or type the 6-digit code here:")
                         .font(.caption)
