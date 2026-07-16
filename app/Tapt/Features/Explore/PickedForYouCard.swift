@@ -55,7 +55,7 @@ struct PickedForYouCard: View {
     var body: some View {
         NavigationLink { BeerDetailView(beerId: beer.beerId) } label: {
             HStack(spacing: 14) {
-                BeerThumb(imageUrl: beer.imageUrl, size: 64, corner: 14)
+                BeerThumb(imageUrl: beer.imageUrl, size: 64, corner: 14, style: beer.style)
                 VStack(alignment: .leading, spacing: 3) {
                     Label("Picked for you", systemImage: "sparkles")
                         .font(.caption2.weight(.heavy))

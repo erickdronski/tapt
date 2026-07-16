@@ -53,6 +53,8 @@ struct BeerImageView: View {
     let url: String?
     var contentMode: ContentMode = .fit
     var maxPixelSize: CGFloat = 900
+    /// Style for the fallback glass so an imageless beer still reads true.
+    var style: String? = nil
 
     @State private var display: UIImage?
     @State private var loaded = false
@@ -68,7 +70,7 @@ struct BeerImageView: View {
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
             } else if loaded {
-                BeerGlassView(pour: 0.76, animatesPour: false)
+                BeerGlassView(pour: 0.76, animatesPour: false, style: style)
                     .padding(6)
                     .accessibilityHidden(true)
             } else {

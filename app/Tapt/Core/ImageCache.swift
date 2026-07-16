@@ -94,6 +94,8 @@ struct CachedBeerImage: View {
     /// Point size of the destination; the loader decodes to ~2x this.
     var targetPoints: CGFloat = 44
     var contentMode: ContentMode = .fit
+    /// Style for the fallback glass so an imageless beer still reads true.
+    var style: String? = nil
 
     @State private var image: UIImage?
     @State private var settled = false
@@ -103,7 +105,7 @@ struct CachedBeerImage: View {
             if let image {
                 Image(uiImage: image).resizable().aspectRatio(contentMode: contentMode)
             } else if settled {
-                BeerGlassView(pour: 0.72, animatesPour: false)
+                BeerGlassView(pour: 0.72, animatesPour: false, style: style)
                     .padding(targetPoints * 0.08)
                     .accessibilityHidden(true)
             } else {

@@ -122,7 +122,7 @@ struct BeerDetailView: View {
     private func labelImage(_ d: BeerDetail) -> some View {
         Group {
             if let urlString = d.labelImageUrl, !urlString.isEmpty {
-                BeerImageView(url: urlString).padding(6)
+                BeerImageView(url: urlString, style: d.style).padding(6)
             } else {
                 srmGlass(d)
             }

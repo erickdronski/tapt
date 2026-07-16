@@ -513,7 +513,7 @@ struct ScanView: View {
             if let m = matches.first(where: { $0.id == pick.beerId }) { selected = m.pick; rating = nil }
         } label: {
             HStack(spacing: 12) {
-                BeerThumb(imageUrl: pick.imageUrl, size: 56, corner: 12)
+                BeerThumb(imageUrl: pick.imageUrl, size: 56, corner: 12, style: pick.style)
                 VStack(alignment: .leading, spacing: 3) {
                     Label("Your pick on this menu", systemImage: "sparkles")
                         .font(.caption2.weight(.heavy)).foregroundStyle(Brand.copper)

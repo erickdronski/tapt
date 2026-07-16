@@ -107,9 +107,81 @@ struct TaptSkeletonList: View {
 /// a gold beer fill, a solid foam cap, ONE soft highlight, and a heavy dark
 /// outline. No rising bubbles, no glossy sheen. It still fills on appear for a
 /// little life, but the resting mark is the canonical one, used everywhere.
+
+/// Style-accurate glass tinting. Colors follow real SRM ranges per family
+/// (straw pilsners, hazy wheats, amber IPAs, near-black stouts with tan foam).
+/// Unknown or empty styles keep the canonical brand-gold glass. Illustration,
+/// clearly branded artwork; never a fake product photo.
+struct StyleGlassTint {
+    let top: Color
+    let mid: Color
+    let bottom: Color
+    let foamTop: Color
+    let foamBottom: Color
+    let haze: Double
+
+    static let brand = StyleGlassTint(
+        top: Color(hex: 0xFFD24D), mid: Color(hex: 0xF2A900), bottom: Color(hex: 0xC56B10),
+        foamTop: .white, foamBottom: Color(hex: 0xF3E7CC), haze: 0
+    )
+
+    static func resolve(_ style: String?) -> StyleGlassTint {
+        guard let style, !style.isEmpty else { return .brand }
+        let s = style.lowercased()
+        func has(_ needles: String...) -> Bool { needles.contains { s.contains($0) } }
+
+        // Order matters: darkest and most specific families first.
+        if has("stout", "porter", "schwarz", "black ale", "black ipa") {
+            return StyleGlassTint(top: Color(hex: 0x4A2C14), mid: Color(hex: 0x2A160A), bottom: Color(hex: 0x140A04),
+                                  foamTop: Color(hex: 0xF0DCC0), foamBottom: Color(hex: 0xD9B98E), haze: 0)
+        }
+        if has("dubbel", "quad", "abbey", "barleywine", "old ale", "scotch") {
+            return StyleGlassTint(top: Color(hex: 0xA65A24), mid: Color(hex: 0x733414), bottom: Color(hex: 0x3E1A08),
+                                  foamTop: Color(hex: 0xF5E3C8), foamBottom: Color(hex: 0xE2C49A), haze: 0)
+        }
+        if has("brown", "dunkel", "bock", "doppel", "mild") {
+            return StyleGlassTint(top: Color(hex: 0xB97335), mid: Color(hex: 0x8A4A1B), bottom: Color(hex: 0x4F250B),
+                                  foamTop: Color(hex: 0xF7E8D0), foamBottom: Color(hex: 0xE8CFA8), haze: 0)
+        }
+        if has("sour", "gose", "lambic", "berliner", "kriek", "flanders", "fruit") {
+            return StyleGlassTint(top: Color(hex: 0xFFB37A), mid: Color(hex: 0xE86A4A), bottom: Color(hex: 0xA83A2E),
+                                  foamTop: Color(hex: 0xFFF0E8), foamBottom: Color(hex: 0xF6D6C4), haze: 0.10)
+        }
+        if has("amber", "red ale", "red ipa", "märzen", "marzen", "vienna", "oktoberfest", "irish red", "altbier") {
+            return StyleGlassTint(top: Color(hex: 0xF0A94E), mid: Color(hex: 0xD07B22), bottom: Color(hex: 0x8F4A10),
+                                  foamTop: .white, foamBottom: Color(hex: 0xF0DDBE), haze: 0)
+        }
+        if has("wit", "wheat", "hefe", "weizen", "weiss") {
+            return StyleGlassTint(top: Color(hex: 0xFFF3C4), mid: Color(hex: 0xFFD877), bottom: Color(hex: 0xDFAE45),
+                                  foamTop: .white, foamBottom: Color(hex: 0xFAF0DC), haze: 0.22)
+        }
+        if has("hazy", "new england", "neipa") {
+            return StyleGlassTint(top: Color(hex: 0xFFDF8A), mid: Color(hex: 0xF7B733), bottom: Color(hex: 0xD08A1E),
+                                  foamTop: .white, foamBottom: Color(hex: 0xF7ECD4), haze: 0.20)
+        }
+        if has("ipa", "india pale") {
+            return StyleGlassTint(top: Color(hex: 0xFFCC4D), mid: Color(hex: 0xF29C00), bottom: Color(hex: 0xB86A10),
+                                  foamTop: .white, foamBottom: Color(hex: 0xF3E7CC), haze: 0)
+        }
+        if has("pils", "lager", "helles", "kölsch", "kolsch", "crisp", "dortmund") {
+            return StyleGlassTint(top: Color(hex: 0xFFF2B8), mid: Color(hex: 0xFFE07A), bottom: Color(hex: 0xE8B93E),
+                                  foamTop: .white, foamBottom: Color(hex: 0xFBF3DF), haze: 0)
+        }
+        if has("saison", "tripel", "golden", "blonde", "pale ale", "farmhouse") {
+            return StyleGlassTint(top: Color(hex: 0xFFDD66), mid: Color(hex: 0xFFB627), bottom: Color(hex: 0xD98E1B),
+                                  foamTop: .white, foamBottom: Color(hex: 0xF6ECD2), haze: 0.06)
+        }
+        return .brand
+    }
+}
+
 struct BeerGlassView: View {
     var pour: CGFloat = 0.8          // 0...1 fill level
     var animatesPour: Bool = true
+    /// Optional beer style; tints the pour to the style's real color family.
+    var style: String? = nil
+
+    private var tint: StyleGlassTint { StyleGlassTint.resolve(style) }
 
     /// The canonical mark's ink (brand/glass.svg #130A02).
     private let ink = Color(hex: 0x130A02)
@@ -142,6 +214,15 @@ struct BeerGlassView: View {
                 beerBody(height: glassH * fill)
                     .frame(width: w, height: h, alignment: .bottom)
                     .clipShape(glass)
+
+                // Wheat and hazy families read cloudy, not brilliant.
+                if tint.haze > 0 {
+                    Rectangle()
+                        .fill(Color.white.opacity(tint.haze))
+                        .frame(width: w, height: glassH * fill, alignment: .bottom)
+                        .frame(width: w, height: h, alignment: .bottom)
+                        .clipShape(glass)
+                }
 
                 // ONE soft highlight streak (the canonical mark's single shine, not a glossy sheen)
                 RoundedRectangle(cornerRadius: w * 0.06)
@@ -179,9 +260,9 @@ struct BeerGlassView: View {
             .fill(
                 LinearGradient(
                     stops: [
-                        .init(color: Color(hex: 0xFFD24D), location: 0),
-                        .init(color: Color(hex: 0xF2A900), location: 0.45),
-                        .init(color: Color(hex: 0xC56B10), location: 1),
+                        .init(color: tint.top, location: 0),
+                        .init(color: tint.mid, location: 0.45),
+                        .init(color: tint.bottom, location: 1),
                     ],
                     startPoint: .top, endPoint: .bottom
                 )
@@ -254,7 +335,7 @@ struct BeerGlassView: View {
         return path
             .fill(
                 LinearGradient(
-                    colors: [.white, Color(hex: 0xF3E7CC)],
+                    colors: [tint.foamTop, tint.foamBottom],
                     startPoint: .top, endPoint: .bottom
                 )
             )

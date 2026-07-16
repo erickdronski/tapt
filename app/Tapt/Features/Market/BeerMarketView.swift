@@ -127,7 +127,7 @@ struct BeerMarketView: View {
                 }
             }
             Spacer(minLength: 6)
-            Sparkline(values: b.spark, trend: b.change)
+            Sparkline(values: b.spark, trend: windowTrend(b))
                 .frame(width: 54, height: 30)
                 .accessibilityHidden(true)
             VStack(alignment: .trailing, spacing: 1) {
@@ -149,7 +149,9 @@ struct BeerMarketView: View {
                 BeerImageView(url: source, maxPixelSize: 160)
                     .padding(3)
             } else {
-                Text(String(b.symbol.prefix(2))).font(.caption2.weight(.heavy)).foregroundStyle(Brand.gold)
+                // No reviewed cutout yet: a style-true glass beats a monogram.
+                BeerGlassView(pour: 0.76, animatesPour: false, style: b.style)
+                    .padding(4)
             }
         }
         .frame(width: 34, height: 34)
@@ -159,15 +161,34 @@ struct BeerMarketView: View {
 
     private func rowAccessibilityLabel(rank: Int, beer: MarketBeer) -> String {
         let brewery = beer.brewery.map { ", \($0)" } ?? ""
+        let wk = windowTrend(beer)
         let movement = beer.isFlat
-            ? "steady"
+            ? (wk == 0 ? "steady" : "\(abs(wk)) points \(wk > 0 ? "up" : "down") this week")
             : "\(abs(beer.change)) points \(beer.isUp ? "up" : "down")"
         return "Rank \(rank), \(beer.name)\(brewery), standing \(beer.net), \(movement)"
     }
 
+    /// Trend across the whole visible spark window (what the line itself
+    /// shows), so the color matches the drawn shape. Falls back to the daily
+    /// change when there are not enough points to have a window.
+    private func windowTrend(_ b: MarketBeer) -> Int {
+        guard b.spark.count > 1, let first = b.spark.first, let last = b.spark.last else {
+            return b.change
+        }
+        return Int(last - first)
+    }
+
     @ViewBuilder
     private func changePill(_ b: MarketBeer) -> some View {
-        if b.isFlat {
+        if b.isFlat, windowTrend(b) != 0 {
+            // Quiet today but the week genuinely moved: report the real
+            // week-window movement instead of a dead "steady".
+            let wk = windowTrend(b)
+            Label("\(abs(wk)) wk", systemImage: wk > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                .font(.system(.caption2, design: .rounded).weight(.heavy))
+                .labelStyle(.titleAndIcon)
+                .foregroundStyle((wk > 0 ? Brand.hop : Brand.copper).opacity(0.9))
+        } else if b.isFlat {
             // Zero movement is a neutral fact, never a green "+0" gain signal.
             Text("steady")
                 .font(.system(.caption2, design: .rounded).weight(.semibold))

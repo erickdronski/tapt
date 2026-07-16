@@ -389,7 +389,7 @@ struct ExploreView: View {
                     ForEach(Array(personalizedBeers.prefix(10))) { beer in
                         NavigationLink { BeerDetailView(beerId: beer.id) } label: {
                             VStack(alignment: .leading, spacing: 8) {
-                                BeerThumb(imageUrl: beer.imageUrl, size: 68, corner: 12)
+                                BeerThumb(imageUrl: beer.imageUrl, size: 68, corner: 12, style: beer.style)
                                 Text(beer.name)
                                     .font(.system(.subheadline, design: .rounded).weight(.bold))
                                     .foregroundStyle(Brand.text)
@@ -450,7 +450,7 @@ struct ExploreView: View {
             NavigationLink { BeerDetailView(beerId: b.id) } label: {
                 HStack(spacing: 12) {
                     Text("\(rank)").font(.system(.headline, design: .monospaced)).foregroundStyle(Brand.muted).frame(width: 22)
-                    BeerThumb(imageUrl: b.imageUrl, size: 44, corner: 10)
+                    BeerThumb(imageUrl: b.imageUrl, size: 44, corner: 10, style: b.style)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(b.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                         Text(rowSubtitle(b)).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)

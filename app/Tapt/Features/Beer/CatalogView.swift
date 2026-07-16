@@ -182,7 +182,7 @@ struct CatalogView: View {
     }
 
     private func thumbnail(_ beer: CatalogEntry) -> some View {
-        BeerThumb(imageUrl: beer.imageUrl, size: 54)
+        BeerThumb(imageUrl: beer.imageUrl, size: 54, style: beer.style)
     }
 
     private var empty: some View {
@@ -274,12 +274,14 @@ struct BeerThumb: View {
     let imageUrl: String?
     var size: CGFloat = 44
     var corner: CGFloat = 11
+    /// Style for the fallback glass so an imageless beer still reads true.
+    var style: String? = nil
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: corner).fill(Brand.surface)
             // Reviewed cutouts are cached and downsampled for dense catalog rows.
-            CachedBeerImage(url: imageUrl, targetPoints: size)
+            CachedBeerImage(url: imageUrl, targetPoints: size, style: style)
                 .padding(size * 0.075)
         }
         .frame(width: size, height: size)
