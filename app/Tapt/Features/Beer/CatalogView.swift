@@ -268,9 +268,8 @@ struct CatalogView: View {
     NavigationStack { CatalogView() }
 }
 
-/// A beer's real product photo when we have one (Open Food Facts label imagery,
-/// ~95% of the catalog), with an honest tinted-glass fallback otherwise. Never a
-/// fabricated or generated image. Reused anywhere a beer is named in a row.
+/// A reviewed real-product cutout when available, with the canonical glass
+/// fallback otherwise. Raw source scenes never render as catalog art.
 struct BeerThumb: View {
     let imageUrl: String?
     var size: CGFloat = 44
@@ -279,9 +278,7 @@ struct BeerThumb: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: corner).fill(Brand.surface)
-            // Cached + downsampled: each OFF thumbnail is fetched from the slow
-            // origin once, ever, then served from memory/disk. Was plain
-            // AsyncImage re-downloading full images on every scroll.
+            // Reviewed cutouts are cached and downsampled for dense catalog rows.
             CachedBeerImage(url: imageUrl, targetPoints: size)
                 .padding(size * 0.075)
         }

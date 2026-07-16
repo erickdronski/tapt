@@ -146,7 +146,7 @@ struct BeerMarketView: View {
         ZStack {
             RoundedRectangle(cornerRadius: 9).fill(Brand.surface)
             if let source = b.imageUrl, URL(string: source) != nil {
-                BeerImageView(url: source, maxPixelSize: 160, liftsSubject: false)
+                BeerImageView(url: source, maxPixelSize: 160)
                     .padding(3)
             } else {
                 Text(String(b.symbol.prefix(2))).font(.caption2.weight(.heavy)).foregroundStyle(Brand.gold)

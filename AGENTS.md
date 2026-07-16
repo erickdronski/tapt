@@ -102,6 +102,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Reviewed product-image system v2 (Codex, 2026-07-16):** paired visual audit
+  covered all 142 listable published cutouts; 37 hands, packs, cases, crops,
+  fragments, and other semantic failures are now quarantined in production.
+  Migration `20260716172406` leaves 105 listable reviewed cutouts, corrects OFF
+  image attribution to CC BY-SA 3.0, preserves rejected-source provenance in the
+  processing ledger, and enforces exact UUID PNG publication paths. Native and
+  web renderers now fail closed to the canonical glass and never display raw OFF
+  scenes or arbitrary bucket objects. The daily rembg job uses full-resolution
+  sources, strict geometry/mask gates, subtle transparent studio depth, and
+  stages versioned candidates as `pending_review`; it no longer publishes
+  automatically. `admin.html` has a paired source/candidate approve-or-reject
+  queue. Verified with 25 Python contract tests, a transaction-wrapped live SQL
+  dry run, post-apply count/privilege/constraint checks, and Chrome against the
+  live catalog. **NEXT:** after GitHub build/integrity checks pass, dispatch a
+  small candidate batch and approve only products that pass paired visual
+  review; continue in bounded reviewed batches, never bulk auto-approve.
 - **Cutout CI unbroken + daily (Claude, 2026-07-16):** every scheduled cutout
   run was failing at pip install: the `numpy==2.5.1` pin conflicts with numba
   (rembg -> pymatting -> numba caps numpy<2.5), so pip backtracked to ancient

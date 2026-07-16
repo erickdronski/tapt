@@ -99,6 +99,23 @@
   const PK = 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF';
   const esc = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 
+  function approvedProductImage(value) {
+    if (!value) return null;
+    try {
+      const url = new URL(value, location.origin);
+      if (url.origin === location.origin && url.pathname.startsWith('/img/beers/')) return url.href;
+      const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/', '');
+      return url.protocol === 'https:'
+        && url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
+        && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
+        && !url.username && !url.password && !url.port && !url.search && !url.hash
+        && /^(?:v2\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+        ? url.href : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   function notFound(msg) {
     document.getElementById('mount').innerHTML =
       '<div class="state"><div class="e">🍺</div><h1>Issue not found</h1><p>' + esc(msg || 'That issue is not published yet.') +
@@ -113,6 +130,7 @@
     const date = row.published_at ? new Date(row.published_at).toLocaleDateString(undefined, {month:'long', day:'numeric', year:'numeric'}) : '';
     const abvRange = (s.abv_min != null && s.abv_max != null) ? (s.abv_min + '-' + s.abv_max + '% ABV') : '';
     const ibuRange = (s.ibu_min != null && s.ibu_max != null) ? (s.ibu_min + '-' + s.ibu_max + ' IBU') : '';
+    const productImage = approvedProductImage(f.image);
     document.title = 'The Tapt Dispatch No. ' + num;
     document.getElementById('mount').innerHTML = `
       <div class="issue">
@@ -123,7 +141,7 @@
         <div class="body">
           <div class="lab">🏆 Beer of the Week</div>
           <div class="botw">
-            <div class="photo">${f.image ? `<img src="${esc(f.image)}" alt="${esc(f.name)}">` : '🍺'}</div>
+            <div class="photo">${productImage ? `<img src="${esc(productImage)}" alt="${esc(f.name)}">` : '🍺'}</div>
             <div class="info">
               <h2>${esc(f.name)}</h2>
               <div class="brewery">${esc(f.brewery)}${f.country ? ' / ' + esc(f.country) : ''}</div>

@@ -734,7 +734,17 @@ struct BeerDetailView: View {
             if d.styleName != nil {
                 Text("Style ranges: BJCP 2021 Style Guidelines")
             }
-            if let license = d.labelImageLicense {
+            if let license = d.labelImageLicense,
+               license.hasPrefix("Open Food Facts") {
+                Link("Image source: Open Food Facts", destination: openFoodFactsURL(d))
+                Link(
+                    "Image license: CC BY-SA 3.0",
+                    destination: URL(string: "https://creativecommons.org/licenses/by-sa/3.0/")!
+                )
+                if BeerProductImagePolicy.isApproved(d.labelImageUrl) {
+                    Text("Modification: background removed by Tapt")
+                }
+            } else if let license = d.labelImageLicense {
                 Text("Label photo: \(license)")
             }
             if d.dataSource == "open_food_facts" {
@@ -744,6 +754,15 @@ struct BeerDetailView: View {
         .font(.caption2)
         .foregroundStyle(Brand.muted)
         .padding(.horizontal, 4)
+    }
+
+    private func openFoodFactsURL(_ d: BeerDetail) -> URL {
+        let digits = (d.gtin ?? "").filter(\.isNumber)
+        if (8...14).contains(digits.count),
+           let url = URL(string: "https://world.openfoodfacts.org/product/\(digits)") {
+            return url
+        }
+        return URL(string: "https://world.openfoodfacts.org/")!
     }
 
     private func chip(_ text: String, tint: Color) -> some View {

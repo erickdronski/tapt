@@ -372,11 +372,9 @@ struct ScanView: View {
     private func offCard(_ off: OFFBeer) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                AsyncImage(url: off.imageURL.flatMap(URL.init)) { image in
-                    image.resizable().scaledToFill()
-                } placeholder: {
-                    Image(systemName: "mug.fill").foregroundStyle(Brand.malt)
-                }
+                BeerGlassView(pour: 0.72, animatesPour: false)
+                    .padding(7)
+                    .accessibilityHidden(true)
                 .frame(width: 54, height: 54)
                 .background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
                 .clipShape(RoundedRectangle(cornerRadius: 12))

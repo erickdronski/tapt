@@ -13,12 +13,12 @@ struct PourCard: Identifiable {
     var place: String? = nil
     var beerId: String? = nil       // used to fetch the beer photo for the card
     var rating: Int = 0             // 1-5 stars
-    var imageUrl: String? = nil     // real beer photo if we already have it
+    var imageUrl: String? = nil     // reviewed product cutout if already available
     var country: String? = nil
 }
 
 /// A brand-locked 9:16 card built to look identical wherever it is shared. Now leads
-/// with the real beer photo (loaded before render since ImageRenderer is synchronous),
+/// with reviewed product art (loaded before render since ImageRenderer is synchronous),
 /// the drinker's rating, and the score, so it reads as a proud, social pour.
 struct ShareCard: View {
     let pour: PourCard
@@ -38,7 +38,7 @@ struct ShareCard: View {
 
             Spacer(minLength: 8)
 
-            // Hero: real beer photo with the score as a stamp; falls back to the ring.
+            // Hero: reviewed product art with the score as a stamp; falls back to the ring.
             ZStack(alignment: .bottomTrailing) {
                 Group {
                     if let img = beerImage {

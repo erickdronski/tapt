@@ -3,12 +3,18 @@ from __future__ import annotations
 import unittest
 from typing import Any
 
+import numpy as np
 from PIL import Image, ImageDraw
 
 from scripts.build_beer_cutouts import (
+    Candidate,
     PipelineError,
     SupabaseAPI,
+    add_studio_depth,
+    preferred_source_urls,
+    validate_candidate,
     validate_normalized_cutout,
+    validate_source_mask,
 )
 
 
@@ -54,6 +60,8 @@ class PagingAPI(SupabaseAPI):
                 "status": "rejected",
                 "attempts": 3,
                 "source_url": f"https://images.openfoodfacts.org/{beer_id}.jpg",
+                "error_code": "visual_quality_review",
+                "pipeline_version": "v2",
             }
             for beer_id in ids
             if beer_id.startswith("old-")
@@ -119,11 +127,128 @@ class CutoutQualityTests(unittest.TestCase):
             "image_too_dark",
         )
 
-    def test_explicit_multipack_can_be_wide(self) -> None:
-        validate_normalized_cutout(
-            self.canvas((150, 300, 874, 700)),
-            "Test lager 12 pack",
+    def test_explicit_multipack_is_rejected(self) -> None:
+        with self.assertRaises(PipelineError) as raised:
+            validate_normalized_cutout(self.canvas(), "Test lager 12 pack")
+        self.assertEqual(raised.exception.code, "multipack_source")
+
+    def test_detached_second_product_is_rejected(self) -> None:
+        image = self.canvas((400, 100, 624, 900))
+        ImageDraw.Draw(image).rectangle((700, 300, 790, 720), fill=(40, 150, 220, 255))
+        self.assert_rejected(image, "multiple_foregrounds")
+
+    def test_large_hole_through_product_is_rejected(self) -> None:
+        image = self.canvas((400, 100, 624, 900))
+        ImageDraw.Draw(image).ellipse((455, 430, 545, 520), fill=(0, 0, 0, 0))
+        self.assert_rejected(image, "mask_internal_damage")
+
+    def test_hand_like_base_flare_is_rejected(self) -> None:
+        image = self.canvas((400, 100, 624, 900))
+        ImageDraw.Draw(image).rectangle((340, 740, 684, 900), fill=(40, 150, 220, 255))
+        self.assert_rejected(image, "mask_base_flare")
+
+    def test_source_subject_touching_edge_is_rejected(self) -> None:
+        mask = Image.new("L", (400, 600), 0)
+        ImageDraw.Draw(mask).rectangle((0, 40, 180, 560), fill=255)
+        with self.assertRaises(PipelineError) as raised:
+            validate_source_mask(np.asarray(mask) > 0)
+        self.assertEqual(raised.exception.code, "foreground_cropped")
+
+    def test_studio_depth_keeps_transparent_background(self) -> None:
+        image = self.canvas()
+        result = add_studio_depth(image)
+        alpha = result.getchannel("A")
+        self.assertEqual(alpha.getpixel((0, 0)), 0)
+        self.assertGreater(alpha.getpixel((512, 915)), 0)
+        self.assertEqual(result.getpixel((512, 500))[:3], image.getpixel((512, 500))[:3])
+
+
+class SourcePolicyTests(unittest.TestCase):
+    def test_off_thumbnail_prefers_full_resolution(self) -> None:
+        source = (
+            "https://images.openfoodfacts.org/images/products/009/093/501/4364/"
+            "front_pl.3.400.jpg"
         )
+        self.assertEqual(
+            preferred_source_urls(source),
+            [
+                source.replace(".400.jpg", ".full.jpg"),
+                source,
+            ],
+        )
+
+    def test_unapproved_source_host_is_rejected(self) -> None:
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url="https://example.com/product.jpg",
+            license="CC BY-SA",
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(candidate)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_unapproved_supabase_bucket_is_rejected(self) -> None:
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url=(
+                "https://qfwiizvqxrhjlthbjosz.supabase.co/"
+                "storage/v1/object/public/avatars/user.png"
+            ),
+            license="CC BY-SA",
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(candidate)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_only_uuid_png_cutout_objects_are_accepted_from_supabase(self) -> None:
+        accepted = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url=(
+                "https://qfwiizvqxrhjlthbjosz.supabase.co/"
+                "storage/v1/object/public/beer-cutouts/"
+                "00000000-0000-0000-0000-000000000000.png"
+            ),
+            license="CC BY-SA",
+        )
+        validate_candidate(accepted)
+
+        rejected = Candidate(
+            id=accepted.id,
+            name=accepted.name,
+            source_url=(
+                "https://qfwiizvqxrhjlthbjosz.supabase.co/"
+                "storage/v1/object/public/beer-cutouts/source-photo.jpg"
+            ),
+            license=accepted.license,
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(rejected)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_source_query_parameters_are_rejected(self) -> None:
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url="https://images.openfoodfacts.org/product.jpg?download=1",
+            license="CC BY-SA",
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(candidate)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_candidate_requires_license(self) -> None:
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url="https://images.openfoodfacts.org/product.jpg",
+            license=None,
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(candidate)
+        self.assertEqual(raised.exception.code, "source_license_missing")
 
 
 if __name__ == "__main__":

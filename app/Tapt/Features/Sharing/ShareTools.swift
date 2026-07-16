@@ -12,25 +12,23 @@ enum ShareTools {
         return renderer.uiImage
     }
 
-    /// Load a beer photo for the card. ImageRenderer is synchronous, so we fetch the
-    /// UIImage up front (from a known URL, or by looking the beer up by id).
+    /// Load reviewed product art for the card. ImageRenderer is synchronous, so
+    /// fetch the UIImage up front from a known cutout or catalog id.
     static func loadBeerImage(_ pour: PourCard) async -> UIImage? {
-        var urlString = pour.imageUrl
+        var urlString = BeerProductImagePolicy.isApproved(pour.imageUrl) ? pour.imageUrl : nil
         if urlString == nil, let id = pour.beerId {
             struct Row: Decodable {
                 let cutoutUrl: String?
-                let labelImageUrl: String?
 
                 enum CodingKeys: String, CodingKey {
                     case cutoutUrl = "cutout_url"
-                    case labelImageUrl = "label_image_url"
                 }
             }
             let row: Row? = try? await Supa.client.from("beer_catalog")
-                .select("cutout_url,label_image_url").eq("id", value: id).single().execute().value
-            urlString = row?.cutoutUrl ?? row?.labelImageUrl
+                .select("cutout_url").eq("id", value: id).single().execute().value
+            urlString = row?.cutoutUrl
         }
-        guard let s = urlString, let url = URL(string: s),
+        guard let url = BeerProductImagePolicy.approvedURL(urlString),
               let (data, _) = try? await URLSession.shared.data(from: url),
               let img = UIImage(data: data) else { return nil }
         return img

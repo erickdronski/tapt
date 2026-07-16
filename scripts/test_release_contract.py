@@ -35,7 +35,9 @@ class ReleaseContractTests(unittest.TestCase):
         ).read_text()
         session = (REPO_ROOT / "app" / "Tapt" / "Core" / "Session.swift").read_text()
 
-        self.assertIn('"Sign in with password"', sign_in)
+        self.assertIn('SecureField("Password"', sign_in)
+        self.assertIn('showsPasswordSignIn', sign_in)
+        self.assertIn('"Sign in with a password instead"', sign_in)
         self.assertIn("session.signInWithPassword", sign_in)
         self.assertIn("func signInWithPassword", session)
 

@@ -2,12 +2,8 @@ import SwiftUI
 import ImageIO
 import UIKit
 
-/// Beer thumbnails come from Open Food Facts, whose CDN is slow (seconds per
-/// image). Plain AsyncImage re-downloads on every cell reuse and keeps nothing
-/// across launches, so grids crawl. This caches each decoded, downsampled image
-/// in memory AND on disk keyed by url+size, so every image is fetched from the
-/// slow origin exactly once, ever. Second sight (scroll back, relaunch) is
-/// instant and offline.
+/// Reviewed product cutouts are cached in memory and on disk so catalog grids
+/// stay instant across scrolling and relaunches.
 actor TaptImageCache {
     static let shared = TaptImageCache()
 
@@ -37,18 +33,20 @@ actor TaptImageCache {
         // per process, so it can't name a persistent file). FNV-1a 64-bit.
         var hash: UInt64 = 0xcbf29ce484222325
         for byte in key.utf8 { hash = (hash ^ UInt64(byte)) &* 0x100000001b3 }
-        return dir.appendingPathComponent(String(hash, radix: 16) + ".jpg")
+        return dir.appendingPathComponent(String(hash, radix: 16) + ".img")
     }
 
     func image(for urlString: String, maxPixel: CGFloat) async -> UIImage? {
-        let k = key(urlString, maxPixel)
+        guard let approvedURL = BeerProductImagePolicy.approvedURL(urlString) else { return nil }
+        let approved = approvedURL.absoluteString
+        let k = key(approved, maxPixel)
         if let hit = memory.object(forKey: k as NSString) { return hit }
         if let existing = inflight[k] { return await existing.value }
 
         let file = diskURL(k)
         // Off-actor fetch (nonisolated static): concurrent downloads, the actor
         // only serializes the tiny memory/inflight bookkeeping.
-        let task = Task<UIImage?, Never> { await Self.fetch(urlString, maxPixel: maxPixel, file: file) }
+        let task = Task<UIImage?, Never> { await Self.fetch(approved, maxPixel: maxPixel, file: file) }
         inflight[k] = task
         let result = await task.value
         inflight[k] = nil
@@ -65,7 +63,7 @@ actor TaptImageCache {
             return img
         }
         // Origin, once. Data task honors caching (URLSession.download bypasses it).
-        guard let url = URL(string: urlString),
+        guard let url = BeerProductImagePolicy.approvedURL(urlString),
               let (data, resp) = try? await URLSession.shared.data(from: url),
               (resp as? HTTPURLResponse).map({ (200...299).contains($0.statusCode) }) ?? true,
               let img = downsample(data, maxPixel: maxPixel)
@@ -74,8 +72,7 @@ actor TaptImageCache {
         return img
     }
 
-    /// Decode only the pixels the destination needs (a 400px OFF photo into a
-    /// 44pt row is 8x too big to decode at full size).
+    /// Decode only the pixels the destination needs.
     nonisolated static func downsample(_ data: Data, maxPixel: CGFloat) -> UIImage? {
         guard let src = CGImageSourceCreateWithData(data as CFData,
                                                     [kCGImageSourceShouldCache: false] as CFDictionary)
@@ -91,8 +88,7 @@ actor TaptImageCache {
     }
 }
 
-/// A beer thumbnail that loads through the cache. Shows the image once ready,
-/// a soft placeholder before, and the glass glyph if there is genuinely no art.
+/// A reviewed beer thumbnail with the canonical fallback when no approved art exists.
 struct CachedBeerImage: View {
     let url: String?
     /// Point size of the destination; the loader decodes to ~2x this.
@@ -107,9 +103,9 @@ struct CachedBeerImage: View {
             if let image {
                 Image(uiImage: image).resizable().aspectRatio(contentMode: contentMode)
             } else if settled {
-                Image(systemName: "mug.fill")
-                    .font(.system(size: targetPoints * 0.37))
-                    .foregroundStyle(Brand.gold.opacity(0.7))
+                BeerGlassView(pour: 0.72, animatesPour: false)
+                    .padding(targetPoints * 0.08)
+                    .accessibilityHidden(true)
             } else {
                 Brand.surface
             }

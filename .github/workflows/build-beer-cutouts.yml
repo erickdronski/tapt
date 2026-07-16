@@ -50,11 +50,12 @@ jobs:
           python -m pip install
           "rembg[cpu]==2.0.76"
           "numpy==2.4.6"
+          "scipy==1.18.0"
           "onnxruntime==1.27.0"
           "Pillow==12.3.0"
           "requests==2.34.2"
 
-      - name: Build and publish licensed cutouts
+      - name: Build licensed cutouts for review
         env:
           SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -75,4 +76,4 @@ jobs:
         if: always()
         run: |
           echo "### Real product cutout pipeline" >> "$GITHUB_STEP_SUMMARY"
-          echo "Source photos remain attributed; only validated transparent PNGs are published." >> "$GITHUB_STEP_SUMMARY"
+          echo "Source photos remain attributed. Product-only transparent PNGs are staged for admin review before they can appear in Tapt." >> "$GITHUB_STEP_SUMMARY"

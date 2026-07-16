@@ -29,6 +29,9 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
 .msg{font-weight:600;font-size:.9rem;margin-top:8px}
 .actions{display:flex;gap:8px;margin-top:8px}
 .avatar-preview{width:72px;height:72px;object-fit:cover;border-radius:50%;border:2px solid var(--gold)}
+.product-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.product-shot{min-width:0}.product-shot span{display:block;font-size:.7rem;font-weight:700;color:var(--slate);margin-bottom:5px;text-transform:uppercase}
+.product-shot img{display:block;width:100%;height:230px;object-fit:contain;background:#eee9df;border:1px solid rgba(26,18,6,.08);border-radius:8px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
 .stat{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:14px;padding:14px;text-align:center}
 .stat b{display:block;font-family:'Poppins';font-size:1.6rem;color:var(--malt)}
@@ -38,6 +41,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
 .wrap{animation:adminIn .6s cubic-bezier(.22,1,.36,1) both}
 @keyframes adminIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.wrap{animation:none}}
+@media(max-width:560px){.product-shot img{height:180px}}
 </style>
 </head>
 <body>
@@ -72,6 +76,10 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
   <h2 id="avatarHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Avatar review</h2>
   <div class="msg" id="avatarMsg" aria-live="polite"></div>
   <div id="avatars"></div>
+
+  <h2 id="imageHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Product image review</h2>
+  <div class="msg" id="imageMsg" aria-live="polite"></div>
+  <div id="productImages"></div>
 
   <h2 id="inqHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Partner inquiries</h2>
   <div id="inquiries"></div>
@@ -126,7 +134,7 @@ async function load() {
   if (!isAdmin) { $('queue').innerHTML = '<p style="color:var(--copper)">This account is not an admin.</p>'; return; }
   $('authBox').style.display = 'none';
   $('stats').hidden = false; $('dispatchBox').hidden = false; $('qHead').hidden = false; $('inqHead').hidden = false;
-  $('modHead').hidden = false; $('avatarHead').hidden = false;
+  $('modHead').hidden = false; $('avatarHead').hidden = false; $('imageHead').hidden = false;
 
   // Ops dashboard
   const { data: s } = await supa.rpc('admin_stats');
@@ -152,6 +160,33 @@ async function load() {
           <button class="btn" onclick="moderateReport('${r.report_id}','dismiss')">Dismiss</button>
         </div>`:''}
       </div>`).join('') : '<p style="color:var(--slate)">No content reports.</p>';
+  }
+
+  // Automated cutouts remain unpublished until an admin compares the attributed
+  // source with the product-only candidate and explicitly approves it.
+  const { data: productImages, error: productImagesError } = await supa.rpc('admin_product_images', { p_limit: 50 });
+  if (productImagesError) {
+    $('productImages').innerHTML = `<p style="color:var(--copper)">${esc(productImagesError.message)}</p>`;
+  } else {
+    $('imageHead').textContent = `Product image review${productImages?.length ? ` (${productImages.length})` : ''}`;
+    $('productImages').innerHTML = (productImages && productImages.length) ? productImages.map(p => {
+      const source = safeProductSource(p.source_url);
+      const candidate = safeCutout(p.candidate_url);
+      if (!source || !candidate) return '';
+      const dimensions = p.source_width && p.source_height ? `${p.source_width} × ${p.source_height}` : 'Dimensions unavailable';
+      return `<div class="claim pending">
+        <h3>${esc(p.beer_name)}</h3>
+        <div class="meta">${esc(p.source_license || 'Source license missing')} · ${esc(dimensions)} · staged ${new Date(p.staged_at).toLocaleString()}</div>
+        <div class="product-pair">
+          <div class="product-shot"><span>Attributed source</span><img src="${esc(source)}" alt="Source photo for ${esc(p.beer_name)}"></div>
+          <div class="product-shot"><span>Tapt candidate</span><img src="${esc(candidate)}" alt="Background-removed candidate for ${esc(p.beer_name)}"></div>
+        </div>
+        <div class="actions">
+          <button class="btn g" onclick="reviewProductImage('${p.beer_id}','approve')">Approve</button>
+          <button class="btn r" onclick="reviewProductImage('${p.beer_id}','reject')">Reject</button>
+        </div>
+      </div>`;
+    }).join('') : '<p style="color:var(--slate)">No product images awaiting review.</p>';
   }
 
   // Uploaded avatars are not surfaced publicly until an admin approves them.
@@ -245,6 +280,17 @@ window.moderateAvatar = async (userId, decision) => {
   }
 };
 
+window.reviewProductImage = async (beerId, decision) => {
+  $('imageMsg').textContent = decision === 'approve' ? 'Publishing reviewed product image...' : 'Rejecting product image...';
+  const { error } = await supa.rpc('review_product_image', { p_beer_id: beerId, p_decision: decision });
+  if (error) {
+    $('imageMsg').textContent = error.message;
+    return;
+  }
+  $('imageMsg').textContent = decision === 'approve' ? 'Product image published.' : 'Product image rejected.';
+  await load();
+};
+
 window.sendDispatch = async () => {
   const subject = $('dsubject').value.trim(), html = $('dbody').value.trim();
   if (!subject || !html) { $('dmsg').textContent = 'Add a subject and body.'; return; }
@@ -259,6 +305,30 @@ window.sendDispatch = async () => {
   }
 };
 
+function safeProductSource(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
+    if (url.hostname === 'images.openfoodfacts.org') return url.href;
+    const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/', '');
+    if (url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
+      && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
+      && /^(?:v2\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)) return url.href;
+  } catch (_) {}
+  return null;
+}
+function safeCutout(value) {
+  try {
+    const url = new URL(value);
+    const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/v2/', '');
+    return url.protocol === 'https:'
+      && url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
+      && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/v2/')
+      && !url.username && !url.password && !url.port && !url.search && !url.hash
+      && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+      ? url.href : null;
+  } catch (_) { return null; }
+}
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 supa.auth.getSession().then(({ data }) => { if (data.session) load(); });
 </script>

@@ -77,15 +77,9 @@ struct BeerOfWeekCard: View {
                                 Text(medal(entry.rank ?? 0))
                                     .font(.title3)
                                     .frame(width: 30)
-                                if let img = entry.labelImageUrl, let url = URL(string: img) {
-                                    AsyncImage(url: url) { image in
-                                        image.resizable().scaledToFill()
-                                    } placeholder: {
-                                        Color.clear
-                                    }
+                                BeerImageView(url: entry.labelImageUrl, maxPixelSize: 120)
                                     .frame(width: 34, height: 34)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                                }
                                 VStack(alignment: .leading, spacing: 1) {
                                     Text(entry.name)
                                         .font(.system(.subheadline, design: .rounded).weight(.bold))

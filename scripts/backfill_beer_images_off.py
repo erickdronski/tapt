@@ -61,7 +61,7 @@ STATE_FILE = os.environ.get("STATE_FILE",
                             os.path.join(os.path.dirname(__file__), ".image_backfill_state.json"))
 DRY_RUN = os.environ.get("DRY_RUN", "").lower() == "true"
 UA = "Tapt/1.0 (THE Beer Superapp; image backfill; contact esdronski@gmail.com)"
-LICENSE = "Open Food Facts (ODbL)"
+LICENSE = "Open Food Facts image (CC BY-SA 3.0)"
 
 
 def load_service_key() -> str:

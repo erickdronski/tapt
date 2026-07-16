@@ -68,7 +68,7 @@ struct RootView: View {
                         beer: "Guinness Draught", brewery: "Guinness", style: "Irish Stout",
                         score: 88, user: "you", abv: "4.2%", place: "The Long Hall, Dublin",
                         rating: 5,
-                        imageUrl: "https://images.openfoodfacts.org/images/products/500/021/310/1223/front_fr.60.full.jpg",
+                        imageUrl: nil,
                         country: "Ireland"))
                     .padding(.vertical)
                 }

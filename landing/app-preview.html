@@ -96,7 +96,8 @@
   .row{display:flex;gap:12px;align-items:center;padding:9px 18px;cursor:pointer;border-bottom:1px solid rgba(26,18,6,.05)}
   .row .thumb{width:52px;height:52px;border-radius:11px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto;overflow:hidden;display:grid;place-items:center}
   .row .thumb img{width:100%;height:100%;object-fit:contain;padding:3px}
-  .row .thumb.ph{font-size:1.1rem;color:rgba(242,169,0,.7)}
+  .row .thumb.ph{color:rgba(242,169,0,.7)}
+  .row .thumb.ph svg{width:28px;height:auto}
   .row .info b{font-family:'Poppins';font-size:.9rem;display:block;line-height:1.15}
   .row .info .sub{font-size:.74rem;color:var(--muted);margin-top:1px}
   .row .info .meta{font-size:.7rem;font-weight:700;color:var(--copper);margin-top:2px}
@@ -114,11 +115,12 @@
   /* generic detail / celebration overlays */
   .overlay{position:absolute;inset:0;z-index:80;display:none}
   .overlay.on{display:block}
-  .sheet{position:absolute;inset:0;background:var(--foam);overflow-y:auto;padding-bottom:30px;animation:slideup .32s cubic-bezier(.22,1,.36,1)}
+  .sheet{position:absolute;inset:0;background:var(--foam);overflow-y:auto;padding-bottom:30px}
+  .overlay.on .sheet{animation:slideup .32s cubic-bezier(.22,1,.36,1)}
   @keyframes slideup{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
   .sheet .close{position:sticky;top:0;background:var(--foam);padding:12px 18px;font-weight:700;color:var(--gold);cursor:pointer;z-index:2}
-  .dhero{margin:0 18px;border-radius:20px;overflow:hidden;background:#fff;border:1px solid var(--line);height:230px;display:grid;place-items:center}
-  .dhero img{max-width:100%;max-height:100%;object-fit:contain;padding:14px}
+  .dhero{margin:0 18px;border-radius:20px;overflow:hidden;background:#fff;border:1px solid var(--line);height:230px;display:grid;place-items:center;position:relative}
+  .dhero img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:14px}
   .dname{font-family:'Poppins';font-weight:800;font-size:1.4rem;padding:16px 18px 2px}
   .dsub{padding:0 18px;color:var(--muted)}
   .dstats{display:flex;gap:10px;padding:16px 18px}
@@ -235,7 +237,7 @@
     <div class="overlay" id="detail">
       <div class="sheet">
         <div class="close" onclick="closeDetail()">‹ Catalog</div>
-        <div class="dhero"><img id="dImg" alt=""></div>
+        <div class="dhero"><img id="dImg" alt="" hidden><div id="dFallback"></div></div>
         <div class="dname" id="dName">Not available</div>
         <div class="dsub" id="dSub">Not available</div>
         <div class="dstats">
@@ -278,16 +280,12 @@
 const SUPA='https://qfwiizvqxrhjlthbjosz.supabase.co';
 const PUBLISHABLE='sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF';
 
-// Baked real fallback (clean OFF beers) if live fetch is blocked.
+// Baked reviewed cutouts if the live catalog is unavailable.
 const SEED=[
- {name:"Salvator Doppelbock",style:"Doppelbock",abv:7.9,brewery_name:"Paulaner",country:"Germany",image_url:"https://images.openfoodfacts.org/images/products/406/660/064/1803/front_fr.3.400.jpg"},
- {name:"Disco Soleil",style:"Pale Ale",abv:6.5,brewery_name:"Dieu du Ciel !",country:"Canada",image_url:"https://images.openfoodfacts.org/images/products/064/348/595/6426/front_fr.5.400.jpg"},
- {name:"Atlantic Pale Ale",style:"Pale Ale",abv:4.5,brewery_name:"Sharp's",country:"United Kingdom",image_url:"https://images.openfoodfacts.org/images/products/501/003/849/5827/front_en.6.400.jpg"},
- {name:"Psycho DDH IPA",style:"IPA",abv:6.3,brewery_name:"Naparbier",country:"Spain",image_url:"https://images.openfoodfacts.org/images/products/843/701/244/4911/front_es.5.400.jpg"},
- {name:"Schäffler Weissbier",style:"Weissbier",abv:5.2,brewery_name:"Schäffler Bräu",country:"Germany",image_url:"https://images.openfoodfacts.org/images/products/402/197/400/0076/front_de.4.400.jpg"},
- {name:"Météor Cerise",style:"Fruit Beer",abv:5.5,brewery_name:"Météor",country:"France",image_url:"https://images.openfoodfacts.org/images/products/315/614/073/8161/front_fr.3.400.jpg"},
- {name:"Pelfort Brune",style:"Brown Ale",abv:6.5,brewery_name:"Pelforth",country:"France",image_url:"https://images.openfoodfacts.org/images/products/311/978/026/7446/front_fr.21.400.jpg"},
- {name:"Southwold Summer Beer",style:"Golden Ale",abv:5,brewery_name:"Adnams",country:"United Kingdom",image_url:"https://images.openfoodfacts.org/images/products/000/000/070/8470/front_en.9.400.jpg"}
+ {name:"Pilsner Urquell",style:"Pilsner",abv:4.4,brewery_name:"Plzeňský Prazdroj",country:"Czechia",image_url:"img/beers/pilsner-urquell.png"},
+ {name:"Guinness Draught",style:"Irish Stout",abv:4.2,brewery_name:"Guinness",country:"Ireland",image_url:"img/beers/guinness-draught.png"},
+ {name:"La Chouffe",style:"Belgian Blonde",abv:8,brewery_name:"Brasserie d'Achouffe",country:"Belgium",image_url:"img/beers/la-chouffe.png"},
+ {name:"Chimay Bleue",style:"Belgian Strong Ale",abv:null,brewery_name:"Chimay",country:"Belgium",image_url:"img/beers/chimay-bleue.png"}
 ];
 
 function glassSVG(w){return `<svg viewBox="0 0 400 520" width="${w}" xmlns="http://www.w3.org/2000/svg">
@@ -302,6 +300,7 @@ function glassSVG(w){return `<svg viewBox="0 0 400 520" width="${w}" xmlns="http
  <path d="M95 150 Q104 310 117 464 Q120 475 131 475 L269 475 Q280 475 283 464 Q296 310 305 150" fill="none" stroke="#130A02" stroke-width="16" stroke-linejoin="round" stroke-linecap="round"/></svg>`;}
 document.getElementById('heroGlass').innerHTML=glassSVG(76);
 document.getElementById('celebGlass').innerHTML=glassSVG(150);
+document.getElementById('dFallback').innerHTML=glassSVG(100);
 
 const STYLES=["IPA","Lager","Pilsner","Stout","Porter","Sour","Wheat","Pale Ale","Amber"];
 let activeStyle=null, lastQ="", timer=null;
@@ -323,16 +322,37 @@ async function fetchCatalog(q, style, na, limit=30, offset=0){
 }
 
 function rowHTML(b){
-  const img=b.image_url?`<img src="${b.image_url}" loading="lazy" onerror="this.style.display='none';this.parentNode.classList.add('ph');this.parentNode.textContent='🍺'">`:'🍺';
+  const approvedImage=approvedProductImage(b.image_url);
+  const img=approvedImage?`<img src="${esc(approvedImage)}" loading="lazy" onerror="productImageFailed(this)">`:glassSVG(28);
   const meta=[b.style, b.abv!=null?(b.abv+'%'):null, b.is_na_low?'NA/Low':null].filter(Boolean);
   return `<div class="row" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'>
-    <div class="thumb ${b.image_url?'':'ph'}">${img}</div>
+    <div class="thumb ${approvedImage?'':'ph'}">${img}</div>
     <div class="info"><b>${esc(b.name)}</b>
       <div class="sub">${esc([b.brewery_name,b.country].filter(Boolean).join(' · '))}</div>
       <div class="meta">${meta.map((m,i)=>i===2?`<span class="na">${m}</span>`:esc(m)).join(' · ')}</div></div>
     <div class="chev">›</div></div>`;
 }
+function productImageFailed(image){
+  const thumb=image.closest('.thumb');
+  if(!thumb) return;
+  thumb.classList.add('ph');
+  thumb.innerHTML=glassSVG(28);
+}
 function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function approvedProductImage(value){
+  if(typeof value!=='string'||!value) return null;
+  if(/^img\/beers\/[a-z0-9-]+\.png$/.test(value)) return value;
+  try{
+    const url=new URL(value);
+    const relative=url.pathname.replace('/storage/v1/object/public/beer-cutouts/','');
+    return url.protocol==='https:'
+      && url.hostname==='qfwiizvqxrhjlthbjosz.supabase.co'
+      && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
+      && !url.username && !url.password && !url.port && !url.search && !url.hash
+      && /^(?:v2\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+      ? url.href:null;
+  }catch(_){return null;}
+}
 
 async function search(q){
   const list=document.getElementById('list'), cnt=document.getElementById('count');
@@ -363,7 +383,19 @@ buildChips();
 document.getElementById('q').addEventListener('input',e=>{clearTimeout(timer);timer=setTimeout(()=>search(e.target.value.trim()),300);});
 
 function openDetail(b){
-  document.getElementById('dImg').src=b.image_url||'';
+  const image=approvedProductImage(b.image_url), imageNode=document.getElementById('dImg');
+  const fallback=document.getElementById('dFallback');
+  if(image){
+    imageNode.onerror=()=>{
+      imageNode.removeAttribute('src');
+      imageNode.hidden=true;
+      fallback.hidden=false;
+    };
+    imageNode.src=image;
+    imageNode.hidden=false;
+    fallback.hidden=true;
+  }
+  else{imageNode.removeAttribute('src');imageNode.hidden=true;fallback.hidden=false;}
   document.getElementById('dName').textContent=b.name;
   document.getElementById('dSub').textContent=[b.brewery_name,b.country].filter(Boolean).join(' · ')||'Not available';
   document.getElementById('dAbv').textContent=b.abv!=null?b.abv+'%':'N/A';
@@ -380,7 +412,7 @@ async function fillExplore(){
   let beers=SEED;
   try{ beers=await fetchCatalog('', null, false, 12, 0); }catch(e){}
   if(!beers.length) beers=SEED;
-  const b0=beers.find(b=>b.image_url)||beers[0];
+  const b0=beers.find(b=>approvedProductImage(b.image_url))||beers[0];
   document.getElementById('bowName').textContent=b0.name;
   document.getElementById('bowSub').textContent=(b0.brewery_name||'')+(b0.country?' · '+b0.country:'');
   const card=b=>`<div class="mv" onclick='openDetail(${JSON.stringify(b).replace(/'/g,"&#39;")})'><div class="up">REAL CATALOG</div><b>${esc(b.name)}</b><span>${esc(b.brewery_name||b.style||'')}</span></div>`;
