@@ -173,6 +173,77 @@ def fill_review_attributes_from_beta(
     return still_missing
 
 
+SUPABASE_AUTH_ADMIN = "https://qfwiizvqxrhjlthbjosz.supabase.co/auth/v1/admin"
+
+
+def supabase_admin(method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
+    service_key = os.environ["SUPABASE_SERVICE_ROLE_KEY"].strip()
+    data = json.dumps(body).encode() if body is not None else None
+    request = urllib.request.Request(SUPABASE_AUTH_ADMIN + path, data=data, method=method)
+    request.add_header("apikey", service_key)
+    request.add_header("Authorization", "Bearer " + service_key)
+    request.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            raw = response.read().decode()
+            return response.status, json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as error:
+        raw = error.read().decode()
+        try:
+            return error.code, json.loads(raw) if raw else {}
+        except json.JSONDecodeError:
+            return error.code, {"raw": raw[:300]}
+
+
+def ensure_demo_password(attributes: dict, missing: list[str]) -> list[str]:
+    """Last-resort source for the demo password: mint a fresh one in-process and
+    set it on the Supabase demo account, so Apple's stored value and the live
+    account always match. The value is never printed or logged. Creates the
+    account (email confirmed) if it does not exist yet."""
+    if "demoAccountPassword" not in missing:
+        return missing
+    demo_email = str(attributes.get("demoAccountName", "")).strip().lower()
+    if not demo_email or not os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip():
+        return missing
+
+    import secrets as _secrets
+
+    password = "TaptRev-" + _secrets.token_urlsafe(12)
+
+    user_id = None
+    for page in range(1, 6):
+        status, body = supabase_admin("GET", f"/users?page={page}&per_page=200")
+        if status != 200:
+            print(f"demo account lookup failed ({status}); leaving password unresolved")
+            return missing
+        users = body.get("users", [])
+        user_id = next(
+            (u["id"] for u in users if str(u.get("email", "")).lower() == demo_email),
+            None,
+        )
+        if user_id or len(users) < 200:
+            break
+
+    if user_id:
+        status, body = supabase_admin("PUT", f"/users/{user_id}", {"password": password})
+        action = "rotated"
+    else:
+        status, body = supabase_admin(
+            "POST",
+            "/users",
+            {"email": demo_email, "password": password, "email_confirm": True},
+        )
+        action = "created"
+    if status not in (200, 201):
+        detail = body.get("msg") or body.get("message") or body.get("raw") or status
+        print(f"demo account {action} failed: {detail}; leaving password unresolved")
+        return missing
+
+    attributes["demoAccountPassword"] = password
+    print(f"review field demoAccountPassword: {action} on the Supabase demo account")
+    return [field for field in missing if field != "demoAccountPassword"]
+
+
 def validate_public_legal_pages() -> None:
     blockers = (
         "draft for counsel review",
@@ -221,6 +292,7 @@ def main() -> int:
     review_missing = fill_review_attributes_from_beta(
         app_id, review_attributes, review_missing
     )
+    review_missing = ensure_demo_password(review_attributes, review_missing)
     if review_missing:
         raise RuntimeError(
             "App Review fields are missing from both secrets and the TestFlight "
@@ -258,7 +330,10 @@ def main() -> int:
                 "relationships": {
                     "primaryCategory": {
                         "data": {"type": "appCategories", "id": "FOOD_AND_DRINK"}
-                    }
+                    },
+                    "secondaryCategory": {
+                        "data": {"type": "appCategories", "id": "SOCIAL_NETWORKING"}
+                    },
                 },
             }
         },
