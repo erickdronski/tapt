@@ -29,6 +29,7 @@ KEY_PATH = os.environ["ASC_KEY_PATH"]
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
 TARGET_BUILD_NUMBER = os.environ.get("TARGET_BUILD_NUMBER", "").strip()
+EDITABLE_VERSION_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED"}
 
 DESCRIPTION = """Meet Tapt, THE Beer Superapp.
 
@@ -418,12 +419,20 @@ def main() -> int:
             for item in versions
             if item.get("attributes", {}).get("versionString") == "1.0"
             and item.get("attributes", {}).get("appStoreState")
-            == "PREPARE_FOR_SUBMISSION"
+            in EDITABLE_VERSION_STATES
         ),
         None,
     )
     if not version:
-        raise RuntimeError("Editable iOS version 1.0 not found")
+        states = sorted(
+            str(item.get("attributes", {}).get("appStoreState"))
+            for item in versions
+            if item.get("attributes", {}).get("versionString") == "1.0"
+        )
+        raise RuntimeError(
+            "Editable iOS version 1.0 not found; observed states: "
+            + (", ".join(states) if states else "none")
+        )
     version_id = version["id"]
 
     status, body = api(

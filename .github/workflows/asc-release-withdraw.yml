@@ -1,0 +1,57 @@
+name: ASC Release Withdraw
+
+on:
+  workflow_dispatch:
+    inputs:
+      current_build_number:
+        description: Exact VALID build currently selected for App Review
+        required: true
+        type: string
+      replacement_build_number:
+        description: Exact newer VALID build that will replace it
+        required: true
+        type: string
+      confirmation:
+        description: Type WITHDRAW TAPT 1.0 BUILD <current> FOR <replacement>
+        required: true
+        type: string
+      execute_withdrawal:
+        description: Cancel the live review after all replacement guards pass
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  withdraw:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: app-store-production
+    steps:
+      - name: Verify main branch
+        run: test "$GITHUB_REF" = "refs/heads/main"
+
+      - uses: actions/checkout@v4
+
+      - name: Verify explicit confirmation
+        run: >-
+          test "${{ inputs.confirmation }}" =
+          "WITHDRAW TAPT 1.0 BUILD ${{ inputs.current_build_number }} FOR ${{ inputs.replacement_build_number }}"
+
+      - name: Write ASC API key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.ASC_KEY_P8 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
+      - name: Install dependencies
+        run: pip install pyjwt cryptography
+
+      - name: Withdraw verified Tapt 1.0 submission
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: /home/runner/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          EXPECTED_CURRENT_BUILD_NUMBER: ${{ inputs.current_build_number }}
+          REPLACEMENT_BUILD_NUMBER: ${{ inputs.replacement_build_number }}
+          CONFIRM_WITHDRAW: ${{ inputs.confirmation }}
+          EXECUTE_WITHDRAWAL: ${{ inputs.execute_withdrawal }}
+        run: python scripts/asc_release_withdraw.py

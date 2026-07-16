@@ -25,6 +25,7 @@ EXPECTED_BUILD_NUMBER = os.environ.get("EXPECTED_BUILD_NUMBER", "").strip()
 CONFIRM_SUBMIT = os.environ.get("CONFIRM_SUBMIT", "")
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
+EDITABLE_VERSION_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED"}
 
 
 def token() -> str:
@@ -86,7 +87,8 @@ def main() -> int:
             item
             for item in body.get("data", [])
             if item.get("attributes", {}).get("versionString") == "1.0"
-            and item.get("attributes", {}).get("appStoreState") == "PREPARE_FOR_SUBMISSION"
+            and item.get("attributes", {}).get("appStoreState")
+            in EDITABLE_VERSION_STATES
         ),
         None,
     )

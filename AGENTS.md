@@ -321,24 +321,27 @@ promptly (small commits, don't sit on local state another agent can't see).
   their GitHub Xcode builds passed. Production migrations through `0083` are
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
-  TestFlight feedback automation are on `main`.
-- **Auth truth (2026-07-13):** email magic link + six-digit code are enabled and
-  verified in production. Google is enabled and linked to the owner account,
-  but its signed-device callback still needs TestFlight proof. Apple is
-  implemented in the app but disabled in Supabase pending real Apple
-  credentials. Facebook, X, and phone are disabled. Google remains visible so
-  its signed-device return path can be tested; the other unfinished external
-  providers stay hidden. Do not claim these gates are complete until TestFlight
-  proves them.
-- **Legal truth:** `/privacy` and `/terms` are counsel-review drafts with open
-  company, address, liability, governing-law, and dispute placeholders. They
-  are not App Store-final until those placeholders and the review are complete.
+  TestFlight feedback automation are on `main`. TestFlight build 52 is the exact
+  `main` commit `4124cde`, is Apple `VALID`, and is assigned to `Tapt Team`.
+  The active App Store 1.0 submission remains build 50 in `WAITING_FOR_REVIEW`;
+  use the protected withdraw -> prepare -> audit -> submit workflows to replace
+  it only after the build-52 manual gates pass.
+- **Auth truth (2026-07-16):** email, Google, and Apple are exposed by the
+  current signed app. Production contains successful email and Google
+  identities, but no Apple identity, and none of the three providers has the
+  required physical-device proof on exact TestFlight build 52. Facebook, X,
+  and phone remain disabled. Do not attest the release gate until email,
+  Google, Apple, callback handling, sign-out, relaunch, and deletion pass on 52.
+- **Legal truth (2026-07-16):** canonical `/privacy` and `/terms` pages are live
+  on `taptbeer.com`, contain the named operator/address, and pass the release
+  audit with no placeholders or parked `tapt.app` links.
 - Owner queue: delete `simtest@tapt.app` when QA settles; Supabase dashboard
   toggles (leaked-password protection ON; auth pool -> percentage); complete
   Google consent and Apple provider credentials; verify email/Google/Apple on a
-  signed TestFlight device; dispatch the next TestFlight build after CI passes;
-  resolve the outstanding Supabase invoice; RESEND_API_KEY/Stripe/FB App ID when
-  wanted.
+  signed TestFlight device running build 52; attest App Privacy, legal/admin,
+  and Social Media age-rating UI gates; then replace build 50 with 52 and
+  resubmit. Resolve the outstanding Supabase invoice; RESEND_API_KEY/Stripe/FB
+  App ID when wanted.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

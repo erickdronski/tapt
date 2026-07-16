@@ -52,6 +52,35 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertIn('"contests": "FREQUENT"', script)
             self.assertNotIn("FREQUENT_OR_INTENSE", script)
 
+    def test_review_withdrawal_is_replacement_guarded(self):
+        withdrawal = (REPO_ROOT / "scripts" / "asc_release_withdraw.py").read_text()
+        workflow = (
+            REPO_ROOT / ".github" / "workflows" / "asc-release-withdraw.yml"
+        ).read_text()
+        prepare = (REPO_ROOT / "scripts" / "asc_release_prepare.py").read_text()
+        submit = (REPO_ROOT / "scripts" / "asc_release_submit.py").read_text()
+
+        for marker in (
+            "EXPECTED_CURRENT_BUILD_NUMBER",
+            "REPLACEMENT_BUILD_NUMBER",
+            "Replacement build number must be newer than current build",
+            "filter[state]=WAITING_FOR_REVIEW",
+            "len(items) != 1",
+            '"canceled": True',
+            'last_state == "DEVELOPER_REJECTED"',
+            "if not EXECUTE_WITHDRAWAL",
+        ):
+            self.assertIn(marker, withdrawal)
+
+        self.assertIn("environment: app-store-production", workflow)
+        self.assertIn("default: false", workflow)
+        self.assertIn(
+            "WITHDRAW TAPT 1.0 BUILD ${{ inputs.current_build_number }} FOR ${{ inputs.replacement_build_number }}",
+            workflow,
+        )
+        for script in (prepare, submit):
+            self.assertIn('"DEVELOPER_REJECTED"', script)
+
 
 if __name__ == "__main__":
     unittest.main()
