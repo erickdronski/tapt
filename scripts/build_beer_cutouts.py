@@ -133,14 +133,16 @@ class SupabaseAPI:
         offset = 0
         result: list[Candidate] = []
         while len(result) < target_count:
+            # cutout_queue orders the SAME candidates by live market standing
+            # first, so the beers people actually see get real art first; the
+            # long tail still drains oldest-first behind them.
             rows = self.request(
                 "GET",
-                "/rest/v1/beer_catalog",
+                "/rest/v1/cutout_queue",
                 params={
                     "select": "id,name,label_image_url,label_image_license,updated_at",
-                    "label_image_url": "not.is.null",
                     "or": "(cutout_url.is.null,cutout_url.eq.)",
-                    "order": "updated_at.asc,id.asc",
+                    "order": "market_standing.desc.nullslast,updated_at.asc,id.asc",
                     "limit": str(page_size),
                     "offset": str(offset),
                 },
