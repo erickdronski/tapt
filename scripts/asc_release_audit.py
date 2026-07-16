@@ -212,8 +212,8 @@ def main() -> int:
             expected_rating = {
                 "advertising": True,
                 "ageAssurance": True,
-                "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT_OR_INTENSE",
-                "contests": "FREQUENT_OR_INTENSE",
+                "alcoholTobaccoOrDrugUseOrReferences": "FREQUENT",
+                "contests": "FREQUENT",
                 "gambling": False,
                 "gamblingSimulated": "NONE",
                 "gunsOrOtherWeapons": "NONE",

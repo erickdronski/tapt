@@ -39,6 +39,17 @@ class ReleaseContractTests(unittest.TestCase):
         self.assertIn("session.signInWithPassword", sign_in)
         self.assertIn("func signInWithPassword", session)
 
+    def test_age_rating_uses_current_app_store_connect_enums(self):
+        prepare = (REPO_ROOT / "scripts" / "asc_release_prepare.py").read_text()
+        audit = (REPO_ROOT / "scripts" / "asc_release_audit.py").read_text()
+
+        for script in (prepare, audit):
+            self.assertIn(
+                '"alcoholTobaccoOrDrugUseOrReferences": "FREQUENT"', script
+            )
+            self.assertIn('"contests": "FREQUENT"', script)
+            self.assertNotIn("FREQUENT_OR_INTENSE", script)
+
 
 if __name__ == "__main__":
     unittest.main()
