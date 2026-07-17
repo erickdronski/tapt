@@ -78,7 +78,7 @@ struct ExploreView: View {
                     quickDuo.reveal(appeared, 4)
                     if let recommendation { PickedForYouCard(beer: recommendation).reveal(appeared, 5) }
                     if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 6) }
-                    BeerOfWeekCard().padding(.horizontal).reveal(appeared, 7)
+                    BeerRaceCard().padding(.horizontal).reveal(appeared, 7)
                     // State and country boards are off until we have real
                     // regional activity. The board is worldwide-only for now,
                     // so there is no region picker and nothing to relabel.

@@ -44,6 +44,7 @@ struct BeerDetailView: View {
                     } else {
                         signInCard
                     }
+                    TaptHonorsCard(beerId: beerId)
                     if !d.awards.isEmpty { awardsCard(d.awards, name: d.name) }
                     if d.styleName != nil { styleScience(d) }
                     if !d.sensory.isEmpty || d.styleFlavorNotes != nil { tasteCard(d) }

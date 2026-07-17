@@ -7,6 +7,11 @@ struct RootView: View {
     @State private var selection = 0
     @State private var pendingPartnerVenueId: String?
     @State private var pendingBeerDetailId: String?
+    // Beer of the Week / Month / Year vote prompt: at most once per day.
+    @State private var showBeerPoll = false
+    @State private var showBeerRace = false
+    @State private var polledForPrompt = false
+    @AppStorage("poll.lastPromptDay") private var pollLastPromptDay = ""
 
     init() {
         // Opaque tab bar so full-bleed content (the map) never shows through behind
@@ -52,6 +57,24 @@ struct RootView: View {
             if pendingBeerDetailId == nil {
                 pendingBeerDetailId = session.consumePendingBeerDetail()
             }
+        }
+        .task {
+            // Beer of the Week/Month/Year prompt: once per app run, at most once
+            // per day, and only when there is genuinely something to vote on.
+            guard !polledForPrompt, !session.isGuest, session.user != nil else { return }
+            polledForPrompt = true
+            let today = Self.dayString()
+            guard today != pollLastPromptDay else { return }
+            if await BeerPollService.pendingPeriods().contains(where: { $0.pending > 0 }) {
+                pollLastPromptDay = today
+                showBeerPoll = true
+            }
+        }
+        .sheet(isPresented: $showBeerPoll) {
+            BeerPollSheet(onSeeLeaderboard: { showBeerRace = true })
+        }
+        .sheet(isPresented: $showBeerRace) {
+            NavigationStack { BeerRaceView() }
         }
         .sheet(item: $pendingPartnerVenueId) { venueId in
             PartnerMenuSheet(venueId: venueId)
@@ -137,6 +160,13 @@ struct RootView: View {
     @State private var showCatalogPreview = false
     @State private var showMapPreview = false
     @State private var showGamesPreview = false
+
+    static func dayString() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        return f.string(from: Date())
+    }
 }
 
 #Preview { RootView().tint(Brand.accent) }
