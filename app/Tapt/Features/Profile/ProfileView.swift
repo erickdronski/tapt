@@ -28,7 +28,6 @@ struct ProfileView: View {
     @State private var myActivity: [MyBeerActivity] = []
     @State private var activityError: String?
     @State private var myProfile: ProfileService.MyProfile?
-    @State private var pickedItem: PhotosPickerItem?
     @State private var avatarUploading = false
     @State private var identityError: String?
     @State private var showEditIdentity = false
@@ -78,10 +77,8 @@ struct ProfileView: View {
                 Section {
                     HStack(spacing: 14) {
                         if session.user != nil {
-                            PhotosPicker(selection: $pickedItem, matching: .images) {
-                                avatarView
-                            }
-                            .disabled(avatarUploading)
+                            Button { showEditIdentity = true } label: { avatarView }
+                                .buttonStyle(.plain)
                         } else {
                             avatarView
                         }
@@ -94,7 +91,7 @@ struct ProfileView: View {
                                 Text(email).font(.subheadline).foregroundStyle(.secondary)
                             }
                             if session.user != nil {
-                                Button("Edit name and handle") { showEditIdentity = true }
+                                Button("Edit photo, name, and handle") { showEditIdentity = true }
                                     .font(.footnote.weight(.semibold)).foregroundStyle(Brand.gold)
                                     .padding(.top, 2)
                             }
@@ -301,7 +298,6 @@ struct ProfileView: View {
                 await loadMyProfile()
                 _ = await loadPrivacyChoices()
             }
-            .onChange(of: pickedItem) { _, item in Task { await uploadAvatar(item) } }
             .sheet(isPresented: $showEditIdentity) {
                 EditIdentityView(initial: myProfile) { updated in myProfile = updated }
             }
@@ -338,39 +334,6 @@ struct ProfileView: View {
 
     /// Downscale the picked photo to a <=512px JPEG, upload it, and reflect the
     /// new avatar URL. Never stores anything but a real uploaded image.
-    private func uploadAvatar(_ item: PhotosPickerItem?) async {
-        guard let item, let id = session.user?.id else { return }
-        avatarUploading = true
-        identityError = nil
-        defer { avatarUploading = false }
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let ui = UIImage(data: data) else {
-                identityError = "That photo could not be read. Try another."
-                return
-            }
-            let side: CGFloat = 512
-            let scale = min(1, side / max(ui.size.width, ui.size.height))
-            let target = CGSize(width: ui.size.width * scale, height: ui.size.height * scale)
-            let renderer = UIGraphicsImageRenderer(size: target)
-            let resized = renderer.image { _ in ui.draw(in: CGRect(origin: .zero, size: target)) }
-            guard let jpeg = resized.jpegData(compressionQuality: 0.8) else {
-                identityError = "That photo could not be prepared. Try another."
-                return
-            }
-            let url = try await ProfileService.uploadAvatar(jpeg, userId: id)
-            myProfile = ProfileService.MyProfile(
-                displayName: myProfile?.displayName,
-                handle: myProfile?.handle,
-                avatarUrl: myProfile?.avatarUrl,
-                pendingAvatarUrl: url,
-                avatarModerationStatus: "pending"
-            )
-        } catch {
-            identityError = "Your photo did not upload. Check your connection and try again."
-        }
-    }
-
     /// Persist beer-geek mode to the profile so it follows the account across devices.
     private func syncBeerGeek(_ value: Bool) {
         guard !isHydratingPrivacy, !deleting, let id = session.user?.id else { return }
