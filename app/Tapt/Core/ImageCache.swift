@@ -37,7 +37,7 @@ actor TaptImageCache {
     }
 
     func image(for urlString: String, maxPixel: CGFloat) async -> UIImage? {
-        guard let approvedURL = BeerProductImagePolicy.approvedURL(urlString) else { return nil }
+        guard let approvedURL = BeerProductImagePolicy.displayURL(urlString) else { return nil }
         let approved = approvedURL.absoluteString
         let k = key(approved, maxPixel)
         if let hit = memory.object(forKey: k as NSString) { return hit }
@@ -63,7 +63,7 @@ actor TaptImageCache {
             return img
         }
         // Origin, once. Data task honors caching (URLSession.download bypasses it).
-        guard let url = BeerProductImagePolicy.approvedURL(urlString),
+        guard let url = BeerProductImagePolicy.displayURL(urlString),
               let (data, resp) = try? await URLSession.shared.data(from: url),
               (resp as? HTTPURLResponse).map({ (200...299).contains($0.statusCode) }) ?? true,
               let img = downsample(data, maxPixel: maxPixel)

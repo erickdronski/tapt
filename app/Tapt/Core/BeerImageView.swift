@@ -1,12 +1,25 @@
 import SwiftUI
 import UIKit
 
-/// Product art is a reviewed Tapt cutout, never a raw source scene. The source
-/// photo remains attributed in the catalog for processing and audit, but hands,
-/// tables, packs, and cases cannot cross this customer-facing boundary.
+/// What a beer may show, in order of preference:
+///   1. a reviewed Tapt cutout (background removed, sits clean on the surface), else
+///   2. its real product photo from a trusted catalog source (Open Food Facts
+///      product front, Wikimedia Commons) -- a genuine label beats a generic glass, else
+///   3. the style-true glass (handled by the views).
+/// Cutouts stay the gold standard and marketing/share art is still cutout-only
+/// (approvedURL), so the strict customer-facing boundary is preserved where it
+/// matters; in-app browsing just no longer hides the real photos we already hold.
 enum BeerProductImagePolicy {
     private static let host = "qfwiizvqxrhjlthbjosz.supabase.co"
     private static let pathPrefix = "/storage/v1/object/public/beer-cutouts/"
+
+    // Trusted catalog photo sources. These are product-front databases, not
+    // arbitrary scene hosts, so an unreviewed shot here is still a clean label.
+    private static let sourceHosts: Set<String> = [
+        "images.openfoodfacts.org",
+        "upload.wikimedia.org",
+        "commons.wikimedia.org"
+    ]
 
     private static func isUUIDPNGPath(_ path: String) -> Bool {
         guard path.hasPrefix(pathPrefix) else { return false }
@@ -46,6 +59,31 @@ enum BeerProductImagePolicy {
     static func isApproved(_ value: String?) -> Bool {
         approvedURL(value) != nil
     }
+
+    /// A real product photo from a trusted catalog source (not a Tapt cutout).
+    static func approvedSourceURL(_ value: String?) -> URL? {
+        guard let value, !value.isEmpty,
+              let c = URLComponents(string: value),
+              c.scheme == "https",
+              let host = c.host, sourceHosts.contains(host),
+              c.user == nil, c.password == nil,
+              c.fragment == nil
+        else { return nil }
+        // Wikimedia's Special:FilePath has no extension (and a ?width= query);
+        // everything else must be a plain image path with no query string.
+        let isWikimedia = host.hasSuffix("wikimedia.org")
+        let path = c.path.lowercased()
+        let looksLikeImage = [".jpg", ".jpeg", ".png", ".webp"].contains { path.hasSuffix($0) }
+        guard isWikimedia || (c.query == nil && looksLikeImage) else { return nil }
+        return c.url
+    }
+
+    /// The URL a customer-facing product view should actually load: the reviewed
+    /// cutout if we have one, otherwise the real source photo. Views fall back to
+    /// the style glass only when this is nil.
+    static func displayURL(_ value: String?) -> URL? {
+        approvedURL(value) ?? approvedSourceURL(value)
+    }
 }
 
 /// Displays reviewed, background-removed product art or the canonical glass.
@@ -83,7 +121,7 @@ struct BeerImageView: View {
     private func load() async {
         display = nil
         loaded = false
-        guard let remoteURL = BeerProductImagePolicy.approvedURL(url) else {
+        guard let remoteURL = BeerProductImagePolicy.displayURL(url) else {
             loaded = true
             return
         }
