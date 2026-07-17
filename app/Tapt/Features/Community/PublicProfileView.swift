@@ -181,11 +181,23 @@ struct PublicProfileView: View {
     // MARK: follow
 
     private func followRow(_ card: ProfileCard) -> some View {
-        HStack(spacing: 10) {
-            countPill("\(card.followers)", "Followers")
-            countPill("\(card.following)", "Following")
-            Spacer(minLength: 8)
-            if !card.isSelf { followButton(card) }
+        let top = topEarnedBadges(card)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                countPill("\(card.followers)", "Followers")
+                countPill("\(card.following)", "Following")
+                // On your own passport the strip sits right beside the counts.
+                if card.isSelf, !top.isEmpty {
+                    HStack(spacing: 6) { ForEach(top) { miniMedal($0) } }
+                }
+                Spacer(minLength: 8)
+                if !card.isSelf { followButton(card) }
+            }
+            // On someone else's profile the Follow button owns the right edge,
+            // so the top-badge strip drops to its own line just below the counts.
+            if !card.isSelf, !top.isEmpty {
+                HStack(spacing: 6) { ForEach(top) { miniMedal($0) } }
+            }
         }
     }
 
@@ -273,8 +285,8 @@ struct PublicProfileView: View {
 
     // MARK: badges
 
-    private func badges(_ card: ProfileCard) -> some View {
-        let stats = PassportStats(
+    private func statsFor(_ card: ProfileCard) -> PassportStats {
+        PassportStats(
             pours: card.pours ?? 0,
             beers: card.beersCount,
             styles: card.stylesCount ?? 0,
@@ -292,6 +304,45 @@ struct PublicProfileView: View {
             belgian: card.belgian ?? 0,
             crisp: card.crisp ?? 0
         )
+    }
+
+    /// The five hardest badges this person has actually earned, ranked by tier
+    /// then threshold. This is their flex, shown up in the header.
+    private func topEarnedBadges(_ card: ProfileCard) -> [Badge] {
+        let stats = statsFor(card)
+        return PassportData.badges
+            .filter { $0.earned(stats) }
+            .sorted {
+                $0.tier.rawValue != $1.tier.rawValue
+                    ? $0.tier.rawValue > $1.tier.rawValue
+                    : $0.threshold > $1.threshold
+            }
+            .prefix(5).map { $0 }
+    }
+
+    /// Compact medal (glyph on a tier disc, no label) for the header strip.
+    private func miniMedal(_ badge: Badge) -> some View {
+        let tint: Color = {
+            switch badge.tier {
+            case .bronze: return Brand.copper
+            case .silver: return Color(hex: 0x8C97A8)
+            case .gold:   return Brand.gold
+            case .elite:  return Brand.hop
+            }
+        }()
+        return BadgeGlyph(badge: badge, ink: Brand.malt, accent: Brand.malt.opacity(0.28))
+            .frame(width: 17, height: 17)
+            .frame(width: 30, height: 30)
+            .background(
+                LinearGradient(colors: [tint, tint.opacity(0.72)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                in: Circle())
+            .overlay(Circle().stroke(.white.opacity(0.85), lineWidth: 1.5))
+            .accessibilityLabel("\(badge.title), earned")
+    }
+
+    private func badges(_ card: ProfileCard) -> some View {
+        let stats = statsFor(card)
         let earnedCount = PassportData.badges.filter { $0.earned(stats) }.count
         return VStack(alignment: .leading, spacing: 12) {
             HStack {

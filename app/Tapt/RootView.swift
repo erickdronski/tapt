@@ -22,6 +22,9 @@ struct RootView: View {
         #if DEBUG
         if ProcessInfo.processInfo.environment["TAPT_BADGE_GALLERY"] == "1" {
             BadgeGalleryView()
+        } else if ProcessInfo.processInfo.environment["TAPT_PUBLIC_PREVIEW"] == "1",
+                  let uid = session.user?.id.uuidString {
+            NavigationStack { PublicProfileView(userId: uid, initialName: "You") }
         } else {
             mainBody
         }
