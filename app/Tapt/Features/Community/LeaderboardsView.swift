@@ -13,6 +13,19 @@ struct LeaderboardsView: View {
     @State private var loadError: String?
     @AppStorage("noLowDefault") private var naOnly = false
 
+    /// Boards that actually have rows. Empty boards do not get tabs, empty
+    /// tabs do not get placeholder panels: surfaces exist only when the data
+    /// behind them does.
+    private var boardsWithData: [Board] {
+        Board.allCases.filter { b in
+            switch b {
+            case .beers: return !beers.isEmpty
+            case .tasters: return !tasters.isEmpty
+            case .styles: return !styles.isEmpty
+            }
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -26,7 +39,7 @@ struct LeaderboardsView: View {
                 )
                 .padding(.horizontal)
 
-                boardPicker
+                if boardsWithData.count > 1 { boardPicker }
 
                 if let loadError {
                     Button {
@@ -45,8 +58,16 @@ struct LeaderboardsView: View {
 
                 if loading && beers.isEmpty && tasters.isEmpty && styles.isEmpty {
                     TaptSkeletonList(rows: 6)
+                } else if boardsWithData.isEmpty {
+                    // One compact invitation instead of three placeholder panels.
+                    TaptEmptyState(
+                        icon: "trophy.fill",
+                        title: "The podium is open",
+                        message: "Boards build themselves from real pours and votes. Log a beer and be first on it.",
+                        actionTitle: nil
+                    )
                 } else {
-                    switch board {
+                    switch (boardsWithData.contains(board) ? board : boardsWithData[0]) {
                     case .beers: beersBoard
                     case .tasters: tastersBoard
                     case .styles: stylesBoard
@@ -64,7 +85,7 @@ struct LeaderboardsView: View {
 
     private var boardPicker: some View {
         HStack(spacing: 8) {
-            ForEach(Board.allCases) { b in
+            ForEach(boardsWithData) { b in
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { board = b }
                 } label: {

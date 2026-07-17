@@ -82,8 +82,13 @@ struct ExploreView: View {
                     BeerOfWeekCard().padding(.horizontal).reveal(appeared, 7)
                     // The thin regional "beer guide" was wasted space; a real local-scene
                     // module returns with the venue/local-data ingestion.
-                    regionPicker.reveal(appeared, 7)
-                    if showRegionBoardBanner { regionBoardBanner.reveal(appeared, 8) }
+                    // Region chips only exist once a second real board exists.
+                    // A lone "Global" chip is dead space, so it renders nothing
+                    // until regional activity creates an actual choice.
+                    if regions.count > 1 {
+                        regionPicker.reveal(appeared, 7)
+                        if showRegionBoardBanner { regionBoardBanner.reveal(appeared, 8) }
+                    }
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
                     } else {
