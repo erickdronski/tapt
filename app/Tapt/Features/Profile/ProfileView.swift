@@ -157,6 +157,21 @@ struct ProfileView: View {
                     } footer: {
                         Text("Your votes count on the Beer Market. Your notes are private to you.")
                     }
+
+                    Section {
+                        NavigationLink { WeeklyPicksView() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "sparkles").foregroundStyle(Brand.copper)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Your weekly picks").font(.system(.subheadline, design: .rounded).weight(.bold))
+                                    Text("Every beer we picked for you, week by week")
+                                        .font(.caption).foregroundStyle(Brand.muted)
+                                }
+                            }
+                        }
+                    } footer: {
+                        Text("Missed a week? Your past picks wait here for the next time you are out.")
+                    }
                 }
 
                 Section("Appearance") {

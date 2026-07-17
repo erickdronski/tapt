@@ -592,7 +592,10 @@ struct ExploreView: View {
     /// genuinely personal.
     private func loadRecommendation() async {
         guard let uid = session.user?.id else { return }
-        recommendation = try? await RecommendationService.pick(userId: uid)
+        // Weekly-stable pick: the same beer all week (logged to the profile),
+        // recomputed each new week from the user's latest taste. No more churn
+        // on every open.
+        recommendation = try? await RecommendationService.weeklyPick(userId: uid)
     }
 
     private func loadTicker() async {
