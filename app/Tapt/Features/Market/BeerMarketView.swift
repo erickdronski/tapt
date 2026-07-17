@@ -15,31 +15,31 @@ struct BeerMarketView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    Section {
-                        boardHeader
-                        if loading && beers.isEmpty {
-                            TaptSkeletonList(rows: 8).padding(.top, 6)
-                        } else if beers.isEmpty {
-                            marketEmptyState
-                        } else {
-                            ForEach(Array(beers.enumerated()), id: \.element.id) { i, b in
-                                Button { Haptic.tap(); selected = b } label: { row(rank: i + 1, b) }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel(rowAccessibilityLabel(rank: i + 1, beer: b))
-                                    .accessibilityHint("Opens beer details")
-                                Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 60)
-                            }
-                            footer
+                LazyVStack(spacing: 0) {
+                    boardHeader
+                    if loading && beers.isEmpty {
+                        TaptSkeletonList(rows: 8).padding(.top, 6)
+                    } else if beers.isEmpty {
+                        marketEmptyState
+                    } else {
+                        ForEach(Array(beers.enumerated()), id: \.element.id) { i, b in
+                            Button { Haptic.tap(); selected = b } label: { row(rank: i + 1, b) }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(rowAccessibilityLabel(rank: i + 1, beer: b))
+                                .accessibilityHint("Opens beer details")
+                            Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 60)
                         }
-                    } header: {
-                        tickerBar
+                        footer
                     }
                 }
             }
             .background(Brand.background)
-            .navigationTitle("Beer Market")
-            .navigationBarTitleDisplayMode(.inline)
+            // The tape is a fixed top bar whose malt band bleeds through the
+            // status bar, covering the top of the phone. It replaces the nav
+            // chrome (the board carries the screen title), so nothing scrolls
+            // behind a translucent bar anymore.
+            .safeAreaInset(edge: .top, spacing: 0) { tickerBar }
+            .toolbar(.hidden, for: .navigationBar)
             .task(id: naOnly) { await load() }
             .refreshable { await load() }
             .sheet(item: $selected) { b in
@@ -55,9 +55,10 @@ struct BeerMarketView: View {
         if !items.isEmpty {   // hide the ticker band entirely on a fresh/empty board
             VStack(spacing: 0) {
                 MarketTicker(items: items) { b in Haptic.tap(); selected = b }
-                    .background(Brand.malt)
                 Rectangle().fill(Brand.gold.opacity(0.5)).frame(height: 1.5)
             }
+            // Opaque malt band, bled up through the status bar to cover the phone top.
+            .background(Brand.malt.ignoresSafeArea(edges: .top))
         }
     }
 

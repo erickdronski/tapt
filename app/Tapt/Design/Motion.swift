@@ -177,7 +177,10 @@ struct StyleGlassTint {
 
 struct BeerGlassView: View {
     var pour: CGFloat = 0.8          // 0...1 fill level
-    var animatesPour: Bool = true
+    // Static by default: the glass is simply THERE on load, already full, so it
+    // never appears half-broken with foam floating over an empty glass while a
+    // screen settles. Only the pour celebration opts in to the fill animation.
+    var animatesPour: Bool = false
     /// Optional beer style; tints the pour to the style's real color family.
     var style: String? = nil
 

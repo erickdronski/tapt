@@ -44,7 +44,7 @@ struct BeerDetailView: View {
                     } else {
                         signInCard
                     }
-                    if !d.awards.isEmpty { awardsCard(d.awards) }
+                    if !d.awards.isEmpty { awardsCard(d.awards, name: d.name) }
                     if d.styleName != nil { styleScience(d) }
                     if !d.sensory.isEmpty || d.styleFlavorNotes != nil { tasteCard(d) }
                     if let ing = d.styleIngredients, !ing.isEmpty { ingredientsCard(ing) }
@@ -430,52 +430,66 @@ struct BeerDetailView: View {
 
     // MARK: - Awards (verified, cited)
 
-    private func awardsCard(_ awards: [BeerDetail.Award]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Decorated", systemImage: "medal.fill")
-                .font(.system(.headline, design: .rounded).weight(.bold))
-                .foregroundStyle(Brand.text)
-            ForEach(awards) { award in
-                HStack(alignment: .top, spacing: 10) {
-                    Text(award.medalEmoji).font(.title3)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text([award.medalLabel,
-                              award.awardBody == "Tapt" ? nil : award.awardBody,
-                              award.year.map(String.init)]
-                            .compactMap { $0 }.joined(separator: " · "))
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
-                            .foregroundStyle(Brand.text)
-                        if let category = award.category {
-                            Text(category).font(.caption).foregroundStyle(Brand.muted)
-                        }
-                        if award.medal == "tapt_favorite" {
-                            Text(award.region.map { "Tapt poured it in \($0), and loved it." } ?? "We were here. We poured it. We loved it.")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Brand.copper)
-                        } else if let note = award.note {
-                            Text(note).font(.caption).foregroundStyle(Brand.muted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+    /// Awards ordered by prestige so the collapsed tile always shows the best
+    /// three first: gold, then Tapt's Favorite, then silver, bronze, newest year up.
+    private func rankedAwards(_ awards: [BeerDetail.Award]) -> [BeerDetail.Award] {
+        func rank(_ m: String) -> Int {
+            switch m {
+            case "gold": return 0
+            case "tapt_favorite": return 1
+            case "silver": return 2
+            case "bronze": return 3
+            default: return 4
+            }
+        }
+        return awards.sorted {
+            if rank($0.medal) != rank($1.medal) { return rank($0.medal) < rank($1.medal) }
+            return ($0.year ?? 0) > ($1.year ?? 0)
+        }
+    }
+
+    /// Collapsed awards tile: only the top three medals, then a "See all" that
+    /// opens the full decorated page. Keeps a heavily-awarded beer from burying
+    /// the rest of the page under a wall of medals.
+    private func awardsCard(_ awards: [BeerDetail.Award], name: String) -> some View {
+        let ranked = rankedAwards(awards)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Decorated", systemImage: "medal.fill")
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text)
+                Spacer()
+                Text("\(awards.count)")
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Brand.gold, in: Capsule())
+            }
+            ForEach(ranked.prefix(3)) { award in awardRow(award) }
+            if ranked.count > 3 {
+                NavigationLink {
+                    BeerAwardsListView(beerName: name, awards: ranked)
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("See all \(awards.count) awards")
+                        Image(systemName: "chevron.right")
                     }
-                    Spacer(minLength: 0)
-                    if let src = award.sourceUrl, let url = URL(string: src) {
-                        Link(destination: url) {
-                            Image(systemName: "link.circle.fill")
-                                .font(.title3).foregroundStyle(Brand.muted)
-                        }
-                    }
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.copper)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Brand.gold.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                 }
-                .padding(10)
-                .background(
-                    (award.medal == "tapt_favorite" ? Brand.copper : Brand.gold).opacity(0.1),
-                    in: RoundedRectangle(cornerRadius: 12)
-                )
+                .buttonStyle(.plain)
             }
         }
         .padding(16)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.35)))
     }
+
+    /// One award row, shared by the collapsed tile and the full decorated page.
+    func awardRow(_ award: BeerDetail.Award) -> some View { AwardRowView(award: award) }
 
     // MARK: - Style science (BJCP)
 
@@ -924,6 +938,71 @@ enum BeerNoteService {
     static func save(_ beerId: String, note: String) async throws {
         struct P: Encodable { let p_beer: String; let p_note: String }
         try await Supa.authedRPCVoid("save_beer_note", params: P(p_beer: beerId, p_note: note))
+    }
+}
+
+/// One decorated-award row. Shared by the collapsed tile on the beer page and
+/// the full "See all awards" page, so both read identically.
+struct AwardRowView: View {
+    let award: BeerDetail.Award
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text(award.medalEmoji).font(.title3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text([award.medalLabel,
+                      award.awardBody == "Tapt" ? nil : award.awardBody,
+                      award.year.map(String.init)]
+                    .compactMap { $0 }.joined(separator: " · "))
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.text)
+                if let category = award.category {
+                    Text(category).font(.caption).foregroundStyle(Brand.muted)
+                }
+                if award.medal == "tapt_favorite" {
+                    Text(award.region.map { "Tapt poured it in \($0), and loved it." } ?? "We were here. We poured it. We loved it.")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Brand.copper)
+                } else if let note = award.note {
+                    Text(note).font(.caption).foregroundStyle(Brand.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 0)
+            if let src = award.sourceUrl, let url = URL(string: src) {
+                Link(destination: url) {
+                    Image(systemName: "link.circle.fill")
+                        .font(.title3).foregroundStyle(Brand.muted)
+                }
+            }
+        }
+        .padding(10)
+        .background(
+            (award.medal == "tapt_favorite" ? Brand.copper : Brand.gold).opacity(0.1),
+            in: RoundedRectangle(cornerRadius: 12)
+        )
+    }
+}
+
+/// The full decorated page: every medal a beer has won, opened from "See all".
+struct BeerAwardsListView: View {
+    let beerName: String
+    let awards: [BeerDetail.Award]
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(beerName)
+                    .font(.system(.title3, design: .rounded).weight(.heavy))
+                    .foregroundStyle(Brand.text)
+                Text("\(awards.count) awards on record")
+                    .font(.caption).foregroundStyle(Brand.muted)
+                    .padding(.bottom, 4)
+                ForEach(awards) { award in AwardRowView(award: award) }
+            }
+            .padding()
+        }
+        .background(Brand.background)
+        .navigationTitle("Decorated")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

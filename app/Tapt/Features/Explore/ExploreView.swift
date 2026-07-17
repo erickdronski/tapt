@@ -71,7 +71,6 @@ struct ExploreView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    marketTickerBar.reveal(appeared, 0)
                     exploreHeader.reveal(appeared, 0)
                     hero.reveal(appeared, 1)
                     scanTile.reveal(appeared, 2)
@@ -94,6 +93,10 @@ struct ExploreView: View {
                 .padding(.bottom)
             }
             .background(Brand.background)
+            // The live tape is a fixed top bar, not a scrolling row. Its malt
+            // band bleeds up through the status bar so it fully covers the top
+            // of the phone -- no page content ever shows behind it.
+            .safeAreaInset(edge: .top, spacing: 0) { marketTickerBar }
             .overlay(alignment: .bottom) { voteToast }
             .taptCelebration($celebration)
             .toolbar(.hidden, for: .navigationBar)
@@ -185,9 +188,11 @@ struct ExploreView: View {
         if !ticker.isEmpty {
             VStack(spacing: 0) {
                 MarketTicker(items: ticker) { b in Haptic.tap(); tickerBeer = b }
-                    .background(Brand.malt)
                 Rectangle().fill(Brand.gold.opacity(0.5)).frame(height: 1.5)
             }
+            // Solid malt band that bleeds up through the status bar, so the tape
+            // covers the very top of the phone and nothing shows behind it.
+            .background(Brand.malt.ignoresSafeArea(edges: .top))
         }
     }
 
