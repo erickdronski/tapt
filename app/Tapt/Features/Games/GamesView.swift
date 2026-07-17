@@ -1,54 +1,65 @@
 import SwiftUI
 
-/// Games hub. Presented inside Discover's NavigationStack.
+/// Games hub. Presented inside Discover's NavigationStack. A vibrant grid so it
+/// reads like a real arcade (GamePigeon energy), Beer Olympics featured up top.
 struct GamesView: View {
+    private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                NavigationLink { DartsGame() } label: {
-                    GameTile(title: "Darts", subtitle: "Flick to throw. Real aim, real scatter, pass-and-play.", icon: "scope", tint: Brand.copper, ready: true)
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Game Night")
+                        .font(.system(size: 34, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Brand.text)
+                    Text("Pick a game, pass the phone. Real physics, real trivia, all free.")
+                        .font(.subheadline).foregroundStyle(Brand.muted)
                 }
-                .buttonStyle(.taptPress)
-                NavigationLink { ConnectFourGame() } label: {
-                    GameTile(title: "Connect 4", subtitle: "Gravity drops, four in a row, table bragging rights.", icon: "circle.grid.3x3.fill", tint: Brand.gold, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { TriviaGame(title: "Daily 5", questionLimit: 5, category: .mixed) } label: {
-                    GameTile(title: "Daily 5", subtitle: "A quick five-question run from the beer world.", icon: "calendar.badge.clock", tint: Brand.hop, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { TriviaGame() } label: {
-                    GameTile(title: "Trivia", subtitle: "Beer, pop culture, wild facts, general. Pick your topic.", icon: "brain.head.profile", tint: Brand.gold, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { CardDeckGame() } label: {
-                    GameTile(title: "Tapt Deck", subtitle: "A house-built card game for the table. Free.", icon: "rectangle.on.rectangle.angled", tint: Brand.hop, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { BeerPongGame() } label: {
-                    GameTile(title: "Beer Pong", subtitle: "Flick to throw. Real arc physics, clear the rack, pass-and-play.", icon: "circle.grid.cross.fill", tint: Brand.gold, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { FlipCupGame() } label: {
-                    GameTile(title: "Flip Cup", subtitle: "Flick to flip. Nail the spin, land it on the base, chase your streak.", icon: "cup.and.saucer.fill", tint: Brand.hop, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { QuartersGame() } label: {
-                    GameTile(title: "Quarters", subtitle: "Flick to bounce the coin into the cup. Aim and power, cup moves each round.", icon: "circle.hexagongrid.fill", tint: Brand.copper, ready: true)
-                }
-                .buttonStyle(.taptPress)
-                NavigationLink { BreweryModeView() } label: {
-                    GameTile(title: "Beer Night Mode", subtitle: "Round roulette plus games for the whole table.", icon: "person.3.fill", tint: Brand.copper, ready: true)
-                }
-                .buttonStyle(.taptPress)
+                .padding(.horizontal, 2)
+
+                // The big one, featured full width.
                 NavigationLink { BeerOlympicsView() } label: {
-                    GameTile(title: "Beer Olympics", subtitle: "Teams, events, medal table, champion. The big one.", icon: "trophy.fill", tint: Brand.gold, ready: true)
+                    FeaturedGameCard(
+                        title: "Beer Olympics",
+                        tag: "Teams, events, medal table, a champion. The big one.",
+                        icon: "trophy.fill",
+                        colors: [Color(hex: 0xE0A64B), Brand.copper])
                 }
                 .buttonStyle(.taptPress)
-                NavigationLink { GameNightGuidesView() } label: {
-                    GameTile(title: "Game Night Guides", subtitle: "Classic card + no-prop games, explained in a minute. Real deck or no props.", icon: "book.fill", tint: Brand.hop, ready: true)
+
+                sectionLabel("Flick & aim")
+                LazyVGrid(columns: cols, spacing: 14) {
+                    gameCard("Darts", "Real aim & scatter", "scope",
+                             [Brand.copper, Color(hex: 0x7E2A1B)]) { DartsGame() }
+                    gameCard("Beer Pong", "Real arc physics", "circle.grid.cross.fill",
+                             [Brand.gold, Brand.copper]) { BeerPongGame() }
+                    gameCard("Flip Cup", "Nail the spin", "cup.and.saucer.fill",
+                             [Brand.hop, Color(hex: 0x2E7D5B)]) { FlipCupGame() }
+                    gameCard("Quarters", "Bounce it in", "circle.hexagongrid.fill",
+                             [Brand.copper, Color(hex: 0x6B4A2A)]) { QuartersGame() }
                 }
-                .buttonStyle(.taptPress)
+
+                sectionLabel("Brain")
+                LazyVGrid(columns: cols, spacing: 14) {
+                    gameCard("Trivia", "Pick your topic", "brain.head.profile",
+                             [Color(hex: 0x3E6DB5), Color(hex: 0x243F6E)]) { TriviaGame() }
+                    gameCard("Daily 5", "Five quick ones", "calendar.badge.clock",
+                             [Brand.hop, Color(hex: 0x2E7D5B)]) {
+                        TriviaGame(title: "Daily 5", questionLimit: 5, category: .mixed)
+                    }
+                }
+
+                sectionLabel("Around the table")
+                LazyVGrid(columns: cols, spacing: 14) {
+                    gameCard("Connect 4", "Four in a row", "circle.grid.3x3.fill",
+                             [Brand.gold, Color(hex: 0xC77E2E)]) { ConnectFourGame() }
+                    gameCard("Tapt Deck", "House card game", "rectangle.on.rectangle.angled",
+                             [Color(hex: 0x7A4FB0), Color(hex: 0x4A2E80)]) { CardDeckGame() }
+                    gameCard("Beer Night", "Round roulette", "person.3.fill",
+                             [Brand.copper, Color(hex: 0x8A5A2E)]) { BreweryModeView() }
+                    gameCard("Guides", "Learn in a minute", "book.fill",
+                             [Color(hex: 0x4C6A57), Color(hex: 0x2E4136)]) { GameNightGuidesView() }
+                }
 
                 Label(GameGuidesData.safetyLine, systemImage: "hand.raised.fill")
                     .font(.caption)
@@ -56,6 +67,7 @@ struct GamesView: View {
                     .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Brand.surface.opacity(0.7), in: RoundedRectangle(cornerRadius: 13))
+                    .padding(.top, 4)
             }
             .padding()
         }
@@ -63,39 +75,90 @@ struct GamesView: View {
         .navigationTitle("Games")
         .navigationBarTitleDisplayMode(.inline)
     }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(.system(.caption, design: .rounded).weight(.heavy))
+            .foregroundStyle(Brand.muted)
+            .tracking(1.2)
+            .padding(.top, 4).padding(.horizontal, 2)
+    }
+
+    private func gameCard<D: View>(_ title: String, _ tag: String, _ icon: String,
+                                   _ colors: [Color],
+                                   @ViewBuilder destination: @escaping () -> D) -> some View {
+        NavigationLink { destination() } label: {
+            GameCard(title: title, tag: tag, icon: icon, colors: colors)
+        }
+        .buttonStyle(.taptPress)
+    }
 }
 
-private struct GameTile: View {
+/// A vibrant square game tile: gradient field, white glyph, name + one-line tag.
+private struct GameCard: View {
     let title: String
-    let subtitle: String
+    let tag: String
     let icon: String
-    let tint: Color
-    let ready: Bool
+    let colors: [Color]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Image(systemName: icon)
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.18), radius: 3, y: 2)
+            Spacer(minLength: 12)
+            Text(title)
+                .font(.system(.headline, design: .rounded).weight(.heavy))
+                .foregroundStyle(.white)
+            Text(tag)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white.opacity(0.85))
+                .lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .padding(15)
+        .frame(height: 132, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.12), lineWidth: 1))
+        .shadow(color: (colors.last ?? .black).opacity(0.35), radius: 9, y: 5)
+    }
+}
+
+/// The featured hero card (wider, taller) for the flagship game.
+private struct FeaturedGameCard: View {
+    let title: String
+    let tag: String
+    let icon: String
+    let colors: [Color]
 
     var body: some View {
         HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 28))
-                .foregroundStyle(Brand.malt)
-                .frame(width: 60, height: 60)
-                .background(tint, in: RoundedRectangle(cornerRadius: 15))
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
-                Text(subtitle).font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.leading)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("FEATURED")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.85)).tracking(1.5)
+                Text(title)
+                    .font(.system(size: 26, weight: .heavy, design: .rounded))
+                    .foregroundStyle(.white)
+                Text(tag)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-            if ready {
-                Image(systemName: "chevron.right").foregroundStyle(Brand.muted)
-            } else {
-                Text("SOON").font(.caption2.weight(.bold)).foregroundStyle(Brand.muted)
-                    .padding(.horizontal, 8).padding(.vertical, 4)
-                    .background(Brand.haze, in: Capsule())
-            }
+            Image(systemName: icon)
+                .font(.system(size: 52, weight: .bold))
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.2), radius: 5, y: 3)
         }
-        .padding(16)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Brand.surface, in: RoundedRectangle(cornerRadius: 20))
-        .opacity(ready ? 1 : 0.75)
+        .background(LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing))
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(.white.opacity(0.14), lineWidth: 1))
+        .shadow(color: (colors.last ?? .black).opacity(0.4), radius: 12, y: 7)
     }
 }
 
