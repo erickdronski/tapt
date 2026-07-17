@@ -54,11 +54,16 @@ struct BadgeSticker: View {
                         .blur(radius: 0.6)
                 }
 
-                Text(badge.emoji)
-                    .font(.system(size: size * 0.42))
-                    .grayscale(earned ? 0 : 1)
-                    .opacity(earned ? 1 : 0.4)
-                    .shadow(color: earned ? .black.opacity(0.18) : .clear, radius: 1, y: 1)
+                // Custom Tapt-drawn glyph, not emoji. Inked dark on earned
+                // (color comes from the tier disc), muted on locked.
+                BadgeGlyph(
+                    badge: badge,
+                    ink: earned ? Brand.malt : Brand.muted.opacity(0.6),
+                    accent: earned ? Brand.malt.opacity(0.28) : Brand.muted.opacity(0.18)
+                )
+                .frame(width: size * 0.6, height: size * 0.6)
+                .opacity(earned ? 1 : 0.75)
+                .shadow(color: earned ? .black.opacity(0.14) : .clear, radius: 0.5, y: 0.5)
             }
             .frame(width: size, height: size)
 

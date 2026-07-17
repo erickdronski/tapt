@@ -19,6 +19,19 @@ struct RootView: View {
     }
 
     var body: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["TAPT_BADGE_GALLERY"] == "1" {
+            BadgeGalleryView()
+        } else {
+            mainBody
+        }
+        #else
+        mainBody
+        #endif
+    }
+
+    @ViewBuilder
+    private var mainBody: some View {
         tabShell
         .onAppear {
             #if targetEnvironment(simulator)
