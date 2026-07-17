@@ -80,15 +80,9 @@ struct ExploreView: View {
                     if let recommendation { PickedForYouCard(beer: recommendation).reveal(appeared, 5) }
                     if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 6) }
                     BeerOfWeekCard().padding(.horizontal).reveal(appeared, 7)
-                    // The thin regional "beer guide" was wasted space; a real local-scene
-                    // module returns with the venue/local-data ingestion.
-                    // Region chips only exist once a second real board exists.
-                    // A lone "Global" chip is dead space, so it renders nothing
-                    // until regional activity creates an actual choice.
-                    if regions.count > 1 {
-                        regionPicker.reveal(appeared, 7)
-                        if showRegionBoardBanner { regionBoardBanner.reveal(appeared, 8) }
-                    }
+                    // State and country boards are off until we have real
+                    // regional activity. The board is worldwide-only for now,
+                    // so there is no region picker and nothing to relabel.
                     if loading && beers.isEmpty {
                         TaptSkeletonList(rows: 5)
                     } else {
@@ -104,11 +98,11 @@ struct ExploreView: View {
             .taptCelebration($celebration)
             .toolbar(.hidden, for: .navigationBar)
             .onAppear {
-                if region.isEmpty { region = homeRegion }
+                // Worldwide-only board for now: no state/country switching.
+                region = "Global"
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }
             .task(id: region) { await load() }
-            .task { await loadBoardRegions() }
             .task { await loadGuides() }
             .task { await hydrateTastePreferences() }
             .task { await detectHomeState() }
@@ -153,7 +147,7 @@ struct ExploreView: View {
     private var heroPanel: some View {
         TaptHeroPanel(
             title: heroBeer?.name ?? "Your beer radar",
-            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") in \(dataRegion)." }
+            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") \(dataRegion == "Global" ? "worldwide" : "in \(dataRegion)")." }
                 ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
                 ?? "Browse real beers and cast the vote that starts the board.",
             metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "EXPLORE",
@@ -649,7 +643,8 @@ struct ExploreView: View {
             }
             homeRegionGeocoded = true
             homeRegion = detected
-            withAnimation { region = detected }
+            // Profile region is recorded for later, but the visible board stays
+            // worldwide until state/country boards ship with real data.
         }
     }
 
