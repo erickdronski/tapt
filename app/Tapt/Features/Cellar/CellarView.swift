@@ -200,22 +200,54 @@ struct CellarView: View {
             .padding(.horizontal)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(ordered, id: \.name) { c in
+                    ForEach(Array(ordered.enumerated()), id: \.element.name) { i, c in
                         let on = visited.contains(c.name)
-                        VStack(spacing: 4) {
-                            Text(c.flag).font(.title3).grayscale(on ? 0 : 1).opacity(on ? 1 : 0.45)
-                            Text(c.name).font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(on ? Brand.text : Brand.muted)
-                                .lineLimit(1)
-                        }
-                        .frame(width: 58, height: 52)
-                        .background((on ? Brand.gold.opacity(0.14) : Brand.surface), in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke((on ? Brand.gold : Brand.malt).opacity(on ? 0.5 : 0.08)))
+                        countryStamp(c, visited: on, index: i)
                     }
                 }
                 .padding(.horizontal)
             }
         }
+    }
+
+    /// A visited country renders as an inked passport stamp: double ring,
+    /// dashed seal, a slight hand-pressed rotation that is deterministic per
+    /// country (stable across launches, no randomness). Unvisited countries
+    /// are faint outlines waiting for ink. Only real pours stamp a page.
+    private func countryStamp(_ c: (name: String, flag: String), visited on: Bool, index: Int) -> some View {
+        let tilt = Double((index * 7) % 11) - 5.0   // -5..+5 degrees, stable
+        return VStack(spacing: 3) {
+            Text(c.flag).font(.title3)
+                .grayscale(on ? 0 : 1).opacity(on ? 1 : 0.4)
+            Text(c.name.uppercased())
+                .font(.system(size: 7.5, weight: .heavy, design: .rounded))
+                .tracking(0.5)
+                .foregroundStyle(on ? Brand.copper : Brand.muted)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if on {
+                Text("TAPT")
+                    .font(.system(size: 5.5, weight: .black, design: .rounded))
+                    .tracking(1.6)
+                    .foregroundStyle(Brand.copper.opacity(0.85))
+            }
+        }
+        .padding(.horizontal, 5)
+        .frame(width: 64, height: 60)
+        .background(on ? Brand.copper.opacity(0.07) : Brand.surface, in: Circle())
+        .overlay {
+            if on {
+                Circle().stroke(Brand.copper.opacity(0.75), lineWidth: 1.6)
+                Circle().inset(by: 3.5)
+                    .stroke(Brand.copper.opacity(0.55),
+                            style: StrokeStyle(lineWidth: 1, dash: [2.5, 2.5]))
+            } else {
+                Circle().stroke(Brand.malt.opacity(0.14),
+                                style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+            }
+        }
+        .rotationEffect(.degrees(on ? tilt : 0))
+        .padding(.vertical, 3)
     }
 
     private func currentValue(for metric: BadgeMetric) -> Int { stats.value(for: metric) }
