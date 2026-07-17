@@ -1,0 +1,12 @@
+-- Market physics, the downside + full explainability. Applied to prod
+-- 2026-07-16 (full function bodies in prod migration history, same name).
+--
+-- 1) beer_market_standing.drift_pts: silence costs altitude. days_quiet =
+--    days since last vote/pour (never engaged = days since first board
+--    appearance). 14-day grace, then -2 per quiet week, capped at -15 so
+--    legends cool but never vanish. Uniform for every beer; any engagement
+--    resets it. standing = greatest(1, 6 + season + awards + notability +
+--    activity - drift). Reason surfaces as 'Quiet lately, cooling off'.
+-- 2) beer_market_one() now also returns season_pts, award_pts,
+--    notability_pts, vote_pts, drift_pts so the beer page renders the
+--    "WHY THIS STANDING" breakdown: every point on the board is explainable.

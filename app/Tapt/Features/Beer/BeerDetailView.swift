@@ -227,7 +227,26 @@ struct BeerDetailView: View {
                 marketStat("Total votes", "\(m.votes)")
                 marketStat("Votes 24h", "\(m.volume)")
             }
-            Text("Moves on what people are drinking and rating lately, plus real awards and what's in season. No money, no trading, not a financial product.")
+            let breakdown = standingBreakdown(m)
+            if !breakdown.isEmpty {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("WHY THIS STANDING")
+                        .font(.caption2.weight(.heavy)).tracking(0.6)
+                        .foregroundStyle(Brand.muted)
+                    ForEach(breakdown, id: \.0) { row in
+                        HStack {
+                            Text(row.0).font(.caption).foregroundStyle(Brand.text.opacity(0.85))
+                            Spacer()
+                            Text(row.1)
+                                .font(.system(.caption, design: .monospaced).weight(.bold))
+                                .foregroundStyle(row.1.hasPrefix("-") ? Brand.copper : Brand.hop)
+                        }
+                    }
+                }
+                .padding(10)
+                .background(Brand.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+            }
+            Text("Moves on what people are drinking and rating lately, plus real awards and what's in season. Beers nobody touches cool off over time. No money, no trading, not a financial product.")
                 .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)
@@ -300,6 +319,18 @@ struct BeerDetailView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
+    }
+
+    /// Every point on the board is explainable. Rows only appear for real,
+    /// nonzero components; nothing is invented to fill the panel.
+    private func standingBreakdown(_ m: MarketBeer) -> [(String, String)] {
+        var rows: [(String, String)] = []
+        if let s = m.seasonPts, s > 0 { rows.append(("In season for this style", "+\(s)")) }
+        if let a = m.awardPts, a > 0 { rows.append(("Real medal record", "+\(a)")) }
+        if let n = m.notabilityPts, n > 0 { rows.append(("Catalog completeness", "+\(n)")) }
+        if let v = m.votePts, v > 0 { rows.append(("Recent votes and pours", "+\(v)")) }
+        if let q = m.driftPts, q > 0 { rows.append(("Quiet lately", "-\(q)")) }
+        return rows
     }
 
     private func beerPick(_ d: BeerDetail) -> BeerPick {

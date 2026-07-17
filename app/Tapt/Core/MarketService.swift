@@ -30,6 +30,14 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     /// 0-100 trending intensity relative to the hottest beer on the board right now.
     /// Drives the ticker/board pulse so a surge in global sentiment is impossible to miss.
     let heat: Int
+    // Standing components (returned by beer_market_one only; nil on the lean
+    // board feed). These power the "why this standing" breakdown on the beer
+    // page: every point on the board is explainable, nothing is invented.
+    var seasonPts: Int? = nil
+    var awardPts: Int? = nil
+    var notabilityPts: Int? = nil
+    var votePts: Int? = nil
+    var driftPts: Int? = nil
 
     var id: String { beerId }
     var isUp: Bool { change > 0 }
@@ -59,6 +67,11 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
         case imageUrl = "image_url"
         case isNaLow = "is_na_low"
         case seasonFit = "season_fit"
+        case seasonPts = "season_pts"
+        case awardPts = "award_pts"
+        case notabilityPts = "notability_pts"
+        case votePts = "vote_pts"
+        case driftPts = "drift_pts"
     }
 }
 
