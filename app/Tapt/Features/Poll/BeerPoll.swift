@@ -7,6 +7,7 @@ import SwiftUI
 /// off to the leaderboard. Shown on app open when there is something to vote on.
 struct BeerPollSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(Session.self) private var session
     var onSeeLeaderboard: () -> Void = {}
 
     @State private var queue: [(period: PollPeriod, cand: PollCandidate)] = []
@@ -38,9 +39,10 @@ struct BeerPollSheet: View {
     }
 
     private func build() async {
+        guard let uid = session.user?.id else { await MainActor.run { loaded = true }; return }
         var q: [(PollPeriod, PollCandidate)] = []
         for period in PollPeriod.allCases {
-            for c in await BeerPollService.candidates(period) where c.myVote == nil {
+            for c in await BeerPollService.candidates(period, userId: uid) where c.myVote == nil {
                 q.append((period, c))
             }
         }
@@ -117,12 +119,12 @@ struct BeerPollSheet: View {
     }
 
     private func vote(_ value: Int) {
-        guard index < queue.count, !voting else { return }
+        guard index < queue.count, !voting, let uid = session.user?.id else { return }
         let item = queue[index]
         voting = true
         if value == 1 { Haptic.success() } else { Haptic.tap() }
         Task {
-            await BeerPollService.cast(item.period, beer: item.cand.beerId, vote: value)
+            await BeerPollService.cast(item.period, beer: item.cand.beerId, vote: value, userId: uid)
             await MainActor.run {
                 voting = false
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { index += 1 }

@@ -108,25 +108,28 @@ struct PollPending: Decodable, Sendable {
 enum BeerPollService {
     private struct PeriodParam: Encodable, Sendable { let p_period: String }
     private struct PeriodLimit: Encodable, Sendable { let p_period: String; let p_limit: Int }
-    private struct CastParam: Encodable, Sendable { let p_period: String; let p_beer: String; let p_vote: Int }
+    private struct CandParam: Encodable, Sendable { let p_period: String; let p_limit: Int; let p_user: String }
+    private struct CastParam: Encodable, Sendable { let p_period: String; let p_beer: String; let p_vote: Int; let p_user: String }
+    private struct UserParam: Encodable, Sendable { let p_user: String }
     private struct BeerParam: Encodable, Sendable { let p_beer: String }
-    private struct Empty: Encodable, Sendable {}
 
     /// Candidates for a period: the live top of the Beer Market, plus my vote.
-    static func candidates(_ period: PollPeriod, limit: Int = 5) async -> [PollCandidate] {
+    /// p_user mirrors recommend_beer so my_vote resolves under the sim's shim too.
+    static func candidates(_ period: PollPeriod, userId: UUID, limit: Int = 5) async -> [PollCandidate] {
         (try? await Supa.authedRPC("beer_poll_candidates",
-            params: PeriodLimit(p_period: period.rawValue, p_limit: limit))) ?? []
+            params: CandParam(p_period: period.rawValue, p_limit: limit, p_user: userId.uuidString))) ?? []
     }
 
     /// Which periods still have candidates this drinker has not voted on.
-    static func pendingPeriods() async -> [PollPending] {
-        (try? await Supa.authedRPC("beer_poll_pending_periods", params: Empty())) ?? []
+    static func pendingPeriods(userId: UUID) async -> [PollPending] {
+        (try? await Supa.authedRPC("beer_poll_pending_periods",
+            params: UserParam(p_user: userId.uuidString))) ?? []
     }
 
     /// Cast up (1), down (-1), or skip (0) for the current period.
-    static func cast(_ period: PollPeriod, beer: String, vote: Int) async {
+    static func cast(_ period: PollPeriod, beer: String, vote: Int, userId: UUID) async {
         try? await Supa.authedRPCVoid("beer_poll_cast",
-            params: CastParam(p_period: period.rawValue, p_beer: beer, p_vote: vote))
+            params: CastParam(p_period: period.rawValue, p_beer: beer, p_vote: vote, p_user: userId.uuidString))
     }
 
     /// Live standings for the current period.

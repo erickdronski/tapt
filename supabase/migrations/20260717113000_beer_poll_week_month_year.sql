@@ -88,7 +88,10 @@ create policy beer_poll_vote_self_update on public.beer_poll_vote
 -- Candidates for a period: the live top-5 of the Beer Market, globally, with
 -- the caller's current vote (null = not yet voted).
 -- ---------------------------------------------------------------------------
-create or replace function public.beer_poll_candidates(p_period text, p_limit int default 5)
+-- p_user mirrors recommend_beer/weekly_pick: coalesce(auth.uid(), p_user) so the
+-- vote flow works from the simulator's shimmed session too (on a real signed
+-- device auth.uid() always wins, so the fallback never applies -- no vote fraud).
+create or replace function public.beer_poll_candidates(p_period text, p_limit int default 5, p_user uuid default null)
 returns table(
   beer_id uuid, name text, style text, brewery_name text,
   country text, label_image_url text, standing int, my_vote int
@@ -99,7 +102,7 @@ language sql stable security definer set search_path to 'public' as $$
   from public.beer_market_standing s
   left join public.beer_poll_vote v
     on v.beer_id = s.beer_id
-   and v.user_id = auth.uid()
+   and v.user_id = coalesce(auth.uid(), p_user)
    and v.period = p_period
    and v.period_key = public.tapt_period_start(p_period)::text
   where p_period in ('week','month','year')
@@ -110,7 +113,7 @@ $$;
 
 -- Per-period count of candidates the caller has NOT acted on yet. The app asks
 -- this once on launch and only raises the vote sheet when something is pending.
-create or replace function public.beer_poll_pending_periods()
+create or replace function public.beer_poll_pending_periods(p_user uuid default null)
 returns table(period text, pending int)
 language sql stable security definer set search_path to 'public' as $$
   with cand as (
@@ -128,23 +131,24 @@ language sql stable security definer set search_path to 'public' as $$
   from cand c
   left join public.beer_poll_vote v
     on v.beer_id = c.beer_id
-   and v.user_id = auth.uid()
+   and v.user_id = coalesce(auth.uid(), p_user)
    and v.period = c.period
    and v.period_key = public.tapt_period_start(c.period)::text
   group by c.period;
 $$;
 
 -- Cast (or change) the caller's vote on a candidate for the CURRENT period.
-create or replace function public.beer_poll_cast(p_period text, p_beer uuid, p_vote int)
+create or replace function public.beer_poll_cast(p_period text, p_beer uuid, p_vote int, p_user uuid default null)
 returns void
 language plpgsql security definer set search_path to 'public' as $$
+declare uid uuid := coalesce(auth.uid(), p_user);
 begin
-  if auth.uid() is null then raise exception 'auth required'; end if;
+  if uid is null then raise exception 'auth required'; end if;
   if p_period not in ('week','month','year') then raise exception 'bad period'; end if;
   if p_vote not in (-1,0,1) then raise exception 'bad vote'; end if;
 
   insert into public.beer_poll_vote(user_id, period, period_key, beer_id, vote)
-  values (auth.uid(), p_period, public.tapt_period_start(p_period)::text, p_beer, p_vote::smallint)
+  values (uid, p_period, public.tapt_period_start(p_period)::text, p_beer, p_vote::smallint)
   on conflict (user_id, period, period_key, beer_id)
   do update set vote = excluded.vote, updated_at = now();
 end;
@@ -229,16 +233,16 @@ language sql stable security definer set search_path to 'public' as $$
 $$;
 
 -- Authenticated-only surface. Anon contract (0081) intentionally untouched.
-revoke all on function public.beer_poll_candidates(text,int)     from public;
-revoke all on function public.beer_poll_pending_periods()        from public;
-revoke all on function public.beer_poll_cast(text,uuid,int)      from public;
-revoke all on function public.beer_poll_standings(text,int)      from public;
+revoke all on function public.beer_poll_candidates(text,int,uuid) from public;
+revoke all on function public.beer_poll_pending_periods(uuid)     from public;
+revoke all on function public.beer_poll_cast(text,uuid,int,uuid)  from public;
+revoke all on function public.beer_poll_standings(text,int)       from public;
 revoke all on function public.beer_poll_winner(text)             from public;
 revoke all on function public.beer_poll_wins(uuid)               from public;
 
-grant execute on function public.beer_poll_candidates(text,int)  to authenticated;
-grant execute on function public.beer_poll_pending_periods()     to authenticated;
-grant execute on function public.beer_poll_cast(text,uuid,int)   to authenticated;
+grant execute on function public.beer_poll_candidates(text,int,uuid) to authenticated;
+grant execute on function public.beer_poll_pending_periods(uuid)     to authenticated;
+grant execute on function public.beer_poll_cast(text,uuid,int,uuid)  to authenticated;
 grant execute on function public.beer_poll_standings(text,int)   to authenticated;
 grant execute on function public.beer_poll_winner(text)          to authenticated;
 grant execute on function public.beer_poll_wins(uuid)            to authenticated;

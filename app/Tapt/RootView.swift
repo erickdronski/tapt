@@ -61,11 +61,11 @@ struct RootView: View {
         .task {
             // Beer of the Week/Month/Year prompt: once per app run, at most once
             // per day, and only when there is genuinely something to vote on.
-            guard !polledForPrompt, !session.isGuest, session.user != nil else { return }
+            guard !polledForPrompt, !session.isGuest, let uid = session.user?.id else { return }
             polledForPrompt = true
             let today = Self.dayString()
             guard today != pollLastPromptDay else { return }
-            if await BeerPollService.pendingPeriods().contains(where: { $0.pending > 0 }) {
+            if await BeerPollService.pendingPeriods(userId: uid).contains(where: { $0.pending > 0 }) {
                 pollLastPromptDay = today
                 showBeerPoll = true
             }
