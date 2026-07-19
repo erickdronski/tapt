@@ -463,7 +463,12 @@ enum BarcodeCatalogService {
         else { return nil }
 
         let categories = product.categoriesTags ?? []
+        // Open Food Facts tags like en:root-beers, en:ginger-beers, en:beer-breads,
+        // en:beer-cheeses all contain "beer" but are sodas or foods, not beer.
+        let nonBeer = ["root-beer", "ginger-beer", "birch-beer", "spruce-beer",
+                       "sarsaparilla", "beer-bread", "beer-cheese", "beer-batter"]
         let isBeer = categories.contains { $0.contains("beer") }
+            && !categories.contains { tag in nonBeer.contains { tag.contains($0) } }
         let abv = product.nutriments?.alcohol.flatMap { (0...70).contains($0) ? $0 : nil }
         let brand = product.brands?
             .split(separator: ",").first

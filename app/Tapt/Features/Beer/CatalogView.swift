@@ -75,16 +75,10 @@ struct CatalogView: View {
                     empty
                 } else {
                     ForEach(results) { beer in
-                        Group {
-                            if session.user != nil {
-                                NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
-                            } else {
-                                Button {
-                                    session.deferBeerDetail(beerId: beer.id)
-                                    session.endGuestSession()
-                                } label: { row(beer) }
-                            }
-                        }
+                        // Guests open the same read-only beer page (it already
+                        // gates logging/voting behind sign-in). A routine list
+                        // tap must never silently swap the whole app to SignInView.
+                        NavigationLink { BeerDetailView(beerId: beer.id) } label: { row(beer) }
                         .buttonStyle(.plain)
                         .task { if beer.id == results.last?.id { await loadMore() } }
                         Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 78)

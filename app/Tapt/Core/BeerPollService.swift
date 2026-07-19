@@ -126,10 +126,17 @@ enum BeerPollService {
             params: UserParam(p_user: userId.uuidString))) ?? []
     }
 
-    /// Cast up (1), down (-1), or skip (0) for the current period.
-    static func cast(_ period: PollPeriod, beer: String, vote: Int, userId: UUID) async {
-        try? await Supa.authedRPCVoid("beer_poll_cast",
-            params: CastParam(p_period: period.rawValue, p_beer: beer, p_vote: vote, p_user: userId.uuidString))
+    /// Cast up (1), down (-1), or skip (0) for the current period. Returns
+    /// whether it actually persisted, so the UI never reports a phantom vote.
+    @discardableResult
+    static func cast(_ period: PollPeriod, beer: String, vote: Int, userId: UUID) async -> Bool {
+        do {
+            try await Supa.authedRPCVoid("beer_poll_cast",
+                params: CastParam(p_period: period.rawValue, p_beer: beer, p_vote: vote, p_user: userId.uuidString))
+            return true
+        } catch {
+            return false
+        }
     }
 
     /// Live standings for the current period.

@@ -10,13 +10,21 @@ function json(body: unknown, status = 200): Response {
   return Response.json(body, { status, headers: CORS });
 }
 
+// Sodas and foods whose OFF category merely contains "beer" (root beer, ginger
+// beer, birch/spruce beer, beer bread, beer cheese, beer batter) are NOT beer.
+const NON_BEER = /root[-_ ]?beer|ginger[-_ ]?beer|birch[-_ ]?beer|spruce[-_ ]?beer|sarsaparilla|beer[-_ ]?bread|beer[-_ ]?cheese|beer[-_ ]?batter/;
+
 function isBeerCategory(tags: unknown): boolean {
   if (!Array.isArray(tags)) return false;
-  return tags.some((value) => {
-    if (typeof value !== "string") return false;
+  let hasBeer = false;
+  let hasNonBeer = false;
+  for (const value of tags) {
+    if (typeof value !== "string") continue;
     const tag = value.toLowerCase().replace(/^.*:/, "");
-    return /(^|[-_])beers?($|[-_])/.test(tag);
-  });
+    if (/(^|[-_])beers?($|[-_])/.test(tag)) hasBeer = true;
+    if (NON_BEER.test(tag)) hasNonBeer = true;
+  }
+  return hasBeer && !hasNonBeer;
 }
 
 function verifiedImageURL(value: unknown): string | null {

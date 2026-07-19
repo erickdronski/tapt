@@ -14,6 +14,7 @@ struct BeerPollSheet: View {
     @State private var index = 0
     @State private var loaded = false
     @State private var voting = false
+    @State private var voteError: String?
 
     var body: some View {
         NavigationStack {
@@ -89,6 +90,10 @@ struct BeerPollSheet: View {
 
             Spacer(minLength: 0)
 
+            if let voteError {
+                Text(voteError).font(.caption.weight(.semibold)).foregroundStyle(Brand.copper)
+                    .multilineTextAlignment(.center)
+            }
             Text("\(index + 1) of \(queue.count)")
                 .font(.system(.caption, design: .monospaced)).foregroundStyle(Brand.muted)
 
@@ -122,13 +127,20 @@ struct BeerPollSheet: View {
         guard index < queue.count, !voting, let uid = session.user?.id else { return }
         let item = queue[index]
         voting = true
+        voteError = nil
         if value == 1 { Haptic.success() } else { Haptic.tap() }
         Task {
-            await BeerPollService.cast(item.period, beer: item.cand.beerId, vote: value, userId: uid)
+            let ok = await BeerPollService.cast(item.period, beer: item.cand.beerId, vote: value, userId: uid)
             await MainActor.run {
                 voting = false
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { index += 1 }
-                if index >= queue.count { Haptic.celebrate() }
+                // Only advance on a real persisted vote -- never report a phantom one.
+                if ok {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { index += 1 }
+                    if index >= queue.count { Haptic.celebrate() }
+                } else {
+                    voteError = "Couldn't save that. Check your connection and tap again."
+                    Haptic.tap()
+                }
             }
         }
     }

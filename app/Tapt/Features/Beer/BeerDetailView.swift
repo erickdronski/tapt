@@ -275,7 +275,10 @@ struct BeerDetailView: View {
                     session.endGuestSession()
                     return
                 }
-                guard !quickLogging else { return }
+                // One tap = one pour. Once logged, the button is a terminal
+                // confirmation, not a re-trigger (a second tap otherwise inserts
+                // a duplicate check-in and orphans the first).
+                guard !quickLogging, quickLoggedId == nil else { return }
                 quickLogging = true
                 Haptic.firm()
                 Task {
@@ -302,7 +305,7 @@ struct BeerDetailView: View {
                 .foregroundStyle(quickLoggedId != nil ? .white : Brand.malt)
             }
             .buttonStyle(.taptPress)
-            .disabled(quickLogging)
+            .disabled(quickLogging || quickLoggedId != nil)
 
             if let error = quickLogError {
                 Text(error).font(.footnote).foregroundStyle(.red)
