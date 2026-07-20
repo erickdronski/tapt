@@ -16,9 +16,10 @@ promptly (small commits, don't sit on local state another agent can't see).
 
 ## Hard rules (owner directives, non-negotiable)
 1. **Nothing invented.** No fake users, votes, ratings, counts, or facts —
-   anywhere (app, DB, landing, marketing). Blank beats invented. Marketing may
-   show a populated "as-if-live" DEMO only via the simulator-gated
-   `MarketService.demoEnabled` lane; it can never reach a device build.
+   anywhere (app, DB, landing, marketing). Blank beats invented.
+   (The `MarketService.demoEnabled` simulator lane this rule used to sanction no
+   longer exists in the codebase; there is currently NO demo lane. If marketing
+   needs one again, build it simulator-gated and say so here.)
 2. **Voice:** plain and direct. No em dashes in user-facing copy, no hype
    adjectives, no number-flexing (no "11,000+ beers" style claims), no "$" in
    the Beer Market (menus may show prices).
@@ -57,9 +58,13 @@ promptly (small commits, don't sit on local state another agent can't see).
 - **Beer Market** — flagship. `beer_market_standing` (materialized, deduped,
   display fields precomputed) + `beer_market_snapshot` (daily history) +
   `refresh_beer_market_standing()` on pg_cron `*/30 * * * *`. `beer_market()`
-  is a pure indexed read (~10ms). Standing = 10 + season(0/40) + awards(≤60,
-  real cited medals only) + notability(≤14) + net_votes×8. Votes dominate as
-  they arrive. **Never** fabricate movement; sparklines come from real
+  is a pure indexed read (~10ms). Standing (live, read it from
+  `refresh_beer_market_standing()` before quoting it) =
+  `greatest(1, 6 + season + awards + notability + votes - quiet_drift)`, where
+  notability ≤19 (image 8/4, brewery 5, abv 3, style_ref 3), votes =
+  pours_7d×10 + pours_30d×2 + net_votes_7d×6 + least(20, net_votes×4), and
+  quiet_drift decays a beer with no activity after a 14-day grace, capped at
+  -15. Awards are real cited medals only. Votes dominate as they arrive. **Never** fabricate movement; sparklines come from real
   snapshots. App labels the number "standing", copy says the blend honestly.
 - **Menus (business-critical):** portal claim → approve → `publish_tap_list`
   (approved claimants only, 1–60 taps) → snapshot with **10-year expiry**
@@ -67,13 +72,27 @@ promptly (small commits, don't sit on local state another agent can't see).
   `venue_menu` serves latest → `menu?v=` renders + printable QR. Portal has
   localStorage draft autosave, beforeunload guard, reorder, publish lifecycle,
   and an "add my venue" fallback (`submit_partner_inquiry`).
-- **Tapt-owned anon RPC surface is locked to:** `catalog_search`, `venue_brand`,
-  `venue_events`, `venue_menu` (public web) plus `region_guide_feed`,
-  `match_beers`, `beer_detail`, `beer_of_week_standings`,
-  `beer_of_week_latest_winner`, `brewery_map_feed`, `brewery_map_feed_near`
-  (guest browsing in-app, per 0081_public_guest_read_contract), plus the pure
-  formatter `tapt_trusted_country` (used inside security_invoker views).
-  Everything else is `authenticated`-only. Public activity aggregates must
+- **Tapt-owned anon RPC surface (20 as of 2026-07-20, verified in prod).** This
+  list drifted for weeks because additions were granted but never recorded here;
+  it is now the measured truth, not an aspiration. Re-derive it rather than
+  trusting this paragraph:
+  `select p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+   where n.nspname='public' and has_function_privilege('anon',p.oid,'execute')
+   and not exists (select 1 from pg_depend d where d.objid=p.oid
+   and d.classid='pg_proc'::regclass and d.deptype='e');`
+  - public web: `catalog_search`, `venue_brand`, `venue_events`, `venue_menu`,
+    `venue_detail`
+  - guest browsing in-app (0081_public_guest_read_contract): `region_guide_feed`,
+    `match_beers`, `beer_detail`, `beer_of_week_standings`,
+    `beer_of_week_latest_winner`, `brewery_map_feed`, `brewery_map_feed_near`,
+    `beer_board_regions`, `beer_market_one`
+  - Dispatch + partners: `dispatch_archive`, `dispatch_issue_public`,
+    `featured_partner_feed`, `log_featured_event`
+  - pure formatters used inside security_invoker views: `tapt_trusted_country`,
+    `tapt_scan_name`
+  Everything else is `authenticated`-only. NOTE: migration 0082 still asserts a
+  hard-coded 12-name array; it is a one-shot DO block that already ran, so it
+  does NOT guard anything going forward and is stale against this list. Public activity aggregates must
   include only visible rows with current `aggregate_analytics` consent.
   **GOTCHA (0081):** Postgres grants EXECUTE to PUBLIC on every `create
   function`, so `revoke ... from anon` alone is a NO-OP. 0081 revoked
@@ -191,10 +210,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   title-case), which needs the display_name/name_ok generated-column drop+readd
   per your 0083 pattern. I scoped it to the scanner only (tapt_scan_name) to
   avoid colliding with your generated columns.
-  **APP STORE 4.8 BLOCKER (owner + either agent):** Sign in with Apple is
-  disabled while Google is enabled -> guaranteed rejection. Must enable SIWA
-  (Apple Developer Service ID + Supabase Apple provider + app entitlement +
-  SignInView Apple button) before submit. Full checklist in docs/24.
+  **APP STORE 4.8 BLOCKER — CLOSED 2026-07-20.** This was: Sign in with Apple
+  disabled while Google was enabled, a guaranteed rejection. All four parts are
+  now live and verified (Supabase Apple provider enabled with client
+  app.tapt.tapt, the public auth settings endpoint advertises apple, the
+  entitlement ships, and SignInView renders the Apple button). Leaving the note
+  here as history; do NOT re-raise it as open.
   **STILL OPEN (docs/24):** App Store promotional screenshots + submission;
   image CDN mirror (durable image fix); social batch: swap Apple 3D emoji hero
   art for the canonical glass mark; scanner label-OCR + menu-accumulation feature.
@@ -325,13 +346,19 @@ promptly (small commits, don't sit on local state another agent can't see).
   their GitHub Xcode builds passed. Production migrations through `0083` are
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
-  TestFlight feedback automation are on `main`. TestFlight build 52 was built
-  from app-bearing `main` commit `4124cde`, is Apple `VALID`, and is assigned to
-  `Tapt Team`; subsequent release-control/documentation commits do not alter the
-  app binary.
+  TestFlight feedback automation are on `main`.
+  **Current TestFlight build is 55** (run 29713992206, 2026-07-20), built from
+  `main` commit `967ae63`, Apple `state=VALID`, `nonExemptEnc=False`, assigned
+  to `Tapt Team`, `internal=READY_FOR_BETA_TESTING` /
+  `external=READY_FOR_BETA_SUBMISSION`. It carries the 2026-07-19 audit batches
+  (image gate, No/Low correctness, taste-chip resolution, poll honesty,
+  newsletter consent). Build 52 is superseded — the old claim here that
+  "subsequent commits do not alter the app binary" went stale after 22
+  app-bearing commits; do not trust a pinned build number in this file without
+  checking `gh run list --workflow TestFlight`.
   The active App Store 1.0 submission remains build 50 in `WAITING_FOR_REVIEW`;
   use the protected withdraw -> prepare -> audit -> submit workflows to replace
-  it only after the build-52 manual gates pass.
+  it only after the manual gates pass on the build you intend to ship.
 - **Auth truth (2026-07-16):** email, Google, and Apple are exposed by the
   current signed app and enabled in live Supabase. The site URL is
   `https://taptbeer.com`; `tapt://auth-callback` is allowlisted; the Apple
