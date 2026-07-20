@@ -19,10 +19,6 @@ class ContractManifest(unittest.TestCase):
         self.assertEqual(allowed, sorted(allowed), "manifest must be sorted")
         self.assertEqual(len(allowed), len(set(allowed)), "manifest has duplicates")
 
-    def test_manifest_names_look_like_identifiers(self):
-        for name in json.loads(guard.CONTRACT.read_text())["allowed"]:
-            self.assertRegex(name, r"^[a-z_][a-z0-9_]*$", f"suspicious name: {name}")
-
 
 class DriftDetection(unittest.TestCase):
     def setUp(self):
@@ -47,9 +43,40 @@ class DriftDetection(unittest.TestCase):
         """Also catch the reverse, so the manifest cannot rot silently."""
         self.assertEqual(self._run_with(self.allowed[:-1]), 1)
 
-    def test_missing_key_skips_rather_than_fails(self):
-        with mock.patch.dict("os.environ", {"SUPABASE_SERVICE_ROLE_KEY": ""}):
+    def test_missing_key_skips_on_untrusted_run(self):
+        """Fork PRs get no secrets; do not block them on an unrunnable check."""
+        with mock.patch.dict("os.environ", {
+            "SUPABASE_SERVICE_ROLE_KEY": "", "GITHUB_REF": "refs/pull/7/merge",
+            "GITHUB_EVENT_NAME": "pull_request",
+        }):
             self.assertEqual(guard.main(), 0)
+
+    def test_missing_key_FAILS_on_main(self):
+        """A rotated or renamed secret must not silently disable the guard."""
+        with mock.patch.dict("os.environ", {
+            "SUPABASE_SERVICE_ROLE_KEY": "", "GITHUB_REF": "refs/heads/main",
+            "GITHUB_EVENT_NAME": "push",
+        }):
+            self.assertEqual(guard.main(), 1)
+
+    def test_missing_key_FAILS_on_scheduled_run(self):
+        with mock.patch.dict("os.environ", {
+            "SUPABASE_SERVICE_ROLE_KEY": "", "GITHUB_REF": "refs/heads/main",
+            "GITHUB_EVENT_NAME": "schedule",
+        }):
+            self.assertEqual(guard.main(), 1)
+
+    def test_new_overload_of_allowed_name_is_caught(self):
+        """The v1 bug: keying on bare names let a new overload of an allowed
+        name collapse onto the existing entry and pass green."""
+        overload = "public.beer_detail(p_beer_id uuid, p_locale text)"
+        self.assertNotIn(overload, self.allowed)
+        self.assertEqual(self._run_with(self.allowed + [overload]), 1)
+
+    def test_manifest_entries_are_signatures_not_bare_names(self):
+        for name in json.loads(guard.CONTRACT.read_text())["allowed"]:
+            self.assertIn("(", name, f"{name} is not a full signature")
+            self.assertIn(".", name.split("(")[0], f"{name} is not schema-qualified")
 
     def test_unreachable_prod_fails_loudly(self):
         with mock.patch.dict("os.environ", {"SUPABASE_SERVICE_ROLE_KEY": "test-key"}), \

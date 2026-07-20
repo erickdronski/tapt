@@ -41,10 +41,27 @@ def live_surface(service_key: str) -> list[str]:
         return json.load(response)
 
 
+def _is_trusted_branch() -> bool:
+    """True when running on main (or a manual/scheduled run), where secrets are
+    always available. Fork pull requests get no secrets, and blocking them on an
+    unrunnable check helps nobody."""
+    if os.environ.get("GITHUB_REF") == "refs/heads/main":
+        return True
+    return os.environ.get("GITHUB_EVENT_NAME") in {"schedule", "workflow_dispatch"}
+
+
 def main() -> int:
     service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
     if not service_key:
-        print("anon-rpc-contract: SKIPPED (no SUPABASE_SERVICE_ROLE_KEY in env)")
+        # Skipping quietly on main would mean a rotated or renamed secret turns
+        # the guard off permanently with a green build and one grey log line.
+        if _is_trusted_branch():
+            print("anon-rpc-contract: FAILED — no SUPABASE_SERVICE_ROLE_KEY on a "
+                  "trusted run. The guard cannot be silently disabled here; "
+                  "restore the secret or remove the step deliberately.")
+            return 1
+        print("anon-rpc-contract: SKIPPED (no SUPABASE_SERVICE_ROLE_KEY; "
+              "expected on fork pull requests)")
         return 0
 
     expected = sorted(json.loads(CONTRACT.read_text())["allowed"])

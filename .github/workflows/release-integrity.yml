@@ -14,6 +14,13 @@ on:
       - 'scripts/**'
       - 'landing/admin.html'
       - '.github/workflows/**'
+  # SQL reaches prod here out of band (applied directly, not via `supabase db
+  # push`), so a push-path trigger can miss a live schema change for days. The
+  # nightly run catches drift that never had a matching commit. Ubuntu runner,
+  # about a minute, and this repo is public so the minutes are free.
+  schedule:
+    - cron: '17 9 * * *'
+  workflow_dispatch:
 
 concurrency:
   group: release-integrity-${{ github.ref }}
