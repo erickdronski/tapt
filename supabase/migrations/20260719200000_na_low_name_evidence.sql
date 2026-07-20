@@ -65,3 +65,9 @@ update public.beer_catalog b
 set is_na_low = true
 where not coalesce(b.is_na_low, false)
   and public.tapt_is_na_low(coalesce(nullif(b.display_name, ''), b.name), b.abv);
+
+-- New functions default to EXECUTE for PUBLIC, which would quietly add this to
+-- the anon RPC surface (the 0081 gotcha). Every caller is SECURITY DEFINER and
+-- runs as the owner, so no client role needs it.
+revoke all on function public.tapt_is_na_low(text, numeric) from public;
+grant execute on function public.tapt_is_na_low(text, numeric) to service_role;
