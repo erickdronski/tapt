@@ -152,8 +152,13 @@ struct LogPourView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(selected == nil ? "Cancel" : "Back") {
-                        if selected == nil {
+                    // In update mode this sheet adds details to ONE existing
+                    // check-in, so there is no "Back" to the beer picker: going
+                    // back and choosing another beer would leave updatingCheckinId
+                    // pointing at the original pour and write the new beer's
+                    // rating onto it. Cancel out of the sheet instead.
+                    Button(selected == nil || updatingCheckinId != nil ? "Cancel" : "Back") {
+                        if selected == nil || updatingCheckinId != nil {
                             dismiss()
                         } else {
                             selected = nil

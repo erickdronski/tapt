@@ -135,21 +135,21 @@ struct NearYouView: View {
             .navigationTitle("Beer Near You")
             .navigationBarTitleDisplayMode(.inline)
             .task {
-                // Ask for location up front (before the network load) so the
-                // system prompt appears immediately on arrival. Once granted, the
-                // map centers on the user and pulls up the closest spots. If it
-                // was already denied we skip the ask and just load the radar.
-                if !location.deniedOrRestricted { location.request() }
+                // Only ask for location if the drinker turned "Nearby beer spots"
+                // ON in their own privacy settings. The OS permission is not
+                // consent to this feature: someone who granted location for the
+                // scanner and left this toggle off must not be located here.
+                if locationConsent, !location.deniedOrRestricted { location.request() }
                 await loadTaptRadar()
                 // If a GPS fix is already cached when we arrive, onChange never
                 // fires, so center + pull the local radar here too.
                 if let loc = location.location { await applyUserLocation(loc) }
             }
-            .onChange(of: location.authorized) { _, ok in
-                // Mirror a granted OS permission into the in-app choice so the
-                // spotlight and radar copy reflect that location is live.
-                if ok { locationConsent = true }
-            }
+            // Deliberately NOT mirroring location.authorized into locationConsent:
+            // granting the iOS prompt is not the same as opting in to nearby
+            // spots, and auto-writing it silently overwrote the drinker's own
+            // recorded privacy choice (and POSTed a consent grant they never gave).
+            // The opt-in row below is the only thing that sets locationConsent.
             .onChange(of: location.location) { _, loc in
                 guard let loc else { return }
                 Task { await applyUserLocation(loc) }
