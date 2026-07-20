@@ -13,6 +13,7 @@ struct BeerPollSheet: View {
     @State private var queue: [(period: PollPeriod, cand: PollCandidate)] = []
     @State private var index = 0
     @State private var loaded = false
+    @State private var loadFailed = false
     @State private var voting = false
     @State private var voteError: String?
 
@@ -48,13 +49,17 @@ struct BeerPollSheet: View {
     private func build() async {
         guard let uid = session.user?.id else { await MainActor.run { loaded = true }; return }
         var q: [(PollPeriod, PollCandidate)] = []
+        var anyFailed = false
         for period in PollPeriod.allCases {
-            for c in await BeerPollService.candidates(period, userId: uid) where c.myVote == nil {
-                q.append((period, c))
+            guard let cands = await BeerPollService.candidates(period, userId: uid) else {
+                anyFailed = true
+                continue
             }
+            for c in cands where c.myVote == nil { q.append((period, c)) }
         }
         let capped = Array(q.prefix(Self.cardsPerSession))
-        await MainActor.run { queue = capped; loaded = true }
+        let failed = anyFailed
+        await MainActor.run { queue = capped; loadFailed = failed; loaded = true }
     }
 
     private func voteView(_ period: PollPeriod, _ c: PollCandidate) -> some View {
@@ -135,13 +140,17 @@ struct BeerPollSheet: View {
         let item = queue[index]
         voting = true
         voteError = nil
-        if value == 1 { Haptic.success() } else { Haptic.tap() }
+        // A light tap acknowledges the press. The success haptic waits for the
+        // server, because firing it up front tells your hand the vote counted
+        // before we know it did.
+        Haptic.tap()
         Task {
             let ok = await BeerPollService.cast(item.period, beer: item.cand.beerId, vote: value, userId: uid)
             await MainActor.run {
                 voting = false
                 // Only advance on a real persisted vote -- never report a phantom one.
                 if ok {
+                    if value == 1 { Haptic.success() }
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) { index += 1 }
                     if index >= queue.count { Haptic.celebrate() }
                 } else {
@@ -153,17 +162,36 @@ struct BeerPollSheet: View {
     }
 
     private var doneView: some View {
-        VStack(spacing: 16) {
+        // Three distinct outcomes. "All caught up" is a claim about the market, so
+        // it is only said when the market actually answered.
+        let couldNotLoad = queue.isEmpty && loadFailed
+        return VStack(spacing: 16) {
             Spacer()
-            Image(systemName: "checkmark.seal.fill").font(.system(size: 64)).foregroundStyle(Brand.hop)
-            Text(queue.isEmpty ? "You are all caught up" : "Your votes are in")
+            Image(systemName: couldNotLoad ? "wifi.exclamationmark" : "checkmark.seal.fill")
+                .font(.system(size: 64))
+                .foregroundStyle(couldNotLoad ? Brand.muted : Brand.hop)
+            Text(couldNotLoad ? "Could not load the ballot"
+                 : (queue.isEmpty ? "You are all caught up" : "Your votes are in"))
                 .font(.system(.title2, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-            Text(queue.isEmpty
-                 ? "No new beers to vote on right now. Check back as the market moves."
-                 : "You helped crown this period's contenders. See how the race stands.")
+            Text(couldNotLoad
+                 ? "Check your connection and try again."
+                 : (queue.isEmpty
+                    ? "No new beers to vote on right now. Check back as the market moves."
+                    : "You helped crown this period's contenders. See how the race stands."))
                 .font(.subheadline).foregroundStyle(Brand.muted)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
             Spacer()
+            if couldNotLoad {
+                Button("Try again") {
+                    loaded = false
+                    loadFailed = false
+                    Task { await build() }
+                }
+                .font(.system(.headline, design: .rounded))
+                .frame(maxWidth: .infinity).padding(.vertical, 15)
+                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(Brand.malt)
+            }
             if !queue.isEmpty {
                 Button("See the leaderboard") { dismiss(); onSeeLeaderboard() }
                     .font(.system(.headline, design: .rounded))

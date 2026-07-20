@@ -115,9 +115,14 @@ enum BeerPollService {
 
     /// Candidates for a period: the live top of the Beer Market, plus my vote.
     /// p_user mirrors recommend_beer so my_vote resolves under the sim's shim too.
-    static func candidates(_ period: PollPeriod, userId: UUID, limit: Int = 5) async -> [PollCandidate] {
-        (try? await Supa.authedRPC("beer_poll_candidates",
-            params: CandParam(p_period: period.rawValue, p_limit: limit, p_user: userId.uuidString))) ?? []
+    ///
+    /// Returns nil when the call failed, empty when there is genuinely nothing to
+    /// vote on. Collapsing those two into [] made a dropped connection read as
+    /// "You are all caught up", which is a confident claim about the market that
+    /// we have no basis for.
+    static func candidates(_ period: PollPeriod, userId: UUID, limit: Int = 5) async -> [PollCandidate]? {
+        try? await Supa.authedRPC("beer_poll_candidates",
+            params: CandParam(p_period: period.rawValue, p_limit: limit, p_user: userId.uuidString))
     }
 
     /// Which periods still have candidates this drinker has not voted on.
