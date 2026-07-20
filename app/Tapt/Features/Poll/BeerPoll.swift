@@ -39,6 +39,12 @@ struct BeerPollSheet: View {
         .task { guard !loaded else { return }; await build() }
     }
 
+    /// At most this many cards in one sitting. The full slate is 5 per period
+    /// across week/month/year, and 15 cards is a chore at a bar. Voted and
+    /// skipped candidates are remembered, so the rest surface on later opens --
+    /// week first, then month, then year.
+    private static let cardsPerSession = 5
+
     private func build() async {
         guard let uid = session.user?.id else { await MainActor.run { loaded = true }; return }
         var q: [(PollPeriod, PollCandidate)] = []
@@ -47,7 +53,8 @@ struct BeerPollSheet: View {
                 q.append((period, c))
             }
         }
-        await MainActor.run { queue = q; loaded = true }
+        let capped = Array(q.prefix(Self.cardsPerSession))
+        await MainActor.run { queue = capped; loaded = true }
     }
 
     private func voteView(_ period: PollPeriod, _ c: PollCandidate) -> some View {

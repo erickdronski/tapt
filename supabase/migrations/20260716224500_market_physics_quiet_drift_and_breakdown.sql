@@ -169,6 +169,15 @@ begin
 end;
 $function$;
 
+-- 0098 already defines beer_market_one(uuid) with an 18-column RETURNS TABLE.
+-- Adding the five breakdown columns changes the composite type defined by the
+-- OUT parameters, and Postgres REFUSES that under CREATE OR REPLACE ("cannot
+-- change return type of existing function"). Without this DROP the migration
+-- aborts on any fresh rebuild (supabase db reset / CI / preview branch / DR) and
+-- every later migration never runs. DROP also discards the ACL, so the grants
+-- below must be restored or guests silently lose the market block on beer pages.
+drop function if exists public.beer_market_one(uuid);
+
 create or replace function public.beer_market_one(p_beer_id uuid)
  returns table(beer_id uuid, symbol text, name text, brewery text, style text, country text, image_url text, is_na_low boolean, net integer, votes integer, change integer, volume integer, ups integer, downs integer, spark double precision[], reason text, season_fit integer, heat integer, season_pts integer, award_pts integer, notability_pts integer, vote_pts integer, drift_pts integer)
  language sql stable security definer set search_path to 'public'
@@ -190,3 +199,8 @@ as $function$
   join public.beer_catalog b on b.id = st.beer_id
   where st.beer_id = p_beer_id;
 $function$;
+
+-- Restore the ACL the DROP above discarded (matches 0098): the beer page's
+-- market block is anon-readable, so guests must keep EXECUTE.
+revoke all on function public.beer_market_one(uuid) from public;
+grant execute on function public.beer_market_one(uuid) to anon, authenticated;

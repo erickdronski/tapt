@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.106.2";
+import { isBeerCategory } from "../_shared/off-beer-taxonomy.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -10,21 +11,13 @@ function json(body: unknown, status = 200): Response {
   return Response.json(body, { status, headers: CORS });
 }
 
-// Sodas and foods whose OFF category merely contains "beer" (root beer, ginger
-// beer, birch/spruce beer, beer bread, beer cheese, beer batter) are NOT beer.
-const NON_BEER = /root[-_ ]?beer|ginger[-_ ]?beer|birch[-_ ]?beer|spruce[-_ ]?beer|sarsaparilla|beer[-_ ]?bread|beer[-_ ]?cheese|beer[-_ ]?batter/;
-
-function isBeerCategory(tags: unknown): boolean {
-  if (!Array.isArray(tags)) return false;
-  let hasBeer = false;
-  let hasNonBeer = false;
-  for (const value of tags) {
-    if (typeof value !== "string") continue;
-    const tag = value.toLowerCase().replace(/^.*:/, "");
-    if (/(^|[-_])beers?($|[-_])/.test(tag)) hasBeer = true;
-    if (NON_BEER.test(tag)) hasNonBeer = true;
-  }
-  return hasBeer && !hasNonBeer;
+function parseABV(value: unknown): number | null {
+  const raw = typeof value === "number"
+    ? value
+    : typeof value === "string" && value.trim() !== ""
+    ? Number(value)
+    : Number.NaN;
+  return Number.isFinite(raw) && raw >= 0 && raw <= 70 ? raw : null;
 }
 
 function verifiedImageURL(value: unknown): string | null {
@@ -83,7 +76,8 @@ Deno.serve(async (req) => {
 
   const off = await offResponse.json();
   const product = off?.status === 1 ? off.product : null;
-  if (!product || !isBeerCategory(product.categories_tags)) {
+  const abv = product ? parseABV(product.nutriments?.alcohol_100g) : null;
+  if (!product || !isBeerCategory(product.categories_tags, abv)) {
     return json({ error: "product is not classified as beer" }, 422);
   }
 
@@ -96,15 +90,6 @@ Deno.serve(async (req) => {
 
   const brand = typeof product.brands === "string"
     ? product.brands.split(",")[0].trim().slice(0, 160) || null
-    : null;
-  const alcohol = product.nutriments?.alcohol_100g;
-  const rawABV = typeof alcohol === "number"
-    ? alcohol
-    : typeof alcohol === "string" && alcohol.trim() !== ""
-    ? Number(alcohol)
-    : Number.NaN;
-  const abv = Number.isFinite(rawABV) && rawABV >= 0 && rawABV <= 70
-    ? rawABV
     : null;
   const imageURL = verifiedImageURL(product.image_front_url);
 

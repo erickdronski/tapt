@@ -342,7 +342,11 @@ enum SocialGraphService {
 /// and top styles. Mirrors public_profile()'s jsonb shape 1:1.
 struct ProfileCard: Decodable, Sendable {
     let userId: String
-    let displayName: String
+    /// Optional on purpose: public_profile() returns null identity fields for a
+    /// PRIVATE or BLOCKED profile (it withholds name/handle/avatar/region). A
+    /// non-optional here made JSONDecoder throw on that envelope, which the view
+    /// swallowed into a fake "couldn't load" error and hid the report/block menu.
+    let displayName: String?
     let handle: String?
     let avatarUrl: String?
     let region: String?
@@ -463,13 +467,12 @@ enum BarcodeCatalogService {
         else { return nil }
 
         let categories = product.categoriesTags ?? []
-        // Open Food Facts tags like en:root-beers, en:ginger-beers, en:beer-breads,
-        // en:beer-cheeses all contain "beer" but are sodas or foods, not beer.
-        let nonBeer = ["root-beer", "ginger-beer", "birch-beer", "spruce-beer",
-                       "sarsaparilla", "beer-bread", "beer-cheese", "beer-batter"]
-        let isBeer = categories.contains { $0.contains("beer") }
-            && !categories.contains { tag in nonBeer.contains { tag.contains($0) } }
         let abv = product.nutriments?.alcohol.flatMap { (0...70).contains($0) ? $0 : nil }
+        // Matched against OFF's language-independent category taxonomy, so a
+        // Polish or Italian beer is not dropped for lacking the English word
+        // "beer", while root beer, ginger beer and beer bread stay out.
+        // Keep in sync with supabase/functions/_shared/off-beer-taxonomy.ts.
+        let isBeer = OFFBeerTaxonomy.isBeer(categoryTags: categories, alcoholByVolume: abv)
         let brand = product.brands?
             .split(separator: ",").first
             .map { $0.trimmingCharacters(in: .whitespaces) }
