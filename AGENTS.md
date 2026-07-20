@@ -90,9 +90,14 @@ promptly (small commits, don't sit on local state another agent can't see).
     `featured_partner_feed`, `log_featured_event`
   - pure formatters used inside security_invoker views: `tapt_trusted_country`,
     `tapt_scan_name`
-  Everything else is `authenticated`-only. NOTE: migration 0082 still asserts a
-  hard-coded 12-name array; it is a one-shot DO block that already ran, so it
-  does NOT guard anything going forward and is stale against this list. Public activity aggregates must
+  Everything else is `authenticated`-only.
+  **This is now ENFORCED, not just documented.** The authoritative list lives in
+  `supabase/anon_rpc_contract.json`, and `scripts/check_anon_rpc_contract.py`
+  diffs it against live prod (via the service_role-only `anon_rpc_contract()`
+  RPC) on every push that touches `supabase/`, `scripts/`, or workflows. If you
+  grant anon a new function, add it to that manifest in the SAME commit with a
+  reason, or Release Integrity fails. Migration 0082's hard-coded 12-name array
+  is a spent one-shot DO block and guards nothing; the manifest replaces it. Public activity aggregates must
   include only visible rows with current `aggregate_analytics` consent.
   **GOTCHA (0081):** Postgres grants EXECUTE to PUBLIC on every `create
   function`, so `revoke ... from anon` alone is a NO-OP. 0081 revoked
@@ -391,6 +396,13 @@ promptly (small commits, don't sit on local state another agent can't see).
 - Don't trust `tapt-landing.vercel.app`'s default alias as proof of deploy —
   check `taptbeer.com` itself.
 - Don't ship copy that flexes numbers or uses em dashes; scrub before commit.
+- Don't compare a repo migration FILE to `supabase_migrations.schema_migrations`
+  and call a mismatch drift. Many repo files were edited after they were applied
+  (comment-only stubs were later filled in with the real DDL), and early ledger
+  rows use semantic names rather than filenames, so ~14 files and ~23 rows do not
+  match textually. That is expected. The check that actually matters is OBJECT
+  parity, verified 2026-07-20: every function and table the repo creates and does
+  not later drop exists in prod (0 gaps). Re-verify that way, not by diffing text.
 - Don't assume an edge function is still public after you deploy it. Deploying
   resets `verify_jwt` to true, and the landing page calls `dispatch-signup` with
   no auth header, so the signup form starts answering 401 and the page reports

@@ -1,0 +1,38 @@
+{
+  "_comment": [
+    "The Tapt-owned functions the anon role is ALLOWED to execute in production.",
+    "scripts/check_anon_rpc_contract.py diffs live prod against this list on every",
+    "push that touches supabase/, scripts/, or .github/workflows/.",
+    "",
+    "If CI fails on this file, do not just paste the live list in. Decide first:",
+    "  - Function genuinely meant to be public (guest browsing, public web)?",
+    "    Add it here WITH a reason, in the same commit that grants it.",
+    "  - Function NOT meant to be public? It is almost certainly the 0081 gotcha:",
+    "    Postgres grants EXECUTE to PUBLIC on every CREATE FUNCTION, so anon gets",
+    "    it by default. Fix with: revoke all on function ... from public;",
+    "",
+    "Verified against prod 2026-07-20."
+  ],
+  "allowed": [
+    "beer_board_regions",
+    "beer_detail",
+    "beer_market_one",
+    "beer_of_week_latest_winner",
+    "beer_of_week_standings",
+    "brewery_map_feed",
+    "brewery_map_feed_near",
+    "catalog_search",
+    "dispatch_archive",
+    "dispatch_issue_public",
+    "featured_partner_feed",
+    "log_featured_event",
+    "match_beers",
+    "region_guide_feed",
+    "tapt_scan_name",
+    "tapt_trusted_country",
+    "venue_brand",
+    "venue_detail",
+    "venue_events",
+    "venue_menu"
+  ]
+}

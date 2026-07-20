@@ -1,0 +1,22 @@
+-- Repo/prod reconciliation: migration 0007 declares
+-- public.submit_venue_correction(uuid, text, jsonb, text) and grants it to
+-- authenticated, but the function has NEVER existed in production. The applied
+-- copy of 0007 in supabase_migrations.schema_migrations is 32,283 chars and
+-- declares 10 functions; the repo file is larger and declares 11, so the repo
+-- file was edited after it was applied and this declaration was never run.
+--
+-- Nothing calls it: no Swift, no web, no SQL, no docs. There is no
+-- venue-correction feature in the app. The venue_correction TABLE does exist in
+-- prod (created by 20260709150031 social_ingestion_live_beer, not by 0007) and
+-- already carries RLS insert/read-own policies keyed on submitted_by =
+-- auth.uid(), so a correction feature could be built later without this RPC.
+--
+-- Resolved forward rather than by editing 0007's history: a fresh
+-- `supabase db reset` now creates the function from 0007 and immediately drops
+-- it here, converging on the production shape. The alternative -- creating it in
+-- prod -- would add an RPC to the authenticated surface that nothing calls, and
+-- unused surface is not free.
+--
+-- If a venue-correction feature is built later, add the RPC in a NEW migration
+-- with its caller, not by resurrecting this one.
+drop function if exists public.submit_venue_correction(uuid, text, jsonb, text);

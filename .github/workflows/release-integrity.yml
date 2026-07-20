@@ -58,6 +58,15 @@ jobs:
           PY
           node --check /tmp/tapt-admin.mjs
 
+      # The anon RPC surface drifted from 12 to 24 functions unnoticed because the
+      # only guard was a one-shot DO block inside an already-applied migration.
+      # This checks live prod on every push instead. Skips (does not fail) when the
+      # secret is unavailable, e.g. a pull request from a fork.
+      - name: Enforce anon RPC contract
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scripts/check_anon_rpc_contract.py
+
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x

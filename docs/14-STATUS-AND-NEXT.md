@@ -1,9 +1,30 @@
 # Tapt Status and Release Roadmap
 
-Living release record, updated 2026-07-13. `AGENTS.md` is the coordination
-source of truth. This document describes product state and release gates.
+Release roadmap and gates. `AGENTS.md` is the coordination source of truth and
+is kept current; this document is not.
 
-## Current State
+> **Read this first.** The "Current State" section below is a snapshot from
+> **2026-07-13** and several of its claims are now false. It was presented as
+> current for a week and misled an audit, so it is labelled rather than quietly
+> patched. Corrections as of **2026-07-20**:
+>
+> - **Apple sign-in is ENABLED**, not "disabled in Supabase pending credentials".
+>   The provider is on (client `app.tapt.tapt`), `/auth/v1/settings` advertises
+>   it, the entitlement ships, and the button renders. The old App Store 4.8
+>   rejection risk is closed.
+> - **The app IS on TestFlight.** Build 55 (2026-07-20, from `967ae63`) is Apple
+>   `VALID` and `READY_FOR_BETA_TESTING`. The line below saying the candidate "is
+>   not yet on TestFlight" describes July 13.
+> - **Migrations run well past `0083`.** As of 2026-07-20 prod is at
+>   `20260720051000`. Do not use `0083` as the high-water mark.
+> - **Anon RPC access is 20 functions, not "the four web surfaces".** The
+>   authoritative list is `supabase/anon_rpc_contract.json`, enforced against
+>   live prod on every push by `scripts/check_anon_rpc_contract.py`.
+>
+> For anything release-critical, trust `AGENTS.md` and the live systems over the
+> snapshot below.
+
+## Current State (snapshot, 2026-07-13 — see corrections above)
 
 ### iOS
 
