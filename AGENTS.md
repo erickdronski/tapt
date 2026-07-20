@@ -364,3 +364,10 @@ promptly (small commits, don't sit on local state another agent can't see).
 - Don't trust `tapt-landing.vercel.app`'s default alias as proof of deploy —
   check `taptbeer.com` itself.
 - Don't ship copy that flexes numbers or uses em dashes; scrub before commit.
+- Don't assume an edge function is still public after you deploy it. Deploying
+  resets `verify_jwt` to true, and the landing page calls `dispatch-signup` with
+  no auth header, so the signup form starts answering 401 and the page reports
+  "That email did not look right." Public functions today: `dispatch-signup`,
+  `newsletter-unsubscribe`, `dispatch-weekly`, `resend-send`. After deploying any
+  of them, set it back and curl it:
+  `PATCH /v1/projects/<ref>/functions/<slug>` with `{"verify_jwt": false}`.

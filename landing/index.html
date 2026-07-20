@@ -283,6 +283,7 @@
         <button class="btn btn-gold" type="submit">Get launch access</button>
       </form>
       <div class="msg" id="hero-msg" role="status"></div>
+      <p class="fineprint">Signing up gets you The Tapt Dispatch, our free weekly beer email, plus a note the day Tapt lands. Unsubscribe any time.</p>
       <p class="fineprint"><b>iOS, launching soon.</b> Free for drinkers, always. Breweries and bars get free menu hosting.</p>
     </div>
     <div style="display:flex;justify-content:center">
@@ -532,7 +533,10 @@
     });
   })();
 
-  function wireSignup(formId, msgId, sendingLabel, doneLabel, successText) {
+  // `formKey` tells the server WHICH form the person actually saw, so the
+  // consent we store is the wording that was on screen. The server owns the
+  // text for each key; the page only names the form.
+  function wireSignup(formId, msgId, sendingLabel, doneLabel, successText, formKey) {
     const form = document.getElementById(formId);
     if (!form) return;
     const msg = document.getElementById(msgId);
@@ -545,7 +549,7 @@
         const res = await fetch('https://qfwiizvqxrhjlthbjosz.supabase.co/functions/v1/dispatch-signup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email.value, website: form.website.value })
+          body: JSON.stringify({ email: form.email.value, website: form.website.value, form: formKey })
         });
         const data = await res.json();
         if (res.ok && data.ok) {
@@ -565,8 +569,8 @@
       btn.disabled = false; btn.textContent = doneLabel || idle;
     });
   }
-  wireSignup('dispatch-form', 'dispatch-msg', 'Signing up…', 'Sign me up', 'Welcome aboard, first issue lands soon. 🍻');
-  wireSignup('hero-form', 'hero-msg', 'Saving…', 'Get launch access', "You're on the list. We'll email you the moment Tapt lands. 🍻");
+  wireSignup('dispatch-form', 'dispatch-msg', 'Signing up…', 'Sign me up', 'Welcome aboard, first issue lands soon. 🍻', 'dispatch');
+  wireSignup('hero-form', 'hero-msg', 'Saving…', 'Get launch access', "You're on the list. We'll email you the moment Tapt lands, plus the Dispatch each week. 🍻", 'hero');
 </script>
 <script>
   (function(){

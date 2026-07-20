@@ -1,9 +1,27 @@
 // Public newsletter signup for the Tapt landing page (The Tapt Dispatch).
 // Guards: method check, email validation, honeypot field, per-IP throttle,
-// and idempotent upsert. Stores source='landing'.
+// and idempotent upsert. Source and consent text come from the form the person
+// actually used (see FORMS), not a single hardcoded string.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const hits = new Map<string, { n: number; t: number }>();
+
+// What each landing form actually says on screen, owned here so the stored
+// consent record is the wording the person read rather than a stand-in. The
+// page sends only the form key; it cannot supply its own consent text.
+// Keep these in sync with landing/index.html when that copy changes.
+const FORMS: Record<string, { source: string; consent: string }> = {
+  dispatch: {
+    source: "landing",
+    consent:
+      "Landing page, The Tapt Dispatch section: One free email a week. The Beer of the Week, fun facts, brewing history, and the stories behind beers, bars, and taprooms around the world.",
+  },
+  hero: {
+    source: "landing_hero",
+    consent:
+      "Landing page hero, Get launch access: Signing up gets you The Tapt Dispatch, our free weekly beer email, plus a note the day Tapt lands. Unsubscribe any time.",
+  },
+};
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +43,7 @@ Deno.serve(async (req) => {
   }
   hits.set(ip, { n: (h && now - h.t < 3600_000 ? h.n : 0) + 1, t: h && now - h.t < 3600_000 ? h.t : now });
 
-  let body: { email?: string; website?: string };
+  let body: { email?: string; website?: string; form?: string };
   try {
     body = await req.json();
   } catch {
@@ -52,12 +70,13 @@ Deno.serve(async (req) => {
   if (existing?.status === "unsubscribed") {
     return Response.json({ ok: true }, { headers: CORS });
   }
+  const form = FORMS[body.form ?? ""] ?? FORMS.dispatch;
   const { error } = await supa.from("newsletter_subscriber").upsert(
     {
       email,
-      source: "landing",
+      source: form.source,
       status: "subscribed",
-      consent_ui_text: "Landing page: Get The Tapt Dispatch - beer trends, new spots, events, and what the world is pouring.",
+      consent_ui_text: form.consent,
     },
     { onConflict: "email" },
   );

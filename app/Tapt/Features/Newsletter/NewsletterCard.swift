@@ -4,7 +4,6 @@ import SwiftUI
 /// compact manager for the You tab. Subscription state lives on the account.
 struct NewsletterCard: View {
     @Environment(Session.self) private var session
-    @State private var email = ""
     @State private var subscribed: Bool?
     @State private var working = false
     @State private var note: String?
@@ -51,20 +50,24 @@ struct NewsletterCard: View {
                         .foregroundStyle(Brand.muted)
                         .disabled(working)
                 }
-            } else {
+            } else if let accountEmail = session.user?.email, accountEmail.contains("@") {
+                // The Dispatch only ever goes to the address on your account. We
+                // used to show a free-text field, which implied you could sign up
+                // any address you liked, including someone else's.
                 HStack(spacing: 8) {
-                    TextField("Email address", text: $email)
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
+                    Text(accountEmail)
                         .font(.subheadline)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .foregroundStyle(Brand.muted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 12)
                         .frame(height: 44)
                         .background(Brand.background, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Brand.malt.opacity(0.12)))
+                        .accessibilityLabel("Sends to \(accountEmail)")
                     Button {
-                        subscribe()
+                        subscribe(accountEmail)
                     } label: {
                         Text(working ? "..." : "Sign up")
                             .font(.system(.subheadline, design: .rounded).weight(.bold))
@@ -74,9 +77,12 @@ struct NewsletterCard: View {
                             .foregroundStyle(Brand.malt)
                     }
                     .buttonStyle(.plain)
-                    .disabled(working || !email.contains("@"))
-                    .opacity(email.contains("@") ? 1 : 0.55)
+                    .disabled(working)
                 }
+            } else {
+                Text("Add an email to your account to get the Dispatch.")
+                    .font(.subheadline)
+                    .foregroundStyle(Brand.muted)
             }
 
             if let note {
@@ -93,16 +99,12 @@ struct NewsletterCard: View {
         guard session.user != nil else { return }
         if let status = try? await NewsletterService.status() {
             subscribed = status.status == "subscribed"
-            if email.isEmpty { email = status.email }
         } else {
             subscribed = false
-            if email.isEmpty, let userEmail = session.user?.email {
-                email = userEmail
-            }
         }
     }
 
-    private func subscribe() {
+    private func subscribe(_ address: String) {
         guard session.user != nil else {
             session.endGuestSession()
             return
@@ -111,7 +113,7 @@ struct NewsletterCard: View {
         note = nil
         Task {
             do {
-                try await NewsletterService.subscribe(email: email.trimmingCharacters(in: .whitespaces), source: "app_discover")
+                try await NewsletterService.subscribe(email: address.trimmingCharacters(in: .whitespaces), source: "app_discover")
                 subscribed = true
                 note = "Welcome aboard. First issue lands soon. 🍻"
             } catch {
