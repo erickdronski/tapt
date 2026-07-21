@@ -4,12 +4,62 @@ import Foundation
 // play, not just beer nerds: Beer, Pop Culture, Fun Facts & Feats, General.
 
 struct TriviaQuestion: Identifiable {
-    let id = UUID()
+    let id: UUID
     let q: String
     let options: [String]
     let correct: Int
     let why: String
-    var category: TriviaCategory = .beer
+    let category: TriviaCategory
+
+    init(
+        id: UUID = UUID(),
+        q: String,
+        options: [String],
+        correct: Int,
+        why: String,
+        category: TriviaCategory = .beer
+    ) {
+        self.id = id
+        self.q = q
+        self.options = options
+        self.correct = correct
+        self.why = why
+        self.category = category
+    }
+
+    func shufflingOptions<R: RandomNumberGenerator>(using generator: inout R) -> TriviaQuestion {
+        guard options.indices.contains(correct) else { return self }
+        let answer = options[correct]
+        var shuffled = options
+        shuffled.shuffle(using: &generator)
+        guard let newCorrect = shuffled.firstIndex(of: answer) else { return self }
+        return TriviaQuestion(
+            id: id,
+            q: q,
+            options: shuffled,
+            correct: newCorrect,
+            why: why,
+            category: category
+        )
+    }
+}
+
+struct SeededRandomNumberGenerator: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: String) {
+        var hash: UInt64 = 1_469_598_103_934_665_603
+        for byte in seed.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 1_099_511_628_211
+        }
+        state = hash
+    }
+
+    mutating func next() -> UInt64 {
+        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return state
+    }
 }
 
 enum TriviaCategory: String, CaseIterable, Identifiable {
@@ -33,6 +83,31 @@ enum TriviaCategory: String, CaseIterable, Identifiable {
 enum TriviaData {
     static func pool(_ category: TriviaCategory) -> [TriviaQuestion] {
         category == .mixed ? questions : questions.filter { $0.category == category }
+    }
+
+    static func round(
+        limit: Int?,
+        category: TriviaCategory,
+        seed: String? = nil
+    ) -> [TriviaQuestion] {
+        if let seed {
+            var generator = SeededRandomNumberGenerator(seed: seed)
+            return makeRound(limit: limit, category: category, using: &generator)
+        }
+        var generator = SystemRandomNumberGenerator()
+        return makeRound(limit: limit, category: category, using: &generator)
+    }
+
+    private static func makeRound<R: RandomNumberGenerator>(
+        limit: Int?,
+        category: TriviaCategory,
+        using generator: inout R
+    ) -> [TriviaQuestion] {
+        var shuffled = pool(category)
+        shuffled.shuffle(using: &generator)
+        shuffled = shuffled.map { $0.shufflingOptions(using: &generator) }
+        guard let limit else { return shuffled }
+        return Array(shuffled.prefix(max(1, min(limit, shuffled.count))))
     }
 
     static let questions: [TriviaQuestion] = beer + popCulture + funFacts + general
@@ -71,6 +146,22 @@ enum TriviaData {
               why: "Kanpai is the Japanese toast."),
         .init(q: "A gose is known for tartness plus:", options: ["Salt", "Smoke", "Chocolate", "Vanilla"], correct: 0,
               why: "Gose is a tart wheat ale traditionally touched with coriander and salinity."),
+        .init(q: "Which German city is the home of Kolsch?", options: ["Cologne", "Berlin", "Bamberg", "Dresden"], correct: 0,
+              why: "Kolsch comes from Cologne and is top-fermented before a cold conditioning period."),
+        .init(q: "Munich Helles was first brewed in which decade?", options: ["1840s", "1890s", "1920s", "1960s"], correct: 1,
+              why: "Munich's Spaten brewery introduced the style in 1894 as a local answer to pale lagers."),
+        .init(q: "Traditional Rauchbier gets its smoke character from malt dried over:", options: ["Beechwood", "Peat", "Mesquite", "Cedar"], correct: 0,
+              why: "The classic Bamberg style uses malt smoked over beechwood."),
+        .init(q: "A classic Saison is usually:", options: ["Sweet and still", "Dry and highly carbonated", "Smoky and flat", "Dark and syrupy"], correct: 1,
+              why: "Saison is known for a very dry finish and lively carbonation."),
+        .init(q: "Which pair traditionally seasons Belgian Witbier?", options: ["Coriander and orange peel", "Juniper and mint", "Vanilla and cinnamon", "Coffee and cocoa"], correct: 0,
+              why: "Coriander and Curacao orange peel are classic Witbier additions."),
+        .init(q: "English Porter first developed in which city?", options: ["London", "Manchester", "Dublin", "Edinburgh"], correct: 0,
+              why: "Porter developed in London in the early 1700s and became a major urban beer style."),
+        .init(q: "Traditional Lambic fermentation begins with:", options: ["Spontaneous local microbes", "Bread yeast", "Lager yeast only", "No yeast at all"], correct: 0,
+              why: "Lambic relies on spontaneous fermentation by yeast and bacteria associated with the Brussels region."),
+        .init(q: "Which grain gives Irish Stout much of its dry, roasted edge?", options: ["Roasted barley", "Flaked rice", "Rye malt", "Smoked wheat"], correct: 0,
+              why: "Roasted barley helps create the coffee-like flavor and dry finish associated with Irish Stout."),
     ]
 
     // MARK: - Pop Culture

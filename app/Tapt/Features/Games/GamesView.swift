@@ -162,24 +162,6 @@ private struct FeaturedGameCard: View {
     }
 }
 
-private struct SeededRandomNumberGenerator: RandomNumberGenerator {
-    private var state: UInt64
-
-    init(seed: String) {
-        var hash: UInt64 = 1_469_598_103_934_665_603
-        for byte in seed.utf8 {
-            hash ^= UInt64(byte)
-            hash &*= 1_099_511_628_211
-        }
-        state = hash
-    }
-
-    mutating func next() -> UInt64 {
-        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
-        return state
-    }
-}
-
 // MARK: - Trivia (playable, mixed topics)
 struct TriviaGame: View {
     let title: String
@@ -380,15 +362,7 @@ struct TriviaGame: View {
         category: TriviaCategory,
         seed: String? = nil
     ) -> [TriviaQuestion] {
-        let shuffled: [TriviaQuestion]
-        if let seed {
-            var generator = SeededRandomNumberGenerator(seed: seed)
-            shuffled = TriviaData.pool(category).shuffled(using: &generator)
-        } else {
-            shuffled = TriviaData.pool(category).shuffled()
-        }
-        guard let limit else { return shuffled }
-        return Array(shuffled.prefix(max(1, min(limit, shuffled.count))))
+        TriviaData.round(limit: limit, category: category, seed: seed)
     }
 
     private static func dailySeed(category: TriviaCategory) -> String {

@@ -126,6 +126,17 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Database exposure + trivia audit closeout (Codex, 2026-07-21):** production
+  migration `20260721200016` makes the internal `cutout_queue` view security
+  invoker and service-role-only; anon/authenticated access is revoked while the
+  GitHub cutout job still reads all candidates. It also pins the four remaining
+  Beer Market period/season helper search paths; the security advisor now has
+  no cutout-view error and no mutable-search-path warnings. The previously
+  live-only barcode No/Low migration is mirrored at `20260720130932`, restoring clean
+  replay parity. Trivia now shuffles both questions and answers, preserves a
+  deterministic Daily 5, expands verified beer material from 16 to 24 questions
+  (54 total), and has catalog/answer/determinism regression tests. A new signed
+  TestFlight build is required after this app-bearing change.
 - **App image gate OPENED — cutout, else real source photo, else glass (Claude, 2026-07-17):** the app was rendering ONLY 595 reviewed cutouts and hiding the 10,636 real OFF/Wikimedia product photos we already store, so 98% of beers drew a generic glass and the owner (rightly) called it "missing images everywhere". `BeerProductImagePolicy` now has `approvedSourceURL` (trusted hosts: images.openfoodfacts.org, upload/commons.wikimedia.org) and `displayURL = cutout ?? source`; `BeerImageView` + the thumb cache use `displayURL`. Board went ~12% → **99.98% imaged**. **DO NOT re-close this to cutouts-only in the app.** Cutouts stay preferred and MARKETING/SHARE art + the "background removed by Tapt" attribution stay strict cutout-only (`approvedURL`), so the customer-facing-boundary rule still holds where it matters (share cards, web/OG). Also backfilled 198 notable beers with real Wikimedia P18 photos.
 - **Beer of the Week/Month/Year community vote (Claude, 2026-07-17):** `20260717113000_beer_poll_week_month_year.sql` — `beer_poll_vote` + authed-only RPCs (`beer_poll_candidates/pending_periods/cast/standings/winner/wins`). Candidates = live Beer Market top-5; winner only exists once a period is COMPLETE + net-positive; votes stamp the current period server-side so past periods freeze (no cron). App: `BeerPollSheet` popup (once/day on open), `BeerRaceCard` on Explore (replaced BeerOfWeekCard usage), `BeerRaceView` full leaderboard, `TaptHonorsCard` + `TaptCrownMedallion` crown badge on winning beer pages. Ships with an honest empty state (zero seeded votes).
 - **Weekly Picked-for-you + log (Claude, 2026-07-17):** `20260717120000_weekly_pick_and_history.sql` — `user_beer_pick` + `weekly_pick`/`pick_history` (trust `coalesce(auth.uid(), p_user)` like recommend_beer). Home pick is now stable per ISO week (recomputed each new week from latest taste); Profile > "Your weekly picks" is the log.
@@ -372,9 +383,9 @@ promptly (small commits, don't sit on local state another agent can't see).
   ID-token flow, so Supabase's missing web-OAuth secret response does not apply
   to the app. Production contains successful email and Google identities, but
   no Apple identity, and none of the three providers has the required physical
-  proof on exact TestFlight build 52. Facebook, X, and phone remain disabled.
-  Do not attest the release gate until email, Google, Apple, callback handling,
-  sign-out, relaunch, and deletion pass on 52.
+  proof on exact current TestFlight build 55. Facebook, X, and phone remain
+  disabled. Do not attest the release gate until email, Google, Apple, callback
+  handling, sign-out, relaunch, and deletion pass on the current release build.
 - **Legal truth (2026-07-16):** canonical `/privacy` and `/terms` pages are live
   on `taptbeer.com`, contain the named operator/address, and pass the release
   audit with no placeholders or parked `tapt.app` links. App Privacy is
@@ -387,8 +398,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   Do not treat auth availability as release-stable until the owner pays it.
 - Owner queue: delete `simtest@tapt.app` when QA settles; choose and complete the
   App Store DSA declaration; pay the outstanding Supabase invoice; verify
-  email/Google/Apple on signed TestFlight build 52; then replace build 50 with
-  52 and resubmit. RESEND_API_KEY/Stripe/FB App ID remain optional future work.
+  email/Google/Apple on the signed current release build; then replace build 50
+  and resubmit. RESEND_API_KEY/Stripe/FB App ID remain optional future work.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).
