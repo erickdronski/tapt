@@ -33,7 +33,7 @@ struct GamesView: View {
                              [Brand.copper, Color(hex: 0x7E2A1B)]) { DartsGame() }
                     gameCard("Beer Pong", "Real arc physics", "circle.grid.cross.fill",
                              [Brand.gold, Brand.copper]) { BeerPongGame() }
-                    gameCard("Flip Cup", "Nail the spin", "cup.and.saucer.fill",
+                    gameCard("Flip Cup", "1-4 player race", "cup.and.saucer.fill",
                              [Brand.hop, Color(hex: 0x2E7D5B)]) { FlipCupGame() }
                     gameCard("Quarters", "Bounce it in", "circle.hexagongrid.fill",
                              [Brand.copper, Color(hex: 0x6B4A2A)]) { QuartersGame() }
