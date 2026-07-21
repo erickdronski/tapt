@@ -136,7 +136,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   replay parity. Trivia now shuffles both questions and answers, preserves a
   deterministic Daily 5, expands verified beer material from 16 to 24 questions
   (54 total), and has catalog/answer/determinism regression tests. TestFlight
-  build 56 carries this batch.
+  builds 56 and 57 carry this batch.
 - **Global venue refresh repaired (Codex, 2026-07-21):** the July 20 Overture
   workflow staged 119,811 licensed beer places and then failed with PostgREST
   HTTP 300 because both the legacy one-argument and country-batched
@@ -154,8 +154,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   winner/rematch flow, and cancellation-safe flight resolution. Flick physics
   and match rules are separate deterministic types with seven XCTest cases for
   launch/landing windows, player normalization, turn rotation, streaks, and
-  frozen winner state. Build 56 predates this app-bearing change; the next
-  signed build must carry it.
+  frozen winner state. TestFlight build 57 carries this app-bearing change.
 - **App image gate OPENED — cutout, else real source photo, else glass (Claude, 2026-07-17):** the app was rendering ONLY 595 reviewed cutouts and hiding the 10,636 real OFF/Wikimedia product photos we already store, so 98% of beers drew a generic glass and the owner (rightly) called it "missing images everywhere". `BeerProductImagePolicy` now has `approvedSourceURL` (trusted hosts: images.openfoodfacts.org, upload/commons.wikimedia.org) and `displayURL = cutout ?? source`; `BeerImageView` + the thumb cache use `displayURL`. Board went ~12% → **99.98% imaged**. **DO NOT re-close this to cutouts-only in the app.** Cutouts stay preferred and MARKETING/SHARE art + the "background removed by Tapt" attribution stay strict cutout-only (`approvedURL`), so the customer-facing-boundary rule still holds where it matters (share cards, web/OG). Also backfilled 198 notable beers with real Wikimedia P18 photos.
 - **Beer of the Week/Month/Year community vote (Claude, 2026-07-17):** `20260717113000_beer_poll_week_month_year.sql` — `beer_poll_vote` + authed-only RPCs (`beer_poll_candidates/pending_periods/cast/standings/winner/wins`). Candidates = live Beer Market top-5; winner only exists once a period is COMPLETE + net-positive; votes stamp the current period server-side so past periods freeze (no cron). App: `BeerPollSheet` popup (once/day on open), `BeerRaceCard` on Explore (replaced BeerOfWeekCard usage), `BeerRaceView` full leaderboard, `TaptHonorsCard` + `TaptCrownMedallion` crown badge on winning beer pages. Ships with an honest empty state (zero seeded votes).
 - **Weekly Picked-for-you + log (Claude, 2026-07-17):** `20260717120000_weekly_pick_and_history.sql` — `user_beer_pick` + `weekly_pick`/`pick_history` (trust `coalesce(auth.uid(), p_user)` like recommend_beer). Home pick is now stable per ISO week (recomputed each new week from latest taste); Profile > "Your weekly picks" is the log.
@@ -383,12 +382,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
   TestFlight feedback automation are on `main`.
-  **Current TestFlight build is 56** (run 29865335871, 2026-07-21), built from
-  `main` commit `fba8446`, Apple `state=VALID`, `nonExemptEnc=False`, assigned
+  **Current TestFlight build is 57** (run 29871675833, 2026-07-21), built from
+  `main` commit `1eaae5b`, Apple `state=VALID`, `nonExemptEnc=False`, assigned
   to `Tapt Team`, `internal=READY_FOR_BETA_TESTING` /
   `external=READY_FOR_BETA_SUBMISSION`, with screenshot feedback enabled. It
-  carries the trivia/security batch but predates the Flip Cup multiplayer work
-  above. Do not trust a pinned build number in this file without checking
+  carries the trivia/security batch and Flip Cup multiplayer work above. Do
+  not trust a pinned build number in this file without checking
   `gh run list --workflow TestFlight`.
   The active App Store 1.0 submission remains build 50 in `WAITING_FOR_REVIEW`;
   use the protected withdraw -> prepare -> audit -> submit workflows to replace
@@ -401,7 +400,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   ID-token flow, so Supabase's missing web-OAuth secret response does not apply
   to the app. Production contains successful email and Google identities, but
   no Apple identity, and none of the three providers has the required physical
-  proof on exact current TestFlight build 56. Facebook, X, and phone remain
+  proof on exact current TestFlight build 57. Facebook, X, and phone remain
   disabled. Do not attest the release gate until email, Google, Apple, callback
   handling, sign-out, relaunch, and deletion pass on the current release build.
 - **Legal truth (2026-07-16):** canonical `/privacy` and `/terms` pages are live
