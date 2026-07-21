@@ -10,7 +10,7 @@ Required for writes:
 
 Optional:
   SUPABASE_URL       defaults to the Tapt project
-  OVERTURE_RELEASE   defaults to 2026-06-17.0
+  OVERTURE_RELEASE   defaults to Overture's current STAC release
 
 Use --dry-run to inspect source counts and samples without touching Supabase.
 """
@@ -22,6 +22,7 @@ import collections
 import datetime as dt
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -43,7 +44,9 @@ SUPABASE_URL = os.environ.get(
     "SUPABASE_URL", "https://qfwiizvqxrhjlthbjosz.supabase.co"
 ).rstrip("/")
 SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-DEFAULT_RELEASE = os.environ.get("OVERTURE_RELEASE", "2026-06-17.0")
+DEFAULT_RELEASE = os.environ.get("OVERTURE_RELEASE", "latest")
+OVERTURE_STAC_CATALOG = "https://stac.overturemaps.org/catalog.json"
+RELEASE_PATTERN = re.compile(r"^[0-9]{4}-[0-9]{2}-[0-9]{2}[.][0-9]+$")
 
 # Selected explicitly from Overture's official taxonomy. Categories such as
 # juice bars, hookah bars, wine bars, and private clubs are intentionally out.
@@ -124,6 +127,21 @@ def source_path(release: str) -> str:
         "s3://overturemaps-us-west-2/release/"
         f"{release}/theme=places/type=place/*"
     )
+
+
+def resolve_release(value: str) -> str:
+    requested = value.strip()
+    if requested.lower() == "latest":
+        request = urllib.request.Request(
+            OVERTURE_STAC_CATALOG,
+            headers={"User-Agent": "Tapt/1.0 Overture release resolver"},
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            catalog = json.loads(response.read())
+        requested = str(catalog.get("latest") or "").strip()
+    if not RELEASE_PATTERN.fullmatch(requested):
+        raise RuntimeError(f"invalid Overture release: {requested or 'empty'}")
+    return requested
 
 
 def query_places(args: argparse.Namespace) -> list[dict[str, Any]]:
@@ -392,11 +410,39 @@ def upload(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str, An
             )
             uploaded += len(batch)
             print(f"staged {uploaded:,}/{len(rows):,}")
-        result = request_json(
-            "/rest/v1/rpc/apply_overture_place_import",
-            payload={"p_release": args.release},
+        country_codes = sorted({
+            str(row["country_code"])
+            for row in rows
+            if row.get("country_code")
+        })
+        if not country_codes:
+            raise RuntimeError("no country-coded rows available to apply")
+
+        count_keys = (
+            "venues_inserted",
+            "venues_updated",
+            "venues_matched",
+            "source_links_written",
         )
-        counts = (result or [{}])[0] if isinstance(result, list) else (result or {})
+        counts = {key: 0 for key in count_keys}
+        for index, country_code in enumerate(country_codes, start=1):
+            result = request_json(
+                "/rest/v1/rpc/apply_overture_place_import",
+                payload={
+                    "p_release": args.release,
+                    "p_country_code": country_code,
+                },
+            )
+            country_counts = (
+                (result or [{}])[0] if isinstance(result, list) else (result or {})
+            )
+            for key in count_keys:
+                counts[key] += int(country_counts.get(key) or 0)
+            print(
+                f"applied country {index}/{len(country_codes)} {country_code}: "
+                f"{json.dumps(country_counts, sort_keys=True)}"
+            )
+
         finish_run(
             run_id,
             "succeeded",
@@ -409,6 +455,7 @@ def upload(rows: list[dict[str, Any]], args: argparse.Namespace) -> dict[str, An
             metadata={
                 "release": args.release,
                 "confidence": args.confidence,
+                "countries_applied": len(country_codes),
                 "source_links_written": counts.get("source_links_written", 0),
             },
         )
@@ -447,6 +494,7 @@ def print_summary(rows: list[dict[str, Any]], args: argparse.Namespace) -> None:
 
 def main() -> int:
     args = parse_args()
+    args.release = resolve_release(args.release)
     rows = query_places(args)
     print_summary(rows, args)
     if args.dry_run:

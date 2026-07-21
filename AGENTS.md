@@ -137,6 +137,15 @@ promptly (small commits, don't sit on local state another agent can't see).
   deterministic Daily 5, expands verified beer material from 16 to 24 questions
   (54 total), and has catalog/answer/determinism regression tests. A new signed
   TestFlight build is required after this app-bearing change.
+- **Global venue refresh repaired (Codex, 2026-07-21):** the July 20 Overture
+  workflow staged 119,811 licensed beer places and then failed with PostgREST
+  HTTP 300 because both the legacy one-argument and country-batched
+  `apply_overture_place_import` functions matched its payload. Production
+  migration `20260721201320` removes the legacy overload. The driver now calls
+  the remaining function once per ISO country code, aggregates honest totals,
+  and resolves scheduled releases from Overture's official STAC `latest` value
+  instead of staying pinned to June. Four upload/release regression tests cover
+  explicit batching, totals, failure recording, and release validation.
 - **App image gate OPENED — cutout, else real source photo, else glass (Claude, 2026-07-17):** the app was rendering ONLY 595 reviewed cutouts and hiding the 10,636 real OFF/Wikimedia product photos we already store, so 98% of beers drew a generic glass and the owner (rightly) called it "missing images everywhere". `BeerProductImagePolicy` now has `approvedSourceURL` (trusted hosts: images.openfoodfacts.org, upload/commons.wikimedia.org) and `displayURL = cutout ?? source`; `BeerImageView` + the thumb cache use `displayURL`. Board went ~12% → **99.98% imaged**. **DO NOT re-close this to cutouts-only in the app.** Cutouts stay preferred and MARKETING/SHARE art + the "background removed by Tapt" attribution stay strict cutout-only (`approvedURL`), so the customer-facing-boundary rule still holds where it matters (share cards, web/OG). Also backfilled 198 notable beers with real Wikimedia P18 photos.
 - **Beer of the Week/Month/Year community vote (Claude, 2026-07-17):** `20260717113000_beer_poll_week_month_year.sql` — `beer_poll_vote` + authed-only RPCs (`beer_poll_candidates/pending_periods/cast/standings/winner/wins`). Candidates = live Beer Market top-5; winner only exists once a period is COMPLETE + net-positive; votes stamp the current period server-side so past periods freeze (no cron). App: `BeerPollSheet` popup (once/day on open), `BeerRaceCard` on Explore (replaced BeerOfWeekCard usage), `BeerRaceView` full leaderboard, `TaptHonorsCard` + `TaptCrownMedallion` crown badge on winning beer pages. Ships with an honest empty state (zero seeded votes).
 - **Weekly Picked-for-you + log (Claude, 2026-07-17):** `20260717120000_weekly_pick_and_history.sql` — `user_beer_pick` + `weekly_pick`/`pick_history` (trust `coalesce(auth.uid(), p_user)` like recommend_beer). Home pick is now stable per ISO week (recomputed each new week from latest taste); Profile > "Your weekly picks" is the log.
