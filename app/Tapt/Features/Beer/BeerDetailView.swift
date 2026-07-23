@@ -247,7 +247,7 @@ struct BeerDetailView: View {
                 .padding(10)
                 .background(Brand.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
             }
-            Text("Moves on what people are drinking and rating lately, plus real awards and what's in season. Beers nobody touches cool off over time. No money, no trading, not a financial product.")
+            Text("Moves on what people log and rate lately, plus real awards and what's in season. Beers with no recent activity cool off over time. No money, no trading, not a financial product.")
                 .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)

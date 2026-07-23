@@ -1,7 +1,7 @@
 import SwiftUI
 import SpriteKit
 
-/// Beer Pong, the real thing: a SpriteKit physics game. Slingshot the ball with
+/// Cup Pong: a SpriteKit physics game. Slingshot the ball with
 /// a live trajectory preview, real gravity, rim bounces and rattle-outs, splash
 /// particles, streak multipliers, screen shake, haptics, and a persistent best
 /// score. All game state and HUD live inside the scene (SKLabelNodes), so the
@@ -15,7 +15,7 @@ struct BeerPongGame: View {
             SpriteView(scene: configured(size: proxy.size))
                 .ignoresSafeArea(edges: .bottom)
         }
-        .navigationTitle("Beer Pong")
+        .navigationTitle("Cup Pong")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

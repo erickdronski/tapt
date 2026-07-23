@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Beer Olympics, team scoreboard for a multi-event game night. Pure
+/// Table Olympics, team scoreboard for a multi-event game night. Pure
 /// organizing/scorekeeping (medals, points, champion); drinking is never part
 /// of the mechanics. State persists across app launches for multi-hour nights.
 struct BeerOlympicsView: View {
@@ -11,7 +11,7 @@ struct BeerOlympicsView: View {
     @State private var showReset = false
 
     private let eventIdeas = [
-        "Tapt Trivia", "Beer Pong", "Flip Cup", "Quarters",
+        "Tapt Trivia", "Cup Pong", "Cup Flip", "Quarters",
         "Cornhole", "Cup Stack Relay", "Categories", "Horse Race",
     ]
 
@@ -29,10 +29,10 @@ struct BeerOlympicsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 TaptHeroPanel(
-                    title: "Beer Olympics",
-                    subtitle: "Draft teams, run events, crown a champion. Gold 3 · Silver 2 · Bronze 1.",
-                    metric: "🏟️",
-                    caption: "Zero-proof athletes medal the same",
+                    title: "Table Olympics",
+                    subtitle: "Draft teams, run skill events, crown a champion. Gold 3 · Silver 2 · Bronze 1.",
+                    metric: "PLAY",
+                    caption: "Zero-proof teams medal the same",
                     icon: "trophy.fill",
                     tint: Brand.gold
                 )
@@ -49,7 +49,7 @@ struct BeerOlympicsView: View {
             .padding()
         }
         .background(Brand.background)
-        .navigationTitle("Beer Olympics")
+        .navigationTitle("Table Olympics")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !teams.isEmpty || !events.isEmpty {

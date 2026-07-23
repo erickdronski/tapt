@@ -43,10 +43,10 @@ FIND BEER NEAR YOU
 Browse real breweries, pubs, bars, taprooms, and beer gardens on the global Beer Radar. Tapt's venue map uses real coordinates and source provenance.
 
 RIDE THE BEER MARKET
-Vote beers up or down and watch rankings move from real community activity. No invented scores: empty boards stay empty until people vote.
+Vote beers up or down and watch rankings move from real community activity. No invented scores: empty boards stay empty until people vote or log pours.
 
 LEARN AND PLAY
-Use guided flights, Beer School, trivia, skill games, and zero-proof-friendly table tools to bring people together. Tapt games never require alcohol.
+Use guided flights, Beer School, trivia, skill games, and zero-proof-friendly table tools to bring people together. Tapt games never require alcohol and never score alcohol use.
 
 FOLLOW YOUR BEER CIRCLE
 Find friends, follow public Passport progress, and see eligible check-ins on Tonight. Report and block controls are built in.
@@ -66,17 +66,17 @@ KEYWORDS = "beer,brewery,bar,pub,taproom,cellar,passport,scanner,pong,trivia,cra
 REVIEW_NOTES = """Tapt is an informational and social beer app for legal-drinking-age adults. It does not sell alcohol.
 
 PUBLIC REVIEW PATH
-- Tap "Explore without an account" to inspect catalog search, the local MapKit beer-place map, Beer School, games, Discover, and partner information without providing credentials.
+- Tap "Explore without an account" to inspect catalog search, the local MapKit beer-place map, Beer School, points-only table games, Discover, and partner information without providing credentials.
 - Account-only actions clearly return the reviewer to sign-in.
 
 ACCOUNT REVIEW PATH
-- Tap "Sign in with password" and use the dedicated demo account supplied in the App Review fields. The account opens the full signed-in experience.
+- Tap "Sign in with password" and use the dedicated demo account supplied in the App Review fields. The account opens the full signed-in experience, including Discover and account-only social surfaces.
 - Email link/code, Sign in with Apple, and Google are also available. All complete inside the signed app and return to Tapt.
 - Delete account: You tab > Delete account > confirm. This revokes stored Sign in with Apple authorization, deletes avatar objects, the auth identity, and all personal-plane rows.
 - Privacy controls: You tab > Privacy Choices. Optional aggregate and partner-insight sharing default off.
 - UGC safety: profile text is filtered before publication; avatar uploads wait for approval; report/block actions are available from social feed items and public profiles; reports enter an authenticated admin moderation queue.
 - Age rating: Tapt includes social-media capability through profile search, follows, and the Tonight feed, and includes frequent contests through trivia/rankings. We do not claim the under-13 social-media mitigation because Tapt does not use Apple's Declared Age Range API.
-- Responsible play: games are skill, trivia, and scorekeeping experiences. They never require alcohol, include zero-proof play, and contain no volume or speed-drinking prompts.
+- Responsible play: games are skill, trivia, and scorekeeping experiences. They never require alcohol, include zero-proof play, and contain no volume, speed-drinking, or alcohol-consumption prompts. The prior visible game labels have been revised for App Review: Beer Olympics is now Table Olympics, Beer Night is now Game Night, Beer Pong is now Cup Pong, and Flip Cup is now Cup Flip.
 - Passport badges reward distinct beers, styles, and places rather than repeat consumption volume.
 
 LOCATION AND CAMERA

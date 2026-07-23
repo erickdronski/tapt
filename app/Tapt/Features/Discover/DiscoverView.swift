@@ -51,7 +51,7 @@ struct DiscoverView: View {
                                      subtitle: "How it's made, the lingo, the history, the legends.",
                                      icon: "graduationcap.fill", tint: Brand.hop) { LearnView() }
                         DiscoverTile(title: "Games",
-                                     subtitle: "Trivia, table games, Beer Olympics. All free.",
+                                     subtitle: "Trivia, table games, Table Olympics. All free.",
                                      icon: "die.face.5.fill", tint: Brand.copper) { GamesView() }
                     }
 
@@ -123,16 +123,16 @@ struct DiscoverView: View {
                 QuickPlayTile(title: "Deck", icon: "rectangle.on.rectangle.angled", tint: Brand.hop) {
                     CardDeckGame()
                 }
-                QuickPlayTile(title: "Pong", icon: "circle.grid.cross.fill", tint: Brand.gold) {
+                QuickPlayTile(title: "Cup Pong", icon: "circle.grid.cross.fill", tint: Brand.gold) {
                     BeerPongGame()
                 }
-                QuickPlayTile(title: "Flip Cup", icon: "cup.and.saucer.fill", tint: Brand.hop) {
+                QuickPlayTile(title: "Cup Flip", icon: "cup.and.saucer.fill", tint: Brand.hop) {
                     FlipCupGame()
                 }
                 QuickPlayTile(title: "Olympics", icon: "trophy.fill", tint: Brand.gold) {
                     BeerOlympicsView()
                 }
-                QuickPlayTile(title: "Beer Night", icon: "person.3.fill", tint: Brand.copper) {
+                QuickPlayTile(title: "Game Night", icon: "person.3.fill", tint: Brand.copper) {
                     BreweryModeView()
                 }
             }

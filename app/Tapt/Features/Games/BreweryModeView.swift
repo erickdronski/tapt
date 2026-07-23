@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Beer Night Mode: pass-the-phone group play. Round roulette + the table games.
+/// Game Night Mode: pass-the-phone group play. Round roulette + the table games.
 struct BreweryModeView: View {
     @State private var players = 4
     @State private var picked: Int?
@@ -9,7 +9,7 @@ struct BreweryModeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Text("Everyone at the table, pass the phone. Games for the whole crew, with NA-friendly play built in.")
+                Text("Everyone at the table, pass the phone. Points, trivia, and zero-proof play are built in.")
                     .font(.subheadline).foregroundStyle(Brand.muted).multilineTextAlignment(.center).padding(.horizontal)
 
                 VStack(spacing: 14) {
@@ -32,10 +32,10 @@ struct BreweryModeView: View {
                     tile("Tapt Deck", "Draw a card, play the table", "rectangle.on.rectangle.angled", Brand.hop)
                 }.buttonStyle(.plain)
                 NavigationLink { BeerPongGame() } label: {
-                    tile("Beer Pong", "Flick to throw, clear the rack", "circle.grid.cross.fill", Brand.gold)
+                    tile("Cup Pong", "Flick to throw, score points", "circle.grid.cross.fill", Brand.gold)
                 }.buttonStyle(.plain)
                 NavigationLink { FlipCupGame() } label: {
-                    tile("Flip Cup", "Flick to flip, land it on the base, build a streak", "cup.and.saucer.fill", Brand.hop)
+                    tile("Cup Flip", "Flick to flip, land it on the base", "cup.and.saucer.fill", Brand.hop)
                 }.buttonStyle(.plain)
                 NavigationLink { TriviaGame() } label: {
                     tile("Beer Trivia", "Miss one, pass the phone", "brain.head.profile", Brand.copper)
@@ -44,7 +44,7 @@ struct BreweryModeView: View {
             .padding()
         }
         .background(Brand.background)
-        .navigationTitle("Beer Night Mode")
+        .navigationTitle("Game Night Mode")
         .navigationBarTitleDisplayMode(.inline)
     }
 

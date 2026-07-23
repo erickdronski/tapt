@@ -4,7 +4,7 @@ import SwiftUI
 //   Scan   -> VisionKit DataScanner -> identify -> rate
 //   Cellar -> your logged pours + wishlist
 //   Near You -> MapKit beer spots + "popular near me" from first-party check-ins
-//   Games    -> trivia / card / table games (Beer Night Mode)
+//   Games    -> trivia / card / table games (Game Night Mode)
 
 // ScanView -> Features/Scan/ScanView.swift
 

@@ -24,7 +24,7 @@ enum GuideKind: String, CaseIterable, Identifiable {
 }
 
 enum GameGuidesData {
-    static let safetyLine = "Tapt games never direct alcohol use. Score with points, dares, or table chores. Water and No / Low are always welcome. Never drive after drinking."
+    static let safetyLine = "Tapt games never direct alcohol use. Score with points, dares, or table chores. Water and No / Low are always welcome."
 
     static let guides: [GameGuide] = [
         // ------------------------------------------------ with a real deck
@@ -156,18 +156,18 @@ enum GameGuidesData {
         // ------------------------------------------------ templates
         .init(
             id: "beer-olympics",
-            title: "Beer Olympics",
+            title: "Table Olympics",
             needs: "Teams, events, the Tapt scoreboard",
             players: "6-20 (2-6 teams)",
             vibe: "An opening ceremony, a medal table, and bragging rights that last all year.",
             steps: [
                 "Draft 2-6 teams, names and countries mandatory, costumes encouraged.",
-                "Pick 3-7 events. Mix Tapt digital games (Trivia, Pong, Flip Cup, Quarters) with table events (cornhole, cup stack relay, Categories).",
-                "Run each event; the Tapt scoreboard (Games → Beer Olympics) tracks gold/silver/bronze.",
+                "Pick 3-7 events. Mix Tapt digital games (Trivia, Cup Pong, Cup Flip, Quarters) with table events (cornhole, cup stack relay, Categories).",
+                "Run each event; the Tapt scoreboard (Games > Table Olympics) tracks gold/silver/bronze.",
                 "Medal points decide the champion: gold 3, silver 2, bronze 1.",
                 "Podium photo with the share card. Loser team plans the next Olympics."
             ],
-            houseRule: "Hydration station is an official event sponsor. Zero-proof athletes medal the same as anyone.",
+            houseRule: "Hydration station is an official event sponsor. Zero-proof teams medal the same as anyone.",
             kind: .templates
         ),
         .init(

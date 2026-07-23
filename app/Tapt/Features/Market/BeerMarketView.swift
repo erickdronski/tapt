@@ -69,7 +69,7 @@ struct BeerMarketView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("The Board").font(.system(.title3, design: .rounded).weight(.heavy)).foregroundStyle(Brand.text)
-                    Text("What people are drinking and loving right now, plus awards and what's in season.")
+                    Text("What people are logging and loving right now, plus awards and what's in season.")
                         .font(.caption).foregroundStyle(Brand.muted)
                 }
                 Spacer()
@@ -193,7 +193,7 @@ struct BeerMarketView: View {
     }
 
     private var footer: some View {
-        Text("Moves on what people are drinking and rating lately, plus real awards and what's in season. The more the community drinks and votes, the more it takes over. Nothing invented. No money, no trading, not a financial product.")
+        Text("Moves on what people log and rate lately, plus real awards and what's in season. Community pours and votes take over as real activity grows. Nothing invented. No money, no trading, not a financial product.")
             .font(.caption2).foregroundStyle(Brand.muted)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 28).padding(.vertical, 18)

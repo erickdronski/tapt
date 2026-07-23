@@ -25,7 +25,7 @@ enum FlightsData {
             id: "world-lager-lap",
             title: "World Lager Lap",
             subtitle: "A global intro that starts crisp and ends roasty.",
-            why: "Great for casual drinkers because it teaches how different countries bend the clean lager family without making anyone drink heavy.",
+            why: "A friendly way to learn how different countries shape the clean lager family, with small pours and No / Low choices welcome.",
             icon: "globe.europe.africa.fill",
             tint: Brand.gold,
             stops: [

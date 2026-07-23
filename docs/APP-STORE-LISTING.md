@@ -27,7 +27,7 @@ Rate, log, and discover beer
 
 ## Promotional text (170 char max — editable anytime without review)
 ```
-The global Beer Market is live: see what people are drinking and rating right now, follow the movers, and log your own pours. All of beer, one app.
+The global Beer Market is live: see what people are logging and rating right now, follow the movers, and log your own pours. All of beer, one app.
 ```
 
 ## Keywords (100 char max, comma separated, no spaces)
@@ -45,7 +45,7 @@ Rate what you drink, log it to your Cellar, and discover your next pour from a
 catalog of tens of thousands of beers from around the world.
 
 THE GLOBAL BEER MARKET
-See what people are drinking and rating lately. The Beer Market is a live
+See what people are logging and rating lately. The Beer Market is a live
 community popularity board with movers, trends, and a Beer of the Week. It is
 not a financial product. There is no money, no trading, and nothing to buy or
 sell. Just what the world is pouring right now.
@@ -145,13 +145,19 @@ recent check-ins and ratings. It is NOT gambling and NOT a financial product.
 There is no currency, no wagering, no real or virtual money, and nothing to buy
 or sell. "Up" and "down" arrows reflect changes in community popularity only.
 
-SIGN IN: Sign in with Apple is supported. A demo account is provided below for
-review.
+SIGN IN: Sign in with Apple is supported. A demo account is provided in the App
+Review Information fields and opens the full signed-in experience, including
+Discover and account-only social surfaces.
 
 UGC SAFETY: Users can report and block other users and content. A EULA
 (Terms of Service) is linked in-app and on the website.
 
 ACCOUNT DELETION: Users can delete their account in-app under You > Settings.
+
+RESPONSIBLE PLAY: Games are skill, trivia, and scorekeeping experiences. They
+never require alcohol and never score alcohol use. Visible labels were revised
+for App Review: Beer Olympics is now Table Olympics, Beer Night is now Game
+Night, Beer Pong is now Cup Pong, and Flip Cup is now Cup Flip.
 
 Demo account:
 Stored only in App Store Connect and the protected GitHub Actions secrets

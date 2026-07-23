@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A local Flip Cup race for one to four players. The flick still drives the
+/// A local Cup Flip match for one to four players. The flick still drives the
 /// cup's spin and landing, while match state stays separate and testable.
 struct FlipCupGame: View {
     private enum Phase {
@@ -42,7 +42,7 @@ struct FlipCupGame: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Brand.background)
-        .navigationTitle("Flip Cup")
+        .navigationTitle("Cup Flip")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if phase == .playing {
@@ -53,7 +53,7 @@ struct FlipCupGame: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
-                    .accessibilityLabel("Flip Cup options")
+                    .accessibilityLabel("Cup Flip options")
                 }
             }
         }
@@ -77,7 +77,7 @@ struct FlipCupGame: View {
                         .font(.subheadline)
                         .foregroundStyle(Brand.muted)
                     if bestStreak > 0 {
-                        Label("Best streak \(bestStreak)", systemImage: "flame.fill")
+                        Label("Best run \(bestStreak)", systemImage: "flag.checkered")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(Brand.copper)
                     }

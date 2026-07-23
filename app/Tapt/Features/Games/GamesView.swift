@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Games hub. Presented inside Discover's NavigationStack. A vibrant grid so it
-/// reads like a real arcade (GamePigeon energy), Beer Olympics featured up top.
+/// reads like a real arcade (GamePigeon energy), with table scorekeeping up top.
 struct GamesView: View {
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
@@ -12,7 +12,7 @@ struct GamesView: View {
                     Text("Game Night")
                         .font(.system(size: 34, weight: .heavy, design: .rounded))
                         .foregroundStyle(Brand.text)
-                    Text("Pick a game, pass the phone. Real physics, real trivia, all free.")
+                    Text("Pick a game, pass the phone. Points, trivia, and table skills. No drinking prompts.")
                         .font(.subheadline).foregroundStyle(Brand.muted)
                 }
                 .padding(.horizontal, 2)
@@ -20,8 +20,8 @@ struct GamesView: View {
                 // The big one, featured full width.
                 NavigationLink { BeerOlympicsView() } label: {
                     FeaturedGameCard(
-                        title: "Beer Olympics",
-                        tag: "Teams, events, medal table, a champion. The big one.",
+                        title: "Table Olympics",
+                        tag: "Teams, events, medal table, a champion. Points only.",
                         icon: "trophy.fill",
                         colors: [Color(hex: 0xE0A64B), Brand.copper])
                 }
@@ -31,9 +31,9 @@ struct GamesView: View {
                 LazyVGrid(columns: cols, spacing: 14) {
                     gameCard("Darts", "Real aim & scatter", "scope",
                              [Brand.copper, Color(hex: 0x7E2A1B)]) { DartsGame() }
-                    gameCard("Beer Pong", "Real arc physics", "circle.grid.cross.fill",
+                    gameCard("Cup Pong", "Real arc physics", "circle.grid.cross.fill",
                              [Brand.gold, Brand.copper]) { BeerPongGame() }
-                    gameCard("Flip Cup", "1-4 player race", "cup.and.saucer.fill",
+                    gameCard("Cup Flip", "1-4 player skill match", "cup.and.saucer.fill",
                              [Brand.hop, Color(hex: 0x2E7D5B)]) { FlipCupGame() }
                     gameCard("Quarters", "Bounce it in", "circle.hexagongrid.fill",
                              [Brand.copper, Color(hex: 0x6B4A2A)]) { QuartersGame() }
@@ -55,7 +55,7 @@ struct GamesView: View {
                              [Brand.gold, Color(hex: 0xC77E2E)]) { ConnectFourGame() }
                     gameCard("Tapt Deck", "House card game", "rectangle.on.rectangle.angled",
                              [Color(hex: 0x7A4FB0), Color(hex: 0x4A2E80)]) { CardDeckGame() }
-                    gameCard("Beer Night", "Round roulette", "person.3.fill",
+                    gameCard("Game Night", "Round chooser", "person.3.fill",
                              [Brand.copper, Color(hex: 0x8A5A2E)]) { BreweryModeView() }
                     gameCard("Guides", "Learn in a minute", "book.fill",
                              [Color(hex: 0x4C6A57), Color(hex: 0x2E4136)]) { GameNightGuidesView() }

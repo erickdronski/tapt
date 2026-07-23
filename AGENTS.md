@@ -126,6 +126,13 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **App Review 1.4.3/2.1(a) resubmission pass (Codex, 2026-07-23):** Apple
+  rejected build 50 on 2026-07-22 for excessive-alcohol read and demo-account
+  access clarity. Visible game labels are now points-only table-game framing
+  (`Table Olympics`, `Game Night`, `Cup Pong`, `Cup Flip`), ASC description and
+  review notes were updated directly, and an unsigned simulator build succeeds
+  locally with a workspace DerivedData path. Local simulator tests remain
+  blocked by CoreSimulator runtime discovery on this machine.
 - **Database exposure + trivia audit closeout (Codex, 2026-07-21):** production
   migration `20260721200016` makes the internal `cutout_queue` view security
   invoker and service-role-only; anon/authenticated access is revoked while the
