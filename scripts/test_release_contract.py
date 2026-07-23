@@ -80,6 +80,8 @@ class ReleaseContractTests(unittest.TestCase):
         )
         for script in (prepare, submit):
             self.assertIn('"DEVELOPER_REJECTED"', script)
+            self.assertIn('"REJECTED"', script)
+            self.assertIn('"METADATA_REJECTED"', script)
 
 
 if __name__ == "__main__":

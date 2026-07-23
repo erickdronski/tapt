@@ -25,7 +25,12 @@ EXPECTED_BUILD_NUMBER = os.environ.get("EXPECTED_BUILD_NUMBER", "").strip()
 CONFIRM_SUBMIT = os.environ.get("CONFIRM_SUBMIT", "")
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
-EDITABLE_VERSION_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED"}
+EDITABLE_VERSION_STATES = {
+    "PREPARE_FOR_SUBMISSION",
+    "DEVELOPER_REJECTED",
+    "REJECTED",
+    "METADATA_REJECTED",
+}
 
 
 def token() -> str:

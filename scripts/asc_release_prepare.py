@@ -29,7 +29,12 @@ KEY_PATH = os.environ["ASC_KEY_PATH"]
 BUNDLE_ID = "app.tapt.tapt"
 BASE = "https://api.appstoreconnect.apple.com"
 TARGET_BUILD_NUMBER = os.environ.get("TARGET_BUILD_NUMBER", "").strip()
-EDITABLE_VERSION_STATES = {"PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED"}
+EDITABLE_VERSION_STATES = {
+    "PREPARE_FOR_SUBMISSION",
+    "DEVELOPER_REJECTED",
+    "REJECTED",
+    "METADATA_REJECTED",
+}
 
 DESCRIPTION = """Meet Tapt, THE Beer Superapp.
 
