@@ -82,6 +82,8 @@ class ReleaseContractTests(unittest.TestCase):
             self.assertIn('"DEVELOPER_REJECTED"', script)
             self.assertIn('"REJECTED"', script)
             self.assertIn('"METADATA_REJECTED"', script)
+        self.assertIn("UNRESOLVED_ISSUES", submit)
+        self.assertIn('"resolved": True', submit)
 
 
 if __name__ == "__main__":

@@ -134,7 +134,10 @@ promptly (small commits, don't sit on local state another agent can't see).
   locally with a workspace DerivedData path. Local simulator tests remain
   blocked by CoreSimulator runtime discovery on this machine. Release prepare
   and submit automation now treat `REJECTED`/`METADATA_REJECTED` as editable
-  resubmission states, matching the audit script and ASC behavior.
+  resubmission states, matching the audit script and ASC behavior. Submit also
+  reuses `UNRESOLVED_ISSUES` review submissions and marks the rejected item
+  resolved before resubmitting, instead of adding the same app version to a new
+  submission.
 - **Database exposure + trivia audit closeout (Codex, 2026-07-21):** production
   migration `20260721200016` makes the internal `cutout_queue` view security
   invoker and service-role-only; anon/authenticated access is revoked while the
