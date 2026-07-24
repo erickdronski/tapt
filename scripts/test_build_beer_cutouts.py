@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw
 
 from scripts.build_beer_cutouts import (
     Candidate,
+    Cutout,
     PipelineError,
     SupabaseAPI,
     add_studio_depth,
@@ -21,8 +22,9 @@ from scripts.build_beer_cutouts import (
 
 
 class FakeResponse:
-    def __init__(self, value: Any):
+    def __init__(self, value: Any, content: bytes = b""):
         self.value = value
+        self.content = content
 
     def json(self) -> Any:
         return self.value
@@ -47,6 +49,20 @@ class FakeOFFSession:
     def get(self, url: str, **_: Any) -> FakeOFFResponse:
         self.urls.append(url)
         return FakeOFFResponse(self.value)
+
+
+class RecoverableStageAPI(SupabaseAPI):
+    def __init__(self, existing: bytes):
+        self.url = "https://qfwiizvqxrhjlthbjosz.supabase.co"
+        self.dry_run = False
+        self.existing = existing
+        self.calls: list[tuple[str, str]] = []
+
+    def request(self, method: str, path: str, **_: Any) -> FakeResponse:
+        self.calls.append((method, path))
+        if method == "POST":
+            raise PipelineError("supabase_request", "object already exists")
+        return FakeResponse({}, content=self.existing)
 
 
 class PagingAPI(SupabaseAPI):
@@ -105,6 +121,46 @@ class CandidatePagingTests(unittest.TestCase):
         self.assertEqual([candidate.id for candidate in candidates], ["new-500"])
         self.assertEqual(api.catalog_offsets, [0, 500])
         self.assertTrue(api.catalog_orders[0].startswith("source_priority.desc,"))
+
+
+class CutoutStageRecoveryTests(unittest.TestCase):
+    @staticmethod
+    def candidate() -> Candidate:
+        return Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url="https://upload.wikimedia.org/test.jpg",
+            license="CC BY-SA",
+        )
+
+    @staticmethod
+    def cutout(png: bytes) -> Cutout:
+        return Cutout(
+            png=png,
+            source_sha256="source-hash",
+            foreground_fraction=0.5,
+            effective_source_url="https://upload.wikimedia.org/test.jpg",
+            source_width=1200,
+            source_height=1600,
+            source_kind="wikimedia_commons",
+        )
+
+    def test_existing_identical_immutable_object_recovers(self) -> None:
+        png = b"exact immutable bytes"
+        api = RecoverableStageAPI(existing=png)
+
+        url = api.stage(self.candidate(), self.cutout(png))
+
+        self.assertIn("/beer-cutouts/v4/00000000-0000-0000-0000-000000000000/", url)
+        self.assertEqual([method for method, _ in api.calls], ["POST", "GET"])
+
+    def test_existing_different_immutable_object_is_rejected(self) -> None:
+        api = RecoverableStageAPI(existing=b"different bytes")
+
+        with self.assertRaises(PipelineError) as raised:
+            api.stage(self.candidate(), self.cutout(b"expected bytes"))
+
+        self.assertEqual(raised.exception.code, "cutout_hash_conflict")
 
 
 class CutoutQualityTests(unittest.TestCase):
@@ -256,8 +312,10 @@ class SourcePolicyTests(unittest.TestCase):
             source_url=source,
             license="Open Food Facts image (CC BY-SA 3.0)",
             gtin="0090935014364",
+            source_gtin="0090935014364",
         )
         session = FakeOFFSession({
+            "code": "0090935014364",
             "product": {
                 "image_front_url": source,
                 "images": {"front_en": {"imgid": "12", "rev": "7"}},
@@ -269,12 +327,27 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertEqual(
             urls,
             [
+                source.rsplit("/", 1)[0] + "/12.jpg",
                 source.replace(".400.jpg", ".full.jpg"),
                 source,
-                source.rsplit("/", 1)[0] + "/12.jpg",
             ],
         )
-        self.assertEqual(source_kind(urls[-1]), "open_food_facts_raw")
+        self.assertEqual(source_kind(urls[0]), "open_food_facts_raw")
+
+    def test_off_source_requires_exact_source_gtin(self) -> None:
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url="https://images.openfoodfacts.org/images/products/123/front.jpg",
+            license="Open Food Facts image (CC BY-SA 3.0)",
+            gtin="12345678",
+            source_gtin="87654321",
+        )
+
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(candidate)
+
+        self.assertEqual(raised.exception.code, "exact_gtin_required")
 
     def test_unapproved_supabase_bucket_is_rejected(self) -> None:
         candidate = Candidate(

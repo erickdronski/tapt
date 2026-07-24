@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-"""Tapt - backfill the remaining missing beer label images from Open Food Facts.
+"""Discover exact-GTIN beer product photos from Open Food Facts for review.
 
-The app renders image_url = COALESCE(cutout_url, label_image_url) from the
-beer_trend_feed view. This script fills the raw source column,
-beer_catalog.label_image_url, for listable beers (name_ok = true) that currently
-have neither a cutout nor a label image.
+New sources are staged in beer_media_source_candidate. They do not become
+customer-visible until the source and its generated cutout pass paired review.
 
-Two honest, rate-limited phases against OFF's free API (ODbL):
+One honest, rate-limited lane runs against OFF's free API:
 
-  1. Barcode rows (have a gtin): GET /api/v2/product/<gtin>.json and accept the
+  1. Barcode rows (have a GTIN): GET /api/v2/product/<gtin>.json and accept the
      product's FRONT image if one exists. The barcode identifies the exact
      product, so no fuzzy name match is needed - the front photo IS this beer.
 
-  2. No-barcode rows: full-text search OFF by brand + product name and accept a
-     match ONLY when every significant token of our name appears in the OFF
-     product name (plus a brand-token check). Strict by design: a wrong image is
-     worse than no image. US craft has a low OFF hit rate; blank beats invented.
+Name-search image matching is intentionally disabled. A wrong package is worse
+than an honest no-photo state.
 
 Every accepted image URL is HEAD-validated (200 + image/*) so we never write a
 dead link. Real data only - the imageless tail with no OFF source stays blank.
@@ -28,11 +24,10 @@ later apply. curl-backed HTTP (python.org builds lack local SSL roots).
 Env:
   SUPABASE_URL               default https://qfwiizvqxrhjlthbjosz.supabase.co
   SUPABASE_KEY               default publishable key (read-only under RLS)
-  SUPABASE_SERVICE_ROLE_KEY  optional; required to write label_image_url
+  SUPABASE_SERVICE_ROLE_KEY  optional; required to stage review candidates
   OUT                        default ./beer_image_backfill.json
   SLEEP_BARCODE              seconds between product-API calls (default 1.0)
-  SLEEP_SEARCH               seconds between search-API calls (default 6.5)
-  LIMIT_BARCODE / LIMIT_SEARCH   cap rows per phase (0 = all; default all)
+  LIMIT_BARCODE              cap exact-GTIN rows (0 = all; default all)
   DRY_RUN                    "true" to resolve without writing even if key present
   APPLY_FROM                 path to a prior OUT json; skip OFF resolution and
                              just PATCH every recorded match (needs service key)
@@ -45,18 +40,14 @@ import re
 import subprocess
 import sys
 import time
-import unicodedata
 import urllib.parse
 
 SUPA = os.environ.get("SUPABASE_URL", "https://qfwiizvqxrhjlthbjosz.supabase.co").rstrip("/")
 READ_KEY = os.environ.get("SUPABASE_KEY", "sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF")
 OUT = os.environ.get("OUT", os.path.join(os.path.dirname(__file__), "..", "beer_image_backfill.json"))
 SLEEP_BARCODE = float(os.environ.get("SLEEP_BARCODE", "1.0"))
-SLEEP_SEARCH = float(os.environ.get("SLEEP_SEARCH", "6.5"))
 LIMIT_BARCODE = int(os.environ.get("LIMIT_BARCODE", "0"))
-LIMIT_SEARCH = int(os.environ.get("LIMIT_SEARCH", "0"))
 SKIP_BARCODE = os.environ.get("SKIP_BARCODE", "").lower() == "true"
-SKIP_SEARCH = os.environ.get("SKIP_SEARCH", "").lower() == "true"
 STATE_FILE = os.environ.get("STATE_FILE",
                             os.path.join(os.path.dirname(__file__), ".image_backfill_state.json"))
 DRY_RUN = os.environ.get("DRY_RUN", "").lower() == "true"
@@ -190,26 +181,33 @@ def fetch_rows(with_gtin: bool, limit: int) -> list[dict]:
     return rows[:limit] if limit else rows
 
 
-def patch_image(beer_id: str, image_url: str) -> None:
+def stage_image_candidate(beer_id: str, image_url: str, gtin: str) -> None:
     body = json.dumps({
-        "label_image_url": image_url,
-        "label_image_license": LICENSE,
+        "beer_id": beer_id,
+        "source_url": image_url,
+        "source_license": LICENSE,
+        "source_kind": "open_food_facts",
+        "source_external_id": gtin,
+        "source_page_url": f"https://world.openfoodfacts.org/product/{gtin}",
+        "source_gtin": gtin,
+        "source_metadata": {"match_kind": "exact_gtin", "discovery": "tapt_off_backfill"},
+        "status": "pending_cutout",
     })
     out = subprocess.run(
         ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "45",
-         "-X", "PATCH",
+         "-X", "POST",
          "-H", f"User-Agent: {UA}",
          "-H", f"apikey: {SERVICE_KEY}",
          "-H", f"Authorization: Bearer {SERVICE_KEY}",
          "-H", "Content-Type: application/json",
-         "-H", "Prefer: return=minimal",
+         "-H", "Prefer: resolution=ignore-duplicates,return=minimal",
          "--data", body,
-         f"{SUPA}/rest/v1/beer_catalog?id=eq.{beer_id}"],
+         f"{SUPA}/rest/v1/beer_media_source_candidate?on_conflict=beer_id"],
         capture_output=True, text=True, timeout=70,
     )
     code = out.stdout.strip()
-    if code not in ("200", "204"):
-        raise RuntimeError(f"PATCH {beer_id} -> HTTP {code}")
+    if code not in ("200", "201", "204"):
+        raise RuntimeError(f"stage {beer_id} -> HTTP {code}")
 
 
 # ---- OFF resolution ------------------------------------------------------
@@ -230,63 +228,19 @@ def off_product_front(gtin: str) -> tuple[str, str | None]:
         return "throttled", None
     if d.get("status") != 1:
         return "notfound", None
-    img = (d.get("product") or {}).get("image_front_url") or None
+    product = d.get("product") or {}
+    response_gtin = re.sub(r"[^0-9]", "", str(d.get("code") or product.get("code") or ""))
+    requested_gtin = re.sub(r"[^0-9]", "", gtin)
+    if not requested_gtin or response_gtin != requested_gtin:
+        return "notfound", None
+    img = product.get("image_front_url") or None
     return ("found", img) if img else ("none", None)
-
-
-GENERIC = {"beer", "bier", "biere", "biere", "cerveza", "birra", "pivo", "ol",
-           "the", "of", "and", "de", "la", "le", "el", "no", "n",
-           "original", "premium", "ale", "lager"}
-
-
-def norm(s: str) -> list[str]:
-    s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9 ]+", " ", s.lower()).split()
-
-
-def off_search(term: str) -> tuple[bool, list[dict]]:
-    """Return (got_valid_response, products). got_valid_response is False on a
-    throttle/error so callers can retry rather than record a false blank."""
-    q = urllib.parse.quote(term)
-    url = ("https://world.openfoodfacts.org/cgi/search.pl?"
-           f"search_terms={q}&search_simple=1&action=process&json=1&page_size=12"
-           "&fields=code,product_name,brands,image_front_url,categories_tags")
-    code, body = off_get(url)
-    if code != "200" or not body:
-        return False, []
-    try:
-        return True, json.loads(body).get("products", [])
-    except Exception:
-        return False, []
-
-
-def pick(beer_name: str, brewery: str, products: list[dict]) -> dict | None:
-    beer_tokens = set(norm(beer_name))
-    brand_tokens = set(norm(brewery))
-    sig = beer_tokens - brand_tokens - GENERIC
-    for p in products:
-        cats = p.get("categories_tags") or []
-        if not any("beer" in c for c in cats):
-            continue
-        if not p.get("image_front_url"):
-            continue
-        pn = set(norm(p.get("product_name", ""))) | set(norm(p.get("brands", "")))
-        if sig:
-            if not sig.issubset(pn):
-                continue
-            if brand_tokens and not (brand_tokens & pn):
-                continue
-        else:
-            if not (pn <= (brand_tokens | GENERIC) and (brand_tokens & pn)):
-                continue
-        return p
-    return None
 
 
 # ---- main ----------------------------------------------------------------
 
 def apply_from(path: str) -> int:
-    """Resolution already done: PATCH every recorded match. Needs the service key."""
+    """Stage exact-GTIN matches from a prior resolution file."""
     if not SERVICE_KEY:
         print("APPLY_FROM needs SUPABASE_SERVICE_ROLE_KEY", file=sys.stderr)
         return 2
@@ -297,12 +251,12 @@ def apply_from(path: str) -> int:
     print(f"before: {with_img_before}/{total} ({100*with_img_before/total:.2f}%)", flush=True)
     written = 0
     for i, m in enumerate(matches, 1):
-        if not m.get("image"):
+        if not m.get("image") or m.get("phase") != "barcode" or m.get("gtin") != m.get("off_code"):
             continue
         try:
-            patch_image(m["id"], m["image"])
+            stage_image_candidate(m["id"], m["image"], m["gtin"])
             written += 1
-            print(f"[{i}/{len(matches)}] set {m.get('beer')}", flush=True)
+            print(f"[{i}/{len(matches)}] staged {m.get('beer')}", flush=True)
         except Exception as e:
             print(f"[{i}/{len(matches)}] FAILED {m.get('beer')}: {e}", flush=True)
     with_img_after, total_after = coverage()
@@ -338,8 +292,7 @@ def main() -> int:
 
     done = load_state()  # ids with a definitive answer (match or confirmed blank)
     barcode_rows = [] if SKIP_BARCODE else fetch_rows(with_gtin=True, limit=LIMIT_BARCODE)
-    search_rows = [] if SKIP_SEARCH else fetch_rows(with_gtin=False, limit=LIMIT_SEARCH)
-    print(f"worklist: {len(barcode_rows)} barcode, {len(search_rows)} no-barcode "
+    print(f"worklist: {len(barcode_rows)} exact-GTIN products "
           f"({len(done)} already resolved in a prior run)", flush=True)
 
     out_path = os.path.abspath(OUT)
@@ -350,7 +303,7 @@ def main() -> int:
     def flush_out():
         with open(out_path, "w") as f:
             json.dump({"matches": matches, "throttled": throttled,
-                       "written": written, "mode": mode}, f, indent=1)
+                       "staged": written, "mode": mode}, f, indent=1)
 
     def record_match(rec):
         nonlocal written
@@ -358,7 +311,7 @@ def main() -> int:
         done.add(rec["id"])
         if write:
             try:
-                patch_image(rec["id"], rec["image"])
+                stage_image_candidate(rec["id"], rec["image"], rec["gtin"])
                 written += 1
             except Exception as e:
                 print(f"    write failed: {e}", flush=True)
@@ -383,38 +336,12 @@ def main() -> int:
             print(f"[b {i}/{len(barcode_rows)}] blank ({state}) {b['name']}", flush=True)
         time.sleep(SLEEP_BARCODE)
 
-    # Phase 2 - name search (strict)
-    print("\n== phase 2: brand+name -> OFF search (strict match) ==", flush=True)
-    for i, b in enumerate(search_rows, 1):
-        if b["id"] in done:
-            continue
-        brewery = (b.get("brewery") or {}).get("name") or ""
-        term = f"{brewery} {b['name']}".strip()
-        ok_resp, products = off_search(term)
-        if not ok_resp:  # throttle/error - retry on a later run, do NOT blank
-            throttled.append({"id": b["id"], "beer": b["name"]})
-            print(f"[s {i}/{len(search_rows)}] throttled {b['name']}", flush=True)
-            time.sleep(SLEEP_SEARCH)
-            continue
-        p = pick(b["name"], brewery, products)
-        img = p.get("image_front_url") if p else None
-        if img and head_ok(img):
-            record_match({"id": b["id"], "phase": "search", "beer": b["name"],
-                          "gtin": None, "off_code": p.get("code"),
-                          "off_name": p.get("product_name"), "image": img})
-            print(f"[s {i}/{len(search_rows)}] MATCH {b['name']} -> {p.get('product_name')}", flush=True)
-        else:  # confirmed: OFF has no strict-matching front image
-            done.add(b["id"]); save_state(done)
-            print(f"[s {i}/{len(search_rows)}] blank {b['name']}", flush=True)
-        time.sleep(SLEEP_SEARCH)
-
     flush_out()
     b_hits = sum(1 for m in matches if m["phase"] == "barcode")
-    s_hits = sum(1 for m in matches if m["phase"] == "search")
-    print(f"\nresolved this run: {b_hits} barcode, {s_hits} search ({len(matches)} total)", flush=True)
+    print(f"\nresolved this run: {b_hits} exact-GTIN matches", flush=True)
     if throttled:
         print(f"throttled (retry next run): {len(throttled)}", flush=True)
-    print(f"written to DB: {written}", flush=True)
+    print(f"staged for review: {written}", flush=True)
     print(f"matches -> {out_path}", flush=True)
 
     with_img_after, total_after = coverage()

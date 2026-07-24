@@ -109,7 +109,8 @@
         && url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
         && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
         && !url.username && !url.password && !url.port && !url.search && !url.hash
-        && /^(?:v2\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+        && (/^(?:v[23]\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+          || /^v4\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/[0-9a-f]{64}\.png$/.test(relative))
         ? url.href : null;
     } catch (_) {
       return null;

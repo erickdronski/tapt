@@ -61,6 +61,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.tapt.tapt.tests
+        GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "6.0"
     dependencies:
       - target: Tapt

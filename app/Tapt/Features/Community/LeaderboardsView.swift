@@ -133,7 +133,13 @@ struct LeaderboardsView: View {
                     NavigationLink { BeerDetailView(beerId: beer.beerId) } label: {
                         HStack(spacing: 12) {
                             rankBadge(i + 1)
-                            BeerThumb(imageUrl: beer.imageUrl, size: 46)
+                            BeerThumb(
+                                imageUrl: beer.imageUrl,
+                                size: 46,
+                                style: beer.style,
+                                beerName: beer.name,
+                                breweryName: beer.breweryName
+                            )
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(beer.name)
                                     .font(.system(.headline, design: .rounded).weight(.bold))

@@ -5,7 +5,7 @@ import UIKit
 ///   1. a reviewed Tapt cutout (background removed, sits clean on the surface), else
 ///   2. its real product photo from a trusted catalog source (Open Food Facts
 ///      product front, Wikimedia Commons) -- a genuine label beats a generic glass, else
-///   3. the style-true glass (handled by the views).
+///   3. a factual Tapt identity card built from the canonical glass and catalog facts.
 /// Cutouts stay the gold standard and marketing/share art is still cutout-only
 /// (approvedURL), so the strict customer-facing boundary is preserved where it
 /// matters; in-app browsing just no longer hides the real photos we already hold.
@@ -35,6 +35,12 @@ enum BeerProductImagePolicy {
         guard path.hasPrefix(pathPrefix) else { return false }
         let relative = String(path.dropFirst(pathPrefix.count))
         let parts = relative.split(separator: "/", omittingEmptySubsequences: false)
+        if parts.count == 3, parts[0] == "v4", isUUID(parts[1]) {
+            let filename = parts[2]
+            guard filename.hasSuffix(".png") else { return false }
+            let hash = filename.dropLast(4)
+            return hash.count == 64 && hash.allSatisfy { "0123456789abcdef".contains($0) }
+        }
         let filename: Substring
         if parts.count == 1 {
             filename = parts[0]
@@ -44,7 +50,10 @@ enum BeerProductImagePolicy {
             return false
         }
         guard filename.hasSuffix(".png") else { return false }
-        let stem = filename.dropLast(4)
+        return isUUID(filename.dropLast(4))
+    }
+
+    private static func isUUID(_ stem: Substring) -> Bool {
         let groups = stem.split(separator: "-", omittingEmptySubsequences: false)
         guard groups.map(\.count) == [8, 4, 4, 4, 12] else { return false }
         return groups.joined().allSatisfy { "0123456789abcdef".contains($0) }
@@ -138,24 +147,26 @@ enum BeerProductImagePolicy {
     }
 
     /// The URL a customer-facing product view should actually load: the reviewed
-    /// cutout if we have one, otherwise the real source photo. Views fall back to
-    /// the style glass only when this is nil.
+    /// cutout if we have one, otherwise the real source photo. Views use the
+    /// factual identity treatment only when this is nil.
     static func displayURL(_ value: String?) -> URL? {
         displayAsset(value)?.url
     }
 }
 
-/// Displays reviewed cutouts, contained real-source photos, or the canonical glass.
+/// Displays reviewed cutouts, contained real-source photos, or a truthful Tapt
+/// identity card built from the beer's catalog facts and canonical glass.
 struct BeerImageView: View {
     let url: String?
     var contentMode: ContentMode = .fit
     var maxPixelSize: CGFloat = 900
-    /// Style for the fallback glass so an imageless beer still reads true.
+    /// Style for the fallback glass so a beer without a product photo still reads true.
     var style: String? = nil
+    var beerName: String? = nil
+    var breweryName: String? = nil
 
     @State private var display: UIImage?
     @State private var assetKind: BeerProductImagePolicy.AssetKind?
-    @State private var loaded = false
 
     private var loadIdentity: String {
         "\(url ?? "")|\(Int(maxPixelSize.rounded()))"
@@ -164,20 +175,24 @@ struct BeerImageView: View {
     var body: some View {
         Group {
             if let image = display {
-                if assetKind == .trustedSource {
-                    trustedSourcePresentation(image)
-                } else {
-                    Image(uiImage: image)
-                        .resizable()
-                        .interpolation(.high)
-                        .aspectRatio(contentMode: contentMode)
+                Group {
+                    if assetKind == .trustedSource {
+                        trustedSourcePresentation(image)
+                    } else {
+                        Image(uiImage: image)
+                            .resizable()
+                            .interpolation(.high)
+                            .aspectRatio(contentMode: contentMode)
+                    }
                 }
-            } else if loaded {
-                BeerGlassView(pour: 0.76, animatesPour: false, style: style)
-                    .padding(6)
-                    .accessibilityHidden(true)
+                .transition(.opacity)
             } else {
-                Color.clear
+                BeerIdentityArtwork(
+                    beerName: beerName,
+                    breweryName: breweryName,
+                    style: style
+                )
+                .transition(.opacity)
             }
         }
         .task(id: loadIdentity) { await load() }
@@ -226,9 +241,7 @@ struct BeerImageView: View {
     private func load() async {
         display = nil
         assetKind = nil
-        loaded = false
         guard let asset = BeerProductImagePolicy.displayAsset(url) else {
-            loaded = true
             return
         }
 
@@ -241,6 +254,135 @@ struct BeerImageView: View {
             assetKind = asset.kind
             display = image
         }
-        loaded = true
+    }
+}
+
+/// A polished catalog visual for beers whose exact package photo is not
+/// available under usable rights. It uses only known catalog facts and the
+/// canonical Tapt glass, so it never pretends to be a brewery label or package.
+private struct BeerIdentityArtwork: View {
+    let beerName: String?
+    let breweryName: String?
+    let style: String?
+
+    private var title: String? { clean(beerName) }
+    private var brewery: String? { clean(breweryName) }
+    private var styleLabel: String { clean(style) ?? "Beer" }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let edge = min(proxy.size.width, proxy.size.height)
+            let compact = edge < 58
+            let medium = edge < 118
+            let tint = StyleGlassTint.resolve(style)
+            let radius = min(24, max(8, edge * 0.16))
+
+            ZStack {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Brand.malt,
+                                Color(hex: 0x2E1A0A),
+                                tint.mid.opacity(0.58)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                Circle()
+                    .fill(tint.top.opacity(0.24))
+                    .frame(width: edge * 0.82, height: edge * 0.82)
+                    .blur(radius: edge * 0.12)
+                    .offset(x: edge * 0.35, y: -edge * 0.38)
+
+                if compact {
+                    ZStack(alignment: .bottomTrailing) {
+                        BeerGlassView(pour: 0.78, animatesPour: false, style: style)
+                            .padding(max(4, edge * 0.13))
+
+                        if let monogram {
+                            Text(edge < 42 ? String(monogram.prefix(1)) : monogram)
+                                .font(.system(size: max(7, edge * 0.15), weight: .black, design: .rounded))
+                                .foregroundStyle(Brand.malt)
+                                .padding(.horizontal, max(3, edge * 0.06))
+                                .padding(.vertical, max(1, edge * 0.025))
+                                .background(Brand.gold, in: Capsule())
+                                .overlay(Capsule().stroke(Brand.foam.opacity(0.32), lineWidth: 0.5))
+                                .padding(max(3, edge * 0.07))
+                        }
+                    }
+                } else {
+                    VStack(spacing: medium ? 3 : 7) {
+                        HStack(spacing: 4) {
+                            Text("TAPT")
+                                .foregroundStyle(Brand.foam)
+                            Spacer(minLength: 2)
+                            Text("POUR PROFILE")
+                                .foregroundStyle(Brand.copper)
+                        }
+                        .font(.system(size: medium ? 6.5 : 9, weight: .black, design: .rounded))
+                        .tracking(medium ? 0.5 : 0.9)
+
+                        BeerGlassView(pour: 0.78, animatesPour: false, style: style)
+                            .frame(maxHeight: medium ? edge * 0.52 : edge * 0.56)
+
+                        if let title {
+                            Text(title)
+                                .font(.system(
+                                    size: medium ? 9 : 16,
+                                    weight: .black,
+                                    design: .rounded
+                                ))
+                                .foregroundStyle(Brand.foam)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.68)
+                        }
+
+                        Text([brewery, styleLabel].compactMap { $0 }.joined(separator: " / "))
+                            .font(.system(
+                                size: medium ? 5.5 : 8.5,
+                                weight: .bold,
+                                design: .rounded
+                            ))
+                            .foregroundStyle(Brand.foam.opacity(0.7))
+                            .textCase(.uppercase)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                    .padding(medium ? 7 : 12)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .stroke(Brand.foam.opacity(0.12), lineWidth: 0.75)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        let identity = [title, brewery, clean(style)].compactMap { $0 }.joined(separator: ", ")
+        return identity.isEmpty ? "Beer pour profile" : "Pour profile for \(identity)"
+    }
+
+    private var monogram: String? {
+        guard let title else { return nil }
+        let words = title.split { !$0.isLetter && !$0.isNumber }
+        guard let first = words.first else { return nil }
+        if words.count == 1 {
+            return String(first.prefix(2)).uppercased()
+        }
+        return String(words.prefix(2).compactMap(\.first)).uppercased()
+    }
+
+    private func clean(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalized.isEmpty ? nil : normalized
     }
 }

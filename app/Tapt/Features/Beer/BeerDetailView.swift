@@ -124,34 +124,17 @@ struct BeerDetailView: View {
     }
 
     private func labelImage(_ d: BeerDetail) -> some View {
-        Group {
-            if let urlString = d.labelImageUrl, !urlString.isEmpty {
-                BeerImageView(url: urlString, style: d.style).padding(6)
-            } else {
-                srmGlass(d)
-            }
-        }
+        BeerImageView(
+            url: d.labelImageUrl,
+            style: d.style,
+            beerName: d.name,
+            breweryName: d.breweryName
+        )
+        .padding(6)
         .frame(width: 96, height: 128)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.malt.opacity(0.1)))
-    }
-
-    /// When there's no real photo, render the canonical glass tinted by the
-    /// style's real color family, branded illustration, never a fake photo.
-    private func srmGlass(_ d: BeerDetail) -> some View {
-        BeerGlassView(pour: 0.8, animatesPour: false, style: d.style)
-            .padding(10)
-    }
-
-    private func srmColor(_ d: BeerDetail) -> Color {
-        let mid: Double
-        if let lo = d.styleSrmMin, let hi = d.styleSrmMax {
-            mid = Double(lo + hi) / 2
-        } else {
-            mid = 5
-        }
-        return Color.fromSRM(mid)
     }
 
     // MARK: - Community

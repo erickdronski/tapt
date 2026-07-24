@@ -438,22 +438,32 @@ promptly (small commits, don't sit on local state another agent can't see).
   App Store DSA declaration; pay the outstanding Supabase invoice; verify
   email/Google/Apple on the signed current release build. RESEND_API_KEY,
   Stripe, and FB App ID remain optional future work.
-- **Product-image truth and v3 factory (Codex, 2026-07-24):** the earlier
+- **Product-image truth and v4 factory (Codex, 2026-07-24):** the earlier
   `99.98% imaged` statement predates major catalog growth and is no longer the
-  live baseline. Production now has 26,525 listable beers, 10,060 with any real
-  source or cutout (37.9%), 590 reviewed cutouts (2.2%), and 16,465 imageless.
-  Migration `20260724021000` is applied. V3 uses exact-GTIN OFF originals when
-  available, BiRefNet segmentation, no source upscaling, source and derivative
-  hashes, model and transformation provenance, paired admin review, and private
-  rights-cleared source discovery. Verified venue partners can submit exact
-  matched product photos through the portal; uploads remain private until a
-  cutout is approved. Display priority stays reviewed cutout, trusted real
-  source, then canonical glass. Never generate, reconstruct, recolor, or invent
-  a beer label/package. Blank is safer than the wrong SKU. Wikimedia is exact
-  Wikidata-QID P18 only with commercial license, creator, file page, revision,
-  dimensions, and source hash retained. First-party brewery/partner assets tied
-  to exact SKU identity are the scale path; do not scrape search engines,
-  retailers, brewery sites, or social feeds.
+  live baseline. Production has 26,525 listable beers, 9,890 with a visible real
+  source or reviewed cutout (37.3%), 585 reviewed cutouts (2.2%), and 16,635
+  without an exact public photo after 67 previously rejected sources and 103
+  exact URL/catalog GTIN mismatches were correctly quarantined. Zero known
+  manual rejects or comparable OFF barcode mismatches remain visible. There are 84
+  newly licensed exact sources pending cutout (81 Commons, 3 exact-GTIN OFF) and
+  925 legacy cutouts queued for immutable v4 rebuild before review. Migrations
+  `20260724021000`, `20260724041500`, `20260724043000`, `20260724044000`,
+  `20260724045000`, `20260724050000`, and `20260724051000` are applied. V4 disables name-search
+  image matching, requires matching source/catalog GTINs for OFF, tries the
+  uncropped exact-GTIN original first, writes non-overwritable content-hashed
+  cutouts, verifies the derivative hash at approval, quarantines rejected source
+  photos, records structured rejection reasons, and routes bulk and signed
+  barcode-add imagery into exact-GTIN staging rather than direct publication.
+  The admin gate exposes
+  brewery, GTIN, source record, hashes, model, transformation, and requires both
+  previews to load before a decision. Display priority stays reviewed cutout,
+  trusted real source, then the factual `Tapt Pour Profile` identity visual built
+  only from catalog name, brewery, style, and the canonical glass. Never call the
+  identity visual a product photo. Never generate, reconstruct, recolor, or
+  invent a beer label/package. Wikimedia is exact Wikidata-QID P18 only with a
+  commercial license and full provenance. First-party brewery/partner manifests
+  tied to exact SKU identity are the scale path; do not scrape search engines,
+  retailers, brewery sites, social feeds, or Untappd.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

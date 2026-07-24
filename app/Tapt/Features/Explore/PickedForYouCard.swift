@@ -77,7 +77,14 @@ struct PickedForYouCard: View {
     var body: some View {
         NavigationLink { BeerDetailView(beerId: beer.beerId) } label: {
             HStack(spacing: 14) {
-                BeerThumb(imageUrl: beer.imageUrl, size: 64, corner: 14, style: beer.style)
+                BeerThumb(
+                    imageUrl: beer.imageUrl,
+                    size: 64,
+                    corner: 14,
+                    style: beer.style,
+                    beerName: beer.name,
+                    breweryName: beer.brewery
+                )
                 VStack(alignment: .leading, spacing: 3) {
                     Label("Picked for you", systemImage: "sparkles")
                         .font(.caption2.weight(.heavy))
@@ -150,7 +157,13 @@ struct WeeklyPicksView: View {
 
     private func row(_ pick: RecommendedBeer) -> some View {
         HStack(spacing: 12) {
-            BeerImageView(url: pick.imageUrl, maxPixelSize: 160, style: pick.style)
+            BeerImageView(
+                url: pick.imageUrl,
+                maxPixelSize: 160,
+                style: pick.style,
+                beerName: pick.name,
+                breweryName: pick.brewery
+            )
                 .frame(width: 52, height: 52)
                 .background(Brand.surface, in: RoundedRectangle(cornerRadius: 12))
                 .clipShape(RoundedRectangle(cornerRadius: 12))

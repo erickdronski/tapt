@@ -227,7 +227,13 @@ struct TonightView: View {
                 .font(.system(.headline, design: .monospaced).weight(.bold))
                 .foregroundStyle(Brand.muted)
                 .frame(width: 26)
-            BeerThumb(imageUrl: beer.imageUrl, size: 46)
+            BeerThumb(
+                imageUrl: beer.imageUrl,
+                size: 46,
+                style: beer.style,
+                beerName: beer.beerName,
+                breweryName: beer.breweryName
+            )
             VStack(alignment: .leading, spacing: 4) {
                 Text(beer.beerName)
                     .font(.system(.headline, design: .rounded).weight(.bold))

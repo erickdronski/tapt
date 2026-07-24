@@ -77,7 +77,13 @@ struct BeerOfWeekCard: View {
                                 Text(medal(entry.rank ?? 0))
                                     .font(.title3)
                                     .frame(width: 30)
-                                BeerImageView(url: entry.labelImageUrl, maxPixelSize: 120)
+                                BeerImageView(
+                                    url: entry.labelImageUrl,
+                                    maxPixelSize: 120,
+                                    style: entry.style,
+                                    beerName: entry.name,
+                                    breweryName: entry.breweryName
+                                )
                                     .frame(width: 34, height: 34)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                                 VStack(alignment: .leading, spacing: 1) {

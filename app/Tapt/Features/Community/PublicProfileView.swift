@@ -251,7 +251,12 @@ struct PublicProfileView: View {
 
     private func favoriteCard(_ fav: ProfileCard.FavoriteBeer) -> some View {
         HStack(spacing: 12) {
-            BeerThumb(imageUrl: fav.imageUrl, size: 58)
+            BeerThumb(
+                imageUrl: fav.imageUrl,
+                size: 58,
+                beerName: fav.name,
+                breweryName: fav.brewery
+            )
             VStack(alignment: .leading, spacing: 6) {
                 Label("Favorite pour", systemImage: "heart.fill")
                     .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)

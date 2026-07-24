@@ -253,7 +253,13 @@ struct LogPourView: View {
                             venueSearch = beer.breweryName
                         } label: {
                             HStack(spacing: 10) {
-                                BeerThumb(imageUrl: beer.imageUrl, size: 44)
+                                BeerThumb(
+                                    imageUrl: beer.imageUrl,
+                                    size: 44,
+                                    style: beer.style,
+                                    beerName: beer.name,
+                                    breweryName: beer.breweryName
+                                )
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(beer.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
                                     Text("\(beer.breweryName)  \(beer.style ?? "")").font(.caption).foregroundStyle(Brand.muted)

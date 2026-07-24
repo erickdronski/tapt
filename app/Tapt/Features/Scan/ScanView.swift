@@ -330,10 +330,14 @@ struct ScanView: View {
                 rating = nil
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "mug.fill")
-                        .foregroundStyle(Brand.malt)
-                        .frame(width: 40, height: 40)
-                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 10))
+                    BeerThumb(
+                        imageUrl: match.imageUrl,
+                        size: 40,
+                        corner: 10,
+                        style: match.style,
+                        beerName: match.name,
+                        breweryName: match.breweryName
+                    )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(match.name).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text)
                         Text("\(match.breweryName ?? "")  \(match.style ?? "")")
@@ -372,11 +376,13 @@ struct ScanView: View {
     private func offCard(_ off: OFFBeer) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                BeerGlassView(pour: 0.72, animatesPour: false)
-                    .padding(7)
-                    .accessibilityHidden(true)
+                BeerImageView(
+                    url: off.imageURL,
+                    maxPixelSize: 180,
+                    beerName: off.name,
+                    breweryName: off.brand
+                )
                 .frame(width: 54, height: 54)
-                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 12))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -445,7 +451,7 @@ struct ScanView: View {
                     addingOFF = false
                     showResult = false
                     pendingPour = pour
-                    celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating ?? 0), place: nil)
+                    celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating), place: nil)
                 } else {
                     addingOFF = false
                 }
@@ -513,7 +519,14 @@ struct ScanView: View {
             if let m = matches.first(where: { $0.id == pick.beerId }) { selected = m.pick; rating = nil }
         } label: {
             HStack(spacing: 12) {
-                BeerThumb(imageUrl: pick.imageUrl, size: 56, corner: 12, style: pick.style)
+                BeerThumb(
+                    imageUrl: pick.imageUrl,
+                    size: 56,
+                    corner: 12,
+                    style: pick.style,
+                    beerName: pick.name,
+                    breweryName: pick.brewery
+                )
                 VStack(alignment: .leading, spacing: 3) {
                     Label("Your pick on this menu", systemImage: "sparkles")
                         .font(.caption2.weight(.heavy)).foregroundStyle(Brand.copper)
@@ -583,7 +596,7 @@ struct ScanView: View {
                 saving = false
                 showResult = false
                 pendingPour = pour
-                celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating ?? 0), place: nil)
+                celebration = .pourLogged(beer: pour.beer, rating: Double(pour.rating), place: nil)
             } catch {
                 // Never fail silently: the user believes the pour logged.
                 saving = false

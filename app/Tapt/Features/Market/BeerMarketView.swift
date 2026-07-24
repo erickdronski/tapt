@@ -146,14 +146,14 @@ struct BeerMarketView: View {
     private func symbolMark(_ b: MarketBeer) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 9).fill(Brand.surface)
-            if let source = b.imageUrl, URL(string: source) != nil {
-                BeerImageView(url: source, maxPixelSize: 160)
-                    .padding(3)
-            } else {
-                // No reviewed cutout yet: a style-true glass beats a monogram.
-                BeerGlassView(pour: 0.76, animatesPour: false, style: b.style)
-                    .padding(4)
-            }
+            BeerImageView(
+                url: b.imageUrl,
+                maxPixelSize: 160,
+                style: b.style,
+                beerName: b.name,
+                breweryName: b.brewery
+            )
+            .padding(3)
         }
         .frame(width: 34, height: 34)
         .overlay(RoundedRectangle(cornerRadius: 9).stroke(Brand.malt.opacity(0.08)))

@@ -33,7 +33,12 @@ struct MyBeersView: View {
                         ForEach(activity) { a in
                             NavigationLink { BeerDetailView(beerId: a.beerId) } label: {
                                 HStack(spacing: 12) {
-                                    BeerThumb(imageUrl: a.imageUrl, size: 42)
+                                    BeerThumb(
+                                        imageUrl: a.imageUrl,
+                                        size: 42,
+                                        style: a.style,
+                                        beerName: a.name
+                                    )
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(a.name).font(.system(.subheadline, design: .rounded).weight(.bold))
                                             .foregroundStyle(Brand.text).lineLimit(1)

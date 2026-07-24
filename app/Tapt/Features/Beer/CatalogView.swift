@@ -176,7 +176,13 @@ struct CatalogView: View {
     }
 
     private func thumbnail(_ beer: CatalogEntry) -> some View {
-        BeerThumb(imageUrl: beer.imageUrl, size: 54, style: beer.style)
+        BeerThumb(
+            imageUrl: beer.imageUrl,
+            size: 54,
+            style: beer.style,
+            beerName: beer.name,
+            breweryName: beer.breweryName
+        )
     }
 
     private var empty: some View {
@@ -262,20 +268,27 @@ struct CatalogView: View {
     NavigationStack { CatalogView() }
 }
 
-/// A reviewed real-product cutout when available, with the canonical glass
-/// fallback otherwise. Raw source scenes never render as catalog art.
+/// Product art in priority order: reviewed cutout, trusted real source, then a
+/// factual Tapt identity visual. The final lane is never a fabricated label.
 struct BeerThumb: View {
     let imageUrl: String?
     var size: CGFloat = 44
     var corner: CGFloat = 11
     /// Style for the fallback glass so an imageless beer still reads true.
     var style: String? = nil
+    var beerName: String? = nil
+    var breweryName: String? = nil
 
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: corner).fill(Brand.surface)
-            // Reviewed cutouts are cached and downsampled for dense catalog rows.
-            CachedBeerImage(url: imageUrl, targetPoints: size, style: style)
+            BeerImageView(
+                url: imageUrl,
+                maxPixelSize: max(120, size * 3),
+                style: style,
+                beerName: beerName,
+                breweryName: breweryName
+            )
                 .padding(size * 0.075)
         }
         .frame(width: size, height: size)

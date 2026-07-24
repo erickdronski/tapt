@@ -77,7 +77,13 @@ struct BeerPollSheet: View {
             Spacer(minLength: 0)
 
             VStack(spacing: 14) {
-                BeerImageView(url: c.labelImageUrl, maxPixelSize: 500, style: c.style)
+                BeerImageView(
+                    url: c.labelImageUrl,
+                    maxPixelSize: 500,
+                    style: c.style,
+                    beerName: c.name,
+                    breweryName: c.breweryName
+                )
                     .frame(height: 210)
                     .frame(maxWidth: .infinity)
                     .background(Brand.surface, in: RoundedRectangle(cornerRadius: 24))
@@ -309,7 +315,13 @@ struct BeerRaceView: View {
             HStack(spacing: 12) {
                 Text("\(s.rank)").font(.system(.footnote, design: .monospaced).weight(.bold))
                     .foregroundStyle(Brand.muted).frame(width: 20)
-                BeerImageView(url: s.labelImageUrl, maxPixelSize: 120, style: s.style)
+                BeerImageView(
+                    url: s.labelImageUrl,
+                    maxPixelSize: 120,
+                    style: s.style,
+                    beerName: s.name,
+                    breweryName: s.breweryName
+                )
                     .frame(width: 40, height: 40)
                     .background(Brand.background, in: RoundedRectangle(cornerRadius: 10))
                     .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -403,7 +415,13 @@ struct BeerRaceCard: View {
                     ForEach(top.prefix(3)) { s in
                         HStack(spacing: 10) {
                             Text(medal(s.rank)).font(.subheadline).frame(width: 22)
-                            BeerImageView(url: s.labelImageUrl, maxPixelSize: 100, style: s.style)
+                            BeerImageView(
+                                url: s.labelImageUrl,
+                                maxPixelSize: 100,
+                                style: s.style,
+                                beerName: s.name,
+                                breweryName: s.breweryName
+                            )
                                 .frame(width: 30, height: 30)
                                 .background(Brand.background, in: RoundedRectangle(cornerRadius: 8))
                                 .clipShape(RoundedRectangle(cornerRadius: 8))

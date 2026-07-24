@@ -225,16 +225,21 @@ async function load() {
       const aspect = imageAspectRatio(p.source_width, p.source_height);
       const coverage = foregroundCoverage(p.foreground_fraction);
       const flags = productImageFlags(p);
+      const sourcePage = safeExternalPage(p.source_page_url);
+      const licensePage = safeLicensePage(p.source_license_url);
       const titleId = beerId ? `product-title-${beerId}` : `product-title-${index}`;
       if (!reviewable) return `<article class="claim pending product-review product-unavailable" aria-labelledby="${titleId}">
         <div class="product-review-head"><div><h3 id="${titleId}">${esc(p.beer_name)}</h3><div class="meta">Staged ${esc(formatDate(p.staged_at))}</div></div><span class="tag rejected">Blocked</span></div>
         <p style="font-size:.9rem;color:var(--copper);margin-top:10px">Review unavailable: a source, candidate, or product identifier failed the admin page's security allowlist. Nothing has been published or rejected.</p>
       </article>`;
-      return `<article class="claim pending product-review" data-beer-id="${beerId}" data-beer-name="${esc(p.beer_name)}" tabindex="0" aria-labelledby="${titleId}" aria-keyshortcuts="A R">
+      return `<article class="claim pending product-review" data-beer-id="${beerId}" data-beer-name="${esc(p.beer_name)}" data-previews-ready="false" tabindex="0" aria-labelledby="${titleId}" aria-keyshortcuts="A R">
         <div class="product-review-head">
           <div><h3 id="${titleId}">${esc(p.beer_name)}</h3><div class="meta">Staged ${esc(formatDate(p.staged_at))}</div></div>
           <div class="product-state"><span class="tag pending">Pending</span><span class="meta review-position" style="margin:0">${index + 1} of ${productReviewCount}</span></div>
         </div>
+        <div class="meta">Brewery: ${esc(p.brewery_name || 'Unavailable')} · catalog GTIN: ${esc(p.catalog_gtin || 'Unavailable')} · source GTIN: ${esc(p.source_gtin || 'Unavailable')}</div>
+        <div class="meta">Source: ${esc(p.source_kind || 'Unavailable')} · ID: ${esc(p.source_external_id || 'Unavailable')}${sourcePage ? ` · <a href="${esc(sourcePage)}" target="_blank" rel="noopener noreferrer">Open source record</a>` : ''}</div>
+        <div class="meta">Creator: ${esc(p.source_creator || 'Unavailable')} · revision: ${esc(p.source_revision || 'Unavailable')} · source SHA-1: ${esc(p.source_sha1 || 'Unavailable')}</div>
         <div class="quality-grid" aria-label="Image quality metadata">
           <div class="quality-metric"><span>Source size</span><b title="${esc(dimensions)}">${esc(dimensions)}</b></div>
           <div class="quality-metric"><span>Resolution</span><b>${esc(megapixels)}</b></div>
@@ -242,14 +247,27 @@ async function load() {
           <div class="quality-metric"><span>Foreground</span><b>${esc(coverage)}</b></div>
         </div>
         <div class="quality-flags" aria-label="Automatic review cues">${flags.map(flag => `<span class="quality-flag ${flag.warning ? 'warn' : ''}">${esc(flag.label)}</span>`).join('')}</div>
-        <div class="meta">License: ${esc(p.source_license || 'Missing')} · candidate canvas: 1,024 × 1,024 PNG</div>
+        <div class="meta">License: ${esc(p.source_license || 'Missing')}${licensePage ? ` · <a href="${esc(licensePage)}" target="_blank" rel="noopener noreferrer">License terms</a>` : ''} · rights confirmed: ${esc(p.rights_confirmed_at ? formatDate(p.rights_confirmed_at) : 'Not separately attested')} · candidate canvas: 1,024 × 1,024 PNG</div>
+        <div class="meta">Source hash: ${esc(shortHash(p.source_sha256))} · derivative hash: ${esc(shortHash(p.derivative_sha256))} · model: ${esc(p.segmentation_model || 'Unavailable')}</div>
+        <div class="meta">Transform: ${esc(p.transformation_notes || 'Unavailable')}</div>
         <div class="product-pair">
           ${productImagePreview('Attributed source', source, `Source photo for ${p.beer_name}`, false)}
           ${productImagePreview('Tapt candidate', candidate, `Background-removed candidate for ${p.beer_name}`, true)}
         </div>
         <div class="actions">
-          <button type="button" class="btn g" data-review-action="approve" aria-keyshortcuts="A" onclick="reviewProductImage('${beerId}','approve')">Approve <span class="key">A</span></button>
-          <button type="button" class="btn r" data-review-action="reject" aria-keyshortcuts="R" onclick="reviewProductImage('${beerId}','reject')">Reject <span class="key">R</span></button>
+          <button type="button" class="btn g" data-review-action="approve" aria-keyshortcuts="A" onclick="reviewProductImage('${beerId}','approve')" disabled>Approve <span class="key">A</span></button>
+          <button type="button" class="btn r" data-review-action="reject" aria-keyshortcuts="R" onclick="reviewProductImage('${beerId}','reject')" disabled>Reject <span class="key">R</span></button>
+          <label class="field" style="min-width:190px"><span>Rejection reason</span><select class="rejection-reason">
+            <option value="">Choose before rejecting</option>
+            <option value="wrong_product">Wrong product / SKU</option>
+            <option value="back_label">Back label</option>
+            <option value="cropped_product">Cropped product</option>
+            <option value="background_artifact">Background / edge artifact</option>
+            <option value="low_resolution">Low resolution</option>
+            <option value="blur_or_glare">Blur or glare</option>
+            <option value="multipack">Multipack</option>
+            <option value="other">Other quality issue</option>
+          </select></label>
           <div class="msg review-status" id="product-status-${beerId}" aria-live="polite">Awaiting a decision.</div>
         </div>
       </article>`;
@@ -352,10 +370,21 @@ window.reviewProductImage = async (beerId, decision) => {
   const safeBeerId = safeUuid(beerId);
   const card = safeBeerId ? document.querySelector(`[data-beer-id="${safeBeerId}"]`) : null;
   if (!card || !['approve', 'reject'].includes(decision) || card.getAttribute('aria-busy') === 'true') return;
+  if (card.dataset.previewsReady !== 'true') {
+    card.querySelector('.review-status').textContent = 'Wait for both full previews to load before deciding.';
+    return;
+  }
+  const reasonSelect = card.querySelector('.rejection-reason');
+  const reason = decision === 'reject' ? reasonSelect?.value || '' : null;
+  if (decision === 'reject' && !reason) {
+    card.querySelector('.review-status').textContent = 'Choose a structured rejection reason first.';
+    reasonSelect?.focus();
+    return;
+  }
   const beerName = card.dataset.beerName || 'this product image';
   const prompt = decision === 'approve'
     ? `Publish the reviewed cutout for ${beerName}? It will become customer-visible.`
-    : `Reject the cutout for ${beerName}? The current review endpoint stores a generic manual-quality rejection; it cannot store a specific reason.`;
+    : `Reject the cutout for ${beerName} as ${reasonSelect.options[reasonSelect.selectedIndex].text}?`;
   if (!window.confirm(prompt)) {
     card.focus();
     return;
@@ -364,10 +393,10 @@ window.reviewProductImage = async (beerId, decision) => {
   const buttons = card.querySelectorAll('button[data-review-action]');
   card.setAttribute('aria-busy', 'true');
   buttons.forEach(button => { button.disabled = true; });
-  const pendingMessage = decision === 'approve' ? 'Publishing reviewed product image...' : 'Recording generic quality rejection...';
+  const pendingMessage = decision === 'approve' ? 'Publishing reviewed product image...' : 'Recording structured quality rejection...';
   status.textContent = pendingMessage;
   $('imageMsg').textContent = pendingMessage;
-  const { error } = await supa.rpc('review_product_image', { p_beer_id: beerId, p_decision: decision });
+  const { error } = await supa.rpc('review_product_image', { p_beer_id: beerId, p_decision: decision, p_reason: reason });
   if (error) {
     card.setAttribute('aria-busy', 'false');
     buttons.forEach(button => { button.disabled = false; });
@@ -375,7 +404,7 @@ window.reviewProductImage = async (beerId, decision) => {
     $('imageMsg').textContent = error.message;
     return;
   }
-  const completedMessage = decision === 'approve' ? `${beerName} published.` : `${beerName} rejected with the generic quality reason.`;
+  const completedMessage = decision === 'approve' ? `${beerName} published.` : `${beerName} rejected with a structured quality reason.`;
   $('imageMsg').textContent = completedMessage;
   let nextCard = card.nextElementSibling;
   while (nextCard && !nextCard.matches('.product-review[data-beer-id]')) nextCard = nextCard.nextElementSibling;
@@ -426,19 +455,20 @@ function safeProductSource(value) {
     if (url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
       && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
       && !url.search
-      && /^(?:v[23]\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)) return url.href;
+      && (/^(?:v[23]\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+        || /^v4\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/[0-9a-f]{64}\.png$/.test(relative))) return url.href;
   } catch (_) {}
   return null;
 }
 function safeCutout(value) {
   try {
     const url = new URL(value);
-    const match = url.pathname.match(/^\/storage\/v1\/object\/public\/beer-cutouts\/(v[23])\/([^/]+)$/);
+    const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/', '');
     return url.protocol === 'https:'
       && url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
       && !url.username && !url.password && !url.port && !url.search && !url.hash
-      && match
-      && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(match[2])
+      && (/^v[23]\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+        || /^v4\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/[0-9a-f]{64}\.png$/.test(relative))
       ? url.href : null;
   } catch (_) { return null; }
 }
@@ -449,6 +479,26 @@ function safeUuid(value) {
 function formatDate(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? 'time unavailable' : date.toLocaleString();
+}
+function safeExternalPage(value) {
+  try {
+    const url = new URL(value);
+    const hosts = new Set(['world.openfoodfacts.org', 'commons.wikimedia.org', 'www.wikidata.org']);
+    return url.protocol === 'https:' && hosts.has(url.hostname)
+      && !url.username && !url.password && !url.port ? url.href : null;
+  } catch (_) { return null; }
+}
+function safeLicensePage(value) {
+  try {
+    const url = new URL(value);
+    const hosts = new Set(['creativecommons.org', 'www.gnu.org', 'openfoodfacts.org', 'world.openfoodfacts.org', 'commons.wikimedia.org']);
+    return url.protocol === 'https:' && hosts.has(url.hostname)
+      && !url.username && !url.password && !url.port ? url.href : null;
+  } catch (_) { return null; }
+}
+function shortHash(value) {
+  const hash = String(value || '').toLowerCase();
+  return /^[0-9a-f]{64}$/.test(hash) ? `${hash.slice(0, 12)}…${hash.slice(-8)}` : 'Unavailable';
 }
 function imageDimensions(width, height) {
   return positiveNumber(width) && positiveNumber(height) ? `${Number(width).toLocaleString()} × ${Number(height).toLocaleString()} px` : 'Unavailable';
@@ -502,7 +552,14 @@ function refreshProductReviewPositions() {
   updateProductReviewCount();
 }
 window.markProductImageLoaded = image => {
-  image.closest('.product-frame')?.classList.add('loaded');
+  const frame = image.closest('.product-frame');
+  frame?.classList.add('loaded');
+  const card = image.closest('.product-review[data-beer-id]');
+  if (!card) return;
+  const ready = card.querySelectorAll('.product-frame.loaded').length === 2;
+  card.dataset.previewsReady = ready ? 'true' : 'false';
+  card.querySelectorAll('button[data-review-action]').forEach(button => { button.disabled = !ready; });
+  if (ready) card.querySelector('.review-status').textContent = 'Both previews loaded. Compare identity and edges before deciding.';
 };
 window.markProductImageFailed = image => {
   const frame = image.closest('.product-frame');
@@ -511,12 +568,17 @@ window.markProductImageFailed = image => {
   frame.classList.add('failed');
   const state = frame.querySelector('.image-state');
   if (state) state.textContent = 'Image failed to load. Open full size or leave pending.';
+  const card = image.closest('.product-review[data-beer-id]');
+  if (card) {
+    card.dataset.previewsReady = 'false';
+    card.querySelectorAll('button[data-review-action]').forEach(button => { button.disabled = true; });
+  }
 };
 document.addEventListener('keydown', event => {
   if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
   if (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(event.target.tagName) || event.target.isContentEditable) return;
   const card = event.target.closest?.('.product-review[data-beer-id]');
-  if (!card || card.getAttribute('aria-busy') === 'true') return;
+  if (!card || card.getAttribute('aria-busy') === 'true' || card.dataset.previewsReady !== 'true') return;
   const decision = event.key.toLowerCase() === 'a' ? 'approve' : event.key.toLowerCase() === 'r' ? 'reject' : null;
   if (!decision) return;
   event.preventDefault();

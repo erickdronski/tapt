@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     return json({ error: "invalid barcode" }, 400);
   }
 
-  const fields = "product_name,brands,categories_tags,image_front_url,nutriments";
+  const fields = "code,product_name,brands,categories_tags,image_front_url,nutriments";
   const offResponse = await fetch(
     `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=${fields}`,
     { headers: { "User-Agent": "Tapt/1.0 (hello@taptbeer.com)" } },
@@ -76,6 +76,10 @@ Deno.serve(async (req) => {
 
   const off = await offResponse.json();
   const product = off?.status === 1 ? off.product : null;
+  const responseBarcode = String(off?.code ?? product?.code ?? "").replace(/[^0-9]/g, "");
+  if (responseBarcode !== barcode) {
+    return json({ error: "product barcode identity mismatch" }, 422);
+  }
   const abv = product ? parseABV(product.nutriments?.alcohol_100g) : null;
   if (!product || !isBeerCategory(product.categories_tags, abv)) {
     return json({ error: "product is not classified as beer" }, 422);

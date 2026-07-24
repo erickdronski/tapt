@@ -301,7 +301,14 @@ struct CellarView: View {
     private func collectionCard(_ beer: CollectionBeer) -> some View {
         VStack(spacing: 6) {
             ZStack(alignment: .topTrailing) {
-                BeerThumb(imageUrl: beer.imageUrl, size: 96, corner: 14)
+                BeerThumb(
+                    imageUrl: beer.imageUrl,
+                    size: 96,
+                    corner: 14,
+                    style: beer.style,
+                    beerName: beer.name,
+                    breweryName: beer.brewery
+                )
                 if let r = beer.rating {
                     HStack(spacing: 1) {
                         Image(systemName: "star.fill").font(.system(size: 8))
@@ -409,7 +416,14 @@ struct CellarView: View {
 
     private func row(_ c: MyCheckin) -> some View {
         let content = HStack(spacing: 12) {
-            BeerThumb(imageUrl: c.imageUrl, size: 44, corner: 10)
+            BeerThumb(
+                imageUrl: c.imageUrl,
+                size: 44,
+                corner: 10,
+                style: c.displayStyle,
+                beerName: c.beerName,
+                breweryName: c.breweryName
+            )
             VStack(alignment: .leading, spacing: 2) {
                 Text(c.beerName).font(.system(.headline, design: .rounded)).foregroundStyle(Brand.text).lineLimit(1)
                 Text([c.breweryName, c.displayStyle ?? ""].filter { !$0.isEmpty }.joined(separator: "  ")).font(.caption).foregroundStyle(Brand.muted).lineLimit(1)

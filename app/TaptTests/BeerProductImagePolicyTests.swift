@@ -44,6 +44,14 @@ final class BeerProductImagePolicyTests: XCTestCase {
         XCTAssertEqual(BeerProductImagePolicy.displayAsset(reviewed)?.kind, .reviewedCutout)
     }
 
+    func testAcceptsImmutableReviewedV4Cutout() {
+        let hash = String(repeating: "a", count: 64)
+        let reviewed = "https://qfwiizvqxrhjlthbjosz.supabase.co/storage/v1/object/public/beer-cutouts/v4/00000000-0000-0000-0000-000000000000/\(hash).png"
+
+        XCTAssertEqual(BeerProductImagePolicy.approvedURL(reviewed)?.absoluteString, reviewed)
+        XCTAssertNil(BeerProductImagePolicy.approvedURL(reviewed.replacingOccurrences(of: hash, with: "short")))
+    }
+
     func testRejectsWrongBucketAndHost() {
         XCTAssertNil(BeerProductImagePolicy.approvedURL(
             "https://qfwiizvqxrhjlthbjosz.supabase.co/storage/v1/object/public/beer-labels/00000000-0000-0000-0000-000000000000.png"

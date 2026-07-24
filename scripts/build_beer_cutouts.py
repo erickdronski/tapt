@@ -48,7 +48,7 @@ MAX_SOURCE_PIXELS = 40_000_000
 MIN_SOURCE_EDGE = 512
 MAX_ATTEMPTS = 3
 MIN_OUTPUT_FOREGROUND_EDGE = 700
-PIPELINE_VERSION = "v3"
+PIPELINE_VERSION = "v4"
 MAX_PRODUCT_ASPECT = 0.72
 MIN_SILHOUETTE_SYMMETRY = 0.84
 MAX_CENTERLINE_DEVIATION = 0.10
@@ -66,8 +66,10 @@ SOURCE_HOSTS = {
     "upload.wikimedia.org",
 }
 CUTOUT_PATH_PATTERN = re.compile(
-    r"^/storage/v1/object/public/beer-cutouts/(?:v[23]/)?"
-    r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}[.]png$"
+    r"^/storage/v1/object/public/beer-cutouts/(?:"
+    r"(?:v[23]/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}[.]png"
+    r"|v4/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}/[0-9a-f]{64}[.]png"
+    r")$"
 )
 PARTNER_SOURCE_PATH_PATTERN = re.compile(
     r"^/storage/v1/object/public/partner-assets/"
@@ -92,6 +94,7 @@ class Candidate:
     source_url: str
     license: str | None
     gtin: str | None = None
+    source_gtin: str | None = None
     attempts: int = 0
 
 
@@ -151,7 +154,7 @@ class SupabaseAPI:
                 "GET",
                 "/rest/v1/cutout_queue",
                 params={
-                    "select": "id,name,gtin,label_image_url,label_image_license,updated_at,source_priority",
+                    "select": "id,name,gtin,label_image_url,label_image_license,source_gtin,updated_at,source_priority",
                     "or": "(cutout_url.is.null,cutout_url.eq.)",
                     "order": "source_priority.desc,market_standing.desc.nullslast,updated_at.asc,id.asc",
                     "limit": str(page_size),
@@ -196,6 +199,7 @@ class SupabaseAPI:
                     source_url=source_url,
                     license=row.get("label_image_license"),
                     gtin=(row.get("gtin") or "").strip() or None,
+                    source_gtin=(row.get("source_gtin") or "").strip() or None,
                     attempts=attempts if same_source and same_version else 0,
                 ))
                 if len(result) >= target_count:
@@ -230,16 +234,34 @@ class SupabaseAPI:
         )
 
     def stage(self, candidate: Candidate, cutout: Cutout) -> str:
-        object_name = f"{PIPELINE_VERSION}/{candidate.id}.png"
+        derivative_sha256 = hashlib.sha256(cutout.png).hexdigest()
+        object_name = f"{PIPELINE_VERSION}/{candidate.id}/{derivative_sha256}.png"
         if self.dry_run:
             return f"dry-run://beer-cutouts/{object_name}"
-        self.request(
-            "POST",
-            f"/storage/v1/object/beer-cutouts/{quote(object_name)}",
-            headers={"Content-Type": "image/png", "x-upsert": "true"},
-            data=cutout.png,
-        )
         public_url = f"{self.url}/storage/v1/object/public/beer-cutouts/{object_name}"
+        try:
+            self.request(
+                "POST",
+                f"/storage/v1/object/beer-cutouts/{quote(object_name)}",
+                headers={"Content-Type": "image/png", "x-upsert": "false"},
+                data=cutout.png,
+            )
+        except PipelineError as upload_error:
+            # A previous upload may have committed before its database write
+            # failed. Recover only when the immutable object contains the exact
+            # expected bytes; never overwrite a conflicting object.
+            try:
+                existing = self.request(
+                    "GET",
+                    f"/storage/v1/object/public/beer-cutouts/{quote(object_name)}",
+                ).content
+            except PipelineError:
+                raise upload_error
+            if hashlib.sha256(existing).hexdigest() != derivative_sha256:
+                raise PipelineError(
+                    "cutout_hash_conflict",
+                    "immutable cutout path already contains different bytes",
+                ) from upload_error
         return public_url
 
 
@@ -281,6 +303,14 @@ def validate_candidate(candidate: Candidate) -> None:
         raise PipelineError("source_license_missing", "source has no recorded image license")
     if is_multipack(candidate.name):
         raise PipelineError("multipack_source", "product name identifies a pack or case")
+    if urlsplit(candidate.source_url).hostname == "images.openfoodfacts.org":
+        catalog_gtin = re.sub(r"[^0-9]", "", candidate.gtin or "")
+        source_gtin = re.sub(r"[^0-9]", "", candidate.source_gtin or "")
+        if not catalog_gtin or catalog_gtin != source_gtin:
+            raise PipelineError(
+                "exact_gtin_required",
+                "Open Food Facts sources require matching catalog and source GTINs",
+            )
 
 
 def preferred_source_urls(source_url: str) -> list[str]:
@@ -320,6 +350,9 @@ def off_original_source_urls(
     except (requests.RequestException, ValueError):
         return []
     product = payload.get("product") or {}
+    response_code = re.sub(r"[^0-9]", "", str(payload.get("code") or product.get("code") or ""))
+    if response_code != code:
+        return []
     front_url = (product.get("image_front_url") or "").strip()
     if not front_url:
         return []
@@ -334,10 +367,11 @@ def off_original_source_urls(
     selected_key = filename.split(".", 1)[0]
     selected = (product.get("images") or {}).get(selected_key) or {}
     imgid = str(selected.get("imgid") or "").strip()
-    urls = preferred_source_urls(front_url)
+    urls: list[str] = []
     if imgid.isdigit():
         directory = parsed.path.rsplit("/", 1)[0]
         urls.append(urlunsplit(parsed._replace(path=f"{directory}/{imgid}.jpg", query="")))
+    urls.extend(preferred_source_urls(front_url))
     return list(dict.fromkeys(urls))
 
 
@@ -345,9 +379,11 @@ def source_variant_urls(
     session: requests.Session,
     candidate: Candidate,
 ) -> list[str]:
-    urls = preferred_source_urls(candidate.source_url)
-    urls.extend(off_original_source_urls(session, candidate))
-    return list(dict.fromkeys(urls))
+    if urlsplit(candidate.source_url).hostname == "images.openfoodfacts.org":
+        # OFF inputs are usable only when re-resolved from the exact catalog
+        # GTIN. Never fall back to a legacy name-matched URL.
+        return off_original_source_urls(session, candidate)
+    return preferred_source_urls(candidate.source_url)
 
 
 def source_kind(source_url: str) -> str:
@@ -765,7 +801,7 @@ def main() -> int:
                 "mask_internal_damage", "mask_asymmetric", "mask_centerline_drift", "mask_base_flare",
                 "multiple_foregrounds", "foreground_cropped", "multipack_source",
                 "source_not_allowed", "source_license_missing", "alpha_too_soft",
-                "image_too_dark", "image_low_contrast",
+                "image_too_dark", "image_low_contrast", "exact_gtin_required",
             }
             api.mark(candidate, "rejected" if terminal else "retry", error_code=error.code)
             if terminal:

@@ -41,11 +41,13 @@ struct ScannedBeer: Identifiable, Decodable {
     let abv: Double?
     let breweryName: String?
     let country: String?
+    let imageUrl: String?
     let confidence: Double
 
     enum CodingKeys: String, CodingKey {
         case id, name, style, abv, country, confidence
         case breweryName = "brewery_name"
+        case imageUrl = "image_url"
     }
 
     var pick: BeerPick {

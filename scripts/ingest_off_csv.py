@@ -90,7 +90,9 @@ def main():
             "name": name[:160],
             "brand": (field(parts, "brands").split(",")[0].strip() or None),
             "style": style_from(cats),
-            "image_url": field(parts, "image_front_url") or field(parts, "image_url") or None,
+            # Only the selected front is an exact package candidate. Generic
+            # image_url may be a back, nutrition, or ingredients photograph.
+            "image_url": field(parts, "image_front_url") or None,
         }
         alc = field(parts, "alcohol_100g")
         if alc:
