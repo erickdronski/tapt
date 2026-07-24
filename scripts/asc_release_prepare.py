@@ -169,13 +169,16 @@ def fill_review_attributes_from_beta(
         return missing
     beta = body["data"].get("attributes", {})
     still_missing: list[str] = []
+    reused_count = 0
     for field in missing:
         value = beta.get(field)
         if value is not None and str(value).strip():
             attributes[field] = value
-            print(f"review field {field}: reused from the TestFlight review detail")
+            reused_count += 1
         else:
             still_missing.append(field)
+    if reused_count:
+        print(f"reused {reused_count} review metadata field(s) from TestFlight")
     return still_missing
 
 

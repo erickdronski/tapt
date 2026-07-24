@@ -392,7 +392,7 @@ def source_kind(source_url: str) -> str:
     if host == "images.openfoodfacts.org":
         filename = parsed.path.rsplit("/", 1)[-1]
         return "open_food_facts_raw" if re.fullmatch(r"\d+[.]jpg", filename) else "open_food_facts_front"
-    if host.endswith("wikimedia.org"):
+    if host == "wikimedia.org" or host.endswith(".wikimedia.org"):
         return "wikimedia_commons"
     if host == "qfwiizvqxrhjlthbjosz.supabase.co":
         return "partner_official" if PARTNER_SOURCE_PATH_PATTERN.fullmatch(parsed.path) else "tapt_storage"
