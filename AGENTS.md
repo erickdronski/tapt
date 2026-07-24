@@ -130,6 +130,16 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Real photographic fallback for imageless beers (Codex, 2026-07-24):**
+  `BeerImageView` no longer renders the generated glass-and-text identity card
+  when exact imagery is unavailable. It now uses one of four bundled,
+  high-resolution Pexels beer photographs selected by style and visibly labels
+  the result `STYLE POUR`; reviewed cutouts and trusted exact source photos
+  still take priority. Attribution is recorded in
+  `docs/beer-style-photo-attribution.md`. The exact imageless Omnipollo
+  Imperial Stout detail screen was visually verified in the iOS 26.5
+  simulator, and the full suite passes 60/60. This change is on `main` after
+  TestFlight build 61 and therefore requires a later TestFlight build to ship.
 - **Earned delight pass (Codex, 2026-07-24):** the app's reward layer now
   closes three previously quiet loops without fake points or activity. One-tap
   unrated pours receive their own truthful Passport-stamp celebration, guided
