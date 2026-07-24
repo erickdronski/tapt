@@ -24,8 +24,12 @@ promptly (small commits, don't sit on local state another agent can't see).
    adjectives, no number-flexing (no "11,000+ beers" style claims), no "$" in
    the Beer Market (menus may show prices).
 3. **Brand mark:** one canonical beer glass, `brand/glass.svg`. Never redraw it.
-4. **No parallel agent fleets / parallel builds** — the owner's laptop crashed
-   at ~80GB twice. One subagent max, builds strictly sequential.
+4. **Controlled agent fleets allowed; heavy work stays sequential.** The owner
+   has explicitly approved Codex using multi-agent review fleets again. The old
+   ban came from Claude runs that crashed the laptop at ~80GB. Keep local
+   Xcode builds, simulator runs, image pipelines, and other memory-heavy jobs
+   strictly sequential; use fleets for review/planning/code inspection lanes
+   only unless the owner explicitly asks for more.
 5. **No new costs** without the owner's explicit OK. GitHub Actions minutes are
    budgeted; TestFlight workflow runs only on `workflow_dispatch`.
 6. Positioning: **"THE Beer Superapp. All of beer, one app."** Broad claim
@@ -402,13 +406,12 @@ promptly (small commits, don't sit on local state another agent can't see).
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
   TestFlight feedback automation are on `main`.
-  **Current App Store submission is build 58** (submitted by protected ASC
-  workflow run 30052129813 on 2026-07-23), Apple state `WAITING_FOR_REVIEW`.
-  Build 58 replaced the rejected build 50 submission after the release prepare
-  workflow selected the exact build, refreshed metadata/screenshots, and passed
-  the ASC audit. Do
-  not trust a pinned build number in this file without checking
-  `gh run list --workflow TestFlight`.
+  **Current App Store submission is build 59** (submitted by protected ASC
+  workflow run 30056271850 on 2026-07-24), Apple state `WAITING_FOR_REVIEW`.
+  Build 59 replaced build 58 after the release prepare workflow selected the
+  exact build, refreshed metadata/screenshots, and passed the ASC audit
+  (30056321211). Do not trust a pinned build number in this file without
+  checking `gh run list --workflow TestFlight`.
 - **Auth truth (2026-07-16):** email, Google, and Apple are exposed by the
   current signed app and enabled in live Supabase. The site URL is
   `https://taptbeer.com`; `tapt://auth-callback` is allowlisted; the Apple
