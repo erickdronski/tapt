@@ -21,6 +21,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   withdraw:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
       - name: Verify main branch
         run: test "$GITHUB_REF" = "refs/heads/main"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Verify explicit confirmation
         run: >-

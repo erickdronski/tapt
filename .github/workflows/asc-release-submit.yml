@@ -32,13 +32,16 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   submit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: app-store-production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Verify main branch
         run: test "$GITHUB_REF" = "refs/heads/main"
