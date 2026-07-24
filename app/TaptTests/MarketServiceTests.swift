@@ -40,6 +40,13 @@ final class MarketServiceTests: XCTestCase {
         XCTAssertFalse(MarketSort.standing.leadsWithMovement)
     }
 
+    func testEveryFilteredBoardFallsBackToRealStandingWhenEmpty() {
+        for sort in MarketSort.allCases where sort != .standing {
+            XCTAssertTrue(sort.showsStandingFallbackWhenEmpty)
+        }
+        XCTAssertFalse(MarketSort.standing.showsStandingFallbackWhenEmpty)
+    }
+
     func testMarketLabelsDecodeImportedCatalogEntities() {
         let beer = MarketBeer(
             beerId: UUID().uuidString,

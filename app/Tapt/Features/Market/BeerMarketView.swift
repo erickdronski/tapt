@@ -7,6 +7,7 @@ struct BeerMarketView: View {
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("noLowDefault") private var naOnly = false
     @State private var beers: [MarketBeer] = []
+    @State private var standingBeers: [MarketBeer] = []
     @State private var ticker: [MarketBeer] = []
     @State private var spotlight: MarketBeer?
     @State private var pulse: MarketPulse?
@@ -27,16 +28,31 @@ struct BeerMarketView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     boardHeader
-                    if loadFailed && !beers.isEmpty { refreshWarning }
-                    if loading && beers.isEmpty {
+                    if loadFailed && !visibleBoardBeers.isEmpty { refreshWarning }
+                    if loading && visibleBoardBeers.isEmpty {
                         TaptSkeletonList(rows: 8).padding(.top, 6)
-                    } else if beers.isEmpty {
+                    } else if visibleBoardBeers.isEmpty {
                         marketEmptyState
                     } else {
-                        ForEach(Array(beers.enumerated()), id: \.element.id) { i, b in
-                            Button { Haptic.tap(); selected = b } label: { row(rank: i + 1, b) }
+                        if isShowingStandingFallback {
+                            quietBoardFallback
+                        }
+                        catalogDoorway
+                        ForEach(Array(visibleBoardBeers.enumerated()), id: \.element.id) { i, b in
+                            Button {
+                                Haptic.tap()
+                                selected = b
+                            } label: {
+                                row(rank: i + 1, b, metricSort: visibleMetricSort)
+                            }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel(rowAccessibilityLabel(rank: i + 1, beer: b))
+                                .accessibilityLabel(
+                                    rowAccessibilityLabel(
+                                        rank: i + 1,
+                                        beer: b,
+                                        metricSort: visibleMetricSort
+                                    )
+                                )
                                 .accessibilityHint("Opens beer details")
                             Divider().overlay(Brand.malt.opacity(0.06)).padding(.leading, 60)
                         }
@@ -102,7 +118,7 @@ struct BeerMarketView: View {
 
             if let pulse { pulseStrip(pulse) }
             if let pulse { communityState(pulse) }
-            if let spotlight { marketSpotlight(spotlight) }
+            if let featuredBeer { marketSpotlight(featuredBeer) }
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
@@ -396,7 +412,7 @@ struct BeerMarketView: View {
 
     // MARK: board row
 
-    private func row(rank: Int, _ b: MarketBeer) -> some View {
+    private func row(rank: Int, _ b: MarketBeer, metricSort: MarketSort) -> some View {
         HStack(spacing: 10) {
             Text("\(rank)")
                 .font(.system(.footnote, design: .monospaced).weight(.bold))
@@ -424,7 +440,7 @@ struct BeerMarketView: View {
             Sparkline(values: b.displaySpark, trend: b.windowTrend)
                 .frame(width: 46, height: 30)
                 .accessibilityHidden(true)
-            rowMetric(b)
+            rowMetric(b, metricSort: metricSort)
         }
         .padding(.horizontal).padding(.vertical, 11)
         .contentShape(Rectangle())
@@ -448,9 +464,9 @@ struct BeerMarketView: View {
     }
 
     @ViewBuilder
-    private func rowMetric(_ beer: MarketBeer) -> some View {
+    private func rowMetric(_ beer: MarketBeer, metricSort: MarketSort) -> some View {
         VStack(alignment: .trailing, spacing: 2) {
-            switch sort {
+            switch metricSort {
             case .movers, .gainers, .losers:
                 Label(
                     beer.changeText,
@@ -494,14 +510,18 @@ struct BeerMarketView: View {
         .frame(width: 76, alignment: .trailing)
     }
 
-    private func rowAccessibilityLabel(rank: Int, beer: MarketBeer) -> String {
+    private func rowAccessibilityLabel(
+        rank: Int,
+        beer: MarketBeer,
+        metricSort: MarketSort
+    ) -> String {
         let brewery = beer.displayBrewery.map { ", \($0)" } ?? ""
         let wk = beer.windowTrend
         let movement = beer.isFlat
             ? (wk == 0 ? "steady" : "\(abs(wk)) points \(wk > 0 ? "up" : "down") this week")
             : "\(abs(beer.change)) points \(beer.isUp ? "up" : "down")"
         let selectedMetric: String
-        switch sort {
+        switch metricSort {
         case .movers, .gainers, .losers: selectedMetric = "\(movement) today"
         case .active: selectedMetric = "\(beer.volume) community actions in 24 hours"
         case .season: selectedMetric = beer.seasonFit > 1 ? "peak seasonal fit" : "seasonal fit"
@@ -544,12 +564,22 @@ struct BeerMarketView: View {
     private var queryID: String { "\(sort.rawValue)|\(naOnly)" }
     private var primarySorts: [MarketSort] { [.standing, .movers, .top] }
     private var secondarySorts: [MarketSort] { [.season, .gainers, .losers, .active] }
+    private var featuredBeer: MarketBeer? { spotlight ?? standingBeers.first }
+    private var isShowingStandingFallback: Bool {
+        !loading && sort.showsStandingFallbackWhenEmpty && beers.isEmpty && !standingBeers.isEmpty
+    }
+    private var visibleBoardBeers: [MarketBeer] {
+        isShowingStandingFallback ? standingBeers : beers
+    }
+    private var visibleMetricSort: MarketSort {
+        isShowingStandingFallback ? .standing : sort
+    }
     private var spotlightVoteQueryID: String {
-        "\(spotlight?.beerId ?? "none")|\(session.user?.id.uuidString ?? "guest")"
+        "\(featuredBeer?.beerId ?? "none")|\(session.user?.id.uuidString ?? "guest")"
     }
 
     private func loadSpotlightVote() async {
-        guard let beer = spotlight else {
+        guard let beer = featuredBeer else {
             spotlightVote = nil
             spotlightVoteBeerID = nil
             return
@@ -561,7 +591,7 @@ struct BeerMarketView: View {
         }
         let requestedID = beer.beerId
         let current = try? await BeerService.currentVote(beerId: requestedID, userId: uid)
-        guard spotlight?.beerId == requestedID else { return }
+        guard featuredBeer?.beerId == requestedID else { return }
         spotlightVote = current
         spotlightVoteBeerID = requestedID
     }
@@ -643,27 +673,29 @@ struct BeerMarketView: View {
             limit: 100,
             naOnly: requestedNAOnly
         )
-        async let spotlightFallbackRequest: [MarketBeer]? = try? await MarketService.feed(
+        async let standingRequest: [MarketBeer]? = try? await MarketService.feed(
             sort: .standing,
-            limit: 1,
+            limit: 40,
             naOnly: requestedNAOnly
         )
         async let pulseRequest: MarketPulse? = try? await MarketService.pulse()
-        let (board, updatedTicker, updatedSpotlight, spotlightFallback, updatedPulse) = await (
+        let (board, updatedTicker, updatedSpotlight, updatedStanding, updatedPulse) = await (
             boardRequest,
             tickerRequest,
             spotlightRequest,
-            spotlightFallbackRequest,
+            standingRequest,
             pulseRequest
         )
 
         guard !Task.isCancelled, requestedQuery == queryID else { return }
         loading = false
-        loadFailed = board == nil
+        let resolvedBoard = requestedSort == .standing ? (board ?? updatedStanding) : board
+        loadFailed = resolvedBoard == nil && updatedStanding == nil
         withAnimation(.spring(response: 0.42, dampingFraction: 0.88)) {
-            if let board { beers = board }
+            if let resolvedBoard { beers = resolvedBoard }
+            if let updatedStanding { standingBeers = updatedStanding }
             if let updatedTicker { ticker = updatedTicker }
-            spotlight = updatedSpotlight?.first ?? spotlightFallback?.first ?? spotlight
+            spotlight = updatedSpotlight?.first ?? updatedStanding?.first ?? spotlight
             if let updatedSpotlight { votedBeerCount = updatedSpotlight.count }
             if let updatedPulse { pulse = updatedPulse }
         }
@@ -699,6 +731,66 @@ struct BeerMarketView: View {
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity).padding(.top, 70).padding(.horizontal, 40)
+    }
+
+    private var quietBoardFallback: some View {
+        HStack(alignment: .top, spacing: 11) {
+            Image(systemName: "chart.bar.fill")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Brand.gold)
+                .frame(width: 32, height: 32)
+                .background(Brand.gold.opacity(0.14), in: Circle())
+            VStack(alignment: .leading, spacing: 3) {
+                Text(sort.emptyTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Brand.text)
+                Text("\(sort.emptyMessage) The top scored beers are shown below.")
+                    .font(.caption)
+                    .foregroundStyle(Brand.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+        .background(Brand.gold.opacity(0.07))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Brand.gold.opacity(0.18)).frame(height: 1)
+        }
+    }
+
+    private var catalogDoorway: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(isShowingStandingFallback ? "TOP BEERS RIGHT NOW" : "EXPLORE THE BOARD")
+                    .font(.system(size: 10, weight: .black, design: .rounded))
+                    .tracking(1)
+                    .foregroundStyle(Brand.copper)
+                Text(isShowingStandingFallback
+                     ? "Real beers ranked by Tapt Score"
+                     : "\(visibleBoardBeers.count) beers on this board")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Brand.text)
+            }
+            Spacer()
+            NavigationLink {
+                CatalogView()
+            } label: {
+                Label("Search all beer", systemImage: "magnifyingglass")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(Brand.gold, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, 12)
+        .background(Brand.surface)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Brand.malt.opacity(0.08)).frame(height: 1)
+        }
     }
 
     private var refreshWarning: some View {

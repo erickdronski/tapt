@@ -3,8 +3,8 @@ import Supabase
 
 /// The Beer Market: beers ranked by a real STANDING computed server-side in
 /// `beer_market` -- a composite of what's genuinely in season now (time-varying),
-/// real cited awards, catalog notability, and real community votes (which
-/// dominate as they accumulate). `net` is that standing; `votes`/`ups`/`downs`
+/// real cited awards, eligible pours, and real community votes. `net` is that
+/// standing; `votes`/`ups`/`downs`
 /// are real vote counts; `change` is the 24h standing move from stored daily
 /// snapshots; `volume` is real vote/pour activity in the last 24h. Nothing is
 /// invented -- the board is always populated from real signals and becomes fully
@@ -224,6 +224,10 @@ enum MarketSort: String, CaseIterable, Identifiable, Sendable {
 
     var leadsWithMovement: Bool {
         self == .movers || self == .gainers || self == .losers
+    }
+
+    var showsStandingFallbackWhenEmpty: Bool {
+        self != .standing
     }
 }
 

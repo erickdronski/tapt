@@ -131,6 +131,13 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Market never-empty follow-up (Codex, 2026-07-24):** quiet movement,
+  activity, or voting filters no longer replace all beer with a large empty
+  illustration. The selected board keeps its honest zero state, then flows
+  directly into the real top-score list with product images and a persistent
+  `Search all beer` catalog doorway. The spotlight also falls back to the
+  standing feed, so a partial top-voted request cannot leave the Market
+  visually beerless. This follow-up is on `main` after TestFlight build 63.
 - **Core beer loop rebuilt (Codex, 2026-07-24):** production migrations
   `20260724160031_revive_beer_market.sql`,
   `20260724174500_market_score_v2_guard.sql`, and
@@ -146,7 +153,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   into Next, Collection, Places, and Awards, ratings are optional, and US place
   codes resolve consistently. Production contracts, grants, score-v2 output, and
   cron behavior were verified; the full iPhone simulator suite passes 68/68.
-  This is after TestFlight build 62 and requires a later build to ship.
+  TestFlight build 63 carries this pass.
 - **Real photographic fallback for imageless beers (Codex, 2026-07-24):**
   `BeerImageView` no longer renders the generated glass-and-text identity card
   when exact imagery is unavailable. It now uses one of four bundled,
@@ -155,8 +162,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   still take priority. Attribution is recorded in
   `docs/beer-style-photo-attribution.md`. The exact imageless Omnipollo
   Imperial Stout detail screen was visually verified in the iOS 26.5
-  simulator, and the full suite passes 60/60. This change is on `main` after
-  TestFlight build 61 and therefore requires a later TestFlight build to ship.
+  simulator, and the full suite passes 60/60. TestFlight build 63 carries this
+  pass.
 - **Earned delight pass (Codex, 2026-07-24):** the app's reward layer now
   closes three previously quiet loops without fake points or activity. One-tap
   unrated pours receive their own truthful Passport-stamp celebration, guided
@@ -165,8 +172,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   real badge unlock with exact threshold progress instead of drift-prone
   hand-written milestone copy. Tab and flight selection use restrained native
   haptics. Added ten progression regression tests; the full iPhone simulator
-  suite passes 59/59. This change is on `main` after TestFlight build 60 and
-  therefore requires a later TestFlight build to ship.
+  suite passes 59/59. TestFlight build 63 carries this pass.
 - **GitHub professionalization (Codex, 2026-07-23):** the public repository now leads with a real six-screen product tour, architecture and repository maps, reproducible local validation, explicit delivery lanes, and accurate source-available terms. Added private security-reporting guidance, contribution rules, structured bug/feature forms, a pull-request template, and weekly GitHub Actions dependency maintenance. No product, production, data, or release state changed.
 - **App Review 1.4.3/2.1(a) resubmission pass (Codex, 2026-07-23):** Apple
   rejected build 50 on 2026-07-22 for excessive-alcohol read and demo-account
