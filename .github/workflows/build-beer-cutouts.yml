@@ -9,7 +9,7 @@ on:
       batch:
         description: "Real product photos to process (1-300)"
         required: false
-        default: "100"
+        default: "60"
       model:
         description: "rembg segmentation model"
         required: false
@@ -59,7 +59,7 @@ jobs:
         env:
           SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          BATCH: ${{ inputs.batch || '100' }}
+          BATCH: ${{ inputs.batch || '60' }}
           MODEL: ${{ inputs.model || 'birefnet-general' }}
           RETRY_REJECTED: ${{ inputs.retry_rejected || 'false' }}
         run: |

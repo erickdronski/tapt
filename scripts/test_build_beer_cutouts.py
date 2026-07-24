@@ -52,6 +52,7 @@ class FakeOFFSession:
 class PagingAPI(SupabaseAPI):
     def __init__(self) -> None:
         self.catalog_offsets: list[int] = []
+        self.catalog_orders: list[str] = []
         self.old_rows = [
             {
                 "id": f"old-{index}",
@@ -75,6 +76,7 @@ class PagingAPI(SupabaseAPI):
             # as beer_catalog plus market_standing, same paging contract.
             offset = int(params["offset"])
             self.catalog_offsets.append(offset)
+            self.catalog_orders.append(params["order"])
             return FakeResponse(self.old_rows if offset == 0 else [self.new_row])
 
         raw_ids = params["beer_id"][4:-1]
@@ -102,6 +104,7 @@ class CandidatePagingTests(unittest.TestCase):
 
         self.assertEqual([candidate.id for candidate in candidates], ["new-500"])
         self.assertEqual(api.catalog_offsets, [0, 500])
+        self.assertTrue(api.catalog_orders[0].startswith("source_priority.desc,"))
 
 
 class CutoutQualityTests(unittest.TestCase):

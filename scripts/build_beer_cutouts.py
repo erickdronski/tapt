@@ -12,7 +12,7 @@ Required environment:
 
 Optional environment / flags:
   SUPABASE_URL  default Tapt production project URL
-  BATCH         successful outputs per run (default 100, max 300)
+  BATCH         source photos per run (default 60, max 300)
   MODEL         rembg model (default birefnet-general)
   DRY_RUN       true to process without database/storage writes
 """
@@ -151,9 +151,9 @@ class SupabaseAPI:
                 "GET",
                 "/rest/v1/cutout_queue",
                 params={
-                    "select": "id,name,gtin,label_image_url,label_image_license,updated_at",
+                    "select": "id,name,gtin,label_image_url,label_image_license,updated_at,source_priority",
                     "or": "(cutout_url.is.null,cutout_url.eq.)",
-                    "order": "market_standing.desc.nullslast,updated_at.asc,id.asc",
+                    "order": "source_priority.desc,market_standing.desc.nullslast,updated_at.asc,id.asc",
                     "limit": str(page_size),
                     "offset": str(offset),
                 },
@@ -675,7 +675,7 @@ def add_studio_depth(image: Image.Image) -> Image.Image:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--batch", type=int, default=int(os.environ.get("BATCH", "100")))
+    parser.add_argument("--batch", type=int, default=int(os.environ.get("BATCH", "60")))
     parser.add_argument("--model", default=os.environ.get("MODEL", "birefnet-general"))
     parser.add_argument("--dry-run", action="store_true", default=os.environ.get("DRY_RUN", "").lower() == "true")
     parser.add_argument("--retry-rejected", action="store_true")
