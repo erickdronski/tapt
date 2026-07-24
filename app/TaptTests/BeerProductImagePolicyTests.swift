@@ -135,4 +135,15 @@ final class BeerProductImagePolicyTests: XCTestCase {
             "https://images.openfoodfacts.org/images/products/500/front.svg"
         ))
     }
+
+    func testImagelessBeersResolveToRealStyleReferencePhotos() {
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("Imperial Stout"), .dark)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("Baltic Porter"), .dark)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("American Amber Ale"), .amber)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("Barleywine"), .amber)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("German Pilsner"), .pale)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("Helles Lager"), .pale)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve("Hazy IPA"), .golden)
+        XCTAssertEqual(BeerStyleReferencePhoto.resolve(nil), .golden)
+    }
 }
