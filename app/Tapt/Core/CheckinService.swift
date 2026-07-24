@@ -169,7 +169,8 @@ enum CheckinService {
         rating: Double?,
         flavorTags: [String]? = nil,
         glassware: String? = nil,
-        occasion: String? = nil
+        occasion: String? = nil,
+        venueId: String? = nil
     ) async throws {
         struct Params: Encodable {
             let p_checkin_id: String
@@ -177,6 +178,7 @@ enum CheckinService {
             let p_flavor_tags: [String]?
             let p_glassware: String?
             let p_occasion: String?
+            let p_venue_id: String?
         }
         try await Supa.authedRPCVoid(
             "update_checkin_details",
@@ -185,7 +187,8 @@ enum CheckinService {
                 p_rating: rating,
                 p_flavor_tags: flavorTags,
                 p_glassware: glassware,
-                p_occasion: occasion
+                p_occasion: occasion,
+                p_venue_id: venueId
             )
         )
     }

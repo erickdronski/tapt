@@ -76,7 +76,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   `venue_menu` serves latest → `menu?v=` renders + printable QR. Portal has
   localStorage draft autosave, beforeunload guard, reorder, publish lifecycle,
   and an "add my venue" fallback (`submit_partner_inquiry`).
-- **Tapt-owned anon RPC surface (20 as of 2026-07-20, verified in prod).** This
+- **Tapt-owned anon RPC surface (22 as of 2026-07-24, verified in prod).** This
   list drifted for weeks because additions were granted but never recorded here;
   it is now the measured truth, not an aspiration. Re-derive it rather than
   trusting this paragraph:
@@ -89,7 +89,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   - guest browsing in-app (0081_public_guest_read_contract): `region_guide_feed`,
     `match_beers`, `beer_detail`, `beer_of_week_standings`,
     `beer_of_week_latest_winner`, `brewery_map_feed`, `brewery_map_feed_near`,
-    `beer_board_regions`, `beer_market_one`
+    `beer_board_regions`, `beer_market_one`, `beer_market_v2`,
+    `beer_market_pulse`
   - Dispatch + partners: `dispatch_archive`, `dispatch_issue_public`,
     `featured_partner_feed`, `log_featured_event`
   - pure formatters used inside security_invoker views: `tapt_trusted_country`,
@@ -130,6 +131,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Core beer loop rebuilt (Codex, 2026-07-24):** production migrations
+  `20260724160031_revive_beer_market.sql`,
+  `20260724174500_market_score_v2_guard.sql`, and
+  `20260724175500_passport_update_place.sql` make the Market privacy-safe and
+  truthful, remove catalog metadata from the consumer score, isolate score-v2
+  history so formula changes cannot masquerade as movement, and preserve a place
+  selected after a quick pour. The app now has one stable Home / Market /
+  Passport / Play / You shell for guests and members. Market Calls are direct,
+  explained actions with receipts; the separate Beer of Tapt contest is named
+  Crown Vote and no longer interrupts launch. Home leads with a real photographic
+  community beer, while the Market exposes real score, freshness, actions, quiet
+  states, and qualifying boards without fallback activity. Passport is organized
+  into Next, Collection, Places, and Awards, ratings are optional, and US place
+  codes resolve consistently. Production contracts, grants, score-v2 output, and
+  cron behavior were verified; the full iPhone simulator suite passes 68/68.
+  This is after TestFlight build 62 and requires a later build to ship.
 - **Real photographic fallback for imageless beers (Codex, 2026-07-24):**
   `BeerImageView` no longer renders the generated glass-and-text identity card
   when exact imagery is unavailable. It now uses one of four bundled,

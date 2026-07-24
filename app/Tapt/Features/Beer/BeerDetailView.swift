@@ -32,12 +32,6 @@ struct BeerDetailView: View {
                     header(d)
                     communityBar(d)
                     if let m = market { marketCard(m) }
-                    if let voteMessage {
-                        Label(voteMessage, systemImage: voteMessageIsError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(voteMessageIsError ? Brand.copper : Brand.hop)
-                            .padding(.horizontal, 4)
-                    }
                     logPourButton(d)
                     if session.user != nil {
                         noteCard(d)
@@ -141,35 +135,60 @@ struct BeerDetailView: View {
 
     private func communityBar(_ d: BeerDetail) -> some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text("YOUR TAKE")
-                .font(.caption2.weight(.heavy)).tracking(0.6)
-                .foregroundStyle(Brand.muted)
-            HStack(spacing: 12) {
-                voteButton(d, 1, "hand.thumbsup.fill", Brand.hop, count: max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + (myVote == 1 ? 1 : 0))
-                voteButton(d, -1, "hand.thumbsdown.fill", Brand.copper, count: max(0, d.downs - (loadedVote == -1 ? 1 : 0)) + (myVote == -1 ? 1 : 0))
+            HStack {
+                Label("YOUR MARKET CALL", systemImage: "chart.line.uptrend.xyaxis")
+                    .font(.caption2.weight(.heavy)).tracking(0.6)
+                    .foregroundStyle(Brand.gold)
                 Spacer()
+                if myVote != nil {
+                    Text("VOTED")
+                        .font(.system(size: 9, weight: .black, design: .rounded))
+                        .tracking(0.8)
+                        .foregroundStyle(Brand.hop)
+                }
+            }
+            Text("Does this beer deserve more attention?")
+                .font(.system(.headline, design: .rounded).weight(.heavy))
+                .foregroundStyle(Brand.text)
+            HStack(spacing: 9) {
+                voteButton(
+                    d, 1, "Worth the hype", "hand.thumbsup.fill", Brand.hop,
+                    count: max(0, d.ups - (loadedVote == 1 ? 1 : 0)) + (myVote == 1 ? 1 : 0)
+                )
+                voteButton(
+                    d, -1, "Not for me", "hand.thumbsdown.fill", Brand.copper,
+                    count: max(0, d.downs - (loadedVote == -1 ? 1 : 0)) + (myVote == -1 ? 1 : 0)
+                )
+            }
+            HStack {
                 if d.checkinCount > 0 {
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text("\(d.checkinCount) pours")
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
-                            .foregroundStyle(Brand.text)
-                        if let avg = d.avgRating {
-                            Label(String(format: "%.1f", avg), systemImage: "star.fill")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(Brand.gold)
-                        }
+                    Label("\(d.checkinCount) logged pours", systemImage: "drop.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Brand.muted)
+                    Spacer()
+                    if let avg = d.avgRating {
+                        Label(String(format: "%.1f average", avg), systemImage: "star.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Brand.gold)
                     }
                 } else {
-                    Text("Be the first to log it")
+                    Label("Be the first to log a real pour", systemImage: "drop.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Brand.muted)
                 }
             }
-            Text("Saved to your beers. Fresh likes and pours are what move the board each week.")
-                .font(.caption2).foregroundStyle(Brand.muted)
+            Text("Your call joins the next Market snapshot. Logging a pour also adds this beer to your Passport.")
+                .font(.caption2).foregroundStyle(Brand.muted).fixedSize(horizontal: false, vertical: true)
+            if let voteMessage {
+                Label(voteMessage, systemImage: voteMessageIsError ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(voteMessageIsError ? Brand.copper : Brand.hop)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .padding(14)
         .background(Brand.surface, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Brand.gold.opacity(0.16)))
     }
 
     // MARK: - Beer Market standing (how this beer is tracking, on the one page)
@@ -195,7 +214,7 @@ struct BeerDetailView: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("\(m.net)").font(.system(size: 34, weight: .heavy, design: .rounded)).foregroundStyle(Brand.text)
-                Text("standing").font(.subheadline).foregroundStyle(Brand.muted)
+                Text("Tapt Score").font(.subheadline).foregroundStyle(Brand.muted)
             }
             if !m.moveReason.isEmpty {
                 HStack(spacing: 8) {
@@ -205,16 +224,16 @@ struct BeerDetailView: View {
                     Spacer(minLength: 0)
                 }
             }
-            Sparkline(values: m.spark, trend: m.change)
+            Sparkline(values: m.displaySpark, trend: m.change)
                 .frame(height: 84)
             HStack(spacing: 10) {
                 marketStat("Total votes", "\(m.votes)")
-                marketStat("Votes 24h", "\(m.volume)")
+                marketStat("Actions 24h", "\(m.volume)")
             }
             let breakdown = standingBreakdown(m)
             if !breakdown.isEmpty {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("WHY THIS STANDING")
+                            Text("WHY THIS SCORE")
                         .font(.caption2.weight(.heavy)).tracking(0.6)
                         .foregroundStyle(Brand.muted)
                     ForEach(breakdown, id: \.0) { row in
@@ -230,7 +249,7 @@ struct BeerDetailView: View {
                 .padding(10)
                 .background(Brand.background.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
             }
-            Text("Moves on what people log and rate lately, plus real awards and what's in season. Beers with no recent activity cool off over time. No money, no trading, not a financial product.")
+            Text("Votes and eligible pours shape the next snapshot alongside real awards and seasonal fit. No money, no trading, not a financial product.")
                 .font(.caption2).foregroundStyle(Brand.muted)
         }
         .padding(16)
@@ -314,7 +333,6 @@ struct BeerDetailView: View {
         var rows: [(String, String)] = []
         if let s = m.seasonPts, s > 0 { rows.append(("In season for this style", "+\(s)")) }
         if let a = m.awardPts, a > 0 { rows.append(("Real medal record", "+\(a)")) }
-        if let n = m.notabilityPts, n > 0 { rows.append(("Catalog completeness", "+\(n)")) }
         if let v = m.votePts, v > 0 { rows.append(("Recent votes and pours", "+\(v)")) }
         if let q = m.driftPts, q > 0 { rows.append(("Quiet lately", "-\(q)")) }
         return rows
@@ -331,7 +349,14 @@ struct BeerDetailView: View {
         )
     }
 
-    private func voteButton(_ d: BeerDetail, _ value: Int, _ icon: String, _ color: Color, count: Int) -> some View {
+    private func voteButton(
+        _ d: BeerDetail,
+        _ value: Int,
+        _ title: String,
+        _ icon: String,
+        _ color: Color,
+        count: Int
+    ) -> some View {
         let active = myVote == value
         return Button {
             guard let uid = session.user?.id else {
@@ -358,7 +383,12 @@ struct BeerDetailView: View {
                     }
                     await MainActor.run {
                         session.clearPendingBeerVote(for: d.id)
-                        voteMessage = nil
+                        voteMessageIsError = false
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                            voteMessage = newValue == nil
+                                ? "Your Market call was removed."
+                                : "Call counted. Watch the next Market snapshot."
+                        }
                     }
                 } catch {
                     // The optimistic thumb must not lie: revert on failure.
@@ -371,16 +401,18 @@ struct BeerDetailView: View {
                 }
             }
         } label: {
-            Label {
-                Text("\(count)").contentTransition(.numericText(value: Double(count)))
-            } icon: {
+            HStack(spacing: 6) {
                 Image(systemName: icon).symbolEffect(.bounce, value: myVote == value)
+                Text(title).lineLimit(1).minimumScaleFactor(0.82)
+                Spacer(minLength: 2)
+                Text("\(count)").contentTransition(.numericText(value: Double(count)))
             }
-            .font(.system(.subheadline, design: .rounded).weight(.bold))
+            .font(.system(.caption, design: .rounded).weight(.heavy))
+            .frame(maxWidth: .infinity)
             .foregroundStyle(active ? Brand.malt : color)
-            .padding(.horizontal, 14).padding(.vertical, 9)
-            .background(active ? color : Brand.background, in: Capsule())
-            .overlay(Capsule().stroke(color.opacity(0.45)))
+            .padding(.horizontal, 11).padding(.vertical, 11)
+            .background(active ? color : Brand.background, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(color.opacity(0.45)))
         }
         .buttonStyle(.plain)
         .scaleEffect(active ? 1.06 : 1)

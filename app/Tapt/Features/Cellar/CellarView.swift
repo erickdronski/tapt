@@ -13,6 +13,7 @@ struct CellarView: View {
     @State private var countsRolled = false
     @State private var loading = false
     @State private var loadError: String?
+    @State private var activeSection: PassportSection = .next
 
     private var logVerb: String { beerGeekMode ? "Tick a pour" : "Log a pour" }
     private var collectionWord: String { beerGeekMode ? "Cellar" : "Collection" }
@@ -28,7 +29,10 @@ struct CellarView: View {
         Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
     }
     private var visitedStates: Set<String> {
-        Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
+        Set(checkins.compactMap { checkin in
+            guard checkin.passportCountry == "United States" else { return nil }
+            return BeerRegions.canonicalUSRegion(checkin.venueRegion)
+        })
     }
     private var countryCount: Int { visitedCountries.count }
     private var stateCount: Int { visitedStates.count }
@@ -129,7 +133,7 @@ struct CellarView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 TaptHeroPanel(
-                    title: "Passport progress",
+                    title: "Your beer journey",
                     subtitle: "\(uniqueBeerCount) distinct \(pl(uniqueBeerCount, "beer", "beers")) across \(styleCount) \(pl(styleCount, "style", "styles")), \(stateCount) \(pl(stateCount, "state", "states")), and \(countryCount) \(pl(countryCount, "country", "countries")).",
                     metric: "\(uniqueBeerCount)",
                     caption: nextMilestone,
@@ -138,13 +142,8 @@ struct CellarView: View {
                 )
                 .padding(.horizontal)
 
-                if let nextBadge { nextUnlockCard(nextBadge) }
-                statGrid
-                worldStrip
-                trophyShelf
-                collectionShelf
-                regionalShelves
-                pourHistory
+                passportSectionPicker
+                sectionContent
                 Text("Tapt celebrates variety and discovery, not volume. Please drink responsibly.")
                     .font(.caption2).foregroundStyle(Brand.muted)
                     .multilineTextAlignment(.center)
@@ -153,6 +152,141 @@ struct CellarView: View {
             }
             .padding(.vertical)
         }
+    }
+
+    private var passportSectionPicker: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(PassportSection.allCases) { section in
+                    Button {
+                        Haptic.tap()
+                        withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                            activeSection = section
+                        }
+                    } label: {
+                        Label(section.title, systemImage: section.icon)
+                            .font(.caption.weight(.bold))
+                            .padding(.horizontal, 13).padding(.vertical, 9)
+                            .background(activeSection == section ? Brand.gold : Brand.surface, in: Capsule())
+                            .foregroundStyle(activeSection == section ? Brand.malt : Brand.text)
+                            .overlay(Capsule().stroke(Brand.malt.opacity(0.10)))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(activeSection == section ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    @ViewBuilder
+    private var sectionContent: some View {
+        switch activeSection {
+        case .next:
+            journeySection
+        case .collection:
+            collectionShelf
+            pourHistory
+        case .places:
+            worldStrip
+            regionalShelves
+        case .awards:
+            if let nextBadge { nextUnlockCard(nextBadge) }
+            trophyShelf
+            NavigationLink {
+                PassportView(checkins: checkins, guides: guides)
+            } label: {
+                Label("Open the full stamp atlas", systemImage: "map.fill")
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.malt)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+            }
+            .buttonStyle(.taptPress)
+            .padding(.horizontal)
+        }
+    }
+
+    private var journeySection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let nextBadge { nextUnlockCard(nextBadge) }
+            guidedFlightCard
+            statGrid
+            if let latest = checkins.first {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Latest pour")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .foregroundStyle(Brand.text)
+                    row(latest)
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+
+    private var guidedFlightCard: some View {
+        let progress = currentFlightProgress
+        return NavigationLink {
+            FlightsView()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: progress.quest.icon)
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(Brand.malt)
+                    .frame(width: 54, height: 54)
+                    .background(progress.quest.tint, in: RoundedRectangle(cornerRadius: 14))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("GUIDED FLIGHT")
+                        .font(.system(size: 9.5, weight: .black, design: .rounded))
+                        .tracking(1)
+                        .foregroundStyle(progress.quest.tint)
+                    Text(progress.quest.title)
+                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.text)
+                    Text(progress.next.map { "Next: \($0.style)" } ?? "Route complete. Choose another flight.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 4)
+                VStack(alignment: .trailing, spacing: 3) {
+                    Text("\(progress.completed)/\(progress.quest.stops.count)")
+                        .font(.system(.title3, design: .rounded).weight(.heavy))
+                        .foregroundStyle(progress.quest.tint)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Brand.muted)
+                }
+            }
+            .padding(15)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(progress.quest.tint.opacity(0.28)))
+        }
+        .buttonStyle(.taptPress)
+        .padding(.horizontal)
+    }
+
+    private var currentFlightProgress: (quest: FlightQuest, completed: Int, next: FlightStop?) {
+        let styles = FlightProgress.normalizedStyles(
+            checkins.compactMap { $0.displayStyle ?? $0.style }
+        )
+        let ranked = FlightsData.quests.map { quest in
+            (quest, FlightProgress.completedStops(in: quest, styles: styles))
+        }.sorted { lhs, rhs in
+            let leftComplete = lhs.1 == lhs.0.stops.count
+            let rightComplete = rhs.1 == rhs.0.stops.count
+            if leftComplete != rightComplete { return !leftComplete }
+            if lhs.1 != rhs.1 { return lhs.1 > rhs.1 }
+            return lhs.0.title < rhs.0.title
+        }
+        let selected = ranked.first ?? (FlightsData.quests[0], 0)
+        let doneIDs = FlightProgress.completedStopIDs(in: selected.0, styles: styles)
+        return (
+            selected.0,
+            selected.1,
+            selected.0.stops.first { !doneIDs.contains($0.id) }
+        )
     }
 
     private var statGrid: some View {
@@ -277,9 +411,7 @@ struct CellarView: View {
 
     private func nextUnlockCard(_ badge: Badge) -> some View {
         let tint = badgeTint(badge)
-        return NavigationLink {
-            PassportView(checkins: checkins, guides: guides)
-        } label: {
+        return Group {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
@@ -336,7 +468,6 @@ struct CellarView: View {
             )
             .overlay(RoundedRectangle(cornerRadius: 20).stroke(tint.opacity(0.34)))
         }
-        .buttonStyle(.taptPress)
         .padding(.horizontal)
         .accessibilityLabel("Next unlock, \(badge.title), \(badge.current(stats)) of \(badge.threshold). \(badge.detail)")
     }
@@ -409,14 +540,9 @@ struct CellarView: View {
             HStack {
                 Text("Pour history").font(.system(.title3, design: .rounded).weight(.bold)).foregroundStyle(Brand.text)
                 Spacer()
-                NavigationLink { PassportView(checkins: checkins, guides: guides) } label: {
-                    HStack(spacing: 3) {
-                        Text("Passport").font(.caption.weight(.bold))
-                        Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
-                    }
+                Text("\(checkins.count) total")
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(Brand.copper)
-                }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal)
             VStack(spacing: 10) {
@@ -552,6 +678,28 @@ struct CellarView: View {
         // Spin the stat numbers up from zero once the real data is in.
         if !countsRolled {
             withAnimation(.easeOut(duration: 0.6)) { countsRolled = true }
+        }
+    }
+}
+
+private enum PassportSection: String, CaseIterable, Identifiable {
+    case next, collection, places, awards
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .next: "Next"
+        case .collection: "Collection"
+        case .places: "Places"
+        case .awards: "Awards"
+        }
+    }
+    var icon: String {
+        switch self {
+        case .next: "arrow.up.forward.circle.fill"
+        case .collection: "square.stack.3d.up.fill"
+        case .places: "map.fill"
+        case .awards: "seal.fill"
         }
     }
 }

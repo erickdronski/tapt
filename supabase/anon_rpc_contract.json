@@ -26,6 +26,8 @@
     "public.beer_board_regions()",
     "public.beer_detail(p_beer_id uuid)",
     "public.beer_market_one(p_beer_id uuid)",
+    "public.beer_market_pulse()",
+    "public.beer_market_v2(p_sort text, p_limit integer, p_demo boolean, p_na_only boolean)",
     "public.beer_of_week_latest_winner()",
     "public.beer_of_week_standings(p_limit integer)",
     "public.brewery_map_feed(p_limit integer)",
@@ -45,6 +47,7 @@
     "public.venue_menu(p_venue uuid)"
   ],
   "_notes": {
+    "beer_market_pulse / beer_market_v2": "Public, non-personal Beer Market aggregates used by guest browsing. Explicit votes are public community actions; check-in inputs are limited to visible rows with current aggregate_analytics consent.",
     "graphql_public.graphql": "Supabase-managed GraphQL endpoint, owned by supabase_admin. Anon-callable by Supabase default and not ours to revoke. Listed so it is a conscious entry rather than an invisible one; it was outside the guard entirely until 2026-07-20.",
     "log_featured_event": "The only anon-callable function that WRITES. Intentional: it records impressions/clicks for partner placements from the public web. Its own body must keep validating input.",
     "tapt_scan_name / tapt_trusted_country": "Pure formatters used inside security_invoker views; anon needs execute for those views to resolve."

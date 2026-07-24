@@ -26,7 +26,10 @@ struct PassportView: View {
         Set(checkins.map(\.passportCountry).filter { !$0.isEmpty })
     }
     private var visitedStates: Set<String> {
-        Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
+        Set(checkins.compactMap { checkin in
+            guard checkin.passportCountry == "United States" else { return nil }
+            return BeerRegions.canonicalUSRegion(checkin.venueRegion)
+        })
     }
     private var visitedStyles: [String] {
         Array(Set(checkins.compactMap { checkin in
@@ -112,7 +115,7 @@ struct PassportView: View {
             .padding()
         }
         .background(Brand.background)
-        .navigationTitle("Passport")
+        .navigationTitle("Stamp atlas")
         .navigationBarTitleDisplayMode(.inline)
         .taptCelebration($celebration)
         .onAppear { checkForNewBadge() }

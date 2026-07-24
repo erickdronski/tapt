@@ -6,20 +6,26 @@ is kept current; this document is not.
 > **Read this first.** The "Current State" section below is a snapshot from
 > **2026-07-13** and several of its claims are now false. It was presented as
 > current for a week and misled an audit, so it is labelled rather than quietly
-> patched. Corrections as of **2026-07-20**:
+> patched. Corrections as of **2026-07-24**:
 >
 > - **Apple sign-in is ENABLED**, not "disabled in Supabase pending credentials".
 >   The provider is on (client `app.tapt.tapt`), `/auth/v1/settings` advertises
 >   it, the entitlement ships, and the button renders. The old App Store 4.8
 >   rejection risk is closed.
-> - **The app IS on TestFlight.** Build 55 (2026-07-20, from `967ae63`) is Apple
+> - **The app IS on TestFlight.** Build 62 is the latest verified internal build
+>   before the current core-loop release candidate. It is Apple
 >   `VALID` and `READY_FOR_BETA_TESTING`. The line below saying the candidate "is
 >   not yet on TestFlight" describes July 13.
-> - **Migrations run well past `0083`.** As of 2026-07-20 prod is at
->   `20260720051000`. Do not use `0083` as the high-water mark.
-> - **Anon RPC access is 20 functions, not "the four web surfaces".** The
+> - **Migrations run well past `0083`.** Production includes the July 24 Market
+>   score-v2 guard and Passport place-update migration. Do not use `0083` as the
+>   high-water mark.
+> - **Anon RPC access is 22 Tapt-owned functions, not "the four web surfaces".** The
 >   authoritative list is `supabase/anon_rpc_contract.json`, enforced against
 >   live prod on every push by `scripts/check_anon_rpc_contract.py`.
+> - **The core app shell is stable.** Guests and members both use Home, Market,
+>   Passport, Play, and You. Market Calls and Crown Votes are explicitly
+>   different, and Passport is organized around Next, Collection, Places, and
+>   Awards.
 >
 > For anything release-critical, trust `AGENTS.md` and the live systems over the
 > snapshot below.
@@ -58,8 +64,9 @@ is kept current; this document is not.
   through `0083_beer_name_quality_v4.sql`.
 - Catalog, map, market, Tonight, Cellar, partner menu, media-processing, and
   No/Low read models are live.
-- Public RPC access is limited to the four web surfaces documented in
-  `AGENTS.md`; account and community data require an authenticated session.
+- Public RPC access follows the signature-level manifest in
+  `supabase/anon_rpc_contract.json`. The Beer Market feed and aggregate pulse are
+  guest-readable; personal account data still requires an authenticated session.
 - Partner logo replacement has the Storage permissions required for upsert.
 - The Overture venue loader and media cutout pipeline are implemented. Their
   first reviewed production batches have not run yet.
@@ -109,8 +116,8 @@ Complete these in order:
   credentials and notification controls are complete.
 - Deepen local density with licensed venue data, partner-maintained menus, and
   first-party check-ins. Do not manufacture activity to fill empty states.
-- Expand the Cellar and Passport with factual origin, style, and location context
-  derived from each user's real history.
+- Move Passport progress and per-pour impact summaries to one authoritative
+  server contract so every logging path can show exactly what changed.
 
 ## Known Gaps
 
@@ -119,7 +126,9 @@ Complete these in order:
 - The current branch still needs a real Xcode CI build and signed-device test.
 - Production product imagery remains incomplete; the new pipeline is ready but
   its first reviewed batch has not run.
-- Local market and community surfaces will be quiet until real activity exists.
+- Community activity can still be quiet until real votes and eligible pours
+  arrive. The Beer Market now distinguishes that quiet state from real daily
+  standing movement instead of filling filters with static fallback rows.
 - Newsletter collection and send code exist, but production delivery remains inactive until its sender and cron secrets are verified.
 - Legal and App Store metadata require an owner review before submission.
 - Supabase reports outstanding invoices; service continuity is a release risk

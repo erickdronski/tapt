@@ -30,6 +30,9 @@ struct ExploreView: View {
     @State private var recommendation: RecommendedBeer?
     @State private var ticker: [MarketBeer] = []
     @State private var tickerBeer: MarketBeer?
+    private var marketGatewayBeer: MarketBeer? {
+        ticker.dropFirst().first ?? ticker.first
+    }
 
     private var visibleBeers: [TrendedBeer] {
         // No/Low uses the canonical server field, never substring matching.
@@ -62,7 +65,6 @@ struct ExploreView: View {
         visibleBeers.contains { $0.popularity != 0 || $0.momentum != 0 }
     }
     private var heroBeer: TrendedBeer? { hasMarketActivity ? (movers.first ?? top.first) : nil }
-    private var totalMomentum: Int { movers.prefix(8).map(\.momentum).reduce(0, +) }
     private var activeGuide: RegionBeerGuide? {
         guides.first { $0.name == region }
     }
@@ -78,25 +80,13 @@ struct ExploreView: View {
                     quickDuo.reveal(appeared, 4)
                     if let recommendation { PickedForYouCard(beer: recommendation).reveal(appeared, 5) }
                     if !personalizedBeers.isEmpty { tasteSection.reveal(appeared, 6) }
-                    BeerRaceCard().padding(.horizontal).reveal(appeared, 7)
-                    // State and country boards are off until we have real
-                    // regional activity. The board is worldwide-only for now,
-                    // so there is no region picker and nothing to relabel.
-                    if loading && beers.isEmpty {
-                        TaptSkeletonList(rows: 5)
-                    } else {
-                        if hasMarketActivity { moversSection.reveal(appeared, 8) }
-                        topSection.reveal(appeared, 9)
-                    }
-                    FeaturedPartnersRail().reveal(appeared, 10)
+                    marketGateway.reveal(appeared, 7)
+                    BeerRaceCard().padding(.horizontal).reveal(appeared, 8)
+                    FeaturedPartnersRail().reveal(appeared, 9)
                 }
                 .padding(.bottom)
             }
             .background(Brand.background)
-            // The live tape is a fixed top bar, not a scrolling row. Its malt
-            // band bleeds up through the status bar so it fully covers the top
-            // of the phone -- no page content ever shows behind it.
-            .safeAreaInset(edge: .top, spacing: 0) { marketTickerBar }
             .overlay(alignment: .bottom) { voteToast }
             .taptCelebration($celebration)
             .toolbar(.hidden, for: .navigationBar)
@@ -109,15 +99,22 @@ struct ExploreView: View {
             .task { await loadGuides() }
             .task { await hydrateTastePreferences() }
             .task { await detectHomeState() }
-            .task(id: noLowDefault) { await loadTicker() }
+            .task(id: noLowDefault) {
+                await loadTicker()
+                while !Task.isCancelled {
+                    do {
+                        try await Task.sleep(for: .seconds(60))
+                    } catch {
+                        return
+                    }
+                    await loadTicker()
+                }
+            }
             .task { await loadRecommendation() }
             .refreshable {
                 await load()
                 await loadTicker()
                 await loadRecommendation()
-            }
-            .sheet(item: $tickerBeer) { b in
-                NavigationStack { BeerDetailView(beerId: b.beerId) }
             }
         }
     }
@@ -148,25 +145,90 @@ struct ExploreView: View {
     }
 
     private var heroPanel: some View {
-        TaptHeroPanel(
-            title: heroBeer?.name ?? "Your beer radar",
-            subtitle: heroBeer.map { "\($0.brewery) is \($0.momentum >= 0 ? "climbing" : "sliding") \(dataRegion == "Global" ? "worldwide" : "in \(dataRegion)")." }
-                ?? activeGuide.map { "\($0.name) leans \($0.heroStyle.lowercased()): \($0.flavorNotes.prefix(3).joined(separator: ", "))." }
-                ?? "Browse real beers and cast the vote that starts the board.",
-            metric: heroBeer.map { "\($0.momentum >= 0 ? "▲ +" : "▼ ")\(abs($0.momentum))" } ?? "EXPLORE",
-            caption: feedNote ?? (heroBeer != nil ? "Tap to open · \(max(totalMomentum, 0)) market heat"
-                                                   : (noLowDefault ? "No / Low lens on" : "Catalog ready · market awaiting votes")),
-            icon: "chart.line.uptrend.xyaxis"
+        let beer = ticker.first
+
+        return ZStack {
+            LinearGradient(
+                colors: [Brand.malt, Brand.copper.opacity(0.96), Brand.gold.opacity(0.86)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(alignment: .topTrailing) {
+                Circle()
+                    .fill(Brand.foam.opacity(0.10))
+                    .frame(width: 170, height: 170)
+                    .offset(x: 52, y: -58)
+            }
+
+            HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(beer == nil ? "FIND YOUR NEXT BEER" : "TODAY'S COMMUNITY PICK")
+                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .tracking(1.15)
+                        .foregroundStyle(Brand.gold)
+
+                    Text(beer?.displayName ?? "A real beer worth discovering")
+                        .font(.system(.title2, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.foam)
+                        .lineLimit(3)
+
+                    if let brewery = beer?.displayBrewery {
+                        Text(brewery)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Brand.foam.opacity(0.76))
+                            .lineLimit(1)
+                    }
+
+                    Text(beer == nil
+                         ? "Search the live catalog, scan a label, or open the Market."
+                         : "Make your Market call, then watch it join the next snapshot.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.foam.opacity(0.78))
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Label(
+                        beer == nil ? "Browse the live catalog" : "Open this beer",
+                        systemImage: "arrow.up.right"
+                    )
+                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .foregroundStyle(Brand.malt)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 7)
+                    .background(Brand.gold, in: Capsule())
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                BeerImageView(
+                    url: beer?.imageUrl,
+                    maxPixelSize: 420,
+                    style: beer?.displayStyle ?? "Lager",
+                    beerName: beer?.displayName,
+                    breweryName: beer?.displayBrewery
+                )
+                .frame(width: 112, height: 156)
+                .padding(6)
+                .background(Brand.foam.opacity(0.96), in: RoundedRectangle(cornerRadius: 18))
+            }
+            .padding(18)
+        }
+        .frame(minHeight: 220)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(Brand.gold.opacity(0.42), lineWidth: 1)
         )
+        .shadow(color: Brand.malt.opacity(0.22), radius: 22, y: 14)
+        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder private var hero: some View {
         Group {
-            if let heroBeer {
-                NavigationLink { BeerDetailView(beerId: heroBeer.id) } label: { heroPanel }
+            if let beer = ticker.first {
+                NavigationLink { BeerDetailView(beerId: beer.id) } label: { heroPanel }
                     .buttonStyle(.plain)
             } else {
-                heroPanel
+                NavigationLink { CatalogView() } label: { heroPanel }
+                    .buttonStyle(.plain)
             }
         }
         .padding(.horizontal)
@@ -175,7 +237,7 @@ struct ExploreView: View {
     /// Screen title, now BELOW the live ticker tape (the ticker leads the page so
     /// the app opens on motion, not on empty large-title chrome).
     private var exploreHeader: some View {
-        Text("Explore")
+        Text("Home")
             .font(.system(size: 34, weight: .bold))
             .foregroundStyle(Brand.text)
             .padding(.horizontal)
@@ -194,6 +256,55 @@ struct ExploreView: View {
             // covers the very top of the phone and nothing shows behind it.
             .background(Brand.malt.ignoresSafeArea(edges: .top))
         }
+    }
+
+    private var marketGateway: some View {
+        NavigationLink {
+            BeerMarketView()
+        } label: {
+            HStack(spacing: 14) {
+                if let beer = marketGatewayBeer {
+                    BeerImageView(
+                        url: beer.imageUrl,
+                        maxPixelSize: 180,
+                        style: beer.displayStyle,
+                        beerName: beer.displayName,
+                        breweryName: beer.displayBrewery
+                    )
+                    .frame(width: 62, height: 74)
+                } else {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Brand.malt)
+                        .frame(width: 58, height: 58)
+                        .background(Brand.gold, in: RoundedRectangle(cornerRadius: 15))
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SHAPE THE BEER MARKET")
+                        .font(.system(size: 9.5, weight: .black, design: .rounded))
+                        .tracking(1)
+                        .foregroundStyle(Brand.gold)
+                    Text(marketGatewayBeer?.displayName ?? "Make today's first Market call")
+                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.text)
+                        .lineLimit(2)
+                    Text(marketGatewayBeer.map { _ in "Real community calls lead. Add yours and watch the next snapshot." }
+                         ?? "Vote on real beers, log real pours, and see what the community moves next.")
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 2)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Brand.muted)
+            }
+            .padding(15)
+            .background(Brand.surface, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Brand.gold.opacity(0.26)))
+        }
+        .buttonStyle(.taptPress)
+        .padding(.horizontal)
     }
 
     /// Scan lives on the home page now (it left the tab dock).
@@ -355,7 +466,7 @@ struct ExploreView: View {
 
     private var moversSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            header("On the come-up", dataRegion == "Global" ? "Biggest movers worldwide" : "Biggest movers in \(dataRegion)")
+            header("Community movement", dataRegion == "Global" ? "Largest real changes worldwide" : "Largest real changes in \(dataRegion)")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(Array(movers.prefix(10))) { ticker($0) }
@@ -555,7 +666,7 @@ struct ExploreView: View {
         let f = flag(b.country)
         let parts = [b.brewery, b.style].map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let text = parts.joined(separator: " · ")
-        if text.isEmpty && f.isEmpty { return "Community pick" }
+        if text.isEmpty && f.isEmpty { return "Beer" }
         if text.isEmpty { return f }
         return f.isEmpty ? text : "\(text)  \(f)"
     }
@@ -614,13 +725,22 @@ struct ExploreView: View {
 
     private func loadTicker() async {
         do {
+            let communityPicks = try await MarketService.feed(
+                sort: .top,
+                limit: 18,
+                naOnly: noLowDefault
+            )
+            if !communityPicks.isEmpty {
+                ticker = communityPicks
+                return
+            }
             ticker = try await MarketService.feed(
-                sort: .movers,
+                sort: .standing,
                 limit: 18,
                 naOnly: noLowDefault
             )
         } catch {
-            // Keep the last good tape visible through a transient refresh failure.
+            // Keep the last good photographic story visible through a transient refresh failure.
         }
     }
 

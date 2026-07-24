@@ -2,9 +2,8 @@ import SwiftUI
 
 // MARK: - Voting popup (the drunk-proof one-tap flow)
 
-/// One beer at a time, three big buttons: love, nah, skip. Runs through the
-/// week / month / year races (only candidates you have not voted on), then hands
-/// off to the leaderboard. Shown on app open when there is something to vote on.
+/// One beer at a time for the separate Beer of Tapt Crown competition.
+/// Market Calls shape the community score; Crown Votes decide these winners.
 struct BeerPollSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Session.self) private var session
@@ -29,7 +28,7 @@ struct BeerPollSheet: View {
                     voteView(queue[index].period, queue[index].cand)
                 }
             }
-            .navigationTitle("Cast your vote")
+            .navigationTitle("Crown Vote")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -97,7 +96,7 @@ struct BeerPollSheet: View {
                     Text([c.breweryName, c.style, c.country].compactMap { $0 }.joined(separator: " · "))
                         .font(.subheadline).foregroundStyle(Brand.muted).lineLimit(1)
                     if let s = c.standing {
-                        Label("Market standing \(s)", systemImage: "chart.line.uptrend.xyaxis")
+                        Label("Tapt Score \(s)", systemImage: "chart.line.uptrend.xyaxis")
                             .font(.caption.weight(.bold)).foregroundStyle(Brand.copper)
                             .padding(.horizontal, 10).padding(.vertical, 4)
                             .background(Brand.gold.opacity(0.12), in: Capsule())
@@ -116,9 +115,9 @@ struct BeerPollSheet: View {
                 .font(.system(.caption, design: .monospaced)).foregroundStyle(Brand.muted)
 
             HStack(spacing: 12) {
-                voteButton("Nah", "hand.thumbsdown.fill", Brand.copper, -1)
+                voteButton("Pass", "hand.thumbsdown.fill", Brand.copper, -1)
                 voteButton("Skip", "forward.fill", Brand.muted, 0)
-                voteButton("Love", "hand.thumbsup.fill", Brand.hop, 1)
+                voteButton("Crown it", "crown.fill", Brand.hop, 1)
             }
             .padding(.horizontal).padding(.bottom, 6)
         }
@@ -366,7 +365,7 @@ struct BeerRaceCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Beer of Tapt", systemImage: "crown.fill")
+                Label("Beer of Tapt Crown", systemImage: "crown.fill")
                     .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(Brand.text)
                 Spacer()
@@ -407,7 +406,7 @@ struct BeerRaceCard: View {
             }
 
             if top.isEmpty {
-                Text("No votes yet \(period.short.lowercased()). Be the first to crown one.")
+                Text("No Crown Votes yet \(period.short.lowercased()). Be the first to crown one.")
                     .font(.subheadline).foregroundStyle(Brand.muted)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
@@ -436,7 +435,7 @@ struct BeerRaceCard: View {
             }
 
             Button { showVote = true } label: {
-                Label("Vote for \(period.title.replacingOccurrences(of: "Beer of ", with: ""))",
+                Label("Cast Crown Vote",
                       systemImage: "hand.thumbsup.fill")
                     .font(.system(.subheadline, design: .rounded).weight(.bold))
                     .foregroundStyle(Brand.malt)

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The "Discover" tab: a hub for the fun, secondary surfaces (Beer School + Games).
+/// Play: guided tasting, beer culture, community, and table games.
 struct DiscoverView: View {
     @Environment(Session.self) private var session
     @State private var appeared = false
@@ -70,7 +70,7 @@ struct DiscoverView: View {
                 .padding()
             }
             .background(Brand.background)
-            .navigationTitle("Discover")
+            .navigationTitle("Play")
             .onAppear {
                 withAnimation(.spring(response: 0.7, dampingFraction: 0.78)) { appeared = true }
             }

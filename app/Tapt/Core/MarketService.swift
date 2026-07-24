@@ -44,8 +44,14 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     /// Trend across the whole visible spark window (what a drawn sparkline
     /// shows). Falls back to the daily change when there is no window yet.
     var windowTrend: Int {
+        // A flat current snapshot cannot safely prove that older scores were
+        // calculated with the same formula. Prefer a conservative flat state.
+        guard change != 0 else { return 0 }
         guard spark.count > 1, let first = spark.first, let last = spark.last else { return change }
         return Int(last - first)
+    }
+    var displaySpark: [Double] {
+        change == 0 ? [Double(net)] : spark
     }
     /// No movement yet. Rendered as a neutral state, never a green "+0" --
     /// the board must not signal gains that do not exist.
@@ -53,13 +59,20 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     /// Standing is a level, not a gain: no "+" prefix.
     var netText: String { "\(net)" }
     var changeText: String { "\(change > 0 ? "+" : "")\(change)" }
+    var voteBalance: Int { ups - downs }
+    var voteBalanceText: String { "\(voteBalance > 0 ? "+" : "")\(voteBalance)" }
+    var displayName: String { name.decodingCatalogEntities }
+    var displayBrewery: String? { brewery?.decodingCatalogEntities }
+    var displayStyle: String? { style?.decodingCatalogEntities }
     /// Worth a visible pulse ONLY when something is actually happening
     /// (real 24h activity or real movement), not from standing alone.
     var isHot: Bool { heat >= 70 && (volume > 0 || change != 0) }
     /// A short human "why it's moving" line -- a real seasonal reason if it fits the
     /// season, otherwise the style. Never invented.
-    var moveReason: String { reason ?? (style ?? "Community pick") }
-    var isSeasonal: Bool { reason != nil }
+    var moveReason: String {
+        (reason ?? (style ?? "Movement detail unavailable")).decodingCatalogEntities
+    }
+    var isSeasonal: Bool { reason?.hasSuffix("in season now") == true }
 
     enum CodingKeys: String, CodingKey {
         case symbol, name, brewery, style, country, net, votes, change, volume, ups, downs, spark, reason, heat
@@ -75,17 +88,78 @@ struct MarketBeer: Identifiable, Decodable, Sendable, Hashable {
     }
 }
 
-enum MarketSort: String, CaseIterable, Identifiable {
-    case movers, season, gainers, losers, active, top
+private extension String {
+    /// A few imported catalog sources HTML-encode punctuation in otherwise plain
+    /// product text. Keep those source values intact while presenting clean labels.
+    var decodingCatalogEntities: String {
+        let replacements = [
+            ("&#039;", "'"), ("&#39;", "'"), ("&apos;", "'"),
+            ("&quot;", "\""), ("&#34;", "\""), ("&amp;", "&"),
+            ("&lt;", "<"), ("&gt;", ">")
+        ]
+        let once = replacements.reduce(self) { value, replacement in
+            value.replacingOccurrences(of: replacement.0, with: replacement.1)
+        }
+        return replacements.reduce(once) { value, replacement in
+            value.replacingOccurrences(of: replacement.0, with: replacement.1)
+        }
+    }
+}
+
+struct MarketPulse: Decodable, Sendable, Equatable {
+    let computedAt: String?
+    let tracked: Int
+    let moving24h: Int
+    let gainers24h: Int
+    let sliders24h: Int
+    let active24h: Int
+    let votes24h: Int
+    let pours24h: Int
+    let votes7d: Int
+    let pours7d: Int
+
+    var communityActions24h: Int { votes24h + pours24h }
+    var communityActions7d: Int { votes7d + pours7d }
+    var isQuiet: Bool { communityActions24h == 0 }
+
+    var updatedDate: Date? {
+        guard let computedAt else { return nil }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: computedAt) ?? ISO8601DateFormatter().date(from: computedAt)
+    }
+
+    func isFresh(at now: Date = .now) -> Bool {
+        guard let updatedDate else { return false }
+        return now.timeIntervalSince(updatedDate) < 65 * 60
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case tracked
+        case computedAt = "computed_at"
+        case moving24h = "moving_24h"
+        case gainers24h = "gainers_24h"
+        case sliders24h = "sliders_24h"
+        case active24h = "active_24h"
+        case votes24h = "votes_24h"
+        case pours24h = "pours_24h"
+        case votes7d = "votes_7d"
+        case pours7d = "pours_7d"
+    }
+}
+
+enum MarketSort: String, CaseIterable, Identifiable, Sendable {
+    case movers, season, gainers, losers, active, top, standing
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .movers: return "Top movers"
+        case .movers: return "Moving"
         case .season: return "In season"
         case .gainers: return "Gaining"
-        case .losers: return "Sliding"
-        case .active: return "Most active"
+        case .losers: return "Cooling"
+        case .active: return "Active now"
         case .top: return "Top voted"
+        case .standing: return "Top score"
         }
     }
     var icon: String {
@@ -96,7 +170,60 @@ enum MarketSort: String, CaseIterable, Identifiable {
         case .losers: return "chart.line.downtrend.xyaxis"
         case .active: return "bolt.fill"
         case .top: return "trophy.fill"
+        case .standing: return "list.number"
         }
+    }
+
+    var boardTitle: String {
+        switch self {
+        case .movers: return "Moving today"
+        case .season: return "Built for this season"
+        case .gainers: return "Gaining score"
+        case .losers: return "Cooling today"
+        case .active: return "Community activity"
+        case .top: return "Top voted"
+        case .standing: return "Highest Tapt Score"
+        }
+    }
+
+    var boardSubtitle: String {
+        switch self {
+        case .movers: return "Largest changes since yesterday's snapshot."
+        case .season: return "Season fit first, then Tapt Score."
+        case .gainers: return "Only beers with a positive daily change."
+        case .losers: return "Only beers with a negative daily change."
+        case .active: return "Only beers with a vote or eligible pour in the last 24 hours."
+        case .top: return "Only beers with real community votes. Net votes lead."
+        case .standing: return "Tapt Score blends season, cited awards, votes, and eligible pours."
+        }
+    }
+
+    var emptyTitle: String {
+        switch self {
+        case .movers: return "No score changes yet"
+        case .season: return "No seasonal board yet"
+        case .gainers: return "No beer is gaining today"
+        case .losers: return "No beer is cooling today"
+        case .active: return "No community activity today"
+        case .top: return "No community votes yet"
+        case .standing: return "No score data yet"
+        }
+    }
+
+    var emptyMessage: String {
+        switch self {
+        case .movers: return "The latest snapshot is steady. A real vote or eligible pour can start the next move."
+        case .season: return "No beer currently meets the seasonal fit threshold."
+        case .gainers: return "The latest snapshot has no positive score changes."
+        case .losers: return "The latest snapshot has no negative score changes."
+        case .active: return "There are no votes or eligible pours in the last 24 hours."
+        case .top: return "Cast the first vote from a beer page to start this board."
+        case .standing: return "The score engine has not published a board yet."
+        }
+    }
+
+    var leadsWithMovement: Bool {
+        self == .movers || self == .gainers || self == .losers
     }
 }
 
@@ -116,17 +243,26 @@ enum MarketService {
             let p_demo: Bool
             let p_na_only: Bool
         }
-        // authedRPC: the market is authenticated-only; never let the SDK's
-        // silent anon fallback turn an auth blip into an "empty board".
-        return try await Supa.authedRPC(
-            "beer_market_v2",
-            params: Params(
-                p_sort: sort.rawValue,
-                p_limit: limit,
-                p_demo: false,
-                p_na_only: naOnly
+        return try await Supa.client
+            .rpc(
+                "beer_market_v2",
+                params: Params(
+                    p_sort: sort.rawValue,
+                    p_limit: limit,
+                    p_demo: false,
+                    p_na_only: naOnly
+                )
             )
-        )
+            .execute()
+            .value
+    }
+
+    static func pulse() async throws -> MarketPulse? {
+        let rows: [MarketPulse] = try await Supa.client
+            .rpc("beer_market_pulse")
+            .execute()
+            .value
+        return rows.first
     }
 
     /// One beer's live standing + 7-day sparkline for the unified beer profile.

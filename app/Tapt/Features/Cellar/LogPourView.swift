@@ -320,13 +320,16 @@ struct LogPourView: View {
             section("Brewery or taproom") {
                 venuePicker(for: beer)
             }
-            Button(saving ? "Saving..." : (rating != nil ? "Log it" : "Tap a star to rate it")) { save(beer) }
+            Button(saving ? "Saving..." : (rating != nil ? "Log with rating" : "Log without rating")) { save(beer) }
                 .font(.system(.headline, design: .rounded))
                 .frame(maxWidth: .infinity).padding(.vertical, 15)
-                .background(rating != nil ? Brand.gold : Brand.haze, in: RoundedRectangle(cornerRadius: 14))
-                .foregroundStyle(rating != nil ? Brand.malt : Brand.muted)
-                // A rating is the one thing a pour means; never invent one.
-                .disabled(saving || rating == nil)
+                .background(Brand.gold, in: RoundedRectangle(cornerRadius: 14))
+                .foregroundStyle(Brand.malt)
+                .disabled(saving)
+            Text("Rating and tasting details are optional. The pour still advances your Passport.")
+                .font(.caption2).foregroundStyle(Brand.muted)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
                 Text("Know your limits. Never drink and drive. 21+.")
                     .font(.caption2).foregroundStyle(Brand.muted)
                     .multilineTextAlignment(.center)
@@ -500,10 +503,6 @@ struct LogPourView: View {
     }
 
     private func save(_ beer: BeerPick) {
-        guard let rating else {
-            errorMessage = "Choose a rating before logging this pour."
-            return
-        }
         guard let uid = session.user?.id else {
             // Do NOT tear the session down here: endGuestSession() swapped the app
             // root to SignInView and killed this sheet before the alert could show,
@@ -529,7 +528,8 @@ struct LogPourView: View {
                             rating: rating,
                             flavorTags: tags,
                             glassware: glass,
-                            occasion: occ
+                            occasion: occ,
+                            venueId: venueId
                         )
                     } else {
                         _ = try await CheckinService.log(
@@ -552,18 +552,23 @@ struct LogPourView: View {
                     onLogged()
                     // Stash the share card, then play the pour-to-passport-stamp
                     // celebration; the share sheet opens when it finishes.
-                    pendingShare = PourCard(
-                        beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
-                        score: Int(rating / 5 * 100), user: "you",
-                        abv: beer.abv.map { String(format: "%.1f%%", $0) },
-                        place: selectedVenue.map { sharePlace($0) },
-                        beerId: beer.id, rating: Int(rating.rounded()), country: beer.country
-                    )
-                    celebration = .pourLogged(
-                        beer: beer.name,
-                        rating: rating,
-                        place: selectedVenue.map { sharePlace($0) }
-                    )
+                    if let rating {
+                        pendingShare = PourCard(
+                            beer: beer.name, brewery: beer.breweryName, style: beer.style ?? "",
+                            score: Int(rating / 5 * 100), user: "you",
+                            abv: beer.abv.map { String(format: "%.1f%%", $0) },
+                            place: selectedVenue.map { sharePlace($0) },
+                            beerId: beer.id, rating: Int(rating.rounded()), country: beer.country
+                        )
+                        celebration = .pourLogged(
+                            beer: beer.name,
+                            rating: rating,
+                            place: selectedVenue.map { sharePlace($0) }
+                        )
+                    } else {
+                        pendingShare = nil
+                        celebration = .quickPourLogged(beer: beer.name)
+                    }
                 }
             } catch {
                 await MainActor.run {
