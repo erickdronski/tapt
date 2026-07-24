@@ -138,6 +138,14 @@ promptly (small commits, don't sit on local state another agent can't see).
   reuses `UNRESOLVED_ISSUES` review submissions and marks the rejected item
   resolved before resubmitting, instead of adding the same app version to a new
   submission.
+- **Cross-surface polish pass (Codex, 2026-07-23):** app, landing, partner
+  portal, App Store copy, and screenshot tooling were re-audited as one release
+  story. Landing now uses the same real App Store preview panels as the
+  submission asset set, public web copy uses the canonical `THE Beer Superapp.
+  All of beer, one app.` framing, old visible game labels are scrubbed from
+  web/pitch surfaces, onboarding casing is aligned, and the App Store
+  screenshot validator now fails old rejected labels (`Beer Pong`, `Flip Cup`,
+  `Beer Olympics`, `Beer Night`) if they appear in fresh captures.
 - **Database exposure + trivia audit closeout (Codex, 2026-07-21):** production
   migration `20260721200016` makes the internal `cutout_queue` view security
   invoker and service-role-only; anon/authenticated access is revoked while the
@@ -262,8 +270,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   app.tapt.tapt, the public auth settings endpoint advertises apple, the
   entitlement ships, and SignInView renders the Apple button). Leaving the note
   here as history; do NOT re-raise it as open.
-  **STILL OPEN (docs/24):** App Store promotional screenshots + submission;
-  image CDN mirror (durable image fix); social batch: swap Apple 3D emoji hero
+  **STILL OPEN (docs/24):** image CDN mirror (durable image fix);
+  social batch: swap Apple 3D emoji hero
   art for the canonical glass mark; scanner label-OCR + menu-accumulation feature.
 - **Make-it-alive round (Claude, 2026-07-13):** owner said the app felt flat /
   not fun. A 10-lens energy audit (docs/23-MAKE-IT-ALIVE.md) found the delight
@@ -394,16 +402,13 @@ promptly (small commits, don't sit on local state another agent can't see).
   applied and mirrored. Native/web resilience, responsible game framing,
   account deletion, consent hydration, guest navigation, landing, portal, and
   TestFlight feedback automation are on `main`.
-  **Current TestFlight build is 57** (run 29871675833, 2026-07-21), built from
-  `main` commit `1eaae5b`, Apple `state=VALID`, `nonExemptEnc=False`, assigned
-  to `Tapt Team`, `internal=READY_FOR_BETA_TESTING` /
-  `external=READY_FOR_BETA_SUBMISSION`, with screenshot feedback enabled. It
-  carries the trivia/security batch and Flip Cup multiplayer work above. Do
+  **Current App Store submission is build 58** (submitted by protected ASC
+  workflow run 30052129813 on 2026-07-23), Apple state `WAITING_FOR_REVIEW`.
+  Build 58 replaced the rejected build 50 submission after the release prepare
+  workflow selected the exact build, refreshed metadata/screenshots, and passed
+  the ASC audit. Do
   not trust a pinned build number in this file without checking
   `gh run list --workflow TestFlight`.
-  The active App Store 1.0 submission remains build 50 in `WAITING_FOR_REVIEW`;
-  use the protected withdraw -> prepare -> audit -> submit workflows to replace
-  it only after the manual gates pass on the build you intend to ship.
 - **Auth truth (2026-07-16):** email, Google, and Apple are exposed by the
   current signed app and enabled in live Supabase. The site URL is
   `https://taptbeer.com`; `tapt://auth-callback` is allowlisted; the Apple
@@ -412,7 +417,7 @@ promptly (small commits, don't sit on local state another agent can't see).
   ID-token flow, so Supabase's missing web-OAuth secret response does not apply
   to the app. Production contains successful email and Google identities, but
   no Apple identity, and none of the three providers has the required physical
-  proof on exact current TestFlight build 57. Facebook, X, and phone remain
+  proof on exact current release build. Facebook, X, and phone remain
   disabled. Do not attest the release gate until email, Google, Apple, callback
   handling, sign-out, relaunch, and deletion pass on the current release build.
 - **Legal truth (2026-07-16):** canonical `/privacy` and `/terms` pages are live
@@ -427,8 +432,8 @@ promptly (small commits, don't sit on local state another agent can't see).
   Do not treat auth availability as release-stable until the owner pays it.
 - Owner queue: delete `simtest@tapt.app` when QA settles; choose and complete the
   App Store DSA declaration; pay the outstanding Supabase invoice; verify
-  email/Google/Apple on the signed current release build; then replace build 50
-  and resubmit. RESEND_API_KEY/Stripe/FB App ID remain optional future work.
+  email/Google/Apple on the signed current release build. RESEND_API_KEY,
+  Stripe, and FB App ID remain optional future work.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

@@ -18,7 +18,7 @@ Static site in `landing/`, Vercel project `tapt-landing`, `cleanUrls: true`
 | `admin` | owner | `resend-send` edge fn, gated by `app_admin` | Owner ops |
 | `hq` | owner | static links | Unlisted hub |
 | `pitch` | partners/press | static | No API calls |
-| `app-preview` | public | anon `catalog_search` (app-preview.html:314) | Interactive fake-phone demo of the real catalog |
+| `app-preview` | public | anon `catalog_search` (app-preview.html:314) | Interactive web preview of the real catalog |
 | `privacy`, `terms` | public | static | Linked from app (`AppSettings.swift:70-71`) |
 
 **Locked anon RPC surface, verified live** (pg_proc privilege query, 2026-07-12):

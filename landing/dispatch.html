@@ -444,7 +444,7 @@
       </div>
     </div>
 
-    <div class="issue-foot">You are reading a sample. Real issues are built from the week's real community votes. 🍻</div>
+    <div class="issue-foot">You are reading a sample. Real issues are built from the week's real community votes.</div>
   </div>
 
   <div class="wrap" style="text-align:center;padding-top:28px">
@@ -537,7 +537,7 @@
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        msg.textContent = 'Welcome aboard. The first issue lands soon. 🍻'; msg.style.color = '#7FD49B'; form.reset();
+        msg.textContent = 'Welcome aboard. The first issue lands soon.'; msg.style.color = '#7FD49B'; form.reset();
       } else {
         msg.textContent = data.error === 'try again later' ? 'Too many tries, give it an hour.' : 'That email did not look right, double-check it.';
         msg.style.color = '#F2A900';

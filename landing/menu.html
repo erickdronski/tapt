@@ -121,7 +121,7 @@ function eventCard(e){
   const start = e.starts_at ? new Date(e.starts_at) : null;
   const end = e.ends_at ? new Date(e.ends_at) : null;
   const time = start && !Number.isNaN(start.getTime())
-    ? `${start.toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}${end && !Number.isNaN(end.getTime()) ? ` – ${end.toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}` : ''}`
+    ? `${start.toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}${end && !Number.isNaN(end.getTime()) ? ` to ${end.toLocaleString([], {dateStyle:'medium', timeStyle:'short'})}` : ''}`
     : '';
   return `<article class="event"><div class="event-head"><b>${esc(e.title)}</b><span class="event-kind">${esc((e.kind||'event').replaceAll('_',' '))}</span></div>${time?`<div class="event-time">${esc(time)}</div>`:''}${e.details?`<div class="event-details">${esc(e.details)}</div>`:''}</article>`;
 }

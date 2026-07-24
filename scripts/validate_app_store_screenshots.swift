@@ -8,15 +8,19 @@ let expectedPhrases: [String: [String]] = [
     "01-home.png": ["Explore", "Scan a beer"],
     "02-beer-detail.png": ["Guinness Draught"],
     "03-catalog.png": ["Catalog", "Sierra Nevada"],
-    "04-beer-radar.png": ["Tapt beer radar", "beer spots"],
+    "04-beer-radar.png": ["Beer Near You", "beer spots"],
     "05-discover.png": ["Discover", "Tapt Dispatch"],
-    "06-games.png": ["Games", "Beer Pong", "Flip Cup"],
+    "06-games.png": ["Games", "Cup Pong", "Cup Flip"],
 ]
 let forbiddenPhrases = [
     "details unavailable",
     "could not refresh",
     "radar could not refresh",
     "try again",
+    "beer pong",
+    "flip cup",
+    "beer olympics",
+    "beer night",
 ]
 
 let paths = Array(CommandLine.arguments.dropFirst())

@@ -66,7 +66,7 @@ PROMOTIONAL_TEXT = (
     "beer spots, vote on the Beer Market, and play table games. Free for drinkers."
 )
 
-KEYWORDS = "beer,brewery,bar,pub,taproom,cellar,passport,scanner,pong,trivia,craft"
+KEYWORDS = "beer,brewery,bar,pub,taproom,cellar,passport,scanner,trivia,games,craft"
 
 REVIEW_NOTES = """Tapt is an informational and social beer app for legal-drinking-age adults. It does not sell alcohol.
 

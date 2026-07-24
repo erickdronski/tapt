@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tapt for Business · Free menu hosting</title>
+<title>Tapt for Business · THE Beer Superapp</title>
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="description" content="Free core tools for breweries, bars, pubs, and taprooms: claim your venue, publish your tap list, print your QR menu, and view real activity.">
+<meta name="description" content="Tapt for Business gives breweries, bars, pubs, and taprooms free core tools: claim your venue, publish a live menu, print your QR, and view real activity.">
 <link rel="canonical" href="https://taptbeer.com/portal.html">
-<meta property="og:title" content="Tapt for Business · Free menu hosting forever">
-<meta property="og:description" content="Claim your venue, publish your tap list, print your QR menu, and view real activity. Core tools stay free.">
+<meta property="og:title" content="Tapt for Business · THE Beer Superapp">
+<meta property="og:description" content="Claim your venue, publish a live menu, print your QR, and view real activity. Core tools stay free.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://taptbeer.com/og.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
@@ -82,8 +82,8 @@ a{color:var(--copper)}
       <a href="index.html">For drinkers</a>
     </nav>
   </header>
-  <h1>Free menu hosting. Forever.</h1>
-  <p class="sub">Claim your venue, publish your tap list, print your QR. Free.</p>
+  <h1>Free menu hosting for the places that pour.</h1>
+  <p class="sub">Claim your venue, publish a live tap list, print your QR, and see real activity. Core tools stay free.</p>
 
   <div class="card" id="authCard">
     <h2>1 · Sign in</h2>
@@ -278,7 +278,7 @@ window.searchVenues = () => {
     });
     // A venue we don't have yet must still be able to join. One tap files the
     // request with the name they typed; we add the venue and approve fast.
-    const add = document.createElement('div'); add.className = 'row';
+    const add = document.createElement('button'); add.className = 'row'; add.type = 'button';
     add.innerHTML = `<div style="flex:1"><b>${data && data.length ? 'Not yours?' : 'No match found.'}</b><br><span style="font-size:.8rem;color:var(--slate)">Add "${esc(q)}" as a new venue, we set it up and email you.</span></div><span style="color:var(--copper);font-weight:700;font-size:.85rem">request</span>`;
     add.onclick = () => requestVenue(q);
     $('venueResults').appendChild(add);
@@ -418,7 +418,7 @@ document.addEventListener('change', async (e) => {
   const { data: pub } = supa.storage.from('partner-assets').getPublicUrl(path);
   const { error } = await supa.rpc('set_venue_logo', { p_venue: uploadVenue, p_url: pub.publicUrl });
   if (approvedVenue !== uploadVenue) return;
-  $('logoMsg').textContent = error ? error.message : 'Logo saved. It shows on your menu page now. 🎨';
+  $('logoMsg').textContent = error ? error.message : 'Logo saved. It shows on your menu page now.';
   if (!error) $('logoPreview').src = pub.publicUrl;
 });
 
@@ -606,7 +606,7 @@ window.publish = async () => {
   }
   dirty = false; btn.textContent = 'Publish menu';
   try { localStorage.removeItem(draftKey(approvedVenue)); } catch {}
-  $('pubMsg').textContent = `Published ${data} taps. Live now, print the QR from your menu page. 🍻`;
+  $('pubMsg').textContent = `Published ${data} taps. Live now, print the QR from your menu page.`;
 };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }

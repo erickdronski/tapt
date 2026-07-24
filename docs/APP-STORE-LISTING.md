@@ -1,4 +1,4 @@
-# Tapt — App Store listing (copy + setup)
+# Tapt App Store Listing
 
 Paste-ready metadata for App Store Connect. Voice: plain, direct, no hype, no
 em dashes. Everything here reflects what the app actually does today.
@@ -9,15 +9,15 @@ Bundle ID: `app.tapt.tapt` · Version: `1.0` · Primary language: English (U.S.)
 
 ## App name (30 char max)
 ```
-Tapt: The Beer Superapp
+Tapt: THE Beer Superapp
 ```
 (23 chars. If a shorter name is preferred: `Tapt`.)
 
 ## Subtitle (30 char max)
 ```
-Rate, log, and discover beer
+THE Beer Superapp
 ```
-(28 chars.)
+(17 chars.)
 
 ## Category
 - Primary: **Food & Drink**
@@ -25,54 +25,54 @@ Rate, log, and discover beer
 
 ---
 
-## Promotional text (170 char max — editable anytime without review)
+## Promotional text (170 char max, editable anytime without review)
 ```
-The global Beer Market is live: see what people are logging and rating right now, follow the movers, and log your own pours. All of beer, one app.
+Scan a label or barcode, log a pour, stamp your Passport, browse nearby beer spots, vote on the Beer Market, and play table games. Free for drinkers.
 ```
 
 ## Keywords (100 char max, comma separated, no spaces)
 ```
-beer,brewery,ale,ipa,lager,stout,craft beer,taproom,pub,rate beer,beer log,tasting,cellar,pilsner
+beer,brewery,bar,pub,taproom,cellar,passport,scanner,trivia,games,craft
 ```
 
 ---
 
 ## Description
 ```
-Tapt is THE beer superapp. All of beer, in one place.
+Meet Tapt, THE Beer Superapp.
 
-Rate what you drink, log it to your Cellar, and discover your next pour from a
-catalog of tens of thousands of beers from around the world.
+SCAN AND LEARN
+Scan a barcode, beer label, tap list, or venue QR. Explore style science,
+tasting notes, ingredients, history, awards, and brewery information from
+sourced catalog data.
 
-THE GLOBAL BEER MARKET
-See what people are logging and rating lately. The Beer Market is a live
-community popularity board with movers, trends, and a Beer of the Week. It is
-not a financial product. There is no money, no trading, and nothing to buy or
-sell. Just what the world is pouring right now.
+BUILD YOUR CELLAR
+Log pours, add private notes, track styles, and turn each new state or country
+into Passport progress.
 
-EVERY BEER, ONE PAGE
-Open any beer to find its style, flavor notes, brewery, and a bit of history,
-plus how the community rates it. Add your own private notes and rating.
+FIND BEER NEAR YOU
+Browse real breweries, pubs, bars, taprooms, and beer gardens on the global Beer
+Radar. Tapt's venue map uses real coordinates and source provenance.
 
-YOUR BEER PASSPORT
-Earn stamps for exploring, not for drinking. Tapt celebrates variety and
-discovery: new styles, new breweries, new countries, and smart low and no
-alcohol choices. It never rewards how much you drink.
+RIDE THE BEER MARKET
+Vote beers up or down and watch rankings move from real community activity. No
+invented scores: empty boards stay empty until people vote or log pours.
 
-BEER NEAR YOU
-Find breweries, pubs, and taprooms around you on the map, with popular spots
-near the top.
+LEARN AND PLAY
+Use guided flights, Beer School, trivia, skill games, and zero-proof-friendly
+table tools to bring people together. Tapt games never require alcohol and never
+score alcohol use.
 
-THE TAPT DISPATCH
-Subscribe to a free weekly read on the beer world: what is moving, a piece of
-beer history, and a legendary bar or brewery worth knowing.
+FOLLOW YOUR BEER CIRCLE
+Find friends, follow public Passport progress, and see eligible check-ins on
+Tonight. Report and block controls are built in.
 
 FOR BREWERIES AND BARS
-Claim your venue, tell your story, and reach people who are looking for their
-next beer.
+Claim a venue, publish a live tap list, share a QR menu, and view real venue
+activity through Tapt for Business.
 
-Tapt is for people of legal drinking age. Please drink responsibly and never
-drink and drive. Tapt does not sell alcohol.
+Tapt is free for drinkers. It is for people of legal drinking age and does not
+sell alcohol. Please drink responsibly and never drink and drive.
 ```
 
 ## What's New (version 1.0)
@@ -104,7 +104,7 @@ Answer the questionnaire so the app lands at **17+** (old system) / **18+**
 - Everything else (violence, sexual content, gambling, simulated gambling,
   horror, mature/suggestive, medical, profanity, messaging/chat): **None/No**
 - Unrestricted Web Access: **No**
-- Gambling: **No** (the Beer Market is a popularity board, not gambling — see
+- Gambling: **No** (the Beer Market is a popularity board, not gambling; see
   review notes)
 
 ## Copyright
@@ -116,14 +116,14 @@ Answer the questionnaire so the app lands at **17+** (old system) / **18+**
 
 ## App Privacy (must match PrivacyInfo.xcprivacy)
 Data collected and linked to the user:
-- **Contact Info:** name, email address (from Sign in with Apple / account) —
+- **Contact Info:** name, email address (from Sign in with Apple / account):
   used for App Functionality, Account Management.
-- **User Content:** the beers you rate, log, and note; photos you add —
+- **User Content:** the beers you rate, log, and note; photos you add:
   App Functionality.
-- **Identifiers:** user ID — App Functionality.
-- **Location:** precise location, only when granted, to show nearby venues —
+- **Identifiers:** user ID: App Functionality.
+- **Location:** precise location, only when granted, to show nearby venues:
   App Functionality. Not used for tracking. Not collected in the background.
-- **Usage Data / Diagnostics:** basic app diagnostics — App Functionality,
+- **Usage Data / Diagnostics:** basic app diagnostics: App Functionality,
   Analytics.
 
 - Tracking (ATT): **No.** Tapt does not track users across apps or websites.
@@ -134,40 +134,57 @@ Data collected and linked to the user:
 
 ## App Review notes (paste into the "Notes" field)
 ```
-Tapt is a beer discovery and logging app for people of legal drinking age. It
-does not sell alcohol or facilitate its purchase or delivery.
+Tapt is an informational and social beer app for legal-drinking-age adults. It
+does not sell alcohol.
 
-AGE GATE: Onboarding requires confirming legal drinking age. Terms and Privacy
-require legal drinking age.
+PUBLIC REVIEW PATH
+- Tap "Explore without an account" to inspect catalog search, the local MapKit
+beer-place map, Beer School, points-only table games, Discover, and partner
+information without providing credentials.
+- Account-only actions clearly return the reviewer to sign-in.
 
-THE "BEER MARKET": This is a community popularity board that ranks beers by
-recent check-ins and ratings. It is NOT gambling and NOT a financial product.
-There is no currency, no wagering, no real or virtual money, and nothing to buy
-or sell. "Up" and "down" arrows reflect changes in community popularity only.
-
-SIGN IN: Sign in with Apple is supported. A demo account is provided in the App
-Review Information fields and opens the full signed-in experience, including
+ACCOUNT REVIEW PATH
+- Tap "Sign in with password" and use the dedicated demo account supplied in the
+App Review fields. The account opens the full signed-in experience, including
 Discover and account-only social surfaces.
+- Email link/code, Sign in with Apple, and Google are also available. All
+complete inside the signed app and return to Tapt.
+- Delete account: You tab > Delete account > confirm. This revokes stored Sign
+in with Apple authorization, deletes avatar objects, the auth identity, and all
+personal-plane rows.
+- Privacy controls: You tab > Privacy Choices. Optional aggregate and
+partner-insight sharing default off.
+- UGC safety: profile text is filtered before publication; avatar uploads wait
+for approval; report/block actions are available from social feed items and
+public profiles; reports enter an authenticated admin moderation queue.
+- Age rating: Tapt includes social-media capability through profile search,
+follows, and the Tonight feed, and includes frequent contests through
+trivia/rankings. We do not claim the under-13 social-media mitigation because
+Tapt does not use Apple's Declared Age Range API.
+- Responsible play: games are skill, trivia, and scorekeeping experiences. They
+never require alcohol, include zero-proof play, and contain no volume,
+speed-drinking, or alcohol-consumption prompts. The prior visible game labels
+have been revised for App Review: Beer Olympics is now Table Olympics, Beer
+Night is now Game Night, Beer Pong is now Cup Pong, and Flip Cup is now Cup
+Flip.
+- Passport badges reward distinct beers, styles, and places rather than repeat
+consumption volume.
 
-UGC SAFETY: Users can report and block other users and content. A EULA
-(Terms of Service) is linked in-app and on the website.
+LOCATION AND CAMERA
+- Both permissions are optional and requested in context. The public catalog,
+learning, and games remain usable without either permission.
+- The camera supports beer barcodes, printed label/tap-list text, and partner QR
+scanning.
 
-ACCOUNT DELETION: Users can delete their account in-app under You > Settings.
-
-RESPONSIBLE PLAY: Games are skill, trivia, and scorekeeping experiences. They
-never require alcohol and never score alcohol use. Visible labels were revised
-for App Review: Beer Olympics is now Table Olympics, Beer Night is now Game
-Night, Beer Pong is now Cup Pong, and Flip Cup is now Cup Flip.
-
-Demo account:
-Stored only in App Store Connect and the protected GitHub Actions secrets
-`ASC_DEMO_ACCOUNT_NAME` and `ASC_DEMO_ACCOUNT_PASSWORD`. Never commit the
-credentials to this repository.
+DATA INTEGRITY
+- Beer, brewery, and venue records are source-attributed. Community boards
+remain empty until real eligible activity exists; the production app contains
+no fabricated votes or check-ins.
 ```
 
 ---
 
-## Owner setup checklist (things I cannot do — they need your Apple account)
+## Owner setup checklist (things I cannot do because they need your Apple account)
 1. Create the app record in App Store Connect (bundle `app.tapt.tapt`, name above).
 2. Upload a signed build (Xcode Archive > Distribute, or the CI pipeline).
 3. Paste the copy above into the version page.
