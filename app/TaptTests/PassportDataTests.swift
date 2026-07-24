@@ -40,6 +40,42 @@ final class PassportDataTests: XCTestCase {
         XCTAssertTrue(palateOfLegend.earned(PassportStats(pours: 120, beers: 120, styles: 10, states: 5, countries: 3)))
     }
 
+    func testNextBadgeStartsWithFirstPour() {
+        let stats = PassportStats(pours: 0, beers: 0, styles: 0, states: 0, countries: 0)
+
+        XCTAssertEqual(PassportData.nextBadge(for: stats)?.id, "first")
+    }
+
+    func testNextBadgePrefersClosestRealProgress() {
+        let stats = PassportStats(pours: 4, beers: 4, styles: 1, states: 0, countries: 0)
+
+        XCTAssertEqual(PassportData.nextBadge(for: stats)?.id, "sampler")
+        XCTAssertEqual(PassportData.nextBadge(for: stats)?.remaining(stats), 1)
+    }
+
+    func testNextBadgeMovesToStyleDiscoveryAfterSampler() {
+        let stats = PassportStats(pours: 5, beers: 5, styles: 2, states: 0, countries: 0)
+
+        XCTAssertEqual(PassportData.nextBadge(for: stats)?.id, "curious")
+    }
+
+    func testNextBadgeIsNilWhenEverythingIsEarned() {
+        var stats = PassportStats(pours: 999, beers: 999, styles: 999, states: 999, countries: 999)
+        stats.breweries = 999
+        stats.styleFamilies = 999
+        stats.continents = 999
+        stats.seasons = 999
+        stats.noLow = 999
+        stats.hoppy = 999
+        stats.dark = 999
+        stats.wheat = 999
+        stats.sour = 999
+        stats.belgian = 999
+        stats.crisp = 999
+
+        XCTAssertNil(PassportData.nextBadge(for: stats))
+    }
+
     func testCountryFlagSupportsAnyISORegionCode() {
         XCTAssertEqual(CountryFlag.symbol(for: "NZ"), "\u{1F1F3}\u{1F1FF}")
         XCTAssertEqual(CountryFlag.symbol(for: " kr "), "\u{1F1F0}\u{1F1F7}")

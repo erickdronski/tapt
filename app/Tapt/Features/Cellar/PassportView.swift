@@ -29,7 +29,10 @@ struct PassportView: View {
         Set(checkins.filter { $0.passportCountry == "United States" }.map(\.venueRegion).filter { !$0.isEmpty })
     }
     private var visitedStyles: [String] {
-        Array(Set(checkins.compactMap { ($0.style?.isEmpty == false) ? $0.style : nil })).sorted()
+        Array(Set(checkins.compactMap { checkin in
+            let style = checkin.displayStyle ?? checkin.style
+            return style?.isEmpty == false ? style : nil
+        })).sorted()
     }
     private var uniqueBeerCount: Int {
         PassportProgress.uniqueBeerCount(in: checkins)

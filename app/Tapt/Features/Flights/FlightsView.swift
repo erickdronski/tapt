@@ -5,21 +5,24 @@ struct FlightsView: View {
     @State private var checkins: [MyCheckin] = []
     @State private var selectedQuest = FlightsData.quests.first?.id
     @State private var shimmer = false
+    @State private var celebration: TaptCelebration?
+    @State private var pendingCompletedFlight: String?
+    @AppStorage("flights.seenCompleted") private var seenCompletedRaw = ""
 
     private var selected: FlightQuest {
         FlightsData.quests.first { $0.id == selectedQuest } ?? FlightsData.quests[0]
     }
 
     private var stylesLogged: Set<String> {
-        Set(checkins.compactMap { $0.style?.lowercased() })
+        FlightProgress.normalizedStyles(checkins.compactMap { $0.displayStyle ?? $0.style })
     }
 
     private var completedStops: Int {
-        selected.stops.filter { stop in
-            stylesLogged.contains { logged in
-                logged.contains(stop.style.lowercased()) || stop.style.lowercased().contains(logged)
-            }
-        }.count
+        FlightProgress.completedStops(in: selected, styles: stylesLogged)
+    }
+
+    private var completedStopIDs: Set<UUID> {
+        FlightProgress.completedStopIDs(in: selected, styles: stylesLogged)
     }
 
     private var progress: Double {
@@ -39,12 +42,17 @@ struct FlightsView: View {
             .padding(.vertical)
         }
         .background(Brand.background)
+        .taptCelebration($celebration)
         .navigationTitle("Flights")
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .onAppear {
             withAnimation(.linear(duration: 1.9).repeatForever(autoreverses: true)) {
                 shimmer = true
+            }
+            if let pendingCompletedFlight {
+                celebration = .flightCompleted(title: pendingCompletedFlight)
+                self.pendingCompletedFlight = nil
             }
         }
     }
@@ -67,6 +75,7 @@ struct FlightsView: View {
                 ForEach(FlightsData.quests) { quest in
                     let active = quest.id == selected.id
                     Button {
+                        Haptic.tap()
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.76)) {
                             selectedQuest = quest.id
                         }
@@ -115,6 +124,13 @@ struct FlightsView: View {
                     .font(.system(.title, design: .rounded).weight(.heavy))
                     .foregroundStyle(selected.tint)
                     .contentTransition(.numericText())
+                if progress == 1 {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.title2)
+                        .foregroundStyle(selected.tint)
+                        .symbolEffect(.bounce, value: selectedQuest)
+                        .accessibilityLabel("Flight complete")
+                }
             }
 
             GeometryReader { proxy in
@@ -221,7 +237,7 @@ struct FlightsView: View {
                 .padding(.top, 4)
             } else {
                 NavigationLink {
-                    LogPourView(onLogged: { Task { await load() } })
+                    LogPourView(onLogged: { Task { await load(detectNewCompletion: true) } })
                 } label: {
                     Label("Log a pour", systemImage: "plus.circle.fill")
                         .font(.system(.headline, design: .rounded))
@@ -241,13 +257,25 @@ struct FlightsView: View {
     }
 
     private func isDone(_ stop: FlightStop) -> Bool {
-        stylesLogged.contains { logged in
-            logged.contains(stop.style.lowercased()) || stop.style.lowercased().contains(logged)
-        }
+        completedStopIDs.contains(stop.id)
     }
 
-    private func load() async {
+    private func load(detectNewCompletion: Bool = false) async {
         guard let uid = session.user?.id else { return }
-        checkins = (try? await CheckinService.mine(userId: uid)) ?? []
+        let updated = (try? await CheckinService.mine(userId: uid)) ?? []
+        let updatedStyles = FlightProgress.normalizedStyles(
+            updated.compactMap { $0.displayStyle ?? $0.style }
+        )
+        let completed = FlightProgress.completedQuestIDs(styles: updatedStyles)
+        let seen = Set(seenCompletedRaw.split(separator: ",").map(String.init))
+
+        checkins = updated
+        let newCompletions = completed.subtracting(seen)
+        if detectNewCompletion,
+           let completedID = FlightsData.quests.map(\.id).first(where: newCompletions.contains),
+           let quest = FlightsData.quests.first(where: { $0.id == completedID }) {
+            pendingCompletedFlight = quest.title
+        }
+        seenCompletedRaw = seen.union(completed).sorted().joined(separator: ",")
     }
 }

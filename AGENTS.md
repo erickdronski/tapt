@@ -130,6 +130,16 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Earned delight pass (Codex, 2026-07-24):** the app's reward layer now
+  closes three previously quiet loops without fake points or activity. One-tap
+  unrated pours receive their own truthful Passport-stamp celebration, guided
+  Flights match each logged style to at most one stop and celebrate a newly
+  completed route after the user returns, and Passport surfaces the closest
+  real badge unlock with exact threshold progress instead of drift-prone
+  hand-written milestone copy. Tab and flight selection use restrained native
+  haptics. Added ten progression regression tests; the full iPhone simulator
+  suite passes 59/59. This change is on `main` after TestFlight build 60 and
+  therefore requires a later TestFlight build to ship.
 - **GitHub professionalization (Codex, 2026-07-23):** the public repository now leads with a real six-screen product tour, architecture and repository maps, reproducible local validation, explicit delivery lanes, and accurate source-available terms. Added private security-reporting guidance, contribution rules, structured bug/feature forms, a pull-request template, and weekly GitHub Actions dependency maintenance. No product, production, data, or release state changed.
 - **App Review 1.4.3/2.1(a) resubmission pass (Codex, 2026-07-23):** Apple
   rejected build 50 on 2026-07-22 for excessive-alcohol read and demo-account

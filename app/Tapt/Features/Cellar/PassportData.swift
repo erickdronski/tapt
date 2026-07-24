@@ -199,6 +199,10 @@ struct Badge: Identifiable {
     func progress(_ s: PassportStats) -> Double {
         min(1, Double(current(s)) / Double(max(threshold, 1)))
     }
+
+    func remaining(_ s: PassportStats) -> Int {
+        max(0, threshold - current(s))
+    }
 }
 
 enum PassportData {
@@ -252,6 +256,29 @@ enum PassportData {
         .init(id: "stateline",title: "State Line",      detail: "10 states",                    icon: "flag.checkered",          emoji: "🚩", tier: .gold,   metric: .states,  threshold: 10),
         .init(id: "coast2coast",title: "Coast to Coast",detail: "25 states",                    icon: "flag.2.crossed.fill",     emoji: "🇺🇸", tier: .elite,  metric: .states,  threshold: 25),
     ]
+
+    /// The closest honest unlock. Progress wins first, then fewer remaining
+    /// steps, then the earlier/lower-tier badge for a stable beginner path.
+    static func nextBadge(for stats: PassportStats) -> Badge? {
+        badges.enumerated()
+            .filter { !$0.element.earned(stats) }
+            .sorted { lhs, rhs in
+                let leftProgress = lhs.element.progress(stats)
+                let rightProgress = rhs.element.progress(stats)
+                if leftProgress != rightProgress { return leftProgress > rightProgress }
+
+                let leftRemaining = lhs.element.remaining(stats)
+                let rightRemaining = rhs.element.remaining(stats)
+                if leftRemaining != rightRemaining { return leftRemaining < rightRemaining }
+
+                if lhs.element.tier.rawValue != rhs.element.tier.rawValue {
+                    return lhs.element.tier.rawValue < rhs.element.tier.rawValue
+                }
+                return lhs.offset < rhs.offset
+            }
+            .first?
+            .element
+    }
 
     /// Every country with real beers or venues in the Tapt catalog.
     static let countries: [(name: String, flag: String)] = [

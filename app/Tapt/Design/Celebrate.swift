@@ -14,18 +14,24 @@ import UIKit
 enum TaptCelebration: Identifiable, Equatable {
     /// A beer was logged. The marquee moment: glass fills, passport stamps.
     case pourLogged(beer: String, rating: Double, place: String?)
+    /// A one-tap pour was logged without inventing a rating.
+    case quickPourLogged(beer: String)
     /// A vote landed. The number counts up with a bump.
     case voteCounted(beer: String, count: Int)
     /// A passport milestone unlocked a badge.
     case badgeUnlocked(title: String, symbol: String)
+    /// Every real style stop in a guided flight was completed.
+    case flightCompleted(title: String)
     /// Beer of the Week was crowned.
     case bowCrowned(beer: String)
 
     var id: String {
         switch self {
         case .pourLogged(let b, _, _):  return "pour-\(b)"
+        case .quickPourLogged(let b): return "quick-pour-\(b)"
         case .voteCounted(let b, let c): return "vote-\(b)-\(c)"
         case .badgeUnlocked(let t, _):  return "badge-\(t)"
+        case .flightCompleted(let t): return "flight-\(t)"
         case .bowCrowned(let b):        return "bow-\(b)"
         }
     }
@@ -123,6 +129,24 @@ struct CelebrationOverlay: View {
                 }
             }
 
+        case .quickPourLogged(let beer):
+            VStack(spacing: 18) {
+                ZStack {
+                    BeerGlassView(pour: 0.78, animatesPour: !reduceMotion)
+                        .frame(width: 132)
+                    PassportStamp(label: "LOGGED", symbol: "checkmark")
+                        .rotationEffect(.degrees(reveal ? -13 : -34))
+                        .scaleEffect(reveal ? 1 : 1.9)
+                        .opacity(reveal ? 1 : 0)
+                        .offset(y: 6)
+                }
+                .frame(height: 232)
+                title(beer)
+                Label("added to your Passport", systemImage: "book.pages.fill")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Brand.foam.opacity(0.9))
+            }
+
         case .voteCounted(let beer, let count):
             VStack(spacing: 16) {
                 CountUp(target: count)
@@ -142,6 +166,30 @@ struct CelebrationOverlay: View {
                     .font(.system(.caption, design: .rounded).weight(.heavy))
                     .tracking(2).foregroundStyle(Brand.gold)
                 title(heading)
+            }
+
+        case .flightCompleted(let heading):
+            VStack(spacing: 18) {
+                ZStack {
+                    Medallion(symbol: "map.fill", shine: reveal)
+                        .frame(width: 150, height: 150)
+                        .scaleEffect(reveal ? 1 : 0.4)
+                        .rotationEffect(.degrees(reveal ? 0 : -24))
+                    PassportStamp(label: "COMPLETE", symbol: "checkmark")
+                        .scaleEffect(reveal ? 0.62 : 1.4)
+                        .rotationEffect(.degrees(reveal ? -11 : -30))
+                        .opacity(reveal ? 1 : 0)
+                        .offset(x: 56, y: 58)
+                }
+                .frame(width: 220, height: 190)
+                Text("FLIGHT COMPLETE")
+                    .font(.system(.caption, design: .rounded).weight(.heavy))
+                    .tracking(2)
+                    .foregroundStyle(Brand.gold)
+                title(heading)
+                Text("Every stop is in your Passport.")
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Brand.foam.opacity(0.82))
             }
 
         case .bowCrowned(let beer):

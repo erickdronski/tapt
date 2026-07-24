@@ -93,3 +93,47 @@ enum FlightsData {
         ),
     ]
 }
+
+enum FlightProgress {
+    static func normalizedStyles(_ styles: [String]) -> Set<String> {
+        Set(styles.map(normalize).filter { !$0.isEmpty })
+    }
+
+    /// Assigns each logged style to at most one stop. Specific stops are matched
+    /// first so one Nitro Stout never completes both Nitro Stout and Stout.
+    static func completedStopIDs(in quest: FlightQuest, styles: Set<String>) -> Set<UUID> {
+        var available = styles
+        var completed = Set<UUID>()
+        let orderedStops = quest.stops.sorted { normalize($0.style).count > normalize($1.style).count }
+
+        for stop in orderedStops {
+            let target = normalize(stop.style)
+            guard let match = available
+                .filter({ $0.contains(target) })
+                .sorted(by: { $0.count < $1.count })
+                .first else { continue }
+            completed.insert(stop.id)
+            available.remove(match)
+        }
+        return completed
+    }
+
+    static func completedStops(in quest: FlightQuest, styles: Set<String>) -> Int {
+        completedStopIDs(in: quest, styles: styles).count
+    }
+
+    static func completedQuestIDs(styles: Set<String>) -> Set<String> {
+        Set(FlightsData.quests.compactMap { quest in
+            completedStops(in: quest, styles: styles) == quest.stops.count ? quest.id : nil
+        })
+    }
+
+    private static func normalize(_ value: String) -> String {
+        value
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}

@@ -270,7 +270,7 @@ struct BeerDetailView: View {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                             quickLoggedId = id
                         }
-                        Haptic.firm()
+                        celebration = .quickPourLogged(beer: d.name)
                     } catch {
                         quickLogError = "Could not log that. Try again."
                     }

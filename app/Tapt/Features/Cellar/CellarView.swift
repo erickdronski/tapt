@@ -59,6 +59,7 @@ struct CellarView: View {
                            styles: styleCount, states: stateCount, countries: countryCount)
     }
     private var earnedBadges: [Badge] { PassportData.badges.filter { $0.earned(stats) } }
+    private var nextBadge: Badge? { PassportData.nextBadge(for: stats) }
 
     var body: some View {
         NavigationStack {
@@ -137,6 +138,7 @@ struct CellarView: View {
                 )
                 .padding(.horizontal)
 
+                if let nextBadge { nextUnlockCard(nextBadge) }
                 statGrid
                 worldStrip
                 trophyShelf
@@ -270,6 +272,81 @@ struct CellarView: View {
                 }
                 .padding(.horizontal)
             }
+        }
+    }
+
+    private func nextUnlockCard(_ badge: Badge) -> some View {
+        let tint = badgeTint(badge)
+        return NavigationLink {
+            PassportView(checkins: checkins, guides: guides)
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .stroke(Brand.haze, lineWidth: 6)
+                    Circle()
+                        .trim(from: 0, to: badge.progress(stats))
+                        .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                    BadgeGlyph(
+                        badge: badge,
+                        ink: Brand.malt,
+                        accent: Brand.malt.opacity(0.25)
+                    )
+                    .frame(width: 48, height: 48)
+                }
+                .frame(width: 76, height: 76)
+                .padding(5)
+                .background(tint, in: Circle())
+                .shadow(color: tint.opacity(0.28), radius: 10, y: 5)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Next unlock")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(tint)
+                    Text(badge.title)
+                        .font(.system(.title3, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.text)
+                    Text(badge.detail)
+                        .font(.caption)
+                        .foregroundStyle(Brand.muted)
+                        .lineLimit(2)
+                    ProgressView(value: badge.progress(stats))
+                        .tint(tint)
+                }
+                Spacer(minLength: 4)
+                VStack(alignment: .trailing, spacing: 5) {
+                    Text("\(badge.current(stats))/\(badge.threshold)")
+                        .font(.system(.headline, design: .rounded).weight(.heavy))
+                        .foregroundStyle(Brand.text)
+                        .contentTransition(.numericText())
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Brand.muted)
+                }
+            }
+            .padding(16)
+            .background(
+                LinearGradient(
+                    colors: [tint.opacity(0.16), Brand.surface],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 20)
+            )
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(tint.opacity(0.34)))
+        }
+        .buttonStyle(.taptPress)
+        .padding(.horizontal)
+        .accessibilityLabel("Next unlock, \(badge.title), \(badge.current(stats)) of \(badge.threshold). \(badge.detail)")
+    }
+
+    private func badgeTint(_ badge: Badge) -> Color {
+        switch badge.tier {
+        case .bronze: Brand.copper
+        case .silver: Color(hex: 0x8C97A8)
+        case .gold: Brand.gold
+        case .elite: Brand.hop
         }
     }
 
@@ -456,12 +533,9 @@ struct CellarView: View {
     }
 
     private var nextMilestone: String {
-        if uniqueBeerCount < 5 { let n = 5 - uniqueBeerCount; return "\(n) \(pl(n, "beer", "beers")) to first flight" }
-        if styleCount < 5 { let n = 5 - styleCount; return "\(n) \(pl(n, "style", "styles")) to Style Explorer" }
-        if stateCount < 5 { let n = 5 - stateCount; return "\(n) \(pl(n, "state", "states")) to Tap Trail" }
-        if countryCount < 3 { let n = 3 - countryCount; return "\(n) \(pl(n, "country", "countries")) to Border Hopper" }
-        if uniqueBeerCount < 120 { let n = 120 - uniqueBeerCount; return "\(n) \(pl(n, "beer", "beers")) to Palate of Legend" }
-        return "Palate of Legend reached. Keep exploring."
+        guard let badge = nextBadge else { return "Every Passport badge unlocked." }
+        let remaining = badge.remaining(stats)
+        return "\(remaining) left to \(badge.title)"
     }
 
     private func load() async {

@@ -41,6 +41,7 @@ struct RootView: View {
     @ViewBuilder
     private var mainBody: some View {
         tabShell
+        .sensoryFeedback(.selection, trigger: selection)
         .onAppear {
             #if targetEnvironment(simulator)
             if let t = ProcessInfo.processInfo.environment["TAPT_START_TAB"], let i = Int(t) { selection = i }
