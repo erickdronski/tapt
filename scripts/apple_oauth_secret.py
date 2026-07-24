@@ -15,11 +15,22 @@ Env:
   TEAM_ID         default J9DMDH4S58
   CLIENT_ID       the Services ID for web flow (e.g. app.tapt.web) (required)
 
-Usage: python3 scripts/apple_oauth_secret.py
-Paste the output into Supabase → Auth → Providers → Apple → Secret Key.
+Usage: python3 scripts/apple_oauth_secret.py --output /secure/path/apple-secret.txt
+Copy the file directly to the password field, then securely delete it.
 """
-import os, sys, time
+import argparse
+import os
+import sys
+import time
 import jwt  # PyJWT + cryptography
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument(
+    "--output",
+    required=True,
+    help="Path for the generated JWT. The file is written with owner-only permissions.",
+)
+args = parser.parse_args()
 
 KEY_PATH = os.environ.get("SIWA_KEY_PATH")
 KEY_ID = os.environ.get("SIWA_KEY_ID")
@@ -46,4 +57,11 @@ secret = jwt.encode(
     algorithm="ES256",
     headers={"kid": KEY_ID},
 )
-print(secret)
+
+output_path = os.path.abspath(os.path.expanduser(args.output))
+fd = os.open(output_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+with os.fdopen(fd, "w", encoding="utf-8") as output:
+    output.write(secret)
+    output.write("\n")
+os.chmod(output_path, 0o600)
+print(f"Apple client secret written to {output_path} with owner-only permissions.")

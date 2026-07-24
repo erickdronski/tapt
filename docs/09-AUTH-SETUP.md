@@ -61,8 +61,10 @@ that field expects a signed client-secret JWT. The native provider does not need
 that web client secret.
 
 When the landing page later needs web Sign in with Apple, generate the 6-month
-JWT with `scripts/apple_oauth_secret.py` from the dedicated key and configure the
-web Services ID separately.
+JWT with `scripts/apple_oauth_secret.py --output /secure/path/apple-secret.txt`
+from the dedicated key and configure the web Services ID separately. The script
+writes the JWT with owner-only permissions instead of printing it into terminal
+history. Copy it directly to the provider field, then securely delete the file.
 
 ## 3. Enable Facebook or X (optional)
 Facebook needs a Meta app with the Supabase callback in **Facebook Login →
