@@ -444,9 +444,11 @@ promptly (small commits, don't sit on local state another agent can't see).
   source or reviewed cutout (37.3%), 585 reviewed cutouts (2.2%), and 16,635
   without an exact public photo after 67 previously rejected sources and 103
   exact URL/catalog GTIN mismatches were correctly quarantined. Zero known
-  manual rejects or comparable OFF barcode mismatches remain visible. There are 84
-  newly licensed exact sources pending cutout (81 Commons, 3 exact-GTIN OFF) and
-  925 legacy cutouts queued for immutable v4 rebuild before review. Migrations
+  manual rejects or comparable OFF barcode mismatches remain visible. The 84
+  newly licensed exact sources (81 Commons, 3 exact-GTIN OFF) completed their
+  first v4 pass: 15 immutable cutouts await admin review and 69 sources were
+  blocked by automated quality gates. The legacy candidate backlog is actively
+  rebuilding through immutable v4 before review. Migrations
   `20260724021000`, `20260724041500`, `20260724043000`, `20260724044000`,
   `20260724045000`, `20260724050000`, and `20260724051000` are applied. V4 disables name-search
   image matching, requires matching source/catalog GTINs for OFF, tries the
