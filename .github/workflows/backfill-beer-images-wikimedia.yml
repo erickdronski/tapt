@@ -1,0 +1,59 @@
+name: Discover licensed Wikimedia beer images
+
+on:
+  schedule:
+    - cron: "19 7 1 * *"
+  workflow_dispatch:
+    inputs:
+      max_rows:
+        description: "Maximum imageless Wikidata beers to inspect (0 = all)"
+        required: false
+        default: "0"
+      dry_run:
+        description: "Discover and report without staging sources"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wikimedia-beer-image-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify Wikimedia source contracts
+        run: python -m unittest scripts.test_backfill_beer_images_wikimedia
+
+      - name: Stage exact-entity licensed sources
+        env:
+          SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          MAX_ROWS: ${{ inputs.max_rows || '0' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is required."
+            exit 1
+          fi
+          python scripts/backfill_beer_images_wikimedia.py | tee wikimedia-images.log
+
+      - name: Publish discovery summary
+        if: always()
+        run: |
+          echo "### Licensed Wikimedia beer-image discovery" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -E "^(catalog|result):" wikimedia-images.log >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "Sources remain private until their generated cutouts pass paired admin review." >> "$GITHUB_STEP_SUMMARY"

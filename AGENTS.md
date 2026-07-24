@@ -437,6 +437,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   App Store DSA declaration; pay the outstanding Supabase invoice; verify
   email/Google/Apple on the signed current release build. RESEND_API_KEY,
   Stripe, and FB App ID remain optional future work.
+- **Product-image truth and v3 factory (Codex, 2026-07-24):** the earlier
+  `99.98% imaged` statement predates major catalog growth and is no longer the
+  live baseline. Production now has 26,525 listable beers, 10,060 with any real
+  source or cutout (37.9%), 590 reviewed cutouts (2.2%), and 16,465 imageless.
+  Migration `20260724021000` is applied. V3 uses exact-GTIN OFF originals when
+  available, BiRefNet segmentation, no source upscaling, source and derivative
+  hashes, model and transformation provenance, paired admin review, and private
+  rights-cleared source discovery. Verified venue partners can submit exact
+  matched product photos through the portal; uploads remain private until a
+  cutout is approved. Display priority stays reviewed cutout, trusted real
+  source, then canonical glass. Never generate, reconstruct, recolor, or invent
+  a beer label/package. Blank is safer than the wrong SKU. Wikimedia is exact
+  Wikidata-QID P18 only with commercial license, creator, file page, revision,
+  dimensions, and source hash retained. First-party brewery/partner assets tied
+  to exact SKU identity are the scale path; do not scrape search engines,
+  retailers, brewery sites, or social feeds.
 
 ## Don'ts (learned the hard way)
 - Don't re-add per-write triggers to trend/market tables (load-tested away).

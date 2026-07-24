@@ -13,7 +13,7 @@ on:
       model:
         description: "rembg segmentation model"
         required: false
-        default: "isnet-general-use"
+        default: "birefnet-general"
       retry_rejected:
         description: "Retry previously rejected photos"
         type: boolean
@@ -30,7 +30,7 @@ concurrency:
 jobs:
   cutouts:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ~/.u2net
-          key: rembg-${{ inputs.model || 'isnet-general-use' }}-v1
+          key: rembg-${{ inputs.model || 'birefnet-general' }}-v1
 
       - name: Install pinned image pipeline
         # numpy must stay <2.5 until numba (rembg -> pymatting -> numba) lifts
@@ -60,7 +60,7 @@ jobs:
           SUPABASE_URL: https://qfwiizvqxrhjlthbjosz.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           BATCH: ${{ inputs.batch || '100' }}
-          MODEL: ${{ inputs.model || 'isnet-general-use' }}
+          MODEL: ${{ inputs.model || 'birefnet-general' }}
           RETRY_REJECTED: ${{ inputs.retry_rejected || 'false' }}
         run: |
           if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then

@@ -62,6 +62,7 @@ a{color:var(--copper)}
 .active-venue{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:14px;background:var(--malt);color:var(--foam);border-radius:12px}.active-venue span{font-size:.72rem;color:rgba(251,246,236,.62);text-transform:uppercase;font-weight:700}.active-venue b{flex:1;font-family:'Poppins';font-size:.95rem}.active-venue button{border:0;background:transparent;color:var(--gold);font:700 .8rem/1 'Inter';cursor:pointer}
 .active-venue[hidden]{display:none}
 .partner-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.partner-tools .btn{margin:0;text-decoration:none}.embed-code{width:100%;min-height:76px;margin-top:10px;font:500 .74rem/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+.beer-photo-list{display:grid;gap:10px}.beer-photo-row{padding:12px;border-radius:12px;background:var(--foam)}.beer-photo-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}.beer-photo-head b{font-family:'Poppins';font-size:.92rem}.beer-photo-head span{font-size:.76rem;color:var(--slate)}.rights{display:flex;gap:8px;align-items:flex-start;font-size:.76rem;color:var(--slate);margin:2px 0 9px}.rights input{width:auto;margin:3px 0 0;flex:0 0 auto}.beer-photo-row input[type=file]{margin:0;padding:8px;background:#fff;font-size:.82rem}
 .portal-footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px solid rgba(26,18,6,.1);margin-top:28px;padding-top:20px;color:var(--slate);font-size:.76rem}
 .portal-footer nav{display:flex;gap:14px;flex-wrap:wrap}.portal-footer a{color:var(--slate);font-weight:700;text-decoration:none}.portal-footer a:hover{color:var(--copper)}
 .wrap{animation:portalIn .7s cubic-bezier(.22,1,.36,1) both}
@@ -143,8 +144,16 @@ a{color:var(--copper)}
     <div class="msg" id="toolMsg" role="status" aria-live="polite"></div>
   </div>
 
+  <div class="card" id="productImageCard" hidden>
+    <h2>5 · Official beer photos</h2>
+    <p class="sub" style="margin-bottom:10px">Help the whole Tapt catalog. For a matched tap without product art, upload one straight-on can or bottle photo that your business owns or is authorized to provide.</p>
+    <div class="beer-photo-list" id="beerPhotoNeeds"></div>
+    <div class="msg" id="beerPhotoMsg" role="status" aria-live="polite"></div>
+    <div class="hint">PNG, JPG, or WEBP · up to 3MB. Tapt removes the background and reviews the result before publication. Uploads never publish automatically.</div>
+  </div>
+
   <div class="card" id="eventsCard" hidden>
-    <h2>5 · Events &amp; specials</h2>
+    <h2>6 · Events &amp; specials</h2>
     <p class="sub" style="margin-bottom:10px">Happy hours, tap takeovers, releases, trivia nights. Shows on your menu page and in the Tapt app.</p>
     <div id="events"></div>
     <button class="btn ghost" onclick="addEvent()">+ Add an event</button>
@@ -361,6 +370,7 @@ async function openMenu(venueId, name) {
   $('activeVenueName').textContent = name;
   $('brandCard').hidden = false;
   $('menuCard').hidden = false;
+  $('productImageCard').hidden = false;
   $('eventsCard').hidden = false;
   $('numbersCard').hidden = false;
   $('menuVenueName').textContent = name;
@@ -369,11 +379,13 @@ async function openMenu(venueId, name) {
   $('numbers').innerHTML = '';
   $('topBeers').innerHTML = '';
   $('featuredReach').innerHTML = '';
+  $('beerPhotoNeeds').innerHTML = '';
   $('logoPreview').removeAttribute('src');
   $('pubMsg').textContent = '';
   $('evMsg').textContent = '';
   $('logoMsg').textContent = '';
   $('toolMsg').textContent = '';
+  $('beerPhotoMsg').textContent = '';
   loadNumbers(venueId, loadId);
   loadEvents(venueId, loadId);
   const url = `${location.origin}/menu?v=${venueId}`;
@@ -386,6 +398,7 @@ async function openMenu(venueId, name) {
   ]);
   if (loadId !== activeVenueLoad || approvedVenue !== venueId) return;
   if (brandResult.data?.[0]?.logo_url) $('logoPreview').src = brandResult.data[0].logo_url;
+  loadProductImageNeeds(venueId, loadId);
   // Unpublished edits from a previous visit beat the published list.
   if (restoreDraft(venueId)) {
     return;
@@ -402,7 +415,12 @@ async function openMenu(venueId, name) {
 }
 
 document.addEventListener('change', async (e) => {
-  if (e.target.id !== 'logoFile' || !approvedVenue) return;
+  if (!approvedVenue) return;
+  if (e.target.matches('[data-beer-photo]')) {
+    await uploadPartnerBeerPhoto(e.target);
+    return;
+  }
+  if (e.target.id !== 'logoFile') return;
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 3145728) { $('logoMsg').textContent = 'Max 3MB.'; return; }
@@ -421,6 +439,73 @@ document.addEventListener('change', async (e) => {
   $('logoMsg').textContent = error ? error.message : 'Logo saved. It shows on your menu page now.';
   if (!error) $('logoPreview').src = pub.publicUrl;
 });
+
+async function loadProductImageNeeds(venueId, loadId) {
+  const { data, error } = await supa.rpc('partner_imageless_taps', { p_venue: venueId });
+  if (loadId !== activeVenueLoad || approvedVenue !== venueId) return;
+  const box = $('beerPhotoNeeds');
+  if (error) {
+    box.innerHTML = '';
+    $('beerPhotoMsg').textContent = 'Could not load product-photo needs. Select the venue again to retry.';
+    return;
+  }
+  $('beerPhotoMsg').textContent = '';
+  box.innerHTML = data?.length ? data.map(item => `
+    <div class="beer-photo-row" data-beer-photo-row="${esc(item.beer_id)}">
+      <div class="beer-photo-head"><div><b>${esc(item.beer_name)}</b><br><span>${esc(item.brewery_name || 'Brewery unavailable')}</span></div><span>Needs product art</span></div>
+      <label class="rights"><input type="checkbox" data-rights-confirm><span>I have authority to grant Tapt a non-exclusive, worldwide, royalty-free right to host, reproduce, resize, remove the background from, and display this photo in the Tapt app, website, catalog, and product previews.</span></label>
+      <label class="field"><span>Single can or bottle photo</span><input type="file" data-beer-photo="${esc(item.beer_id)}" accept="image/png,image/jpeg,image/webp"></label>
+      <div class="msg" data-upload-status role="status" aria-live="polite"></div>
+    </div>`).join('') : '<div class="hint">Every matched tap already has product art or is awaiting review.</div>';
+}
+
+async function uploadPartnerBeerPhoto(input) {
+  const venueId = approvedVenue;
+  const row = input.closest('[data-beer-photo-row]');
+  const beerId = input.dataset.beerPhoto;
+  const file = input.files?.[0];
+  const status = row?.querySelector('[data-upload-status]');
+  const rights = row?.querySelector('[data-rights-confirm]')?.checked === true;
+  if (!venueId || !row || !beerId || !file || !status) return;
+  if (!rights) {
+    status.textContent = 'Confirm the image rights before uploading.';
+    input.value = '';
+    return;
+  }
+  if (file.size > 3145728) { status.textContent = 'Max 3MB.'; input.value = ''; return; }
+  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) {
+    status.textContent = 'Use a PNG, JPG, or WEBP image.';
+    input.value = '';
+    return;
+  }
+  const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${venueId}/beer-images/${beerId}-${Date.now()}.${extension}`;
+  input.disabled = true;
+  status.textContent = 'Uploading securely...';
+  const { error: uploadError } = await supa.storage.from('partner-assets').upload(path, file, { upsert: false });
+  if (uploadError) {
+    input.disabled = false;
+    status.textContent = uploadError.message;
+    return;
+  }
+  const { data: publicAsset } = supa.storage.from('partner-assets').getPublicUrl(path);
+  const { error } = await supa.rpc('submit_partner_beer_image', {
+    p_venue: venueId,
+    p_beer: beerId,
+    p_url: publicAsset.publicUrl,
+    p_rights_confirmed: true
+  });
+  if (error) {
+    await supa.storage.from('partner-assets').remove([path]).catch(() => {});
+    if (approvedVenue !== venueId) return;
+    input.disabled = false;
+    status.textContent = `Could not submit this photo for review: ${error.message}`;
+    return;
+  }
+  if (approvedVenue !== venueId) return;
+  row.querySelectorAll('input').forEach(control => { control.disabled = true; });
+  status.textContent = 'Submitted. Tapt will remove the background and review it before publication.';
+}
 
 window.addTap = (beer = '', brewery = '', style = '', price = '') => {
   if ($('taps').children.length >= 60) {
@@ -607,6 +692,7 @@ window.publish = async () => {
   dirty = false; btn.textContent = 'Publish menu';
   try { localStorage.removeItem(draftKey(approvedVenue)); } catch {}
   $('pubMsg').textContent = `Published ${data} taps. Live now, print the QR from your menu page.`;
+  loadProductImageNeeds(venueId, activeVenueLoad);
 };
 
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }

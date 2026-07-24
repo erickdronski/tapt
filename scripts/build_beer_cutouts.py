@@ -13,7 +13,7 @@ Required environment:
 Optional environment / flags:
   SUPABASE_URL  default Tapt production project URL
   BATCH         successful outputs per run (default 100, max 300)
-  MODEL         rembg model (default isnet-general-use)
+  MODEL         rembg model (default birefnet-general)
   DRY_RUN       true to process without database/storage writes
 """
 
@@ -29,7 +29,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
-from urllib.parse import quote, urlsplit, urlunsplit
+from urllib.parse import parse_qs, quote, urlencode, urlsplit, urlunsplit
 
 import numpy as np
 import requests
@@ -45,9 +45,10 @@ USER_AGENT = "Tapt/1.0 (beer media quality pipeline; esdronski@gmail.com)"
 OUTPUT_SIZE = 1024
 MAX_SOURCE_BYTES = 16 * 1024 * 1024
 MAX_SOURCE_PIXELS = 40_000_000
+MIN_SOURCE_EDGE = 512
 MAX_ATTEMPTS = 3
 MIN_OUTPUT_FOREGROUND_EDGE = 700
-PIPELINE_VERSION = "v2"
+PIPELINE_VERSION = "v3"
 MAX_PRODUCT_ASPECT = 0.72
 MIN_SILHOUETTE_SYMMETRY = 0.84
 MAX_CENTERLINE_DEVIATION = 0.10
@@ -59,13 +60,20 @@ PERMANENT_REJECTION_CODES = {
     "visual_quality_review",
 }
 SOURCE_HOSTS = {
+    "commons.wikimedia.org",
     "images.openfoodfacts.org",
     "qfwiizvqxrhjlthbjosz.supabase.co",
     "upload.wikimedia.org",
 }
 CUTOUT_PATH_PATTERN = re.compile(
-    r"^/storage/v1/object/public/beer-cutouts/(?:v2/)?"
+    r"^/storage/v1/object/public/beer-cutouts/(?:v[23]/)?"
     r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}[.]png$"
+)
+PARTNER_SOURCE_PATH_PATTERN = re.compile(
+    r"^/storage/v1/object/public/partner-assets/"
+    r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}/beer-images/"
+    r"[A-Za-z0-9._-]+[.](?:png|jpe?g|webp)$",
+    re.IGNORECASE,
 )
 
 Image.MAX_IMAGE_PIXELS = MAX_SOURCE_PIXELS
@@ -83,6 +91,7 @@ class Candidate:
     name: str
     source_url: str
     license: str | None
+    gtin: str | None = None
     attempts: int = 0
 
 
@@ -94,6 +103,7 @@ class Cutout:
     effective_source_url: str
     source_width: int
     source_height: int
+    source_kind: str
 
 
 class SupabaseAPI:
@@ -141,7 +151,7 @@ class SupabaseAPI:
                 "GET",
                 "/rest/v1/cutout_queue",
                 params={
-                    "select": "id,name,label_image_url,label_image_license,updated_at",
+                    "select": "id,name,gtin,label_image_url,label_image_license,updated_at",
                     "or": "(cutout_url.is.null,cutout_url.eq.)",
                     "order": "market_standing.desc.nullslast,updated_at.asc,id.asc",
                     "limit": str(page_size),
@@ -185,6 +195,7 @@ class SupabaseAPI:
                     name=(row.get("name") or "Unnamed beer").strip(),
                     source_url=source_url,
                     license=row.get("label_image_license"),
+                    gtin=(row.get("gtin") or "").strip() or None,
                     attempts=attempts if same_source and same_version else 0,
                 ))
                 if len(result) >= target_count:
@@ -232,23 +243,40 @@ class SupabaseAPI:
         return public_url
 
 
-def validate_candidate(candidate: Candidate) -> None:
-    parsed = urlsplit(candidate.source_url)
+def validate_source_url(source_url: str, *, allow_commons: bool = True) -> None:
+    parsed = urlsplit(source_url)
     if (
         parsed.scheme != "https"
         or parsed.username
         or parsed.password
         or parsed.port is not None
         or parsed.hostname not in SOURCE_HOSTS
-        or parsed.query
         or parsed.fragment
     ):
         raise PipelineError("source_not_allowed", "source host is not approved")
+    if parsed.hostname == "commons.wikimedia.org":
+        query = parse_qs(parsed.query, keep_blank_values=True)
+        width = query.get("width", [])
+        if (
+            not allow_commons
+            or not parsed.path.startswith("/wiki/Special:FilePath/")
+            or set(query) - {"width"}
+            or len(width) > 1
+            or (width and (not width[0].isdigit() or not 320 <= int(width[0]) <= 4096))
+        ):
+            raise PipelineError("source_not_allowed", "invalid Wikimedia source URL")
+    elif parsed.query:
+        raise PipelineError("source_not_allowed", "source query parameters are not approved")
     if (
         parsed.hostname == "qfwiizvqxrhjlthbjosz.supabase.co"
         and CUTOUT_PATH_PATTERN.fullmatch(parsed.path) is None
+        and PARTNER_SOURCE_PATH_PATTERN.fullmatch(parsed.path) is None
     ):
-        raise PipelineError("source_not_allowed", "Supabase source is not a recognized cutout object")
+        raise PipelineError("source_not_allowed", "Supabase source is not an approved media object")
+
+
+def validate_candidate(candidate: Candidate) -> None:
+    validate_source_url(candidate.source_url)
     if not (candidate.license or "").strip():
         raise PipelineError("source_license_missing", "source has no recorded image license")
     if is_multipack(candidate.name):
@@ -256,24 +284,94 @@ def validate_candidate(candidate: Candidate) -> None:
 
 
 def preferred_source_urls(source_url: str) -> list[str]:
-    """Prefer OFF's real full-resolution selected image, with thumbnail fallback."""
+    """Prefer the best licensed rendition while preserving a bounded fallback."""
     parsed = urlsplit(source_url)
     urls: list[str] = []
     if parsed.hostname == "images.openfoodfacts.org":
         full_path = re.sub(r"\.(?:100|200|400)\.jpg$", ".full.jpg", parsed.path)
         if full_path != parsed.path:
             urls.append(urlunsplit(parsed._replace(path=full_path)))
+    elif parsed.hostname == "commons.wikimedia.org":
+        # 1600px is enough for a 1024px cutout without pulling huge originals.
+        urls.append(urlunsplit(parsed._replace(query=urlencode({"width": "1600"}))))
     urls.append(source_url)
     return list(dict.fromkeys(urls))
+
+
+def off_original_source_urls(
+    session: requests.Session,
+    candidate: Candidate,
+) -> list[str]:
+    """Resolve the uncropped upload behind an exact-barcode OFF front image."""
+    if not candidate.gtin or urlsplit(candidate.source_url).hostname != "images.openfoodfacts.org":
+        return []
+    code = re.sub(r"[^0-9]", "", candidate.gtin)
+    if not 8 <= len(code) <= 14:
+        return []
+    try:
+        response = session.get(
+            f"https://world.openfoodfacts.org/api/v2/product/{quote(code)}.json",
+            params={"fields": "code,image_front_url,images"},
+            headers={"User-Agent": USER_AGENT},
+            timeout=(15, 45),
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (requests.RequestException, ValueError):
+        return []
+    product = payload.get("product") or {}
+    front_url = (product.get("image_front_url") or "").strip()
+    if not front_url:
+        return []
+    try:
+        validate_source_url(front_url, allow_commons=False)
+    except PipelineError:
+        return []
+    parsed = urlsplit(front_url)
+    if parsed.hostname != "images.openfoodfacts.org":
+        return []
+    filename = parsed.path.rsplit("/", 1)[-1]
+    selected_key = filename.split(".", 1)[0]
+    selected = (product.get("images") or {}).get(selected_key) or {}
+    imgid = str(selected.get("imgid") or "").strip()
+    urls = preferred_source_urls(front_url)
+    if imgid.isdigit():
+        directory = parsed.path.rsplit("/", 1)[0]
+        urls.append(urlunsplit(parsed._replace(path=f"{directory}/{imgid}.jpg", query="")))
+    return list(dict.fromkeys(urls))
+
+
+def source_variant_urls(
+    session: requests.Session,
+    candidate: Candidate,
+) -> list[str]:
+    urls = preferred_source_urls(candidate.source_url)
+    urls.extend(off_original_source_urls(session, candidate))
+    return list(dict.fromkeys(urls))
+
+
+def source_kind(source_url: str) -> str:
+    parsed = urlsplit(source_url)
+    host = parsed.hostname or ""
+    if host == "images.openfoodfacts.org":
+        filename = parsed.path.rsplit("/", 1)[-1]
+        return "open_food_facts_raw" if re.fullmatch(r"\d+[.]jpg", filename) else "open_food_facts_front"
+    if host.endswith("wikimedia.org"):
+        return "wikimedia_commons"
+    if host == "qfwiizvqxrhjlthbjosz.supabase.co":
+        return "partner_official" if PARTNER_SOURCE_PATH_PATTERN.fullmatch(parsed.path) else "tapt_storage"
+    return "unknown"
 
 
 def download_source(
     session: requests.Session,
     candidate: Candidate,
+    source_url: str | None = None,
 ) -> tuple[bytes, Image.Image, str, tuple[int, int]]:
     errors: list[str] = []
     last_pipeline_code: str | None = None
-    for source_url in preferred_source_urls(candidate.source_url):
+    source_urls = [source_url] if source_url else preferred_source_urls(candidate.source_url)
+    for source_url in source_urls:
         response: requests.Response | None = None
         try:
             response = session.get(
@@ -283,6 +381,7 @@ def download_source(
                 stream=True,
             )
             response.raise_for_status()
+            validate_source_url(response.url, allow_commons=False)
             content_type = response.headers.get("Content-Type", "").split(";", 1)[0].lower()
             if content_type and not content_type.startswith("image/"):
                 raise PipelineError("source_not_image", f"unexpected content type {content_type}")
@@ -303,7 +402,7 @@ def download_source(
                 image.load()
             except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as error:
                 raise PipelineError("source_decode", str(error)) from error
-            if min(image.size) < 160:
+            if min(image.size) < MIN_SOURCE_EDGE:
                 raise PipelineError(
                     "source_too_small",
                     f"source is only {image.width}x{image.height}",
@@ -412,9 +511,9 @@ def normalize_cutout(
 
     max_edge = OUTPUT_SIZE - 128
     scale = min(max_edge / crop.width, max_edge / crop.height)
-    # A bounded upscale gives common 400px OFF photos a premium app-ready size
-    # without pretending a tiny source has detail it does not contain.
-    scale = min(scale, 2.5)
+    # Premium product art must retain real source detail. Never manufacture
+    # apparent resolution by enlarging a small foreground.
+    scale = min(scale, 1.0)
     target = (max(1, round(crop.width * scale)), max(1, round(crop.height * scale)))
     if target != crop.size:
         crop = crop.resize(target, Image.Resampling.LANCZOS)
@@ -432,6 +531,7 @@ def normalize_cutout(
         effective_source_url=effective_source_url,
         source_width=(source_dimensions or image.size)[0],
         source_height=(source_dimensions or image.size)[1],
+        source_kind=source_kind(effective_source_url),
     )
 
 
@@ -576,7 +676,7 @@ def add_studio_depth(image: Image.Image) -> Image.Image:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--batch", type=int, default=int(os.environ.get("BATCH", "100")))
-    parser.add_argument("--model", default=os.environ.get("MODEL", "isnet-general-use"))
+    parser.add_argument("--model", default=os.environ.get("MODEL", "birefnet-general"))
     parser.add_argument("--dry-run", action="store_true", default=os.environ.get("DRY_RUN", "").lower() == "true")
     parser.add_argument("--retry-rejected", action="store_true")
     return parser.parse_args()
@@ -605,29 +705,53 @@ def main() -> int:
         api.mark(candidate, "processing", error_code=None)
         try:
             validate_candidate(candidate)
-            source, image, effective_source_url, source_dimensions = download_source(
-                download_session,
-                candidate,
-            )
-            cutout = normalize_cutout(
-                source,
-                image,
-                rembg_session,
-                candidate.name,
-                effective_source_url,
-                source_dimensions,
-            )
+            cutout: Cutout | None = None
+            variant_errors: list[PipelineError] = []
+            variants = source_variant_urls(download_session, candidate)
+            for variant_url in variants:
+                try:
+                    source, image, effective_source_url, source_dimensions = download_source(
+                        download_session,
+                        candidate,
+                        variant_url,
+                    )
+                    cutout = normalize_cutout(
+                        source,
+                        image,
+                        rembg_session,
+                        candidate.name,
+                        effective_source_url,
+                        source_dimensions,
+                    )
+                    break
+                except PipelineError as error:
+                    variant_errors.append(error)
+            if cutout is None:
+                if not variant_errors:
+                    raise PipelineError("source_download", "no usable source variants")
+                last_error = variant_errors[-1]
+                raise PipelineError(
+                    last_error.code,
+                    f"{last_error}; tried {len(variant_errors)} source variants",
+                )
             url = api.stage(candidate, cutout)
             api.mark(
                 candidate,
                 "pending_review",
                 source_sha256=cutout.source_sha256,
+                derivative_sha256=hashlib.sha256(cutout.png).hexdigest(),
                 effective_source_url=cutout.effective_source_url,
                 source_width=cutout.source_width,
                 source_height=cutout.source_height,
                 output_width=OUTPUT_SIZE,
                 output_height=OUTPUT_SIZE,
                 foreground_fraction=round(cutout.foreground_fraction, 5),
+                effective_source_kind=cutout.source_kind,
+                segmentation_model=args.model,
+                transformation_notes=(
+                    "Background removed; transparent 1024px canvas normalized; "
+                    "subtle factual studio shadow added; no product pixels invented"
+                ),
                 candidate_cutout_url=url,
                 error_code=None,
             )

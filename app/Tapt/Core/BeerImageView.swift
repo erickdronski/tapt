@@ -10,6 +10,16 @@ import UIKit
 /// (approvedURL), so the strict customer-facing boundary is preserved where it
 /// matters; in-app browsing just no longer hides the real photos we already hold.
 enum BeerProductImagePolicy {
+    enum AssetKind: Equatable {
+        case reviewedCutout
+        case trustedSource
+    }
+
+    struct DisplayAsset: Equatable {
+        let url: URL
+        let kind: AssetKind
+    }
+
     private static let host = "qfwiizvqxrhjlthbjosz.supabase.co"
     private static let pathPrefix = "/storage/v1/object/public/beer-cutouts/"
 
@@ -28,7 +38,7 @@ enum BeerProductImagePolicy {
         let filename: Substring
         if parts.count == 1 {
             filename = parts[0]
-        } else if parts.count == 2, parts[0] == "v2" {
+        } else if parts.count == 2, parts[0] == "v2" || parts[0] == "v3" {
             filename = parts[1]
         } else {
             return false
@@ -60,33 +70,82 @@ enum BeerProductImagePolicy {
         approvedURL(value) != nil
     }
 
+    private static func hasSafeImagePath(_ components: URLComponents) -> Bool {
+        let encodedPath = components.percentEncodedPath.lowercased()
+        guard !encodedPath.contains("%2f"),
+              !encodedPath.contains("%5c"),
+              !encodedPath.contains("%00"),
+              !components.path.contains("\\")
+        else { return false }
+
+        return !components.path
+            .split(separator: "/", omittingEmptySubsequences: false)
+            .contains { $0 == "." || $0 == ".." }
+    }
+
+    private static func isImagePath(_ path: String) -> Bool {
+        [".jpg", ".jpeg", ".png", ".webp"].contains { path.lowercased().hasSuffix($0) }
+    }
+
+    private static func hasAllowedWikimediaQuery(_ components: URLComponents) -> Bool {
+        guard components.query != nil else { return true }
+        guard let items = components.queryItems,
+              items.count == 1,
+              items[0].name == "width",
+              let value = items[0].value,
+              let width = Int(value),
+              (1...4096).contains(width)
+        else { return false }
+        return true
+    }
+
     /// A real product photo from a trusted catalog source (not a Tapt cutout).
     static func approvedSourceURL(_ value: String?) -> URL? {
         guard let value, !value.isEmpty,
               let c = URLComponents(string: value),
               c.scheme == "https",
               let host = c.host, sourceHosts.contains(host),
+              c.port == nil,
               c.user == nil, c.password == nil,
-              c.fragment == nil
+              c.fragment == nil,
+              hasSafeImagePath(c),
+              isImagePath(c.path)
         else { return nil }
-        // Wikimedia's Special:FilePath has no extension (and a ?width= query);
-        // everything else must be a plain image path with no query string.
-        let isWikimedia = host.hasSuffix("wikimedia.org")
-        let path = c.path.lowercased()
-        let looksLikeImage = [".jpg", ".jpeg", ".png", ".webp"].contains { path.hasSuffix($0) }
-        guard isWikimedia || (c.query == nil && looksLikeImage) else { return nil }
+
+        switch host {
+        case "images.openfoodfacts.org":
+            guard c.path.hasPrefix("/images/products/"), c.query == nil else { return nil }
+        case "upload.wikimedia.org":
+            guard c.path.hasPrefix("/wikipedia/commons/"), c.query == nil else { return nil }
+        case "commons.wikimedia.org":
+            guard c.path.hasPrefix("/wiki/Special:FilePath/"),
+                  hasAllowedWikimediaQuery(c)
+            else { return nil }
+        default:
+            return nil
+        }
         return c.url
+    }
+
+    static func displayAsset(_ value: String?) -> DisplayAsset? {
+        if let url = approvedURL(value) {
+            return DisplayAsset(url: url, kind: .reviewedCutout)
+        }
+        if let url = approvedSourceURL(value) {
+            return DisplayAsset(url: url, kind: .trustedSource)
+        }
+        return nil
     }
 
     /// The URL a customer-facing product view should actually load: the reviewed
     /// cutout if we have one, otherwise the real source photo. Views fall back to
     /// the style glass only when this is nil.
     static func displayURL(_ value: String?) -> URL? {
-        approvedURL(value) ?? approvedSourceURL(value)
+        displayAsset(value)?.url
     }
 }
 
-/// Displays reviewed, background-removed product art or the canonical glass.
+/// Displays reviewed cutouts, contained real-source photos, or the canonical glass.
 struct BeerImageView: View {
     let url: String?
     var contentMode: ContentMode = .fit
@@ -95,6 +154,7 @@ struct BeerImageView: View {
     var style: String? = nil
 
     @State private var display: UIImage?
+    @State private var assetKind: BeerProductImagePolicy.AssetKind?
     @State private var loaded = false
 
     private var loadIdentity: String {
@@ -104,9 +164,14 @@ struct BeerImageView: View {
     var body: some View {
         Group {
             if let image = display {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: contentMode)
+                if assetKind == .trustedSource {
+                    trustedSourcePresentation(image)
+                } else {
+                    Image(uiImage: image)
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: contentMode)
+                }
             } else if loaded {
                 BeerGlassView(pour: 0.76, animatesPour: false, style: style)
                     .padding(6)
@@ -118,20 +183,64 @@ struct BeerImageView: View {
         .task(id: loadIdentity) { await load() }
     }
 
+    private func trustedSourcePresentation(_ image: UIImage) -> some View {
+        GeometryReader { proxy in
+            let edge = min(proxy.size.width, proxy.size.height)
+            let outerInset = min(5, max(1, edge * 0.04))
+            let imageInset = min(10, max(2, edge * 0.08))
+            let radius = min(18, max(6, edge * 0.18))
+
+            ZStack {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 1.0, green: 0.995, blue: 0.975),
+                                Color(red: 0.955, green: 0.945, blue: 0.91)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .padding(imageInset)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .stroke(Color.black.opacity(0.09), lineWidth: 0.75)
+            }
+            .shadow(
+                color: Color.black.opacity(0.12),
+                radius: min(8, max(2, edge * 0.04)),
+                y: min(4, max(1, edge * 0.02))
+            )
+            .padding(outerInset)
+        }
+    }
+
     private func load() async {
         display = nil
+        assetKind = nil
         loaded = false
-        guard let remoteURL = BeerProductImagePolicy.displayURL(url) else {
+        guard let asset = BeerProductImagePolicy.displayAsset(url) else {
             loaded = true
             return
         }
 
         let image = await TaptImageCache.shared.image(
-            for: remoteURL.absoluteString,
+            for: asset.url.absoluteString,
             maxPixel: maxPixelSize
         )
         guard !Task.isCancelled else { return }
-        withAnimation(.easeOut(duration: 0.2)) { display = image }
+        withAnimation(.easeOut(duration: 0.2)) {
+            assetKind = asset.kind
+            display = image
+        }
         loaded = true
     }
 }

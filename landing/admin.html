@@ -14,12 +14,13 @@
 :root{--gold:#F2A900;--malt:#1A1206;--foam:#FBF6EC;--hop:#3F8F5B;--copper:#B4531F;--slate:#6B6459}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--foam);color:var(--malt)}
-.wrap{max-width:720px;margin:0 auto;padding:36px 20px 80px}
+.wrap{max-width:1080px;margin:0 auto;padding:36px 20px 80px}
 .brand{font-family:'Poppins';font-weight:800;font-size:1.3rem}.brand span{color:var(--gold)}
 h1{font-family:'Poppins';font-size:1.6rem;margin:14px 0 18px}
 input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26,18,6,.15);font-family:inherit;font-size:.98rem;margin-bottom:8px}
 .btn{background:var(--gold);color:var(--malt);font-weight:700;border-radius:999px;padding:9px 18px;border:0;cursor:pointer;font-family:inherit}
 .btn.g{background:var(--hop);color:#fff}.btn.r{background:transparent;border:2px solid rgba(180,83,31,.4);color:var(--copper)}
+.btn:disabled{cursor:wait;filter:saturate(.55)}.btn:focus-visible,a:focus-visible{outline:3px solid rgba(242,169,0,.5);outline-offset:2px}
 .claim{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:16px;padding:16px;margin-bottom:12px}
 .claim.pending{border-left:4px solid var(--gold)}
 .claim h3{font-family:'Poppins';font-size:1.05rem}
@@ -27,11 +28,36 @@ input{width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(26
 .tag{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px}
 .tag.pending{background:#FFF3D6;color:var(--copper)}.tag.approved{background:#E1F2E7;color:var(--hop)}.tag.rejected{background:#F3E0DA;color:var(--copper)}
 .msg{font-weight:600;font-size:.9rem;margin-top:8px}
-.actions{display:flex;gap:8px;margin-top:8px}
+.actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .avatar-preview{width:72px;height:72px;object-fit:cover;border-radius:50%;border:2px solid var(--gold)}
-.product-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.product-shot{min-width:0}.product-shot span{display:block;font-size:.7rem;font-weight:700;color:var(--slate);margin-bottom:5px;text-transform:uppercase}
-.product-shot img{display:block;width:100%;height:230px;object-fit:contain;background:#eee9df;border:1px solid rgba(26,18,6,.08);border-radius:8px}
+.image-guide{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;background:#fff8e7;border:1px solid rgba(242,169,0,.28);border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:.82rem;color:var(--slate);line-height:1.45}
+.image-guide strong{color:var(--malt)}
+.shortcuts{white-space:nowrap}.key{display:inline-grid;place-items:center;min-width:23px;height:23px;padding:0 6px;border:1px solid rgba(26,18,6,.18);border-bottom-width:2px;border-radius:6px;background:#fff;color:var(--malt);font:700 .72rem 'Inter',sans-serif}
+.product-review{padding:18px;transition:border-color .18s,box-shadow .18s,opacity .18s}
+.product-review:focus{outline:3px solid rgba(242,169,0,.38);outline-offset:2px;border-color:var(--gold)}
+.product-review[aria-busy="true"]{opacity:.65;pointer-events:none}
+.product-review-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.product-review-head h3{font-size:1.12rem}
+.product-state{display:flex;gap:7px;align-items:center;flex:0 0 auto}
+.quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+.quality-metric{min-width:0;background:var(--foam);border:1px solid rgba(26,18,6,.07);border-radius:10px;padding:9px 10px}
+.quality-metric span{display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--slate);margin-bottom:3px}
+.quality-metric b{display:block;overflow:hidden;text-overflow:ellipsis;font-size:.82rem;white-space:nowrap}
+.quality-flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.quality-flag{font-size:.7rem;font-weight:700;border-radius:999px;padding:4px 9px;background:#E8EEE9;color:#356648}
+.quality-flag.warn{background:#FFF0CE;color:#865018}
+.product-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:13px}
+.product-shot{min-width:0;margin:0}.product-shot figcaption{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.7rem;font-weight:700;color:var(--slate);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.product-shot figcaption a{color:var(--copper);text-transform:none;letter-spacing:0;text-decoration-thickness:1px;text-underline-offset:2px}
+.product-frame{position:relative;display:block;overflow:hidden;border:1px solid rgba(26,18,6,.1);border-radius:10px;background:#eee9df}
+.product-frame.candidate{background-color:#eee9df;background-image:linear-gradient(45deg,rgba(26,18,6,.055) 25%,transparent 25%),linear-gradient(-45deg,rgba(26,18,6,.055) 25%,transparent 25%),linear-gradient(45deg,transparent 75%,rgba(26,18,6,.055) 75%),linear-gradient(-45deg,transparent 75%,rgba(26,18,6,.055) 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+.product-shot img{display:block;width:100%;height:clamp(280px,36vw,430px);object-fit:contain}
+.image-state{position:absolute;inset:auto 8px 8px;display:block;padding:5px 8px;border-radius:7px;background:rgba(26,18,6,.82);color:#fff;font-size:.7rem;font-weight:700;text-transform:none;letter-spacing:0;pointer-events:none}
+.product-frame.loaded .image-state{display:none}.product-frame.failed{background:#F3E0DA}.product-frame.failed img{visibility:hidden}.product-frame.failed .image-state{background:var(--copper)}
+.product-review .actions{align-items:center;margin-top:13px}
+.product-review .actions .btn{min-width:128px}
+.product-review .actions .review-status{flex:1;min-width:210px;margin:0;text-align:right;color:var(--slate)}
+.product-unavailable{border-left-color:var(--copper)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px}
 .stat{background:#fff;border:1px solid rgba(26,18,6,.08);border-radius:14px;padding:14px;text-align:center}
 .stat b{display:block;font-family:'Poppins';font-size:1.6rem;color:var(--malt)}
@@ -41,7 +67,19 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
 .wrap{animation:adminIn .6s cubic-bezier(.22,1,.36,1) both}
 @keyframes adminIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.wrap{animation:none}}
-@media(max-width:560px){.product-shot img{height:180px}}
+@media(max-width:760px){
+  .quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .product-pair{grid-template-columns:1fr}
+  .product-shot img{height:min(96vw,390px)}
+  .image-guide{display:block}.shortcuts{margin-top:7px}
+}
+@media(max-width:480px){
+  .wrap{padding:24px 14px 64px}
+  .product-review{padding:14px}
+  .product-review-head{display:block}.product-state{margin-top:7px}
+  .product-review .actions .btn{flex:1;min-width:0}
+  .product-review .actions .review-status{flex-basis:100%;min-width:0;text-align:left}
+}
 </style>
 </head>
 <body>
@@ -78,6 +116,10 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
   <div id="avatars"></div>
 
   <h2 id="imageHead" style="font-family:Poppins;font-size:1.15rem;margin:20px 0 10px" hidden>Product image review</h2>
+  <div id="imageGuide" class="image-guide" hidden>
+    <div><strong>Compare before publishing.</strong> Confirm the exact product, a complete package, clean transparent edges, readable branding, and no hands, glassware, multipacks, or background fragments. Automatic flags are review cues, not quality verdicts. Rejects store a generic quality reason because the current review RPC does not accept detailed notes.</div>
+    <div class="shortcuts"><span class="key">A</span> approve&nbsp;&nbsp;<span class="key">R</span> reject</div>
+  </div>
   <div class="msg" id="imageMsg" aria-live="polite"></div>
   <div id="productImages"></div>
 
@@ -93,6 +135,7 @@ textarea:focus,input:focus{outline:none;border-color:var(--gold)}
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/+esm';
 const supa = createClient('https://qfwiizvqxrhjlthbjosz.supabase.co', 'sb_publishable_RdaJXK16LieKNlJZjJJ7tQ_5vF9YkhF');
 const $ = id => document.getElementById(id);
+let productReviewCount = 0;
 
 window.sendCode = async () => {
   const email = $('email').value.trim();
@@ -134,7 +177,7 @@ async function load() {
   if (!isAdmin) { $('queue').innerHTML = '<p style="color:var(--copper)">This account is not an admin.</p>'; return; }
   $('authBox').style.display = 'none';
   $('stats').hidden = false; $('dispatchBox').hidden = false; $('qHead').hidden = false; $('inqHead').hidden = false;
-  $('modHead').hidden = false; $('avatarHead').hidden = false; $('imageHead').hidden = false;
+  $('modHead').hidden = false; $('avatarHead').hidden = false; $('imageHead').hidden = false; $('imageGuide').hidden = false;
 
   // Ops dashboard
   const { data: s } = await supa.rpc('admin_stats');
@@ -166,27 +209,52 @@ async function load() {
   // source with the product-only candidate and explicitly approves it.
   const { data: productImages, error: productImagesError } = await supa.rpc('admin_product_images', { p_limit: 50 });
   if (productImagesError) {
+    productReviewCount = 0;
+    $('imageHead').textContent = 'Product image review';
     $('productImages').innerHTML = `<p style="color:var(--copper)">${esc(productImagesError.message)}</p>`;
   } else {
-    $('imageHead').textContent = `Product image review${productImages?.length ? ` (${productImages.length})` : ''}`;
-    $('productImages').innerHTML = (productImages && productImages.length) ? productImages.map(p => {
+    productReviewCount = productImages?.length || 0;
+    updateProductReviewCount();
+    $('productImages').innerHTML = productReviewCount ? productImages.map((p, index) => {
       const source = safeProductSource(p.source_url);
       const candidate = safeCutout(p.candidate_url);
-      if (!source || !candidate) return '';
-      const dimensions = p.source_width && p.source_height ? `${p.source_width} × ${p.source_height}` : 'Dimensions unavailable';
-      return `<div class="claim pending">
-        <h3>${esc(p.beer_name)}</h3>
-        <div class="meta">${esc(p.source_license || 'Source license missing')} · ${esc(dimensions)} · staged ${new Date(p.staged_at).toLocaleString()}</div>
+      const beerId = safeUuid(p.beer_id);
+      const reviewable = Boolean(source && candidate && beerId);
+      const dimensions = imageDimensions(p.source_width, p.source_height);
+      const megapixels = imageMegapixels(p.source_width, p.source_height);
+      const aspect = imageAspectRatio(p.source_width, p.source_height);
+      const coverage = foregroundCoverage(p.foreground_fraction);
+      const flags = productImageFlags(p);
+      const titleId = beerId ? `product-title-${beerId}` : `product-title-${index}`;
+      if (!reviewable) return `<article class="claim pending product-review product-unavailable" aria-labelledby="${titleId}">
+        <div class="product-review-head"><div><h3 id="${titleId}">${esc(p.beer_name)}</h3><div class="meta">Staged ${esc(formatDate(p.staged_at))}</div></div><span class="tag rejected">Blocked</span></div>
+        <p style="font-size:.9rem;color:var(--copper);margin-top:10px">Review unavailable: a source, candidate, or product identifier failed the admin page's security allowlist. Nothing has been published or rejected.</p>
+      </article>`;
+      return `<article class="claim pending product-review" data-beer-id="${beerId}" data-beer-name="${esc(p.beer_name)}" tabindex="0" aria-labelledby="${titleId}" aria-keyshortcuts="A R">
+        <div class="product-review-head">
+          <div><h3 id="${titleId}">${esc(p.beer_name)}</h3><div class="meta">Staged ${esc(formatDate(p.staged_at))}</div></div>
+          <div class="product-state"><span class="tag pending">Pending</span><span class="meta review-position" style="margin:0">${index + 1} of ${productReviewCount}</span></div>
+        </div>
+        <div class="quality-grid" aria-label="Image quality metadata">
+          <div class="quality-metric"><span>Source size</span><b title="${esc(dimensions)}">${esc(dimensions)}</b></div>
+          <div class="quality-metric"><span>Resolution</span><b>${esc(megapixels)}</b></div>
+          <div class="quality-metric"><span>Aspect ratio</span><b>${esc(aspect)}</b></div>
+          <div class="quality-metric"><span>Foreground</span><b>${esc(coverage)}</b></div>
+        </div>
+        <div class="quality-flags" aria-label="Automatic review cues">${flags.map(flag => `<span class="quality-flag ${flag.warning ? 'warn' : ''}">${esc(flag.label)}</span>`).join('')}</div>
+        <div class="meta">License: ${esc(p.source_license || 'Missing')} · candidate canvas: 1,024 × 1,024 PNG</div>
         <div class="product-pair">
-          <div class="product-shot"><span>Attributed source</span><img src="${esc(source)}" alt="Source photo for ${esc(p.beer_name)}"></div>
-          <div class="product-shot"><span>Tapt candidate</span><img src="${esc(candidate)}" alt="Background-removed candidate for ${esc(p.beer_name)}"></div>
+          ${productImagePreview('Attributed source', source, `Source photo for ${p.beer_name}`, false)}
+          ${productImagePreview('Tapt candidate', candidate, `Background-removed candidate for ${p.beer_name}`, true)}
         </div>
         <div class="actions">
-          <button class="btn g" onclick="reviewProductImage('${p.beer_id}','approve')">Approve</button>
-          <button class="btn r" onclick="reviewProductImage('${p.beer_id}','reject')">Reject</button>
+          <button type="button" class="btn g" data-review-action="approve" aria-keyshortcuts="A" onclick="reviewProductImage('${beerId}','approve')">Approve <span class="key">A</span></button>
+          <button type="button" class="btn r" data-review-action="reject" aria-keyshortcuts="R" onclick="reviewProductImage('${beerId}','reject')">Reject <span class="key">R</span></button>
+          <div class="msg review-status" id="product-status-${beerId}" aria-live="polite">Awaiting a decision.</div>
         </div>
-      </div>`;
+      </article>`;
     }).join('') : '<p style="color:var(--slate)">No product images awaiting review.</p>';
+    refreshProductReviewPositions();
   }
 
   // Uploaded avatars are not surfaced publicly until an admin approves them.
@@ -281,14 +349,47 @@ window.moderateAvatar = async (userId, decision) => {
 };
 
 window.reviewProductImage = async (beerId, decision) => {
-  $('imageMsg').textContent = decision === 'approve' ? 'Publishing reviewed product image...' : 'Rejecting product image...';
+  const safeBeerId = safeUuid(beerId);
+  const card = safeBeerId ? document.querySelector(`[data-beer-id="${safeBeerId}"]`) : null;
+  if (!card || !['approve', 'reject'].includes(decision) || card.getAttribute('aria-busy') === 'true') return;
+  const beerName = card.dataset.beerName || 'this product image';
+  const prompt = decision === 'approve'
+    ? `Publish the reviewed cutout for ${beerName}? It will become customer-visible.`
+    : `Reject the cutout for ${beerName}? The current review endpoint stores a generic manual-quality rejection; it cannot store a specific reason.`;
+  if (!window.confirm(prompt)) {
+    card.focus();
+    return;
+  }
+  const status = $(`product-status-${safeBeerId}`);
+  const buttons = card.querySelectorAll('button[data-review-action]');
+  card.setAttribute('aria-busy', 'true');
+  buttons.forEach(button => { button.disabled = true; });
+  const pendingMessage = decision === 'approve' ? 'Publishing reviewed product image...' : 'Recording generic quality rejection...';
+  status.textContent = pendingMessage;
+  $('imageMsg').textContent = pendingMessage;
   const { error } = await supa.rpc('review_product_image', { p_beer_id: beerId, p_decision: decision });
   if (error) {
+    card.setAttribute('aria-busy', 'false');
+    buttons.forEach(button => { button.disabled = false; });
+    status.textContent = `Not changed: ${error.message}`;
     $('imageMsg').textContent = error.message;
     return;
   }
-  $('imageMsg').textContent = decision === 'approve' ? 'Product image published.' : 'Product image rejected.';
-  await load();
+  const completedMessage = decision === 'approve' ? `${beerName} published.` : `${beerName} rejected with the generic quality reason.`;
+  $('imageMsg').textContent = completedMessage;
+  let nextCard = card.nextElementSibling;
+  while (nextCard && !nextCard.matches('.product-review[data-beer-id]')) nextCard = nextCard.nextElementSibling;
+  if (!nextCard) {
+    nextCard = card.previousElementSibling;
+    while (nextCard && !nextCard.matches('.product-review[data-beer-id]')) nextCard = nextCard.previousElementSibling;
+  }
+  card.remove();
+  refreshProductReviewPositions();
+  if (productReviewCount === 0) {
+    $('productImages').innerHTML = '<p style="color:var(--slate)">No product images awaiting review.</p>';
+  } else if (nextCard?.classList.contains('product-review')) {
+    nextCard.focus();
+  }
 };
 
 window.sendDispatch = async () => {
@@ -308,27 +409,119 @@ window.sendDispatch = async () => {
 function safeProductSource(value) {
   try {
     const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.search || url.hash) return null;
-    if (url.hostname === 'images.openfoodfacts.org') return url.href;
+    if (url.protocol !== 'https:' || url.username || url.password || url.port || url.hash) return null;
+    if (url.hostname === 'images.openfoodfacts.org'
+      && url.pathname.startsWith('/images/products/') && !url.search) return url.href;
+    if (url.hostname === 'upload.wikimedia.org'
+      && url.pathname.startsWith('/wikipedia/commons/') && !url.search) return url.href;
+    if (url.hostname === 'commons.wikimedia.org'
+      && url.pathname.startsWith('/wiki/Special:FilePath/')
+      && (!url.search || (url.searchParams.size === 1
+        && /^\d{3,4}$/.test(url.searchParams.get('width') || '')
+        && Number(url.searchParams.get('width')) <= 4096))) return url.href;
+    if (url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
+      && /^\/storage\/v1\/object\/public\/partner-assets\/[0-9a-f-]{36}\/beer-images\/[A-Za-z0-9._-]+\.(?:png|jpe?g|webp)$/i.test(url.pathname)
+      && !url.search) return url.href;
     const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/', '');
     if (url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
       && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/')
-      && /^(?:v2\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)) return url.href;
+      && !url.search
+      && /^(?:v[23]\/)?[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)) return url.href;
   } catch (_) {}
   return null;
 }
 function safeCutout(value) {
   try {
     const url = new URL(value);
-    const relative = url.pathname.replace('/storage/v1/object/public/beer-cutouts/v2/', '');
+    const match = url.pathname.match(/^\/storage\/v1\/object\/public\/beer-cutouts\/(v[23])\/([^/]+)$/);
     return url.protocol === 'https:'
       && url.hostname === 'qfwiizvqxrhjlthbjosz.supabase.co'
-      && url.pathname.startsWith('/storage/v1/object/public/beer-cutouts/v2/')
       && !url.username && !url.password && !url.port && !url.search && !url.hash
-      && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(relative)
+      && match
+      && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\.png$/.test(match[2])
       ? url.href : null;
   } catch (_) { return null; }
 }
+function safeUuid(value) {
+  const normalized = String(value || '').toLowerCase();
+  return /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(normalized) ? normalized : null;
+}
+function formatDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'time unavailable' : date.toLocaleString();
+}
+function imageDimensions(width, height) {
+  return positiveNumber(width) && positiveNumber(height) ? `${Number(width).toLocaleString()} × ${Number(height).toLocaleString()} px` : 'Unavailable';
+}
+function imageMegapixels(width, height) {
+  return positiveNumber(width) && positiveNumber(height) ? `${((Number(width) * Number(height)) / 1_000_000).toFixed(2)} MP` : 'Unavailable';
+}
+function imageAspectRatio(width, height) {
+  if (!positiveNumber(width) || !positiveNumber(height)) return 'Unavailable';
+  const divisor = greatestCommonDivisor(Math.round(Number(width)), Math.round(Number(height)));
+  return `${Math.round(Number(width)) / divisor}:${Math.round(Number(height)) / divisor}`;
+}
+function foregroundCoverage(value) {
+  return validFraction(value) ? `${(Number(value) * 100).toFixed(1)}%` : 'Unavailable';
+}
+function productImageFlags(image) {
+  const flags = [];
+  const width = Number(image.source_width), height = Number(image.source_height);
+  const coverage = validFraction(image.foreground_fraction) ? Number(image.foreground_fraction) : Number.NaN;
+  if (!positiveNumber(width) || !positiveNumber(height)) flags.push({ label: 'Dimensions missing', warning: true });
+  else if (Math.min(width, height) < 800) flags.push({ label: 'Short edge under 800 px', warning: true });
+  if (!String(image.source_license || '').trim()) flags.push({ label: 'License missing', warning: true });
+  if (!Number.isFinite(coverage) || coverage < 0 || coverage > 1) flags.push({ label: 'Coverage missing', warning: true });
+  else if (coverage < .08) flags.push({ label: 'Sparse foreground under 8%', warning: true });
+  else if (coverage > .75) flags.push({ label: 'Foreground over 75%', warning: true });
+  if (!flags.length) flags.push({ label: 'No automatic flags', warning: false });
+  return flags;
+}
+function productImagePreview(label, url, alt, candidate) {
+  return `<figure class="product-shot">
+    <figcaption><span>${esc(label)}</span><a href="${esc(url)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" aria-label="Open ${esc(label.toLowerCase())} in a new tab">Open full size</a></figcaption>
+    <a class="product-frame ${candidate ? 'candidate' : ''}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">
+      <img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onload="markProductImageLoaded(this)" onerror="markProductImageFailed(this)">
+      <span class="image-state" aria-live="polite">Loading image...</span>
+    </a>
+  </figure>`;
+}
+function positiveNumber(value) { return Number.isFinite(Number(value)) && Number(value) > 0; }
+function validFraction(value) { return value !== null && value !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 1; }
+function greatestCommonDivisor(a, b) { return b ? greatestCommonDivisor(b, a % b) : a; }
+function updateProductReviewCount() {
+  $('imageHead').textContent = `Product image review${productReviewCount ? ` (${productReviewCount})` : ''}`;
+}
+function refreshProductReviewPositions() {
+  const cards = [...document.querySelectorAll('#productImages .product-review')];
+  productReviewCount = cards.length;
+  cards.forEach((card, index) => {
+    const position = card.querySelector('.review-position');
+    if (position) position.textContent = `${index + 1} of ${productReviewCount}`;
+  });
+  updateProductReviewCount();
+}
+window.markProductImageLoaded = image => {
+  image.closest('.product-frame')?.classList.add('loaded');
+};
+window.markProductImageFailed = image => {
+  const frame = image.closest('.product-frame');
+  if (!frame) return;
+  frame.classList.remove('loaded');
+  frame.classList.add('failed');
+  const state = frame.querySelector('.image-state');
+  if (state) state.textContent = 'Image failed to load. Open full size or leave pending.';
+};
+document.addEventListener('keydown', event => {
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || event.repeat) return;
+  if (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(event.target.tagName) || event.target.isContentEditable) return;
+  const card = event.target.closest?.('.product-review[data-beer-id]');
+  if (!card || card.getAttribute('aria-busy') === 'true') return;
+  const decision = event.key.toLowerCase() === 'a' ? 'approve' : event.key.toLowerCase() === 'r' ? 'reject' : null;
+  if (!decision) return;
+  event.preventDefault();
+  window.reviewProductImage(card.dataset.beerId, decision);
+});
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 supa.auth.getSession().then(({ data }) => { if (data.session) load(); });
 </script>

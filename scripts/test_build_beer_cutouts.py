@@ -11,7 +11,9 @@ from scripts.build_beer_cutouts import (
     PipelineError,
     SupabaseAPI,
     add_studio_depth,
+    off_original_source_urls,
     preferred_source_urls,
+    source_kind,
     validate_candidate,
     validate_normalized_cutout,
     validate_source_mask,
@@ -24,6 +26,27 @@ class FakeResponse:
 
     def json(self) -> Any:
         return self.value
+
+
+class FakeOFFResponse:
+    def __init__(self, value: Any):
+        self.value = value
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> Any:
+        return self.value
+
+
+class FakeOFFSession:
+    def __init__(self, value: Any):
+        self.value = value
+        self.urls: list[str] = []
+
+    def get(self, url: str, **_: Any) -> FakeOFFResponse:
+        self.urls.append(url)
+        return FakeOFFResponse(self.value)
 
 
 class PagingAPI(SupabaseAPI):
@@ -190,6 +213,66 @@ class SourcePolicyTests(unittest.TestCase):
             validate_candidate(candidate)
         self.assertEqual(raised.exception.code, "source_not_allowed")
 
+    def test_wikimedia_special_file_path_accepts_only_bounded_width(self) -> None:
+        accepted = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url=(
+                "https://commons.wikimedia.org/wiki/Special:FilePath/"
+                "Test%20lager.jpg?width=800"
+            ),
+            license="Photographer - CC BY-SA 4.0 - Wikimedia Commons",
+        )
+        validate_candidate(accepted)
+        self.assertEqual(
+            preferred_source_urls(accepted.source_url),
+            [
+                accepted.source_url.replace("width=800", "width=1600"),
+                accepted.source_url,
+            ],
+        )
+
+        rejected = Candidate(
+            id=accepted.id,
+            name=accepted.name,
+            source_url=accepted.source_url.replace("width=800", "download=1"),
+            license=accepted.license,
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(rejected)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_exact_barcode_resolves_uncropped_off_upload(self) -> None:
+        source = (
+            "https://images.openfoodfacts.org/images/products/009/093/501/4364/"
+            "front_en.7.400.jpg"
+        )
+        candidate = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url=source,
+            license="Open Food Facts image (CC BY-SA 3.0)",
+            gtin="0090935014364",
+        )
+        session = FakeOFFSession({
+            "product": {
+                "image_front_url": source,
+                "images": {"front_en": {"imgid": "12", "rev": "7"}},
+            }
+        })
+
+        urls = off_original_source_urls(session, candidate)
+
+        self.assertEqual(
+            urls,
+            [
+                source.replace(".400.jpg", ".full.jpg"),
+                source,
+                source.rsplit("/", 1)[0] + "/12.jpg",
+            ],
+        )
+        self.assertEqual(source_kind(urls[-1]), "open_food_facts_raw")
+
     def test_unapproved_supabase_bucket_is_rejected(self) -> None:
         candidate = Candidate(
             id="00000000-0000-0000-0000-000000000000",
@@ -224,6 +307,30 @@ class SourcePolicyTests(unittest.TestCase):
                 "https://qfwiizvqxrhjlthbjosz.supabase.co/"
                 "storage/v1/object/public/beer-cutouts/source-photo.jpg"
             ),
+            license=accepted.license,
+        )
+        with self.assertRaises(PipelineError) as raised:
+            validate_candidate(rejected)
+        self.assertEqual(raised.exception.code, "source_not_allowed")
+
+    def test_accepts_only_scoped_partner_product_photos(self) -> None:
+        accepted = Candidate(
+            id="00000000-0000-0000-0000-000000000000",
+            name="Test lager",
+            source_url=(
+                "https://qfwiizvqxrhjlthbjosz.supabase.co/storage/v1/object/public/"
+                "partner-assets/11111111-1111-4111-8111-111111111111/beer-images/"
+                "00000000-0000-0000-0000-000000000000-front.jpg"
+            ),
+            license="Usage rights attested by verified venue partner",
+        )
+        validate_candidate(accepted)
+        self.assertEqual(source_kind(accepted.source_url), "partner_official")
+
+        rejected = Candidate(
+            id=accepted.id,
+            name=accepted.name,
+            source_url=accepted.source_url.replace("/beer-images/", "/logos/"),
             license=accepted.license,
         )
         with self.assertRaises(PipelineError) as raised:
