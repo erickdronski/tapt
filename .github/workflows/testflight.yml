@@ -3,9 +3,13 @@ name: TestFlight
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: macos-26
+    environment: testflight
     # Archives have taken ~40 min; macOS bills 10x, so an uncapped hang would
     # bill the 360-min default (~3,600 min). 75 keeps headroom.
     timeout-minutes: 75
@@ -23,7 +27,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Select newest Xcode
         run: |
