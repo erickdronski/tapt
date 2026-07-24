@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a focused improvement to Tapt.
+title: "feature: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What real user or operational problem needs to be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe success without prescribing an implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Data, privacy, and cost constraints
+      description: Note provenance, licensing, personal-data, or operating-cost implications.
