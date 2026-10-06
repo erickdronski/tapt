@@ -7,7 +7,19 @@ All notable changes to Tapt are documented in this file. The project follows
 
 ### Added
 
-- Reserved for changes after the current public engineering baseline.
+- `docs/web-deploy.md`, a checklist for redeploying `taptbeer.com` on Vercel.
+
+### Changed
+
+- README status now states that the app is not on the App Store, that the
+  backend and website are offline, and that GitHub Actions is disabled.
+- Release Integrity runs the live anon RPC contract check as its own job.
+- Scheduled data jobs are paused until the Supabase project is restored.
+
+### Fixed
+
+- Image backfill workflows no longer report success when the script fails.
+- Main-actor isolation warnings reported by Xcode 27.
 
 ## [1.0.0-beta.1] - 2026-07-23
 
