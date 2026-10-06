@@ -38,8 +38,8 @@ As of October 2026:
 | TestFlight | Builds were uploaded through 2026-07-24 by the `TestFlight` workflow. |
 | Backend | The production Supabase project is paused. The app builds and its tests pass, but it cannot load live data until the project is restored. |
 | Website | `taptbeer.com` is offline. The source is in [`landing/`](landing/), and [docs/web-deploy.md](docs/web-deploy.md) is the redeploy checklist. |
-| Data jobs | Schedules are commented out until the backend is restored. Each job can still be run manually. |
-| CI | GitHub Actions is disabled for this repository, so no workflow runs at the moment. The commands under [Build and test](#build-and-test) run the same checks locally. |
+
+The app builds and its 69 unit tests pass on the iOS 26.5 and 27 simulators; scheduled data jobs are paused until the backend is back (see [CI and release automation](#ci-and-release-automation)).
 
 ## Features
 
