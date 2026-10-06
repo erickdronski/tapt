@@ -69,6 +69,9 @@ jobs:
             echo "### ⏭️ Beer image backfill skipped — service-role secret not set (add it to enable)." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # The script exits 0 on OFF throttling by design; any other non-zero
+          # exit is a real failure that tee would otherwise hide.
+          set -o pipefail
           python3 scripts/backfill_beer_images_off.py | tee backfill.log
           {
             echo "### 🖼️ Beer image backfill (Open Food Facts, CC BY-SA images)"

@@ -47,6 +47,9 @@ jobs:
             echo "::error::SUPABASE_SERVICE_ROLE_KEY is required."
             exit 1
           fi
+          # Without pipefail the step reports tee's exit status, so a crashed
+          # script showed green (2026-09-01 run: host unresolvable, job passed).
+          set -o pipefail
           python scripts/backfill_beer_images_wikimedia.py | tee wikimedia-images.log
 
       - name: Publish discovery summary
