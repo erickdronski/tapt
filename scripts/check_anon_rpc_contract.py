@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import sys
 import urllib.error
 import urllib.request
@@ -74,6 +75,10 @@ def main() -> int:
         return 1
     except Exception as error:  # network/DNS/timeout
         print(f"anon-rpc-contract: FAILED to read live surface: {error}")
+        if isinstance(getattr(error, "reason", None), socket.gaierror):
+            print(f"anon-rpc-contract: {PROJECT_URL} does not resolve. A paused or "
+                  "deleted Supabase project looks like this; check the project's "
+                  "status in the Supabase dashboard before suspecting the code.")
         return 1
 
     added = [name for name in actual if name not in expected]

@@ -68,15 +68,6 @@ jobs:
           PY
           node --check /tmp/tapt-admin.mjs
 
-      # The anon RPC surface drifted from 12 to 24 functions unnoticed because the
-      # only guard was a one-shot DO block inside an already-applied migration.
-      # This checks live prod on every push instead. Skips (does not fail) when the
-      # secret is unavailable, e.g. a pull request from a fork.
-      - name: Enforce anon RPC contract
-        env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python scripts/check_anon_rpc_contract.py
-
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2
         with:
           deno-version: v2.x
@@ -94,3 +85,27 @@ jobs:
             echo 'Physical Storage objects must be deleted through the Storage API.'
             exit 1
           fi
+
+  # The anon RPC surface drifted from 12 to 24 functions unnoticed because the
+  # only guard was a one-shot DO block inside an already-applied migration.
+  # This checks live prod on every run instead. Skips (does not fail) when the
+  # secret is unavailable, e.g. a pull request from a fork.
+  #
+  # It is a separate job so a production outage (for example a paused Supabase
+  # project) shows up as this check failing, while the repository checks in
+  # `static` still report on the change itself.
+  anon-rpc-contract:
+    name: Live anon RPC contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Enforce anon RPC contract
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python scripts/check_anon_rpc_contract.py
