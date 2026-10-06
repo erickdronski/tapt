@@ -4,8 +4,12 @@ These run in Release Integrity's existing unittest step with no secrets, so the
 DIFF LOGIC is always covered even when the live check skips (fork PRs). The live
 half is exercised separately by the workflow step that has the service key.
 """
+import contextlib
+import io
 import json
+import socket
 import unittest
+import urllib.error
 from pathlib import Path
 from unittest import mock
 
@@ -82,6 +86,17 @@ class DriftDetection(unittest.TestCase):
         with mock.patch.dict("os.environ", {"SUPABASE_SERVICE_ROLE_KEY": "test-key"}), \
              mock.patch.object(guard, "live_surface", side_effect=OSError("network down")):
             self.assertEqual(guard.main(), 1)
+
+    def test_unresolvable_project_host_fails_and_says_so(self):
+        """A paused project's host stops resolving. Still fail, but name the
+        likely cause instead of leaving a bare DNS error in the log."""
+        dns = urllib.error.URLError(socket.gaierror(-2, "Name or service not known"))
+        out = io.StringIO()
+        with mock.patch.dict("os.environ", {"SUPABASE_SERVICE_ROLE_KEY": "test-key"}), \
+             mock.patch.object(guard, "live_surface", side_effect=dns), \
+             contextlib.redirect_stdout(out):
+            self.assertEqual(guard.main(), 1)
+        self.assertIn("paused or deleted Supabase project", out.getvalue())
 
 
 if __name__ == "__main__":
