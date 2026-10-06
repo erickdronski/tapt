@@ -8,8 +8,11 @@ name: Ingest beers (Open Food Facts)
 # (Supabase dashboard -> Project Settings -> API -> service_role key).
 
 on:
-  schedule:
-    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  # Schedule paused 2026-10-06: the production Supabase project is paused and
+  # its host does not resolve, so scheduled runs can only fail. Uncomment the
+  # schedule after restoring the project. Manual dispatch still works.
+  # schedule:
+  #   - cron: "17 6 * * 1"   # Mondays 06:17 UTC
   workflow_dispatch:
     inputs:
       max_pages:

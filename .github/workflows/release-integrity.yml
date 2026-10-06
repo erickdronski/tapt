@@ -18,8 +18,10 @@ on:
   # push`), so a push-path trigger can miss a live schema change for days. The
   # nightly run catches drift that never had a matching commit. Ubuntu runner,
   # about a minute, and this repo is public so the minutes are free.
-  schedule:
-    - cron: '17 9 * * *'
+  # Nightly run paused 2026-10-06: the production Supabase project is paused,
+  # so the live contract check can only fail. Uncomment after restoring it.
+  # schedule:
+  #   - cron: '17 9 * * *'
   workflow_dispatch:
 
 concurrency:
