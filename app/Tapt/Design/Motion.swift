@@ -7,6 +7,9 @@ import UIKit
 
 // MARK: - Haptics
 
+// UIKit feedback generators are main-actor isolated; pinning the namespace to
+// the main actor makes the compiler prove every caller is on it.
+@MainActor
 enum Haptic {
     static func tap() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
