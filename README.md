@@ -1,87 +1,137 @@
 # Tapt
 
 <p align="center">
-  <img src="brand/logo-png/tapt-icon-lockup-1024.png" alt="Tapt" width="180" />
+  <img src="brand/logo-png/tapt-icon-lockup-1024.png" alt="Tapt" width="160" />
 </p>
 
 <p align="center"><strong>THE Beer Superapp. All of beer, one app.</strong></p>
 
 <p align="center">
-  <a href="https://taptbeer.com">Website</a> |
-  <a href="#product-tour">Product tour</a> |
-  <a href="#architecture">Architecture</a> |
-  <a href="#build-and-test">Build and test</a> |
-  <a href="SECURITY.md">Security</a>
+  <a href="#status">Status</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#build-and-test">Build and test</a> ·
+  <a href="#ci-and-release-automation">CI and releases</a> ·
+  <a href="#security-and-privacy">Security</a> ·
+  <a href="#license">License</a>
 </p>
 
-Tapt is a native iOS product for discovering real beers, scanning supported labels and barcodes, logging pours to a Cellar, collecting a location-aware Passport, following a live Beer Market, and finding beer venues worldwide.
+Tapt is a native iOS app for finding, scanning, logging, and ranking real beers,
+built in Swift 6 and SwiftUI on a Supabase backend, with the data pipelines and
+App Store release automation that feed and ship it.
 
-**Stack:** Swift 6, SwiftUI, Supabase (Postgres, PostGIS, Auth, Storage, Edge Functions), MapKit, XcodeGen, Python, Deno, and GitHub Actions.
+<p align="center">
+  <img src="social-assets/appstore/01_superapp.png" width="19%" alt="Home: scan, search, and discover beer" />
+  <img src="social-assets/appstore/02_market.png" width="19%" alt="Beer Market board ranked by real votes and pours" />
+  <img src="social-assets/appstore/03_beerpage.png" width="19%" alt="Beer page with style, votes, and standing history" />
+  <img src="social-assets/appstore/04_passport.png" width="19%" alt="Passport progress across beers, styles, and countries" />
+  <img src="social-assets/appstore/05_nearyou.png" width="19%" alt="Map of breweries, pubs, and taprooms near you" />
+</p>
+<p align="center"><sub>App Store screenshot set from the 1.0 submission (July 2026).</sub></p>
 
-## Product tour
+## Status
 
-<table>
-  <tr>
-    <td><img src="social-assets/screenshots/01-market.png" alt="Tapt Beer Market" /></td>
-    <td><img src="social-assets/screenshots/02-analysis.png" alt="Tapt beer analysis" /></td>
-    <td><img src="social-assets/screenshots/03-home.png" alt="Tapt home" /></td>
-  </tr>
-  <tr>
-    <td><img src="social-assets/screenshots/04-taste.png" alt="Tapt taste profile" /></td>
-    <td><img src="social-assets/screenshots/05-discover.png" alt="Tapt venue discovery" /></td>
-    <td><img src="social-assets/library/out/app-preview.png" alt="Tapt app preview" /></td>
-  </tr>
-</table>
+As of October 2026:
 
-## What ships
+| Area | State |
+| --- | --- |
+| App Store | Not available. Version 1.0 was last submitted to App Review on 2026-07-24 and is not listed on the App Store. |
+| TestFlight | Builds were uploaded through 2026-07-24 by the `TestFlight` workflow. |
+| Backend | The production Supabase project is paused. The app builds and its tests pass, but it cannot load live data until the project is restored. |
+| Website | `taptbeer.com` is offline. The source is in [`landing/`](landing/), and [docs/web-deploy.md](docs/web-deploy.md) is the redeploy checklist. |
+| Data jobs | Schedules are commented out until the backend is restored. Each job can still be run manually. |
+| CI | GitHub Actions is disabled for this repository, so no workflow runs at the moment. The commands under [Build and test](#build-and-test) run the same checks locally. |
 
-- **Beer radar:** provenance-backed venues, MapKit search, and PostGIS nearby feeds
-- **Catalog:** normalized beer identities, sourced product media, barcode resolution, style data, and nutrition where available
-- **Beer Market:** standings derived from season, cited awards, catalog context, and first-party votes and pours
-- **Cellar and Passport:** distinct-beer progress across styles, states, and countries
-- **Social:** profiles, follows, a Tonight feed, reporting, blocking, and privacy-respecting public aggregates
-- **Partner tools:** venue claims, hosted menus, printable QR pages, events, and analytics
-- **Beer School and games:** verified beer education plus local table games
+## Features
 
-## Honest-data rule
+- **Scan and search:** barcode, label, and bar-QR scanning with VisionKit, plus
+  full-catalog search with server-side barcode verification.
+- **Beer pages:** normalized beer identities with style, brewery, country,
+  nutrition where available, and sourced product imagery.
+- **Beer Market:** standings computed from season, cited awards, catalog context,
+  and first-party votes and pours, with history from daily snapshots.
+- **Cellar and Passport:** pour logging, optional ratings, and progress across
+  distinct beers, styles, places, and countries.
+- **Near you:** breweries, pubs, and taprooms on MapKit from PostGIS nearby
+  queries, each with coordinates and source provenance.
+- **Social:** profiles, follows, a Tonight feed, leaderboards, reporting, blocking,
+  and moderated avatars.
+- **Partners:** venue claims, hosted tap-list menus with printable QR codes,
+  events, and an embeddable menu widget on the web.
+- **Learn and play:** Beer School content, trivia, and points-only table games.
 
-Tapt never fabricates products, venues, rankings, ratings, votes, movement, or product imagery. Every venue carries coordinates and provenance. Beer Market numbers are computed from real inputs. Empty states remain empty until real activity exists.
+**Data rule:** Tapt does not fabricate products, venues, rankings, votes,
+movement, or product images. Empty states stay empty until real activity exists.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    App["SwiftUI iOS app"] --> Auth["Supabase Auth"]
-    App --> API["Postgres RPC boundary"]
-    App --> Maps["MapKit and PostGIS"]
-    App --> Storage["Reviewed media storage"]
-    Web["Static partner and public web"] --> API
-    Web --> Storage
-    Sources["Licensed public data sources"] --> Jobs["Validated ingestion jobs"]
-    Jobs --> DB["Postgres data model"]
-    DB --> API
-    Signals["First-party votes and pours"] --> Scores["Materialized market standings"]
-    Scores --> API
-    Actions["GitHub Actions"] --> Tests["Build, tests, and release integrity"]
-    Tests --> TestFlight["Manual TestFlight release lane"]
+    subgraph iOS["iOS app (SwiftUI)"]
+        Features["Features/*"] --> Core["Core services"]
+    end
+    Core -->|publishable key| API["PostgREST RPCs<br/>RLS + explicit grants"]
+    Core --> Auth["Supabase Auth<br/>email, Apple, Google"]
+    Core --> Edge["Edge Functions (Deno)"]
+    Web["landing/ static site"] --> API
+    Web --> Edge
+    API --> DB[("Postgres + PostGIS<br/>pg_cron, Vault")]
+    Edge --> DB
+    Edge --> Storage["Storage"]
+    Jobs["GitHub Actions data jobs<br/>service-role secret"] --> DB
+    Jobs --> Storage
+    Sources["Open Food Facts, Overture,<br/>Wikidata, Wikimedia"] --> Jobs
+    CI["GitHub Actions release lanes"] --> ASC["TestFlight and App Store Connect"]
 ```
 
-The client does not receive service-role credentials. Sensitive operations are implemented behind authenticated Edge Functions or narrowly granted RPCs. Public analytics use coarse aggregates and honor visibility, block, and consent boundaries.
+### iOS app (`app/`)
 
-## Repository map
+- Swift 6 language mode with strict concurrency, SwiftUI, iOS 18 deployment
+  target. The Xcode project is generated from [`app/project.yml`](app/project.yml)
+  by XcodeGen; only the Swift package lock is committed.
+- One dependency: [`supabase-swift`](https://github.com/supabase/supabase-swift),
+  pinned to an exact version.
+- `Tapt/Core` holds the Supabase client, models, and services (beer, market,
+  check-ins, profiles, location, image cache). `Tapt/Design` holds the theme,
+  motion, haptics, and shared components. `Tapt/Features` has one folder per
+  surface (Market, Scan, Cellar, NearYou, Community, Partners, Games, and so on).
+- The app ships only the Supabase URL and publishable key.
+- `TaptTests` covers Market boards and pulse, Passport and Flights progress,
+  taste preferences, product-image source policy, style taxonomy, map pin
+  sampling, trivia data, and game logic.
 
-| Path | Purpose |
-| --- | --- |
-| `app/` | Native SwiftUI application, tests, privacy manifest, and XcodeGen spec |
-| `supabase/` | Versioned schema migrations, Edge Functions, and database contracts |
-| `landing/` | Public site, partner portal, menus, and owner operations surfaces |
-| `scripts/` | Reproducible ingestion, verification, image, and App Store tooling |
-| `docs/` | Product, architecture, privacy, data-source, and release decisions |
-| `.github/workflows/` | CI, data maintenance, TestFlight, and App Store release gates |
+### Backend (`supabase/`)
+
+- **Schema:** versioned SQL migrations in [`supabase/migrations/`](supabase/migrations/),
+  mirrored from production. Postgres with PostGIS for venue geography, pg_cron
+  for market refreshes and weekly locks, and Vault for stored Apple refresh tokens.
+- **Access:** row-level security on user data; clients go through RPCs with
+  explicit `anon` or `authenticated` grants. The set of functions `anon` may call
+  is pinned in [`supabase/anon_rpc_contract.json`](supabase/anon_rpc_contract.json)
+  and checked against production in CI.
+- **Edge Functions:** Deno/TypeScript in [`supabase/functions/`](supabase/functions/)
+  for Sign in with Apple token exchange, account deletion, avatar and content
+  moderation, barcode verification, and newsletter signup, sending, and
+  unsubscribe. The [functions README](supabase/functions/README.md) lists each
+  function's auth mode and the secrets it reads.
+
+### Data pipelines (`scripts/`, `.github/workflows/`)
+
+Python jobs run in GitHub Actions with the service-role key from repository
+secrets. They record each row's source and license, and images are staged for
+admin review before they can appear in the app.
+
+| Workflow | Source | What it does |
+| --- | --- | --- |
+| `ingest-beers.yml`, `ingest-beers-bulk.yml` | Open Food Facts (ODbL) | Adds beers from the API in resumable pages, or from the full export, deduplicated by barcode |
+| `ingest-venues.yml` | Overture Maps Places | Loads beer venues with per-row source licenses |
+| `backfill-beer-images.yml` | Open Food Facts | Stages exact-barcode product photos for review |
+| `backfill-beer-images-wikimedia.yml` | Wikidata and Wikimedia Commons | Stages exact-entity, commercially licensed images for review |
+| `build-beer-cutouts.yml` | Staged photos | Removes backgrounds locally with rembg and uploads cutouts for admin review |
 
 ## Build and test
 
-Requirements: macOS, a current Xcode installation, and XcodeGen.
+Requirements: macOS with Xcode 26 or later and
+[XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 ```sh
 cd app
@@ -89,33 +139,79 @@ xcodegen generate
 xcodebuild test \
   -project Tapt.xcodeproj \
   -scheme Tapt \
-  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
+  CODE_SIGNING_ALLOWED=NO
 ```
 
-Useful repository-level validation:
+Any iPhone from `xcrun simctl list devices available` works. Without an `OS=`
+key, `xcodebuild` looks for the name on the newest installed runtime, so add
+`,OS=<version>` for a device that only exists on an older one. Simulator builds
+need no signing identity.
+
+Repository checks, as run by the `Release Integrity` workflow (Python 3.12 or
+later; the virtual environment directory is ignored by git):
 
 ```sh
-python -m unittest discover -s scripts -p 'test_*.py'
+python3 -m venv .venv && . .venv/bin/activate
+pip install PyYAML==6.0.3 numpy==2.4.6 scipy==1.18.0 Pillow==12.3.0 requests==2.34.2
 python -m compileall -q scripts
+python -m unittest discover -s scripts -p 'test_*.py'
+deno check supabase/functions/delete-account/index.ts   # Deno 2; repeat per function
 ```
 
-Copy `.env.example` only for the supported local tools that require it. Never commit credentials.
+[`.env.example`](.env.example) lists the variables local tools read. Server
+secrets never belong in the repository.
 
-## Delivery
+## CI and release automation
 
-- `build.yml` compiles and tests app changes on pushes and pull requests.
-- `release-integrity.yml` validates Python, workflows, Edge Functions, admin code, and the live anonymous RPC contract.
-- `testflight.yml` performs a manual signed archive and TestFlight upload.
-- App Store preparation, audit, screenshot, submission, and withdrawal workflows are separate explicit lanes.
+| Workflow | Runs on | Purpose |
+| --- | --- | --- |
+| `build.yml` | Pushes to `main` and pull requests that touch `app/` | Generates the project, builds for the simulator, verifies the package lock, runs the unit tests |
+| `release-integrity.yml` | Pushes to `main` and pull requests that touch `supabase/`, `scripts/`, workflows, or the admin page | Python tests, workflow parsing, admin module syntax, Edge Function type checks, and a separate live check of the anon RPC contract |
+| `testflight.yml` | Manual | Tests, archives with manual signing, uploads to TestFlight, then calls `asc-admin.yml` to configure the build |
+| `asc-release-prepare.yml`, `asc-release-audit.yml` | Manual | Attaches an exact build to the App Store version, uploads screenshots and metadata, and audits release readiness |
+| `asc-release-submit.yml`, `asc-release-withdraw.yml` | Manual | Submit needs a typed confirmation, release attestations, and zero audit blockers; withdraw needs a typed confirmation and a newer valid build |
+| `app-store-screenshots.yml` | Manual | Captures and validates App Store screenshots on a simulator |
+| Data jobs above | Manual (schedules paused) | Catalog, venue, and image maintenance |
 
-## Status
+Release lanes start only by manual dispatch and never on pull requests.
+TestFlight upload and the App Store prepare, submit, and withdraw lanes stop
+unless they run from `main`. Third-party actions are pinned to commit SHAs, and
+Dependabot proposes weekly action updates.
 
-Tapt 1.0 is in the App Store release process. The public site is live at [taptbeer.com](https://taptbeer.com). See the commit history and pull requests for current release evidence.
+## Security and privacy
 
-## Contributing and security
+- The app and website hold only the Supabase URL and publishable key. The
+  service-role key exists only as a GitHub Actions secret and inside Edge
+  Functions.
+- Account deletion is self-service: an Edge Function revokes the stored Apple
+  token, removes avatar files through the Storage API, and deletes personal data
+  and the Auth user.
+- Public aggregates count only visible rows from users who consented to
+  aggregate analytics, and respect blocks.
+- The app's privacy manifest ([`PrivacyInfo.xcprivacy`](app/Tapt/PrivacyInfo.xcprivacy))
+  declares no tracking and is checked against the release disclosure by a test.
+- Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. Report vulnerabilities privately using [SECURITY.md](SECURITY.md), not through a public issue.
+## Repository map
+
+| Path | Contents |
+| --- | --- |
+| `app/` | iOS app, unit tests, privacy manifest, XcodeGen spec |
+| `supabase/` | Migrations, Edge Functions, anon RPC contract, seeds |
+| `scripts/` | Data pipelines, release tooling, and their tests |
+| `landing/` | Static website: home, partner portal, menus, admin, legal pages |
+| `docs/` | Product, data-source, schema, and release notes |
+| `brand/`, `social-assets/` | Logo, App Store screenshots, social assets |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Open an issue before substantial work.
 
 ## License
 
-Copyright 2026 Erick Dronski. The source is publicly visible for evaluation and collaboration, but no license to copy, redistribute, or create derivative works is granted. See [LICENSE](LICENSE).
+Source-available, not open source. Copyright 2026 Erick Dronski, all rights
+reserved. The code is public to read and evaluate, but no license is granted to
+copy, modify, redistribute, or create derivative works without written
+permission. GitHub shows the license as "Other" because these terms have no
+SPDX identifier. See [LICENSE](LICENSE).
