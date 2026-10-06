@@ -131,6 +131,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   purpose.
 
 ## NOW board (update when you take/finish work)
+- **Infrastructure offline, repo polish (Claude, 2026-10-06):** the Supabase
+  project `qfwiizvqxrhjlthbjosz` is paused (status INACTIVE, in the free
+  "Archived Projects" org) and its host stopped resolving around 2026-07-26.
+  Supabase allows a one-click restore for 90 days after a pause, so roughly
+  until 2026-10-24; after that only a backup download remains. No Vercel
+  project for `taptbeer.com` exists, so the site returns
+  `DEPLOYMENT_NOT_FOUND`; `docs/web-deploy.md` is the redeploy checklist.
+  Every scheduled job that touches Supabase failed from 2026-07-27 until the
+  last run on 2026-09-20; GitHub Actions is now disabled for the repo (owner
+  setting, leave it to the owner). The `polish/readme-ci-2026-10` PR comments
+  out those schedules so re-enabling Actions does not restart failing jobs
+  (uncomment after restoring), moves the live anon RPC check into its own
+  Release Integrity job, adds `pipefail` to the tee'd image backfills (one
+  crashed run had shown green), fixes three Xcode 27 concurrency warnings, and
+  rewrites the README status. The app is not on the App Store; the last
+  submission was build 59 on 2026-07-24.
 - **Market never-empty follow-up (Codex, 2026-07-24):** quiet movement,
   activity, or voting filters no longer replace all beer with a large empty
   illustration. The selected board keeps its honest zero state, then flows
