@@ -1,9 +1,12 @@
 name: Build real beer product cutouts
 
 on:
-  schedule:
-    # Daily is enough: source photos arrive on a weekly-ish ingest cadence.
-    - cron: "43 8 * * *"
+  # Schedule paused 2026-10-06: the production Supabase project is paused and
+  # its host does not resolve, so scheduled runs can only fail. Uncomment the
+  # schedule after restoring the project. Manual dispatch still works.
+  # schedule:
+  #   # Daily is enough: source photos arrive on a weekly-ish ingest cadence.
+  #   - cron: "43 8 * * *"
   workflow_dispatch:
     inputs:
       batch:

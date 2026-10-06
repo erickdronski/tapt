@@ -1,8 +1,11 @@
 name: Discover licensed Wikimedia beer images
 
 on:
-  schedule:
-    - cron: "19 7 1 * *"
+  # Schedule paused 2026-10-06: the production Supabase project is paused and
+  # its host does not resolve, so scheduled runs can only fail. Uncomment the
+  # schedule after restoring the project. Manual dispatch still works.
+  # schedule:
+  #   - cron: "19 7 1 * *"
   workflow_dispatch:
     inputs:
       max_rows:

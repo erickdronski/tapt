@@ -23,8 +23,11 @@ on:
         required: true
         default: true
         type: boolean
-  schedule:
-    - cron: "24 7 20 * *"
+  # Schedule paused 2026-10-06: the production Supabase project is paused and
+  # its host does not resolve, so scheduled runs can only fail. Uncomment the
+  # schedule after restoring the project. Manual dispatch still works.
+  # schedule:
+  #   - cron: "24 7 20 * *"
 
 permissions:
   contents: read
