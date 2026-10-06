@@ -12,6 +12,7 @@ DerivedData/
 .supabase/
 __pycache__/
 *.pyc
+.venv/
 
 # Beer image backfill: resume cursor is a local/CI re-check aid, never committed
 # (a committed "all done" list would make every future run skip and never pick
@@ -25,3 +26,13 @@ app/*.xcworkspace/
 .build/
 
 scripts/.wikidata_ingest_state.json
+
+# Apple signing material and API keys. CI reads these from encrypted
+# secrets; local copies live outside the repo (see .env.example).
+*.p8
+*.p12
+*.pem
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.certSigningRequest
