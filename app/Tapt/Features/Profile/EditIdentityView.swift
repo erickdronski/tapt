@@ -34,9 +34,12 @@ struct EditIdentityView: View {
                 Section {
                     VStack(spacing: 12) {
                         avatar
+                        // PhotosPicker's label closure is @Sendable; read the
+                        // main-actor state here and capture the value instead.
+                        let isUploading = uploading
                         PhotosPicker(selection: $pickedItem, matching: .images) {
-                            Label(uploading ? "Uploading…" : "Change photo",
-                                  systemImage: uploading ? "arrow.triangle.2.circlepath" : "camera.fill")
+                            Label(isUploading ? "Uploading…" : "Change photo",
+                                  systemImage: isUploading ? "arrow.triangle.2.circlepath" : "camera.fill")
                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
