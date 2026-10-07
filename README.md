@@ -37,7 +37,7 @@ As of October 2026:
 | App Store | Not available. Version 1.0 was last submitted to App Review on 2026-07-24 and is not listed on the App Store. |
 | TestFlight | Builds were uploaded through 2026-07-24 by the `TestFlight` workflow. |
 | Backend | The production Supabase project is paused. The app builds and its tests pass, but it cannot load live data until the project is restored. |
-| Website | `taptbeer.com` is offline. The source is in [`landing/`](landing/), and [docs/web-deploy.md](docs/web-deploy.md) is the redeploy checklist. |
+| Website | Live at [taptbeer.com](https://taptbeer.com), served from [`landing/`](landing/) by the Vercel project `tapt-landing`. Pages that read data (menus, partner portal, newsletter signup) need the backend restored. |
 
 The app builds and its 69 unit tests pass on the iOS 26.5 and 27 simulators; scheduled data jobs are paused until the backend is back (see [CI and release automation](#ci-and-release-automation)).
 

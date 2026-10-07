@@ -5,10 +5,12 @@ QR library, and images. There is no build step, no package manager, and no
 server code. Vercel serves the folder as-is and applies `landing/vercel.json`
 (`cleanUrls` plus security headers).
 
-State on 2026-10-06: `taptbeer.com` returns Vercel `DEPLOYMENT_NOT_FOUND`, and no
-Vercel project named `tapt-landing` exists in the connected account. DNS for the
-apex and `www` already points at Vercel, so a new project only needs the domain
-attached.
+State on 2026-10-07: deployed. The Vercel project `tapt-landing` serves
+`landing/` from `main` (Git-connected, so pushes to `main` redeploy), with
+`taptbeer.com` as the production domain and `www.taptbeer.com` redirecting to it
+with a 308. `/`, `/privacy`, `/terms`, and `/support` return 200. Step 1 below is
+still open: data-driven pages wait on the paused Supabase project. The checklist
+is kept as the procedure for rebuilding the project from scratch.
 
 ## Checklist
 
