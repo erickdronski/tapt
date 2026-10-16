@@ -7,6 +7,7 @@
 <p align="center"><strong>THE Beer Superapp. All of beer, one app.</strong></p>
 
 <p align="center">
+  <a href="https://taptbeer.com">Website</a> ·
   <a href="#status">Status</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#build-and-test">Build and test</a> ·
@@ -17,7 +18,12 @@
 
 Tapt is a native iOS app for finding, scanning, logging, and ranking real beers,
 built in Swift 6 and SwiftUI on a Supabase backend, with the data pipelines and
-App Store release automation that feed and ship it.
+App Store release automation that support it.
+
+**Engineering preview:** review the product screens below, then explore the
+[architecture](#architecture) or [local build](#build-and-test). The app is not
+available on the App Store, and live data features require the paused backend
+to be restored.
 
 <p align="center">
   <img src="social-assets/appstore/01_superapp.png" width="19%" alt="Home: scan, search, and discover beer" />
@@ -30,16 +36,19 @@ App Store release automation that feed and ship it.
 
 ## Status
 
-As of October 2026:
+As of October 16, 2026:
 
 | Area | State |
 | --- | --- |
 | App Store | Not available. Version 1.0 was last submitted to App Review on 2026-07-24 and is not listed on the App Store. |
 | TestFlight | Builds were uploaded through 2026-07-24 by the `TestFlight` workflow. |
-| Backend | The production Supabase project is paused. The app builds and its tests pass, but it cannot load live data until the project is restored. |
-| Website | Live at [taptbeer.com](https://taptbeer.com), served from [`landing/`](landing/) by the Vercel project `tapt-landing`. Pages that read data (menus, partner portal, newsletter signup) need the backend restored. |
+| Backend | The production Supabase project is documented as paused, and its public hostname does not resolve. Live app data is unavailable until service is restored. |
+| Website | The landing page is live at [taptbeer.com](https://taptbeer.com); source is in [`landing/`](landing/). Data features such as menus, the partner portal, and newsletter signup require the backend. |
+| Automation | GitHub Actions is disabled for this repository. Scheduled data jobs are also paused in the workflow definitions. |
 
-The app builds and its 69 unit tests pass on the iOS 26.5 and 27 simulators; scheduled data jobs are paused until the backend is back (see [CI and release automation](#ci-and-release-automation)).
+The source includes simulator tests and manual release workflows. See
+[Build and test](#build-and-test) to evaluate the code locally, and
+[CI and release automation](#ci-and-release-automation) for the delivery design.
 
 ## Features
 
@@ -148,7 +157,7 @@ key, `xcodebuild` looks for the name on the newest installed runtime, so add
 `,OS=<version>` for a device that only exists on an older one. Simulator builds
 need no signing identity.
 
-Repository checks, as run by the `Release Integrity` workflow (Python 3.12 or
+Repository checks defined by the `Release Integrity` workflow (Python 3.12 or
 later; the virtual environment directory is ignored by git):
 
 ```sh
@@ -163,6 +172,10 @@ deno check supabase/functions/delete-account/index.ts   # Deno 2; repeat per fun
 secrets never belong in the repository.
 
 ## CI and release automation
+
+The table describes the configured workflows. GitHub Actions is currently
+disabled, so these jobs do not run until it is re-enabled; live checks and data
+jobs also require the backend to be restored.
 
 | Workflow | Runs on | Purpose |
 | --- | --- | --- |
