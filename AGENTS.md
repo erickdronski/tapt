@@ -59,17 +59,22 @@ promptly (small commits, don't sit on local state another agent can't see).
   Pages: `index` (landing), `portal` (partner self-service), `menu?v=<uuid>`
   (public QR menu), `admin` (owner ops, gated by `app_admin`), `dispatch`,
   `pitch`, `hq` (owner hub, unlisted), `app-preview`.
-- **Beer Market** — flagship. `beer_market_standing` (materialized, deduped,
-  display fields precomputed) + `beer_market_snapshot` (daily history) +
-  `refresh_beer_market_standing()` on pg_cron `*/30 * * * *`. `beer_market()`
-  is a pure indexed read (~10ms). Standing (live, read it from
-  `refresh_beer_market_standing()` before quoting it) =
-  `greatest(1, 6 + season + awards + notability + votes - quiet_drift)`, where
-  notability ≤19 (image 8/4, brewery 5, abv 3, style_ref 3), votes =
-  pours_7d×10 + pours_30d×2 + net_votes_7d×6 + least(20, net_votes×4), and
-  quiet_drift decays a beer with no activity after a 14-day grace, capped at
-  -15. Awards are real cited medals only. Votes dominate as they arrive. **Never** fabricate movement; sparklines come from real
-  snapshots. App labels the number "standing", copy says the blend honestly.
+- **Beer Market** — flagship. Checked-in source contract:
+  `beer_market_standing` stores precomputed standings and display fields;
+  `beer_market_snapshot` stores daily history. The score-v2 wrapper in
+  [`20260724174500_market_score_v2_guard.sql`](supabase/migrations/20260724174500_market_score_v2_guard.sql)
+  calls the v1 scorer, subtracts catalog notability/metadata points with a
+  minimum score of 1, and sets `notability_pts` to zero. The consumer score
+  therefore blends season, real cited awards, community votes, eligible pours,
+  and decay during periods without activity. Native copy calls it **Tapt Score**; see
+  [`MarketService.swift`](app/Tapt/Core/MarketService.swift).
+  Daily change compares only against a previous snapshot with `score_version = 2` and
+  is zero when that baseline is absent, so a formula change cannot masquerade
+  as community movement. **Never** fabricate movement; sparklines use recorded
+  snapshots. This describes repository behavior, not verified current
+  production state: the backend is documented as paused. Verify deployed
+  functions, snapshots, and refresh scheduling after an authorized restore
+  before claiming that live scoring is operating.
 - **Menus (business-critical):** portal claim → approve → `publish_tap_list`
   (approved claimants only, 1–60 taps) → snapshot with **10-year expiry**
   (partner menus never silently vanish; crowd sightings keep short expiry) →
