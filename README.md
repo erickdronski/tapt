@@ -56,8 +56,8 @@ The source includes simulator tests and manual release workflows. See
   full-catalog search with server-side barcode verification.
 - **Beer pages:** normalized beer identities with style, brewery, country,
   nutrition where available, and sourced product imagery.
-- **Beer Market:** standings computed from season, cited awards, catalog context,
-  and first-party votes and pours, with history from daily snapshots.
+- **Beer Market:** Tapt Score blends season, cited awards, community votes,
+  and eligible pours, with history from daily snapshots.
 - **Cellar and Passport:** pour logging, optional ratings, and progress across
   distinct beers, styles, places, and countries.
 - **Near you:** breweries, pubs, and taprooms on MapKit from PostGIS nearby
